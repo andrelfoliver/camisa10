@@ -26,7 +26,7 @@ const FAQItem = ({ question, answer }) => {
 const ProductPage = () => {
   const { id } = useParams();
   const navigate = useNavigate();
-  const { addToCart } = useCart();
+  const { addToCart, pricingConfig } = useCart();
   
   const [product, setProduct] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -105,9 +105,9 @@ const ProductPage = () => {
 
   const basePrice = product.price || 69.90;
   let currentTotal = basePrice;
-  if (['2XL', '3XL', '4XL'].includes(selectedSize)) {
-      currentTotal += 5.00;
-  }
+  if (['2XL', '3XL'].includes(selectedSize)) currentTotal += pricingConfig?.size2XL3XL || 7.00;
+  if (selectedSize === '4XL') currentTotal += pricingConfig?.size4XL || 10.00;
+  if (isCustomized) currentTotal += pricingConfig?.nameNumber || 12.00;
 
   return (
     <div style={{ paddingBottom: '5rem', minHeight: '100vh' }}>
@@ -141,7 +141,7 @@ const ProductPage = () => {
           <div style={{ display: 'flex', flexDirection: 'column', padding: '1rem 0', minWidth: 0 }}>
             
             <div style={{ background: '#1f2937', color: '#fff', padding: '0.8rem 1rem', borderRadius: '4px', textAlign: 'center', fontWeight: 600, fontSize: '0.9rem', marginBottom: '1.5rem', width: '100%', lineHeight: 1.4 }}>
-              🚀 Adicione 3 Produtos Quaisquer no Carrinho e Pague Somente 2. 🚀
+              🚀 Desconto progressivo: na compra de 2 ou mais camisas você economiza! 🚀
             </div>
 
             <h1 style={{ fontSize: '2.5rem', marginBottom: '0.5rem', lineHeight: 1.2, fontWeight: 800 }}>{product.name}</h1>
@@ -163,8 +163,27 @@ const ProductPage = () => {
             </div>
 
             {/* Promocao Fixa */}
-            <div style={{ color: '#EF4444', fontWeight: 800, marginBottom: '0.2rem' }}>LEVE 3 E PAGUE 2!</div>
-            <div style={{ fontSize: '0.9rem', marginBottom: '2rem', color: 'var(--text-muted)' }}>Você pode aproveitar esta promoção em qualquer produto da loja.</div>
+            <div style={{ color: '#EF4444', fontWeight: 800, marginBottom: '0.2rem' }}>DESCONTO PROGRESSIVO</div>
+            <div style={{ fontSize: '0.9rem', marginBottom: '1.5rem', color: 'var(--text-muted)' }}>Na compra de 2 ou mais itens, o desconto é aplicado na sua sacola!</div>
+            
+            {/* Tabela Visual Dinamica */}
+            {pricingConfig?.discounts && pricingConfig.discounts.length > 0 && (
+               <div style={{ background: 'var(--surface-color)', border: '1px solid var(--border-color)', borderRadius: '8px', padding: '1rem', marginBottom: '2rem' }}>
+                 <p style={{ fontWeight: 800, color: 'var(--text-main)', marginBottom: '0.8rem', fontSize: '0.95rem' }}>🔥 Tabela de Atacado / Combos</p>
+                 <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                   <div style={{ display: 'flex', justifyContent: 'space-between', paddingBottom: '0.3rem', borderBottom: '1px dashed var(--border-color)', color: 'var(--text-muted)' }}>
+                     <span>1 peça</span>
+                     <span style={{ fontWeight: 600 }}>Preço normal</span>
+                   </div>
+                   {[...pricingConfig.discounts].sort((a,b)=>a.qty-b.qty).map((d, index) => (
+                     <div key={index} style={{ display: 'flex', justifyContent: 'space-between', paddingBottom: '0.3rem', borderBottom: index < pricingConfig.discounts.length - 1 ? '1px dashed var(--border-color)' : 'none', color: '#10B981', fontWeight: 600 }}>
+                       <span>{d.qty} peças</span>
+                       <span>- $ {d.amount.toFixed(2)} por unidade</span>
+                     </div>
+                   ))}
+                 </div>
+               </div>
+            )}
 
             {/* Customization Toggle */}
             <div style={{ marginBottom: '1.5rem' }}>
@@ -183,7 +202,7 @@ const ProductPage = () => {
             <div style={{ marginBottom: '2.5rem' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
                 <p style={{ fontWeight: 600 }}>Tamanho: <span style={{fontWeight: 800, color: 'var(--accent-color)'}}>{selectedSize}</span></p>
-                <span style={{ color: 'var(--text-muted)', fontSize: '0.9rem' }}>2XL, 3XL, 4XL tem acréscimo de +$5 CAD</span>
+                <span style={{ color: 'var(--text-muted)', fontSize: '0.9rem' }}>Tamanhos plussize (2XL ao 4XL) possuem pequeno acréscimo.</span>
               </div>
               <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
                 {sizes.map(s => (

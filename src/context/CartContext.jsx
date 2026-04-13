@@ -1,4 +1,5 @@
-import React, { createContext, useContext, useState } from 'react';
+import React, { createContext, useContext, useState, useEffect } from 'react';
+import { supabase } from '../services/supabase';
 
 const CartContext = createContext();
 
@@ -9,22 +10,44 @@ export const useCart = () => {
 export const CartProvider = ({ children }) => {
   const [cartItems, setCartItems] = useState([]);
   const [isCartOpen, setIsCartOpen] = useState(false);
+  
+  const [pricing, setPricing] = useState({
+    nameNumber: 12,
+    patch: 5,
+    size2XL3XL: 7,
+    size4XL: 10,
+    discounts: [
+      { qty: 2, amount: 15 },
+      { qty: 3, amount: 20 },
+      { qty: 4, amount: 25 },
+      { qty: 5, amount: 30 },
+      { qty: 10, amount: 35 }
+    ]
+  });
 
-  // extras = { nameNumber: boolean, patch: boolean }
+  useEffect(() => {
+    async function loadPricing() {
+      const { data } = await supabase.from('store_settings').select('value').eq('key', 'pricing').single();
+      if(data && data.value) {
+        try {
+          const parsed = JSON.parse(data.value);
+          setPricing(parsed);
+        } catch(e) {}
+      }
+    }
+    loadPricing();
+  }, []);
+
   const addToCart = (product, size, extras = { nameNumber: false, patch: false }) => {
-    
-    // Base Price calculation
     let basePrice = product.price || 69.90;
     
-    // Customizations
     let addonsPrice = 0;
-    if (['2XL', '3XL', '4XL'].includes(size)) addonsPrice += 5.00;
-    if (extras.nameNumber) addonsPrice += 9.90;
-    if (extras.patch) addonsPrice += 4.90;
+    if (['2XL', '3XL'].includes(size)) addonsPrice += pricing.size2XL3XL || 7.00;
+    if (size === '4XL') addonsPrice += pricing.size4XL || 10.00;
+    if (extras.nameNumber) addonsPrice += pricing.nameNumber || 12.00;
+    if (extras.patch) addonsPrice += pricing.patch || 5.00;
 
     const finalPrice = basePrice + addonsPrice;
-
-    // A unique identifier combining item id, size and extras configuration
     const cartId = `${product.id}-${size}-${extras.nameNumber}-${extras.patch}`;
 
     setCartItems(prev => {
@@ -58,13 +81,14 @@ export const CartProvider = ({ children }) => {
     const totalItems = cartItems.reduce((acc, item) => acc + item.quantity, 0);
     const subtotal = cartItems.reduce((acc, item) => acc + (item.price * item.quantity), 0);
     
-    // Calc discount on base shirts 
     let discount = 0;
-    if (totalItems === 2) {
-      discount = 9.90; // (2 * 69.90 = 139.80) -> 129.90
-    } else if (totalItems >= 3) {
-      const discountedBasePerShirt = 179.90 / 3; // 59.96
-      discount = (69.90 - discountedBasePerShirt) * totalItems;
+    
+    // Sort array descending to find highest valid threshold
+    const sortedDiscounts = (pricing.discounts || []).sort((a,b) => b.qty - a.qty);
+    const matchedDiscount = sortedDiscounts.find(d => totalItems >= d.qty);
+    
+    if (matchedDiscount) {
+       discount = matchedDiscount.amount * totalItems;
     }
 
     return {
@@ -89,11 +113,11 @@ export const CartProvider = ({ children }) => {
         subtotal,
         discount,
         cartTotal,
-        totalItems
+        totalItems,
+        pricingConfig: pricing
       }}
     >
       {children}
     </CartContext.Provider>
   );
 };
-

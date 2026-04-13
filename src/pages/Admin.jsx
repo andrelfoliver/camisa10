@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from '../services/supabase';
 import { useAuth } from '../context/AuthContext';
-import { Save, Check, Crown, Heart, Database, HardDrive, Star, LogOut, Package, Plus, Trash2, X, Users, Image } from 'lucide-react';
+import { Save, Check, Crown, Heart, Database, HardDrive, Star, LogOut, Package, Plus, Trash2, X, Users, Image, DollarSign } from 'lucide-react';
 import { Link, Navigate } from 'react-router-dom';
 import { brasil2025Products } from '../data/brasil2025';
 
@@ -16,13 +16,48 @@ const Admin = () => {
   const OFFICIAL_CATEGORIES = ['Seleções', 'Brasileirão', 'Internacionais', 'Lançamentos', 'Retrô'];
   const [supplierTab, setSupplierTab] = useState('CAT_Lançamentos');
   const [showAddForm, setShowAddForm] = useState(false);
+  
   const [productToDelete, setProductToDelete] = useState(null);
+  const [editingProduct, setEditingProduct] = useState(null);
+
+  const handleUpdateProduct = async (e) => {
+    e.preventDefault();
+    setSaved(false);
+    const prodToUpdate = { ...editingProduct, price: parseFloat(editingProduct.price) };
+    const { id, created_at, ...dataToUpdate } = prodToUpdate;
+    const { error } = await supabase.from('products').update(dataToUpdate).eq('id', id);
+    if(error){
+       alert("Erro ao editar! " + error.message);
+       return;
+    }
+    setProducts(products.map(p => p.id === id ? prodToUpdate : p));
+    setEditingProduct(null);
+    setSaved(true);
+    setTimeout(() => setSaved(false), 3000);
+  };
+
   
   // Campo Categoria adicionado!
   const [newProduct, setNewProduct] = useState({ name: '', price: '', image: '', category: '', league: '', team: '', version: '' });
   
   const [customers, setCustomers] = useState([]);
   const [heroUrl, setHeroUrl] = useState('');
+
+  const defaultPricing = {
+    nameNumber: 12,
+    patch: 5,
+    size2XL3XL: 7,
+    size4XL: 10,
+    discounts: [
+      { qty: 2, amount: 15 },
+      { qty: 3, amount: 20 },
+      { qty: 4, amount: 25 },
+      { qty: 5, amount: 30 },
+      { qty: 10, amount: 35 }
+    ]
+  };
+  const [pricing, setPricing] = useState(defaultPricing);
+
 
   const geralProducts = Array.from({ length: 418 }, (_, i) => ({
     id: `geral_${i + 1}`,
@@ -53,10 +88,20 @@ const Admin = () => {
       if(data) setCustomers(data);
     }
     
+    
     async function loadSettings() {
-      const { data } = await supabase.from('store_settings').select('value').eq('key', 'hero_bg').single();
-      if(data) setHeroUrl(data.value);
+      const { data: heroData } = await supabase.from('store_settings').select('value').eq('key', 'hero_bg').single();
+      if(heroData) setHeroUrl(heroData.value);
+      
+      const { data: pricingData } = await supabase.from('store_settings').select('value').eq('key', 'pricing').single();
+      if(pricingData && pricingData.value) {
+        try {
+          const parsed = JSON.parse(pricingData.value);
+          setPricing(parsed);
+        } catch(e) {}
+      }
     }
+
     
     if (isAdmin) {
       loadProducts();
@@ -65,7 +110,25 @@ const Admin = () => {
     }
   }, [isAdmin]);
 
+  
+  const handleSavePricing = async (e) => {
+    e.preventDefault();
+    setSaved(false);
+    const { error } = await supabase.from('store_settings').upsert({ key: 'pricing', value: JSON.stringify(pricing) }, { onConflict: 'key' });
+    if (error) {
+       const { data: exists } = await supabase.from('store_settings').select('key').eq('key', 'pricing').single();
+       if (exists) {
+          await supabase.from('store_settings').update({ value: JSON.stringify(pricing) }).eq('key', 'pricing');
+       } else {
+          await supabase.from('store_settings').insert([{ key: 'pricing', value: JSON.stringify(pricing) }]);
+       }
+    }
+    setSaved(true);
+    setTimeout(() => setSaved(false), 3000);
+  };
+
   const handleSaveHeroUrl = async (e) => {
+
     e.preventDefault();
     setSaved(false);
     
@@ -237,12 +300,20 @@ const Admin = () => {
           >
             <Users size={18} /> CRM / Clientes
           </button>
+          
           <button 
             onClick={() => setSupplierTab('CONFIG')}
             style={{ padding: '0.8rem 1rem', borderRadius: 'var(--radius-md)', display: 'flex', alignItems: 'center', gap: '0.8rem', width: '100%', textAlign: 'left', background: supplierTab === 'CONFIG' ? '#3B82F6' : 'transparent', color: supplierTab === 'CONFIG' ? '#fff' : 'var(--text-main)', fontWeight: supplierTab === 'CONFIG' ? 700 : 500, transition: 'all 0.2s' }}
           >
             <Image size={18} /> Visual & Banners
           </button>
+          <button 
+            onClick={() => setSupplierTab('PRICING')}
+            style={{ padding: '0.8rem 1rem', borderRadius: 'var(--radius-md)', display: 'flex', alignItems: 'center', gap: '0.8rem', width: '100%', textAlign: 'left', background: supplierTab === 'PRICING' ? '#F59E0B' : 'transparent', color: supplierTab === 'PRICING' ? '#fff' : 'var(--text-main)', fontWeight: supplierTab === 'PRICING' ? 700 : 500, transition: 'all 0.2s' }}
+          >
+            <DollarSign size={18} /> Tabela de Preços
+          </button>
+
         </nav>
 
         <div style={{ marginTop: '2rem', borderTop: '1px solid var(--border-color)', paddingTop: '1.5rem', display: 'flex', flexDirection: 'column', gap: '1rem' }}>
@@ -262,9 +333,12 @@ const Admin = () => {
         <header style={{ position: 'sticky', top: 0, zIndex: 50, background: 'rgba(7, 7, 9, 0.95)', backdropFilter: 'blur(10px)', borderBottom: '1px solid var(--border-color)', padding: '1.5rem 3rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center', boxShadow: '0 4px 20px rgba(0,0,0,0.5)' }}>
           <div>
             <h1 style={{ fontSize: '1.8rem', color: '#fff', fontWeight: 800 }}>
-              {supplierTab === 'CLIENTES' ? 'Gestão de Clientes' : 
+              {
+               supplierTab === 'CLIENTES' ? 'Gestão de Clientes' : 
                supplierTab === 'CONFIG' ? 'Configuração de Interface' : 
-               supplierTab === 'CLOUD_ALL' ? 'Todo o Banco na Nuvem' : 
+               supplierTab === 'PRICING' ? 'Tabela de Preços Globais' : 
+               supplierTab === 'CLOUD_ALL' ? 'Todo o Banco na Nuvem' :
+ 
                `${supplierTab.replace('CAT_', '')}`}
             </h1>
             <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem', marginTop: '0.2rem' }}>Painel Central de Gerenciamento Camisa10.</p>
@@ -347,6 +421,68 @@ const Admin = () => {
                 )}
               </div>
             </div>
+          
+          ) : supplierTab === 'PRICING' ? (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem', maxWidth: '800px' }}>
+              <div className="glass-panel" style={{ padding: '2.5rem', borderRadius: 'var(--radius-lg)' }}>
+                <h2 style={{ display: 'flex', alignItems: 'center', gap: '0.8rem', marginBottom: '1.5rem', fontSize: '1.5rem', color: '#FCD34D' }}>
+                   <DollarSign color="#FCD34D" /> Valores Adicionais Fixos
+                </h2>
+                <form onSubmit={handleSavePricing} style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+                  <div style={{ display: 'flex', gap: '1rem' }}>
+                    <div style={{ flex: 1 }}>
+                      <label style={{ display: 'block', marginBottom: '0.5rem', color: 'var(--text-muted)', fontWeight: 600 }}>Nome + Número Personalizado</label>
+                      <input required type="number" step="0.01" value={pricing.nameNumber} onChange={e => setPricing({...pricing, nameNumber: parseFloat(e.target.value)})} style={{ width: '100%', padding: '1rem', background: 'rgba(255,255,255,0.05)', color: '#fff', border: '1px solid var(--border-color)', borderRadius: 'var(--radius-md)' }} />
+                    </div>
+                    <div style={{ flex: 1 }}>
+                      <label style={{ display: 'block', marginBottom: '0.5rem', color: 'var(--text-muted)', fontWeight: 600 }}>Custo do Patch</label>
+                      <input required type="number" step="0.01" value={pricing.patch} onChange={e => setPricing({...pricing, patch: parseFloat(e.target.value)})} style={{ width: '100%', padding: '1rem', background: 'rgba(255,255,255,0.05)', color: '#fff', border: '1px solid var(--border-color)', borderRadius: 'var(--radius-md)' }} />
+                    </div>
+                  </div>
+                  <div style={{ display: 'flex', gap: '1rem' }}>
+                    <div style={{ flex: 1 }}>
+                      <label style={{ display: 'block', marginBottom: '0.5rem', color: 'var(--text-muted)', fontWeight: 600 }}>Tamanho Plussize (2XL - 3XL)</label>
+                      <input required type="number" step="0.01" value={pricing.size2XL3XL} onChange={e => setPricing({...pricing, size2XL3XL: parseFloat(e.target.value)})} style={{ width: '100%', padding: '1rem', background: 'rgba(255,255,255,0.05)', color: '#fff', border: '1px solid var(--border-color)', borderRadius: 'var(--radius-md)' }} />
+                    </div>
+                    <div style={{ flex: 1 }}>
+                      <label style={{ display: 'block', marginBottom: '0.5rem', color: 'var(--text-muted)', fontWeight: 600 }}>Tamanho Máximo (4XL)</label>
+                      <input required type="number" step="0.01" value={pricing.size4XL} onChange={e => setPricing({...pricing, size4XL: parseFloat(e.target.value)})} style={{ width: '100%', padding: '1rem', background: 'rgba(255,255,255,0.05)', color: '#fff', border: '1px solid var(--border-color)', borderRadius: 'var(--radius-md)' }} />
+                    </div>
+                  </div>
+                  
+                  <div style={{ marginTop: '2rem', borderTop: '1px solid var(--border-color)', paddingTop: '2rem' }}>
+                    <h2 style={{ display: 'flex', alignItems: 'center', gap: '0.8rem', marginBottom: '1.5rem', fontSize: '1.5rem', color: '#10B981' }}>
+                       <Package color="#10B981" /> Desconto Progressivo (Subtração na Peça)
+                    </h2>
+                    <p style={{ color: 'var(--text-muted)', marginBottom: '1.5rem', fontSize: '0.9rem' }}>Os valores abaixo configuram quantos dólares serão subtraídos do preço base de <strong>cada camisa</strong> dependendo do volume na sacola.</p>
+                    
+                    {pricing.discounts.map((discount, index) => (
+                      <div key={index} style={{ display: 'flex', gap: '1rem', marginBottom: '1rem' }}>
+                         <div style={{ flex: 1 }}>
+                            <label style={{ display: 'block', marginBottom: '0.3rem', color: 'var(--text-muted)', fontSize: '0.8rem' }}>Quantidade Mínima</label>
+                            <input required type="number" value={discount.qty} onChange={(e) => {
+                               const newDiscounts = [...pricing.discounts];
+                               newDiscounts[index].qty = parseInt(e.target.value);
+                               setPricing({...pricing, discounts: newDiscounts});
+                            }} style={{ width: '100%', padding: '0.8rem', background: 'var(--bg-color)', color: '#fff', border: '1px solid var(--border-color)', borderRadius: '4px' }} />
+                         </div>
+                         <div style={{ flex: 1 }}>
+                            <label style={{ display: 'block', marginBottom: '0.3rem', color: 'var(--text-muted)', fontSize: '0.8rem' }}>Desconto (Subtração) por Peça</label>
+                            <input required type="number" step="0.01" value={discount.amount} onChange={(e) => {
+                               const newDiscounts = [...pricing.discounts];
+                               newDiscounts[index].amount = parseFloat(e.target.value);
+                               setPricing({...pricing, discounts: newDiscounts});
+                            }} style={{ width: '100%', padding: '0.8rem', background: 'var(--bg-color)', color: '#fff', border: '1px solid var(--border-color)', borderRadius: '4px' }} />
+                         </div>
+                      </div>
+                    ))}
+                  </div>
+
+                  <button type="submit" className="btn-primary" style={{ background: '#3B82F6', color: '#fff', padding: '1rem', fontSize: '1.1rem', marginTop: '1rem' }}>Salvar Tabela de Preços</button>
+                </form>
+              </div>
+            </div>
+
           ) : supplierTab === 'CLIENTES' ? (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', maxWidth: '900px' }}>
               {customers.length === 0 ? (
@@ -434,13 +570,22 @@ const Admin = () => {
                       </button>
                       
                       {(supplierTab.startsWith('CAT_') || supplierTab === 'CLOUD_ALL') && (
-                        <button 
-                          onClick={() => handleDeleteProduct(product)}
-                          title="Excluir do Banco de Dados"
-                          style={{ flex: '0 0 100%', marginTop: '0.5rem', padding: '0.5rem', borderRadius: '4px', background: 'transparent', color: '#EF4444', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem', border: '1px solid rgba(239, 68, 68, 0.3)', cursor: 'pointer', transition: 'all 0.2s', fontSize: '0.85rem' }}
-                        >
-                          <Trash2 size={14} /> Remover Definitivamente
-                        </button>
+                        <div style={{ display: 'flex', gap: '0.5rem', width: '100%', marginTop: '0.5rem' }}>
+                          <button 
+                            onClick={() => setEditingProduct(product)}
+                            title="Editar Dados da Camisa"
+                            style={{ flex: 1, padding: '0.5rem', borderRadius: '4px', background: 'rgba(59, 130, 246, 0.1)', color: '#3B82F6', border: '1px solid rgba(59, 130, 246, 0.3)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', transition: 'all 0.2s', fontSize: '0.85rem' }}
+                          >
+                            Editar Info
+                          </button>
+                          <button 
+                            onClick={() => handleDeleteProduct(product)}
+                            title="Excluir Definitivamente"
+                            style={{ flex: 1, padding: '0.5rem', borderRadius: '4px', background: 'transparent', color: '#EF4444', border: '1px solid rgba(239, 68, 68, 0.3)', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.4rem', cursor: 'pointer', transition: 'all 0.2s', fontSize: '0.85rem' }}
+                          >
+                            <Trash2 size={13} /> Excluir
+                          </button>
+                        </div>
                       )}
                     </div>
                   </div>
@@ -502,9 +647,37 @@ const Admin = () => {
               
               <div style={{ display: 'flex', gap: '1rem' }}>
                 <div style={{ flex: 1 }}>
-                  <label style={{ display: 'block', marginBottom: '0.5rem', color: 'var(--text-muted)', fontSize: '0.9rem' }}>Preço Venda (CAD) *</label>
+                  <label style={{ display: 'block', marginBottom: '0.5rem', color: 'var(--text-muted)', fontSize: '0.9rem' }}>Carregar Tabela</label>
+                  <select onChange={(e) => {
+                     if(e.target.value) setNewProduct({...newProduct, price: e.target.value});
+                  }} style={{ width: '100%', padding: '0.8rem 1rem', background: 'rgba(255,255,255,0.05)', color: '#10B981', border: '1px solid var(--border-color)', borderRadius: 'var(--radius-sm)' }}>
+                    <option value="">-- Autopreencher Preço --</option>
+                    <optgroup label="Camisas">
+                      <option value="44.90">Fã Lisa (CA$ 44.90)</option>
+                      <option value="69.90">Jogador Adidas (CA$ 69.90)</option>
+                      <option value="74.90">Jogador Nike (CA$ 74.90)</option>
+                      <option value="74.90">Retrô (CA$ 74.90)</option>
+                      <option value="59.90">Manga Longa Lisa (CA$ 59.90)</option>
+                    </optgroup>
+                    <optgroup label="Kits & Conjuntos">
+                      <option value="49.90">Kit Infantil 16-22 (CA$ 49.90)</option>
+                      <option value="54.90">Kit Infantil 24-28 (CA$ 54.90)</option>
+                      <option value="69.90">Kit Adulto (CA$ 69.90)</option>
+                    </optgroup>
+                    <optgroup label="Outros">
+                      <option value="44.90">Shorts Fã (CA$ 44.90)</option>
+                      <option value="69.90">Shorts Jogador (CA$ 69.90)</option>
+                      <option value="159.90">Corta Vento (CA$ 159.90)</option>
+                    </optgroup>
+                  </select>
+                </div>
+                <div style={{ flex: 1 }}>
+                  <label style={{ display: 'block', marginBottom: '0.5rem', color: 'var(--text-muted)', fontSize: '0.9rem' }}>Preço Final (CAD) *</label>
                   <input required type="number" step="0.01" value={newProduct.price} onChange={e => setNewProduct({...newProduct, price: e.target.value})} placeholder="Ex: 69.90" style={{ width: '100%', padding: '0.8rem 1rem', background: 'var(--bg-color)', color: '#fff', border: '1px solid var(--border-color)', borderRadius: 'var(--radius-sm)' }} />
                 </div>
+              </div>
+
+              <div style={{ display: 'flex', gap: '1rem' }}>
                 <div style={{ flex: 1 }}>
                   <label style={{ display: 'block', marginBottom: '0.5rem', color: 'var(--text-muted)', fontSize: '0.9rem' }}>Versão *</label>
                   <select required value={newProduct.version} onChange={e => setNewProduct({...newProduct, version: e.target.value})} style={{ width: '100%', padding: '0.8rem 1rem', background: 'var(--bg-color)', color: '#fff', border: '1px solid var(--border-color)', borderRadius: 'var(--radius-sm)' }}>
@@ -546,6 +719,73 @@ const Admin = () => {
       )}
 
       {/* CONFIRMAÇÃO DE DELETE */}
+      
+      {/* MODAL DE EDIÇÃO DE CAMISA */}
+      {editingProduct && (
+        <div style={{ position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh', background: 'rgba(0,0,0,0.85)', zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '1rem', backdropFilter: 'blur(5px)' }}>
+          <div style={{ background: 'var(--surface-color)', padding: '2.5rem', borderRadius: 'var(--radius-lg)', border: '1px solid var(--border-color)', width: '100%', maxWidth: '550px', maxHeight: '90vh', overflowY: 'auto', boxShadow: '0 20px 50px rgba(0,0,0,0.5)' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
+               <h2 style={{ fontSize: '1.5rem', display: 'flex', alignItems: 'center', gap: '0.5rem', color: '#fff' }}>
+                 <Database color="#3B82F6" /> Editar Camisa
+               </h2>
+               <button onClick={() => setEditingProduct(null)} style={{ background: 'rgba(255,255,255,0.05)', border: 'none', color: '#fff', cursor: 'pointer', padding: '0.5rem', borderRadius: '50%' }}><X size={20} /></button>
+            </div>
+            
+            <form onSubmit={handleUpdateProduct} style={{ display: 'flex', flexDirection: 'column', gap: '1.2rem' }}>
+              <div>
+                <label style={{ display: 'block', marginBottom: '0.5rem', color: 'var(--text-muted)', fontSize: '0.9rem' }}>Nome da Camisa *</label>
+                <input required type="text" value={editingProduct.name} onChange={e => setEditingProduct({...editingProduct, name: e.target.value})} style={{ width: '100%', padding: '0.8rem 1rem', background: 'var(--bg-color)', color: '#fff', border: '1px solid var(--border-color)', borderRadius: 'var(--radius-sm)' }} />
+              </div>
+
+              <div style={{ display: 'flex', gap: '1rem' }}>
+                <div style={{ flex: 1 }}>
+                  <label style={{ display: 'block', marginBottom: '0.5rem', color: 'var(--text-muted)', fontSize: '0.9rem' }}>Carregar Tabela</label>
+                  <select onChange={(e) => {
+                     if(e.target.value) setEditingProduct({...editingProduct, price: e.target.value});
+                  }} style={{ width: '100%', padding: '0.8rem 1rem', background: 'rgba(255,255,255,0.05)', color: '#3B82F6', border: '1px solid var(--border-color)', borderRadius: 'var(--radius-sm)' }}>
+                    <option value="">-- Autopreencher Preço --</option>
+                    <optgroup label="Camisas">
+                      <option value="44.90">Fã Lisa (CA$ 44.90)</option>
+                      <option value="69.90">Jogador Adidas (CA$ 69.90)</option>
+                      <option value="74.90">Jogador Nike (CA$ 74.90)</option>
+                      <option value="74.90">Retrô (CA$ 74.90)</option>
+                      <option value="59.90">Manga Longa Lisa (CA$ 59.90)</option>
+                    </optgroup>
+                    <optgroup label="Kits & Conjuntos">
+                      <option value="49.90">Kit Infantil 16-22 (CA$ 49.90)</option>
+                      <option value="54.90">Kit Infantil 24-28 (CA$ 54.90)</option>
+                      <option value="69.90">Kit Adulto (CA$ 69.90)</option>
+                    </optgroup>
+                    <optgroup label="Outros">
+                      <option value="44.90">Shorts Fã (CA$ 44.90)</option>
+                      <option value="69.90">Shorts Jogador (CA$ 69.90)</option>
+                      <option value="159.90">Corta Vento (CA$ 159.90)</option>
+                    </optgroup>
+                  </select>
+                </div>
+                <div style={{ flex: 1 }}>
+                  <label style={{ display: 'block', marginBottom: '0.5rem', color: 'var(--text-muted)', fontSize: '0.9rem' }}>Preço Atualizado (CAD) *</label>
+                  <input required type="number" step="0.01" value={editingProduct.price} onChange={e => setEditingProduct({...editingProduct, price: e.target.value})} style={{ width: '100%', padding: '0.8rem 1rem', background: 'var(--bg-color)', color: '#fff', border: '1px solid var(--border-color)', borderRadius: 'var(--radius-sm)' }} />
+                </div>
+              </div>
+
+              <div>
+                <label style={{ display: 'block', marginBottom: '0.5rem', color: 'var(--text-muted)', fontSize: '0.9rem' }}>URL da Imagem *</label>
+                <input required type="text" value={editingProduct.image} onChange={e => setEditingProduct({...editingProduct, image: e.target.value})} style={{ width: '100%', padding: '0.8rem 1rem', background: 'var(--bg-color)', color: '#fff', border: '1px solid var(--border-color)', borderRadius: 'var(--radius-sm)' }} />
+              </div>
+
+              <div style={{ display: 'flex', gap: '1rem', marginTop: '1.5rem' }}>
+                  <button type="button" onClick={() => setEditingProduct(null)} style={{ flex: 1, padding: '1.2rem', background: 'var(--bg-color)', color: '#fff', fontWeight: 600, borderRadius: 'var(--radius-md)', border: '1px solid var(--border-color)', cursor: 'pointer' }}>
+                    Cancelar
+                  </button>
+                  <button type="submit" style={{ flex: 1, padding: '1.2rem', background: '#3B82F6', color: '#fff', fontWeight: 800, borderRadius: 'var(--radius-md)', border: 'none', cursor: 'pointer', transition: 'all 0.2s', boxShadow: '0 4px 15px rgba(59, 130, 246, 0.3)' }}>
+                    SALVAR ALTERAÇÕES
+                  </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
       {productToDelete && (
         <div style={{ position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh', background: 'rgba(0,0,0,0.85)', zIndex: 1001, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '1rem', backdropFilter: 'blur(5px)' }}>
           <div style={{ background: 'var(--surface-color)', padding: '2.5rem', borderRadius: 'var(--radius-lg)', border: '1px solid #EF4444', width: '100%', maxWidth: '400px', display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center', boxShadow: '0 20px 50px rgba(239, 68, 68, 0.3)' }}>

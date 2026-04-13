@@ -265,12 +265,12 @@ const Home = () => {
             {/* Combo 2 Camisas */}
             <div className="glass-panel" style={{ flex: 1, minWidth: '250px', padding: '2rem', borderRadius: 'var(--radius-md)', display: 'flex', flexDirection: 'column' }}>
               <h3 style={{ fontSize: '1.5rem', marginBottom: '1rem' }}>2 Camisas</h3>
-              <p style={{ color: 'var(--text-muted)', fontSize: '1rem', marginBottom: '0.2rem' }}>De <del>$139.80</del> por apenas</p>
-              <p style={{ fontSize: '3rem', fontWeight: 800, color: 'var(--text-main)', marginBottom: '1rem', lineHeight: 1 }}>$129.90</p>
+              <p style={{ color: 'var(--text-muted)', fontSize: '1rem', marginBottom: '0.2rem' }}>De <del>$149.80</del> por apenas</p>
+              <p style={{ fontSize: '3rem', fontWeight: 800, color: 'var(--text-main)', marginBottom: '1rem', lineHeight: 1 }}>$119.80</p>
               
               <div style={{ background: 'rgba(255,255,255,0.05)', padding: '0.8rem', borderRadius: '8px', marginBottom: '1.5rem', fontSize: '0.95rem' }}>
-                <span style={{ display: 'block', marginBottom: '0.2rem' }}>Sai por <strong>$64.95</strong> cada</span>
-                <span style={{ color: '#10B981', fontWeight: 700 }}>💰 Economia de $9.90</span>
+                <span style={{ display: 'block', marginBottom: '0.2rem' }}>Sai por <strong>$59.90</strong> cada</span>
+                <span style={{ color: '#10B981', fontWeight: 700 }}>💰 Economia de $30.00</span>
               </div>
               
               <div style={{ marginTop: 'auto' }}>
@@ -282,12 +282,12 @@ const Home = () => {
             <div className="glass-panel" style={{ flex: 1, minWidth: '250px', padding: '2rem', borderRadius: 'var(--radius-md)', border: '2px solid var(--accent-color)', position: 'relative', display: 'flex', flexDirection: 'column' }}>
               <div className="badge" style={{ background: 'var(--accent-color)', color: '#000', left: '50%', transform: 'translate(-50%, -150%)', width: 'max-content' }}>Maior Desconto</div>
               <h3 style={{ fontSize: '1.5rem', marginBottom: '1rem' }}>3 Camisas</h3>
-              <p style={{ color: 'var(--text-muted)', fontSize: '1rem', marginBottom: '0.2rem' }}>De <del>$209.70</del> por apenas</p>
-              <p style={{ fontSize: '3rem', fontWeight: 800, color: 'var(--accent-color)', marginBottom: '1rem', lineHeight: 1 }}>$179.90</p>
+              <p style={{ color: 'var(--text-muted)', fontSize: '1rem', marginBottom: '0.2rem' }}>De <del>$224.70</del> por apenas</p>
+              <p style={{ fontSize: '3rem', fontWeight: 800, color: 'var(--accent-color)', marginBottom: '1rem', lineHeight: 1 }}>$164.70</p>
               
               <div style={{ background: 'rgba(219, 254, 135, 0.1)', border: '1px solid rgba(219, 254, 135, 0.3)', padding: '0.8rem', borderRadius: '8px', marginBottom: '1.5rem', fontSize: '0.95rem' }}>
-                <span style={{ display: 'block', color: 'var(--text-main)', marginBottom: '0.2rem' }}>Sai por só <strong>$59.96</strong> cada</span>
-                <span style={{ color: '#10B981', fontWeight: 700 }}>🔥 Você economiza $29.80!</span>
+                <span style={{ display: 'block', color: 'var(--text-main)', marginBottom: '0.2rem' }}>Sai por só <strong>$54.90</strong> cada</span>
+                <span style={{ color: '#10B981', fontWeight: 700 }}>🔥 Você economiza $60.00!</span>
               </div>
 
               <div style={{ marginTop: 'auto' }}>
