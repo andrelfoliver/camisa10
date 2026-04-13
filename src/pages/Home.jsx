@@ -1,0 +1,415 @@
+import React, { useState, useEffect } from 'react';
+import HeroSection from '../components/HeroSection';
+import ProductCard from '../components/ProductCard';
+import { supabase } from '../services/supabase';
+import { ShieldCheck, Truck, Star, Package, Lock, CheckCircle2, AlertTriangle, ChevronDown, ChevronUp, ChevronRight } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { brasil2025Products } from '../data/brasil2025';
+import { getAllProducts } from '../data/mockProducts';
+
+const FAQItem = ({ question, answer }) => {
+  const [isOpen, setIsOpen] = useState(false);
+  return (
+    <div style={{ borderBottom: '1px solid var(--border-color)', padding: '1rem 0' }}>
+      <button 
+        onClick={() => setIsOpen(!isOpen)} 
+        style={{ width: '100%', display: 'flex', justifyContent: 'space-between', alignItems: 'center', textAlign: 'left', fontWeight: 600, fontSize: '1.1rem', color: 'var(--text-main)', background: 'transparent', border: 'none', cursor: 'pointer' }}
+      >
+        {question}
+        {isOpen ? <ChevronUp size={20} /> : <ChevronDown size={20} />}
+      </button>
+      {isOpen && <p style={{ marginTop: '1rem', color: 'var(--text-muted)', lineHeight: 1.5 }}>{answer}</p>}
+    </div>
+  );
+};
+
+const ProductShowcaseCard = ({ product }) => {
+  const navigate = useNavigate();
+
+  if(!product) return null;
+
+  return (
+    <div style={{ margin: '0 auto', width: '100%', maxWidth: '420px' }}>
+      <div 
+        onClick={() => navigate(`/produto/${product.id}`)}
+        style={{ 
+          background: 'var(--surface-color)', 
+          border: '1px solid var(--border-color)',
+          padding: '2rem', 
+          borderRadius: 'var(--radius-lg)', 
+          cursor: 'pointer',
+          position: 'relative',
+          boxShadow: '0 20px 40px rgba(0,0,0,0.5)'
+        }}
+      >
+        <div style={{ position: 'absolute', top: '-1rem', left: '-1rem', background: '#EF4444', color: '#fff', padding: '0.5rem 1rem', borderRadius: '4px', fontWeight: 800, textTransform: 'uppercase', zIndex: 10, boxShadow: '0 4px 10px rgba(239, 68, 68, 0.4)' }}>
+          🔥 Mais vendido
+        </div>
+        <div className="coin-stage">
+          <div className="coin-inner">
+            <div className="coin-front">
+              <img src={product.gallery && product.gallery[0] ? product.gallery[0] : product.image} alt={product.name} style={{ width: '100%', height: '300px', objectFit: 'contain', filter: 'drop-shadow(0 20px 20px rgba(0,0,0,0.5))' }} />
+            </div>
+            <div className="coin-back">
+              <img src={product.gallery && product.gallery[1] ? product.gallery[1] : product.image} alt={`${product.name} costas`} style={{ width: '100%', height: '300px', objectFit: 'contain', filter: 'drop-shadow(0 20px 20px rgba(0,0,0,0.5))' }} />
+            </div>
+          </div>
+        </div>
+        <div style={{ textAlign: 'center' }}>
+          <h2 style={{ fontSize: '1.8rem', color: '#fff', lineHeight: 1.2, marginBottom: '0.8rem' }}>{product.name}</h2>
+          <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '0.5rem', color: 'var(--accent-color)', fontWeight: 600, marginBottom: '1.5rem' }}>
+            <Star size={18} fill="currentColor" /><Star size={18} fill="currentColor" /><Star size={18} fill="currentColor" /><Star size={18} fill="currentColor" /><Star size={18} fill="currentColor" />
+            <span style={{ color: 'var(--text-muted)', marginLeft: '0.5rem' }}>Mais de 100 vendidos</span>
+          </div>
+          <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '1rem' }}>
+            <span style={{ textDecoration: 'line-through', color: 'var(--text-muted)', fontSize: '1.2rem' }}>120.00 CAD</span>
+            <span style={{ fontSize: '2.5rem', fontWeight: 800, color: 'var(--accent-color)', lineHeight: 1 }}>69.90 CAD</span>
+          </div>
+          <button className="btn-primary" style={{ marginTop: '2rem', width: '100%', justifyContent: 'center', padding: '1rem', fontSize: '1.2rem' }}>
+            COMPRAR AGORA
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+
+const Home = () => {
+  const [bestSeller, setBestSeller] = useState(null);
+  const [queridinhas, setQueridinhas] = useState([]);
+  const [loading, setLoading] = useState(true);
+  
+  // As 5 Categorias Oficiais
+  const [storeSections, setStoreSections] = useState({
+    'Seleções': [],
+    'Brasileirão': [],
+    'Internacionais': [],
+    'Lançamentos': [],
+    'Retrô': []
+  });
+
+  // Defaults usando diretamente o catálogo Brasil 2025 para cobrir mobiles/novos acessos sem localStorage
+  const defaultQueridinhasMock = [
+    brasil2025Products[2], // br25_home_torcedor
+    brasil2025Products[0], // br25_home_jogador
+    brasil2025Products[1], // br25_away_jogador
+    brasil2025Products[3]  // br25_away_torcedor
+  ];
+  
+  useEffect(() => {
+    async function fetchHomeData() {
+      const savedQueridinhas = localStorage.getItem('queridinhas_ids');
+      const savedBestSeller = localStorage.getItem('best_seller_id');
+      const savedCatalog = localStorage.getItem('catalog_ids');
+      
+      let qIds = savedQueridinhas ? JSON.parse(savedQueridinhas) : [];
+      let bId = savedBestSeller ? JSON.parse(savedBestSeller) : null;
+      let cIds = savedCatalog ? JSON.parse(savedCatalog) : [];
+
+      const geralProducts = Array.from({ length: 418 }, (_, i) => ({
+        id: `geral_${i + 1}`,
+        name: `Camisa Torcedor/Geral #${i + 1}`,
+        image: `/camisas/@carinhacriativo (${i + 1}).png`,
+        price: 69.90,
+      }));
+
+      const getProductById = (id, supabaseData) => {
+        if (!id) return null;
+        if (String(id).startsWith('geral_')) {
+          return geralProducts.find(p => p.id === id);
+        }
+        if (String(id).startsWith('br25_')) {
+          return brasil2025Products.find(p => p.id === id);
+        }
+        return supabaseData.find(d => String(d.id) === String(id));
+      };
+
+      if(bId || qIds.length > 0 || cIds.length > 0) {
+        const fetchIds = [...new Set([...qIds, ...cIds])];
+        if(bId && !fetchIds.includes(bId)) fetchIds.push(bId);
+        
+        // Filter out local 'geral_' and 'br25_' images before asking Supabase
+        const supabaseIds = fetchIds.filter(id => !String(id).startsWith('geral_') && !String(id).startsWith('br25_'));
+        
+        let supabaseData = [];
+        if (supabaseIds.length > 0) {
+          const { data } = await supabase.from('products').select('*').in('id', supabaseIds);
+          if (data) supabaseData = data;
+        }
+
+        if (bId) {
+          setBestSeller(getProductById(bId, supabaseData) || defaultQueridinhasMock[1]);
+        } else {
+          setBestSeller(defaultQueridinhasMock[1]);
+        }
+
+        if (qIds.length > 0) {
+          // Sort to preserve order of localStorage
+          const sortedQ = qIds.map(id => getProductById(id, supabaseData)).filter(Boolean);
+          setQueridinhas(sortedQ.length > 0 ? sortedQ : defaultQueridinhasMock);
+        } else {
+          setQueridinhas(defaultQueridinhasMock);
+        }
+
+        const { data: dbData } = await supabase.from('products').select('*').order('id', { ascending: false });
+        const allUnified = getAllProducts(dbData || []);
+        
+        const mapCat = {
+          'Seleções': [],
+          'Brasileirão': [],
+          'Internacionais': [],
+          'Lançamentos': [],
+          'Retrô': []
+        };
+        
+        // Distribuição inteligente para garantir que Mocks não fiquem de fora enquanto Supabase enche
+        allUnified.forEach(p => {
+          const cat = (p.category || '').toLowerCase();
+          const lg = (p.league || '').toLowerCase();
+          
+          if(cat === 'seleções' || cat.includes('selec') || lg.includes('selec')) mapCat['Seleções'].push(p);
+          else if(cat === 'brasileirão' || cat.includes('brasil') || lg.includes('brasil')) mapCat['Brasileirão'].push(p);
+          else if(cat === 'internacionais' || cat.includes('europa') || cat.includes('europe') || lg.includes('premier') || lg.includes('liga')) mapCat['Internacionais'].push(p);
+          else if(cat === 'lançamentos' || cat.includes('lançament')) mapCat['Lançamentos'].push(p);
+          else if(cat === 'retrô' || cat.includes('retro')) mapCat['Retrô'].push(p);
+          else {
+             // Fallback para itens sem categoria definida caírem em Lançamentos (se for novo) ou Brasileirao (por padrão)
+             mapCat['Lançamentos'].push(p);
+          }
+        });
+
+        setStoreSections(mapCat);
+
+      } else {
+        // Fallback Completo
+        setBestSeller(defaultQueridinhasMock[1]);
+        setQueridinhas(defaultQueridinhasMock);
+        
+        const allUnified = getAllProducts([]);
+        const mapCat = { 'Seleções': [], 'Brasileirão': [], 'Internacionais': [], 'Lançamentos': [], 'Retrô': [] };
+        allUnified.forEach(p => {
+           if(p.league?.toLowerCase().includes('brasil')) mapCat['Brasileirão'].push(p);
+           else mapCat['Internacionais'].push(p);
+        });
+        setStoreSections(mapCat);
+      }
+      setLoading(false);
+    }
+    fetchHomeData();
+  }, []);
+
+  return (
+    <div style={{ paddingBottom: '4rem' }}>
+      {/* 1. HERO */}
+      <HeroSection />
+
+      {/* 2. PROVA E CONFIANÇA (ICONOS MOVIDOS PARA O TOPO) */}
+      <section className="section-padding" style={{ background: 'var(--surface-color)', borderBottom: '1px solid var(--border-color)' }}>
+        <div className="container" style={{ textAlign: 'center' }}>
+          <p style={{ textAlign: 'center', color: 'var(--text-muted)', marginBottom: '2rem', fontSize: '1.2rem' }}>Já somos <strong style={{color: 'var(--accent-color)'}}>+100 clientes</strong> vestindo a paixão no Canadá! 🍁</p>
+          <div style={{ display: 'flex', justifyContent: 'space-around', flexWrap: 'wrap', gap: '2rem' }}>
+            <div style={{ flex: 1, minWidth: '200px' }}>
+              <Truck size={40} color="var(--accent-color)" style={{ margin: '0 auto 1rem' }} />
+              <h4 style={{ fontSize: '1.2rem' }}>Entrega garantida no Canadá</h4>
+            </div>
+            <div style={{ flex: 1, minWidth: '200px' }}>
+              <ShieldCheck size={40} color="var(--accent-color)" style={{ margin: '0 auto 1rem' }} />
+              <h4 style={{ fontSize: '1.2rem' }}>Pagamento 100% seguro</h4>
+            </div>
+            <div style={{ flex: 1, minWidth: '200px' }}>
+              <Star size={40} color="var(--accent-color)" style={{ margin: '0 auto 1rem' }} />
+              <h4 style={{ fontSize: '1.2rem' }}>Suporte via WhatsApp</h4>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* 3. PRODUTO MAIS VENDIDO (EFEITO 3D HOVER) */}
+      <section id="destaque" className="section-padding">
+        <div className="container" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+          <h2 style={{ fontSize: '3rem', textAlign: 'center', marginBottom: '3rem' }}>A Escolha dos Campeões 🏆</h2>
+          {!loading && <ProductShowcaseCard product={bestSeller} />}
+          
+          <div style={{ marginTop: '3rem', display: 'flex', alignItems: 'center', gap: '0.8rem', background: 'rgba(239, 68, 68, 0.1)', border: '1px solid #EF4444', padding: '1.5rem', borderRadius: 'var(--radius-md)', maxWidth: '600px', width: '100%' }}>
+            <AlertTriangle color="#EF4444" size={30} />
+            <div style={{ display: 'flex', flexDirection: 'column' }}>
+              <span style={{ color: '#EF4444', fontWeight: 800, fontSize: '1.2rem' }}>🔥 Alta demanda no Canadá</span>
+              <span style={{ color: '#EF4444' }}>⚠️ Últimas unidades do nosso estoque com preço promocional!</span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* 4. AS QUERIDINHAS (CARROSSEL) */}
+      <section className="section-padding" style={{ background: 'var(--surface-color)' }}>
+        <div className="container" style={{ paddingLeft: 0, paddingRight: 0 }}>
+          <h2 style={{ fontSize: '2.5rem', textAlign: 'center', marginBottom: '1rem', color: '#fff' }}>As Queridinhas 🇧🇷</h2>
+          <p style={{ textAlign: 'center', color: 'var(--text-muted)', marginBottom: '3rem', fontSize: '1.2rem' }}>Deslize para ver os mantos sagrados mais pedidos.</p>
+          
+          <div className="hide-scrollbar" style={{ display: 'flex', overflowX: 'auto', gap: '1.5rem', padding: '0 1.5rem 2rem' }}>
+            {!loading && queridinhas.map(product => (
+              <div key={product.id} style={{ minWidth: '220px', width: '220px', flexShrink: 0 }}>
+                <ProductCard product={product} />
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* 5. COMBOS (OFERTA ESPECIAL) */}
+      <section className="section-padding container">
+        <div style={{ background: 'linear-gradient(135deg, rgba(255,184,28,0.1) 0%, rgba(0,0,0,0) 100%)', border: '1px solid var(--accent-color)', borderRadius: 'var(--radius-lg)', padding: '3rem', textAlign: 'center' }}>
+          <h2 style={{ fontSize: '2.5rem', marginBottom: '2rem', color: '#EF4444', fontWeight: 800 }}>🔥 OFERTA ESPECIAL</h2>
+          <div style={{ display: 'flex', justifyContent: 'center', gap: '2rem', flexWrap: 'wrap' }}>
+            {/* Combo 2 Camisas */}
+            <div className="glass-panel" style={{ flex: 1, minWidth: '250px', padding: '2rem', borderRadius: 'var(--radius-md)', display: 'flex', flexDirection: 'column' }}>
+              <h3 style={{ fontSize: '1.5rem', marginBottom: '1rem' }}>2 Camisas</h3>
+              <p style={{ color: 'var(--text-muted)', fontSize: '1rem', marginBottom: '0.2rem' }}>De <del>$139.80</del> por apenas</p>
+              <p style={{ fontSize: '3rem', fontWeight: 800, color: 'var(--text-main)', marginBottom: '1rem', lineHeight: 1 }}>$129.90</p>
+              
+              <div style={{ background: 'rgba(255,255,255,0.05)', padding: '0.8rem', borderRadius: '8px', marginBottom: '1.5rem', fontSize: '0.95rem' }}>
+                <span style={{ display: 'block', marginBottom: '0.2rem' }}>Sai por <strong>$64.95</strong> cada</span>
+                <span style={{ color: '#10B981', fontWeight: 700 }}>💰 Economia de $9.90</span>
+              </div>
+              
+              <div style={{ marginTop: 'auto' }}>
+                <a href="#destaque" className="btn-secondary" style={{ width: '100%', justifyContent: 'center' }}>Aproveitar oferta</a>
+              </div>
+            </div>
+
+            {/* Combo 3 Camisas */}
+            <div className="glass-panel" style={{ flex: 1, minWidth: '250px', padding: '2rem', borderRadius: 'var(--radius-md)', border: '2px solid var(--accent-color)', position: 'relative', display: 'flex', flexDirection: 'column' }}>
+              <div className="badge" style={{ background: 'var(--accent-color)', color: '#000', left: '50%', transform: 'translate(-50%, -150%)', width: 'max-content' }}>Maior Desconto</div>
+              <h3 style={{ fontSize: '1.5rem', marginBottom: '1rem' }}>3 Camisas</h3>
+              <p style={{ color: 'var(--text-muted)', fontSize: '1rem', marginBottom: '0.2rem' }}>De <del>$209.70</del> por apenas</p>
+              <p style={{ fontSize: '3rem', fontWeight: 800, color: 'var(--accent-color)', marginBottom: '1rem', lineHeight: 1 }}>$179.90</p>
+              
+              <div style={{ background: 'rgba(219, 254, 135, 0.1)', border: '1px solid rgba(219, 254, 135, 0.3)', padding: '0.8rem', borderRadius: '8px', marginBottom: '1.5rem', fontSize: '0.95rem' }}>
+                <span style={{ display: 'block', color: 'var(--text-main)', marginBottom: '0.2rem' }}>Sai por só <strong>$59.96</strong> cada</span>
+                <span style={{ color: '#10B981', fontWeight: 700 }}>🔥 Você economiza $29.80!</span>
+              </div>
+
+              <div style={{ marginTop: 'auto' }}>
+                <a href="#destaque" className="btn-primary" style={{ width: '100%', justifyContent: 'center' }}>Aproveitar oferta</a>
+              </div>
+            </div>
+          </div>
+          <p style={{ marginTop: '2rem', color: 'var(--text-muted)' }}>* Adicione a quantidade na sacola e o desconto será aplicado magicamente!</p>
+        </div>
+      </section>
+
+      {/* 6. CARROSSEIS CATEGORIAS OFICIAIS */}
+      <section id="catalogo" className="section-padding container">
+        
+        {Object.entries(storeSections).map(([catName, products]) => (
+          <div key={catName} style={{ marginBottom: '4rem' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: '1.5rem' }}>
+              <div>
+                <h2 style={{ fontSize: '2rem', color: '#fff' }}>{catName}</h2>
+                <p style={{ color: 'var(--text-muted)' }}>As melhores opções em {catName.toLowerCase()}</p>
+              </div>
+              <a href={`/colecao/${catName.toLowerCase().replace('ç','c').replace('õ','o').replace('ã','a')}`} style={{ color: 'var(--accent-color)', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '0.5rem' }}>Ver todas <ChevronRight size={16} /></a>
+            </div>
+            
+            <div className="hide-scrollbar" style={{ display: 'flex', overflowX: 'auto', gap: '1.5rem', paddingBottom: '1.5rem' }}>
+              {!loading && products.map(product => (
+                <div key={`section-${product.id}`} style={{ minWidth: '220px', width: '220px', flexShrink: 0 }}>
+                  <ProductCard product={product} />
+                </div>
+              ))}
+              {!loading && products.length === 0 && (
+                <div style={{ padding: '2rem', color: 'var(--text-muted)', border: '1px dashed var(--border-color)', borderRadius: 'var(--radius-md)', width: '100%', textAlign: 'center' }}>
+                  Novidades em breve de {catName}!
+                </div>
+              )}
+            </div>
+          </div>
+        ))}
+
+      </section>
+
+      {/* 7. PERSONALIZAÇÃO (UPSELL) */}
+      <section className="section-padding" style={{ background: 'var(--surface-color)' }}>
+        <div className="container">
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center' }}>
+            <h2 style={{ fontSize: '2.5rem', marginBottom: '1.5rem' }}>Deixe sua camisa única ✍️</h2>
+            <p style={{ fontSize: '1.2rem', color: 'var(--text-muted)', marginBottom: '3rem', maxWidth: '600px' }}>
+              Você poderá solicitar a personalização com a mesma fonte oficial dos jogadores diretamente dentro das opções do produto.
+            </p>
+            <div style={{ display: 'flex', gap: '2rem', flexWrap: 'wrap', justifyContent: 'center' }}>
+              <div style={{ background: 'rgba(255,255,255,0.03)', padding: '2rem', borderRadius: 'var(--radius-lg)', minWidth: '250px', border: '1px solid var(--border-color)' }}>
+                <p style={{ fontSize: '1.2rem', fontWeight: 600, marginBottom: '0.5rem' }}>Nome + Número</p>
+                <p style={{ color: 'var(--accent-color)', fontWeight: 800, fontSize: '1.5rem' }}>+ 9.90 CAD</p>
+              </div>
+              <div style={{ background: 'rgba(255,255,255,0.03)', padding: '2rem', borderRadius: 'var(--radius-lg)', minWidth: '250px', border: '1px solid var(--border-color)' }}>
+                <p style={{ fontSize: '1.2rem', fontWeight: 600, marginBottom: '0.5rem' }}>Patch de Campeonatos</p>
+                <p style={{ color: 'var(--accent-color)', fontWeight: 800, fontSize: '1.5rem' }}>+ 4.90 CAD</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* 7. CONEXÃO EMOCIONAL */}
+      <section style={{ padding: '5rem 0', textAlign: 'center', borderBottom: '1px solid var(--border-color)' }}>
+        <div className="container" style={{ maxWidth: '800px' }}>
+          <h2 style={{ fontSize: '2.5rem', fontStyle: 'italic', fontWeight: 900, color: 'var(--accent-color)' }}>
+            Porque ser brasileiro não tem distância 🇧🇷
+          </h2>
+          <p style={{ fontSize: '1.2rem', color: 'var(--text-muted)', marginTop: '1.5rem', lineHeight: 1.6 }}>
+            A saudade do Brasil e a paixão pelo futebol vivem na mesma gaveta. Entregamos a qualidade de jogador profissional diretamente na sua porta no Canadá.
+          </p>
+        </div>
+      </section>
+
+      {/* 8. PROVA SOCIAL */}
+      <section className="section-padding container" style={{ textAlign: 'center' }}>
+        <h2 style={{ fontSize: '2.5rem', marginBottom: '3rem' }}>O que nossos clientes dizem</h2>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '2rem' }}>
+          <div className="glass-panel" style={{ padding: '2rem', textAlign: 'left', borderRadius: 'var(--radius-md)' }}>
+            <div style={{ color: 'var(--accent-color)', marginBottom: '1rem', display: 'flex' }}><Star fill="currentColor"/><Star fill="currentColor"/><Star fill="currentColor"/><Star fill="currentColor"/><Star fill="currentColor"/></div>
+            <p style={{ fontSize: '1.1rem', marginBottom: '1rem', fontStyle: 'italic' }}>"Qualidade absurda, parece original!"</p>
+            <p style={{ color: 'var(--text-muted)', fontWeight: 600 }}>— Ricardo T.</p>
+          </div>
+          <div className="glass-panel" style={{ padding: '2rem', textAlign: 'left', borderRadius: 'var(--radius-md)' }}>
+            <div style={{ color: 'var(--accent-color)', marginBottom: '1rem', display: 'flex' }}><Star fill="currentColor"/><Star fill="currentColor"/><Star fill="currentColor"/><Star fill="currentColor"/><Star fill="currentColor"/></div>
+            <p style={{ fontSize: '1.1rem', marginBottom: '1rem', fontStyle: 'italic' }}>"Chegou rápido em Toronto!"</p>
+            <p style={{ color: 'var(--text-muted)', fontWeight: 600 }}>— Fernando S.</p>
+          </div>
+          <div className="glass-panel" style={{ padding: '2rem', textAlign: 'left', borderRadius: 'var(--radius-md)' }}>
+            <div style={{ color: 'var(--accent-color)', marginBottom: '1rem', display: 'flex' }}><Star fill="currentColor"/><Star fill="currentColor"/><Star fill="currentColor"/><Star fill="currentColor"/><Star fill="currentColor"/></div>
+            <p style={{ fontSize: '1.1rem', marginBottom: '1rem', fontStyle: 'italic' }}>"Já comprei 2, top demais!"</p>
+            <p style={{ color: 'var(--text-muted)', fontWeight: 600 }}>— Paulo M.</p>
+          </div>
+        </div>
+      </section>
+
+      {/* 9. FAQ */}
+      <section className="section-padding container" style={{ maxWidth: '800px', background: 'var(--surface-color)', borderRadius: 'var(--radius-lg)' }}>
+        <h2 style={{ fontSize: '2.5rem', textAlign: 'center', marginBottom: '3rem' }}>Dúvidas Rápidas</h2>
+        <div style={{ display: 'flex', flexDirection: 'column' }}>
+          <FAQItem question="Vocês entregam em todo o Canadá?" answer="Sim, enviamos para todas as províncias e cidades do Canadá com rastreamento." />
+          <FAQItem question="Qual o prazo de entrega?" answer="Entre 10 e 20 dias úteis, dependendo de sua região." />
+          <FAQItem question="Como escolher o tamanho?" answer="Use seu tamanho normal ou peça para ver a tabela de medidas no WhatsApp. Para estilo largo (streetwear), escolha um número maior." />
+          <FAQItem question="O pagamento é seguro?" answer="100% Seguro através de gateways blindados, ou aceitamos e-Transfer via Interac." />
+        </div>
+      </section>
+
+      {/* 10. CTA FINAL */}
+      <section className="section-padding container" style={{ textAlign: 'center', marginTop: '4rem' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '1rem', marginBottom: '3rem' }}>
+          <CheckCircle2 size={48} color="#10B981" />
+          <h2 style={{ fontSize: '2.5rem' }}>Site 100% Blindado</h2>
+        </div>
+        <h2 style={{ fontSize: '3.5rem', marginBottom: '2rem' }}>Garanta sua camisa antes que acabe!</h2>
+        <a href="#destaque" className="btn-primary btn-massive" style={{ padding: '1.5rem 4rem', fontSize: '1.5rem', borderRadius: '3rem' }}>
+          Comprar Agora
+        </a>
+      </section>
+
+    </div>
+  );
+};
+
+export default Home;

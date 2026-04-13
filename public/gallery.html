@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html>
+<body style="background: white;">
+  <div style="display: flex; flex-wrap: wrap; gap: 10px;">
+    <script>
+      for(let i=1; i<=150; i++){
+        let img = document.createElement('img');
+        img.src = `/camisas/@carinhacriativo (${i}).png`;
+        img.style.height = '120px';
+        img.onload = () => {
+          let div = document.createElement('div');
+          div.style.textAlign = 'center';
+          div.style.width = '120px';
+          div.appendChild(img);
+          div.innerHTML += `<br/><b>${i}</b>`;
+          document.currentScript.parentNode.appendChild(div);
+        }
+      }
+      for(let i=1; i<=150; i++){
+        let img = document.createElement('img');
+        img.src = `/camisas/@carinhacriativo (${i}).webp`;
+        img.style.height = '120px';
+        img.onload = () => {
+          let div = document.createElement('div');
+          div.style.textAlign = 'center';
+          div.style.width = '120px';
+          div.appendChild(img);
+          div.innerHTML += `<br/><b>${i} (webp)</b>`;
+          document.currentScript.parentNode.appendChild(div);
+        }
+      }
+    </script>
+  </div>
+</body>
+</html>

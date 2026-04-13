@@ -1,0 +1,574 @@
+import React, { useState, useEffect } from 'react';
+import { supabase } from '../services/supabase';
+import { useAuth } from '../context/AuthContext';
+import { Save, Check, Crown, Heart, Database, HardDrive, Star, LogOut, Package, Plus, Trash2, X, Users, Image } from 'lucide-react';
+import { Link, Navigate } from 'react-router-dom';
+import { brasil2025Products } from '../data/brasil2025';
+
+const Admin = () => {
+  const { user, isAdmin, loading: authLoading, signOut } = useAuth();
+  const [bestSellerId, setBestSellerId] = useState(null);
+  const [queridinhasIds, setQueridinhasIds] = useState([]);
+  const [catalogIds, setCatalogIds] = useState([]);
+  const [saved, setSaved] = useState(false);
+  const [products, setProducts] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const OFFICIAL_CATEGORIES = ['Seleções', 'Brasileirão', 'Internacionais', 'Lançamentos', 'Retrô'];
+  const [supplierTab, setSupplierTab] = useState('CAT_Lançamentos');
+  const [showAddForm, setShowAddForm] = useState(false);
+  const [productToDelete, setProductToDelete] = useState(null);
+  
+  // Campo Categoria adicionado!
+  const [newProduct, setNewProduct] = useState({ name: '', price: '', image: '', category: '', league: '', team: '', version: '' });
+  
+  const [customers, setCustomers] = useState([]);
+  const [heroUrl, setHeroUrl] = useState('');
+
+  const geralProducts = Array.from({ length: 418 }, (_, i) => ({
+    id: `geral_${i + 1}`,
+    name: `Camisa Geral #${i + 1}`,
+    image: `/camisas/@carinhacriativo (${i + 1}).png`,
+    price: 69.90,
+  }));
+
+  useEffect(() => {
+    const savedQueridinhas = localStorage.getItem('queridinhas_ids');
+    const savedBestSeller = localStorage.getItem('best_seller_id');
+    const savedCatalog = localStorage.getItem('catalog_ids');
+    
+    // Forçando a conversão de todos os IDs carregados para STRING para evitar nulls visuais
+    if (savedQueridinhas) setQueridinhasIds(JSON.parse(savedQueridinhas).map(String));
+    if (savedBestSeller) setBestSellerId(String(JSON.parse(savedBestSeller)));
+    if (savedCatalog) setCatalogIds(JSON.parse(savedCatalog).map(String));
+    
+    async function loadProducts() {
+      const { data } = await supabase.from('products').select('*').order('id', { ascending: false });
+      if(data) setProducts(data);
+      setLoading(false);
+    }
+    
+    async function loadCustomers() {
+      const { data, error } = await supabase.from('profiles').select('*').order('created_at', { ascending: false });
+      if (error) console.error("Erro ao buscar profiles:", error.message);
+      if(data) setCustomers(data);
+    }
+    
+    async function loadSettings() {
+      const { data } = await supabase.from('store_settings').select('value').eq('key', 'hero_bg').single();
+      if(data) setHeroUrl(data.value);
+    }
+    
+    if (isAdmin) {
+      loadProducts();
+      loadCustomers();
+      loadSettings();
+    }
+  }, [isAdmin]);
+
+  const handleSaveHeroUrl = async (e) => {
+    e.preventDefault();
+    setSaved(false);
+    
+    let finalUrl = heroUrl;
+    // Auto-corretor para links indiretos do Imgur (ex: https://imgur.com/YrtK1DT)
+    if (finalUrl.includes('imgur.com') && !finalUrl.includes('i.imgur.com') && !finalUrl.match(/\.(jpeg|jpg|gif|png)$/)) {
+       const imgId = finalUrl.split('/').pop();
+       finalUrl = `https://i.imgur.com/${imgId}.png`;
+       setHeroUrl(finalUrl); // Atualiza visualmente para o usuário ver
+    }
+
+    const { error } = await supabase.from('store_settings').update({ value: finalUrl }).eq('key', 'hero_bg');
+    if (error) {
+      alert("Erro ao salvar! Tem certeza que criou a tabela store_settings no Supabase?");
+    } else {
+      setSaved(true);
+      setTimeout(() => setSaved(false), 3000);
+    }
+  };
+
+  const handleAddProduct = async (e) => {
+    e.preventDefault();
+    setSaved(false);
+    
+    const prodToInsert = { ...newProduct, price: parseFloat(newProduct.price) };
+    
+    const { data, error } = await supabase.from('products').insert([prodToInsert]).select();
+    if (error) {
+      alert("Erro ao adicionar! Detalhes: " + error.message);
+      return;
+    }
+    
+    if (data) {
+      setProducts([data[0], ...products]);
+      setShowAddForm(false);
+      setNewProduct({ name: '', price: '', image: '', category: '', league: '', team: '', version: '' });
+      setSaved(true);
+      setTimeout(() => setSaved(false), 3000);
+    }
+  };
+
+  const handleDeleteProduct = (product) => {
+    setProductToDelete(product);
+  };
+
+  const confirmDelete = async () => {
+    if (!productToDelete) return;
+    const { data, error } = await supabase.from('products').delete().eq('id', productToDelete.id).select();
+    
+    if (error) {
+      alert("Erro ao deletar: " + error.message);
+      setProductToDelete(null);
+      return;
+    }
+
+    if (!data || data.length === 0) {
+      alert("⚠️ ALERTA DE SEGURANÇA SUPABASE:\nA camisa NÃO foi excluída. Desative o RLS ou crie uma Policy liberando DELETE.");
+      setProductToDelete(null);
+      return;
+    }
+    
+    setProducts(products.filter(p => p.id !== productToDelete.id));
+    setSaved(true);
+    setProductToDelete(null);
+    setTimeout(() => setSaved(false), 3000);
+  };
+
+  const toggleQueridinha = (rawId) => {
+    const id = String(rawId);
+    setQueridinhasIds(prev => {
+      if (prev.includes(id)) {
+        return prev.filter(i => i !== id);
+      }
+      if (prev.length >= 6) {
+        alert("Máximo de 6 Queridinhas atingido!");
+        return prev;
+      }
+      return [...prev, id];
+    });
+    setSaved(false);
+  };
+
+  const setBestSeller = (rawId) => {
+    setBestSellerId(String(rawId));
+    setSaved(false);
+  };
+
+  const toggleCatalog = (rawId) => {
+    const id = String(rawId);
+    setCatalogIds(prev => {
+      if (prev.includes(id)) {
+        return prev.filter(i => i !== id);
+      }
+      return [...prev, id];
+    });
+    setSaved(false);
+  };
+
+  const saveConfiguration = () => {
+    localStorage.setItem('queridinhas_ids', JSON.stringify(queridinhasIds));
+    localStorage.setItem('best_seller_id', JSON.stringify(bestSellerId));
+    localStorage.setItem('catalog_ids', JSON.stringify(catalogIds));
+    setSaved(true);
+    setTimeout(() => setSaved(false), 3000);
+  };
+
+  // BUSCADOR UNIVERSAL
+  const getUniversalProduct = (idStr) => {
+    if (!idStr) return null;
+    const sId = String(idStr);
+    return products.find(p => String(p.id) === sId) 
+        || brasil2025Products.find(p => String(p.id) === sId)
+        || geralProducts.find(p => String(p.id) === sId);
+  }
+  
+  const bestSellerName = bestSellerId ? (getUniversalProduct(bestSellerId)?.name || `ID: ${bestSellerId}`) : 'Nenhum Definido';
+
+  const displayProducts = supplierTab.startsWith('CAT_') ? products.filter(p => p.category === supplierTab.replace('CAT_', '')) :
+                          supplierTab === 'CLOUD_ALL' ? products : [];
+
+  if (!isAdmin) {
+    if (!user) {
+      return <Navigate to="/auth" />;
+    } else {
+      return <Navigate to="/perfil" />;
+    }
+  }
+
+  const isCatalogTab = supplierTab === 'CLOUD_ALL' || supplierTab.startsWith('CAT_');
+
+  return (
+    <div className="admin-layout" style={{ display: 'flex', minHeight: '100vh', background: 'var(--bg-color)', color: 'var(--text-main)' }}>
+      {/* SIDEBAR COMPLETA */}
+      <aside style={{ width: '280px', borderRight: '1px solid var(--border-color)', background: 'var(--surface-color)', padding: '2rem 1.5rem', display: 'flex', flexDirection: 'column', position: 'sticky', top: '85px', height: 'calc(100vh - 85px)', overflowY: 'auto' }}>
+        <div style={{ marginBottom: '2.5rem' }}>
+          <div style={{ fontSize: '0.85rem', color: 'var(--text-muted)', background: 'rgba(255,255,255,0.05)', padding: '0.8rem 1rem', borderRadius: '4px', wordBreak: 'break-all', borderLeft: '3px solid var(--accent-color)' }}>
+            <span style={{ display: 'block', fontWeight: 800, color: '#fff', marginBottom: '0.2rem' }}>ADMINISTRADOR</span>
+            {user?.email}
+          </div>
+        </div>
+
+        <nav style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', flex: 1 }}>
+          {/* NOSSOS CATÁLOGOS */}
+          <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '0.5rem', fontWeight: 800 }}>Nossos Catálogos</p>
+          <button 
+            onClick={() => setSupplierTab('CLOUD_ALL')}
+            style={{ padding: '0.8rem 1rem', borderRadius: 'var(--radius-md)', display: 'flex', alignItems: 'center', gap: '0.8rem', width: '100%', textAlign: 'left', background: supplierTab === 'CLOUD_ALL' ? 'var(--accent-color)' : 'transparent', color: supplierTab === 'CLOUD_ALL' ? '#000' : 'var(--text-main)', fontWeight: supplierTab === 'CLOUD_ALL' ? 700 : 500, transition: 'all 0.2s', border: '1px solid transparent' }}
+          >
+            <Database size={18} /> Todo o Banco
+          </button>
+          
+          {OFFICIAL_CATEGORIES.map(cat => {
+            const isActive = supplierTab === `CAT_${cat}`;
+            return (
+              <button 
+                key={cat}
+                onClick={() => setSupplierTab(`CAT_${cat}`)}
+                style={{ padding: '0.5rem 1rem', paddingLeft: '2.5rem', borderRadius: 'var(--radius-md)', display: 'flex', alignItems: 'center', gap: '0.5rem', width: '100%', textAlign: 'left', background: isActive ? 'var(--surface-hover)' : 'transparent', color: isActive ? 'var(--accent-color)' : 'var(--text-muted)', fontWeight: isActive ? 700 : 500, transition: 'all 0.2s', border: isActive ? '1px solid var(--border-color)' : '1px solid transparent', fontSize: '0.9rem' }}
+              >
+                <Package size={14} /> {cat}
+              </button>
+            )
+          })}
+
+          <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '1px', marginTop: '1.5rem', marginBottom: '0.5rem', fontWeight: 800 }}>Gestão & Integrações</p>
+          <button 
+            onClick={() => setSupplierTab('CLIENTES')}
+            style={{ padding: '0.8rem 1rem', borderRadius: 'var(--radius-md)', display: 'flex', alignItems: 'center', gap: '0.8rem', width: '100%', textAlign: 'left', background: supplierTab === 'CLIENTES' ? '#10B981' : 'transparent', color: supplierTab === 'CLIENTES' ? '#fff' : 'var(--text-main)', fontWeight: supplierTab === 'CLIENTES' ? 700 : 500, transition: 'all 0.2s' }}
+          >
+            <Users size={18} /> CRM / Clientes
+          </button>
+          <button 
+            onClick={() => setSupplierTab('CONFIG')}
+            style={{ padding: '0.8rem 1rem', borderRadius: 'var(--radius-md)', display: 'flex', alignItems: 'center', gap: '0.8rem', width: '100%', textAlign: 'left', background: supplierTab === 'CONFIG' ? '#3B82F6' : 'transparent', color: supplierTab === 'CONFIG' ? '#fff' : 'var(--text-main)', fontWeight: supplierTab === 'CONFIG' ? 700 : 500, transition: 'all 0.2s' }}
+          >
+            <Image size={18} /> Visual & Banners
+          </button>
+        </nav>
+
+        <div style={{ marginTop: '2rem', borderTop: '1px solid var(--border-color)', paddingTop: '1.5rem', display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+          <button onClick={signOut} style={{ padding: '0.8rem', borderRadius: 'var(--radius-md)', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem', width: '100%', color: '#EF4444', background: 'rgba(239, 68, 68, 0.1)', border: '1px solid transparent', transition: 'all 0.2s', fontWeight: 600 }}>
+            <LogOut size={18} /> Sair do Painel
+          </button>
+          <div style={{ textAlign: 'center' }}>
+            <Link to="/" style={{ color: 'var(--text-muted)', fontSize: '0.85rem', textDecoration: 'underline' }}>← Visualizar Loja</Link>
+          </div>
+        </div>
+      </aside>
+
+      {/* ÁREA PRINCIPAL */}
+      <main style={{ flex: 1, display: 'flex', flexDirection: 'column', height: '100vh', overflowY: 'auto', position: 'relative' }}>
+        
+        {/* TOP BAR */}
+        <header style={{ position: 'sticky', top: 0, zIndex: 50, background: 'rgba(7, 7, 9, 0.95)', backdropFilter: 'blur(10px)', borderBottom: '1px solid var(--border-color)', padding: '1.5rem 3rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center', boxShadow: '0 4px 20px rgba(0,0,0,0.5)' }}>
+          <div>
+            <h1 style={{ fontSize: '1.8rem', color: '#fff', fontWeight: 800 }}>
+              {supplierTab === 'CLIENTES' ? 'Gestão de Clientes' : 
+               supplierTab === 'CONFIG' ? 'Configuração de Interface' : 
+               supplierTab === 'CLOUD_ALL' ? 'Todo o Banco na Nuvem' : 
+               `${supplierTab.replace('CAT_', '')}`}
+            </h1>
+            <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem', marginTop: '0.2rem' }}>Painel Central de Gerenciamento Camisa10.</p>
+          </div>
+          <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
+            {(supplierTab.startsWith('CAT_') || supplierTab === 'CLOUD_ALL') && (
+              <button onClick={() => setShowAddForm(true)} className="btn-primary" style={{ background: '#10B981', color: '#fff', boxShadow: '0 4px 15px rgba(16, 185, 129, 0.3)' }}>
+                <Plus size={18} /> Nova Camisa
+              </button>
+            )}
+            {isCatalogTab && (
+              <button className="btn-primary" onClick={saveConfiguration} style={{ padding: '0.8rem 2rem', background: saved ? '#10B981' : 'var(--accent-color)' }}>
+                {saved ? <Check size={20} color="#fff" /> : <Save size={20} color="#000" />} 
+                <span style={{ color: saved ? '#fff' : '#000' }}>{saved ? 'Vitrine Sincronizada!' : 'Publicar Alterações'}</span>
+              </button>
+            )}
+          </div>
+        </header>
+
+        {/* CONTEÚDO */}
+        <div style={{ padding: '2.5rem 3rem', flex: 1 }}>
+          
+          {/* DASHBOARD DE MÉTRICAS (Apenas nos Catálogos) */}
+          {isCatalogTab && (
+            <div style={{ display: 'flex', gap: '2rem', marginBottom: '3rem', background: 'var(--surface-hover)', padding: '1.5rem 2rem', borderRadius: 'var(--radius-lg)', border: '1px solid var(--border-color)' }}>
+              <div style={{ flex: 1 }}>
+                <h3 style={{ fontSize: '0.85rem', color: 'var(--text-muted)', textTransform: 'uppercase', marginBottom: '0.8rem', display: 'flex', alignItems: 'center', gap: '0.5rem', fontWeight: 800 }}>
+                  <Crown size={16} color="#FFB81C" /> O Rei (Capa da Loja)
+                </h3>
+                <span style={{ color: '#000', background: '#FFB81C', fontSize: '0.9rem', fontWeight: 800, padding: '0.3rem 0.8rem', borderRadius: '4px' }}>
+                  {bestSellerName}
+                </span>
+              </div>
+              <div style={{ width: '1px', background: 'var(--border-color)' }}></div>
+              <div style={{ flex: 2 }}>
+                <h3 style={{ fontSize: '0.85rem', color: 'var(--text-muted)', textTransform: 'uppercase', marginBottom: '0.8rem', display: 'flex', alignItems: 'center', gap: '0.5rem', fontWeight: 800 }}>
+                  <Heart size={16} color="var(--accent-color)" /> Queridinhas do Carrossel ({queridinhasIds.length}/6)
+                </h3>
+                <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
+                  {queridinhasIds.length === 0 ? <span style={{ color: 'var(--text-muted)', fontSize: '0.9rem' }}>Nenhuma selecionada</span> : 
+                   queridinhasIds.map(id => {
+                     const p = getUniversalProduct(id);
+                     return <span key={id} title={id} style={{ fontSize: '0.8rem', padding: '0.4rem 0.6rem', background: 'rgba(0,0,0,0.5)', border: '1px solid var(--border-color)', borderRadius: '4px', color: '#fff', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: '150px' }}>{p?.name || `ID: ${id}`}</span>
+                   })}
+                </div>
+              </div>
+              <div style={{ width: '1px', background: 'var(--border-color)' }}></div>
+              <div style={{ flex: 1 }}>
+                <h3 style={{ fontSize: '0.85rem', color: 'var(--text-muted)', textTransform: 'uppercase', marginBottom: '0.8rem', display: 'flex', alignItems: 'center', gap: '0.5rem', fontWeight: 800 }}>
+                  <Package size={16} color="#A855F7" /> Em Catálogo Atrás
+                </h3>
+                <span style={{ color: '#fff', background: '#A855F7', fontSize: '0.9rem', fontWeight: 800, padding: '0.3rem 0.8rem', borderRadius: '4px' }}>Todos: {catalogIds.length} Itens</span>
+              </div>
+            </div>
+          )}
+
+          {/* RENDERS CONDICIONAIS DAS ABAS ESPECIAIS */}
+          {supplierTab === 'CONFIG' ? (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem', maxWidth: '800px' }}>
+              <div className="glass-panel" style={{ padding: '2.5rem', borderRadius: 'var(--radius-lg)' }}>
+                <h2 style={{ display: 'flex', alignItems: 'center', gap: '0.8rem', marginBottom: '1.5rem', fontSize: '1.5rem' }}>
+                   <Image color="#3B82F6" /> Banner da Home (Hero)
+                </h2>
+                <form onSubmit={handleSaveHeroUrl} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                  <div>
+                    <label style={{ display: 'block', marginBottom: '0.5rem', color: 'var(--text-muted)', fontWeight: 600 }}>URL da Imagem de Fundo</label>
+                    <div style={{ display: 'flex', gap: '1rem' }}>
+                      <input required type="url" value={heroUrl} onChange={e => setHeroUrl(e.target.value)} placeholder="Ex: https://i.imgur.com/vini.jpg" style={{ flex: 1, padding: '1rem', background: 'rgba(255,255,255,0.05)', color: '#fff', border: '1px solid var(--border-color)', borderRadius: 'var(--radius-md)' }} />
+                      <button type="submit" className="btn-primary" style={{ background: '#3B82F6', color: '#fff', padding: '0 2rem' }}>Atualizar</button>
+                    </div>
+                    <p style={{ marginTop: '0.8rem', fontSize: '0.85rem', color: 'var(--text-muted)' }}>Faça o upload da imagem no Supabase Storage ou Imgur e cole aqui para atualizar instantaneamente o portal da loja.</p>
+                  </div>
+                </form>
+                
+                {heroUrl && (
+                  <div style={{ marginTop: '2.5rem' }}>
+                    <h3 style={{ marginBottom: '1rem', color: 'var(--text-muted)', fontSize: '0.9rem', textTransform: 'uppercase' }}>Preview:</h3>
+                    <div style={{ width: '100%', height: '300px', borderRadius: 'var(--radius-md)', background: `url(${heroUrl}) center/cover no-repeat`, border: '1px solid var(--border-color)' }}></div>
+                  </div>
+                )}
+              </div>
+            </div>
+          ) : supplierTab === 'CLIENTES' ? (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', maxWidth: '900px' }}>
+              {customers.length === 0 ? (
+                 <div style={{ textAlign: 'center', padding: '4rem 2rem', background: 'var(--surface-color)', borderRadius: 'var(--radius-lg)', border: '1px dashed var(--border-color)' }}>
+                    <Users size={48} color="var(--text-muted)" style={{ marginBottom: '1rem' }} />
+                    <h3 style={{ color: '#fff', marginBottom: '0.5rem' }}>Nenhum usuário espelhado</h3>
+                    <p style={{ color: 'var(--text-muted)' }}>Os clientes cadastrados via Google demoram alguns minutos para serem sincronizados ou o Trigger de auth do Supabase ainda não foi acionado.</p>
+                 </div>
+              ) : (
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(400px, 1fr))', gap: '1.5rem' }}>
+                  {customers.map(customer => (
+                    <div key={customer.id} style={{ background: 'var(--surface-color)', padding: '1.5rem', borderRadius: 'var(--radius-lg)', border: '1px solid var(--border-color)', display: 'flex', alignItems: 'center', gap: '1.5rem', transition: 'all 0.2s', cursor: 'pointer' }} className="customer-card">
+                      <img src={customer.avatar_url || 'https://via.placeholder.com/60'} alt="Avatar" style={{ width: '60px', height: '60px', borderRadius: '50%', border: '2px solid rgba(255,255,255,0.1)' }} />
+                      <div>
+                        <h3 style={{ fontSize: '1.1rem', marginBottom: '0.2rem', color: '#fff' }}>{customer.full_name || 'Usuário'}</h3>
+                        <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem' }}>{customer.email}</p>
+                        <p style={{ color: 'var(--accent-color)', fontSize: '0.75rem', marginTop: '0.3rem', fontWeight: 600 }}>Cadastrado: {new Date(customer.created_at).toLocaleDateString()}</p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          ) : loading && supplierTab.startsWith('CLOUD_') ? (
+            <div style={{ textAlign: 'center', padding: '5rem', color: 'var(--text-muted)' }}>
+               <Database size={40} style={{ animation: 'pulse-glow 2s infinite', marginBottom: '1rem' }} />
+               <p>Sincronizando prateleiras com o Banco de Dados...</p>
+            </div>
+          ) : (
+            /* RENDER DE QUALQUER CATÁLOGO DE PRODUTOS */
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: '1.5rem' }}>
+              {displayProducts.map(product => {
+                const sId = String(product.id);
+                const isQueridinha = queridinhasIds.includes(sId);
+                const isBestSeller = bestSellerId === sId;
+                const isCataloged = catalogIds.includes(sId);
+                
+                return (
+                  <div 
+                    key={sId} 
+                    style={{ 
+                      background: 'var(--surface-color)', 
+                      border: `1px solid ${isBestSeller ? '#FFB81C' : isQueridinha ? 'var(--accent-color)' : isCataloged ? '#A855F7' : 'var(--border-color)'}`,
+                      boxShadow: isBestSeller || isQueridinha ? '0 10px 30px rgba(0,0,0,0.3)' : 'none',
+                      borderRadius: 'var(--radius-md)',
+                      padding: '1.5rem',
+                      display: 'flex',
+                      flexDirection: 'column',
+                      transition: 'all 0.2s',
+                      position: 'relative'
+                    }}
+                  >
+                    {isBestSeller && <div style={{ position: 'absolute', top: '-10px', right: '-10px', background: '#FFB81C', color: '#000', padding: '0.3rem', borderRadius: '50%', zIndex: 10 }}><Crown size={16} /></div>}
+                    
+                    <div style={{ padding: '1rem', background: 'rgba(255,255,255,0.02)', borderRadius: 'var(--radius-sm)', marginBottom: '1.2rem', height: '180px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                      <img src={product.image} alt={product.name} style={{ maxWidth: '100%', maxHeight: '100%', objectFit: 'contain', filter: 'drop-shadow(0 5px 10px rgba(0,0,0,0.3))' }} />
+                    </div>
+                    <h4 style={{ fontSize: '0.95rem', marginBottom: '0.5rem', lineHeight: 1.3, height: '40px', overflow: 'hidden', color: '#fff' }}>{product.name}</h4>
+                    <div style={{ display:'flex', justifyContent: 'space-between', color: 'var(--text-muted)', fontSize: '0.8rem', marginBottom: '1.5rem' }}>
+                      <span style={{ maxWidth: '60%', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>REF: {sId}</span>
+                      <span style={{ color: 'var(--accent-color)', fontWeight: 800 }}>${product.price ? product.price.toFixed(2) : '0.00'}</span>
+                    </div>
+                    
+                    <div style={{ display: 'flex', gap: '0.5rem', marginTop: 'auto', flexWrap: 'wrap' }}>
+                      <button 
+                        onClick={() => setBestSeller(sId)}
+                        title="Tornar o Herói"
+                        style={{ flex: '1', padding: '0.6rem', borderRadius: '4px', background: isBestSeller ? '#FFB81C' : 'rgba(255,255,255,0.05)', color: isBestSeller ? '#000' : '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', border: 'none', cursor: 'pointer', transition: 'all 0.2s' }}
+                      >
+                        <Crown size={18} />
+                      </button>
+                      <button 
+                        onClick={() => toggleQueridinha(sId)}
+                        title="Adicionar à Vitrine"
+                        style={{ flex: '1', padding: '0.6rem', borderRadius: '4px', background: isQueridinha ? 'var(--accent-color)' : 'rgba(255,255,255,0.05)', color: isQueridinha ? '#000' : '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', border: 'none', cursor: 'pointer', transition: 'all 0.2s' }}
+                      >
+                        <Heart size={18} />
+                      </button>
+                      <button 
+                        onClick={() => toggleCatalog(sId)}
+                        title="Adicionar ao Catálogo"
+                        style={{ flex: '1', padding: '0.6rem', borderRadius: '4px', background: isCataloged ? '#A855F7' : 'rgba(255,255,255,0.05)', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', border: 'none', cursor: 'pointer', transition: 'all 0.2s' }}
+                      >
+                        <Package size={18} />
+                      </button>
+                      
+                      {(supplierTab.startsWith('CAT_') || supplierTab === 'CLOUD_ALL') && (
+                        <button 
+                          onClick={() => handleDeleteProduct(product)}
+                          title="Excluir do Banco de Dados"
+                          style={{ flex: '0 0 100%', marginTop: '0.5rem', padding: '0.5rem', borderRadius: '4px', background: 'transparent', color: '#EF4444', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem', border: '1px solid rgba(239, 68, 68, 0.3)', cursor: 'pointer', transition: 'all 0.2s', fontSize: '0.85rem' }}
+                        >
+                          <Trash2 size={14} /> Remover Definitivamente
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                );
+              })}
+              {/* CARTÃO DE ADICIONAR (SOLICITADO) */}
+              {(supplierTab.startsWith('CAT_') || supplierTab === 'CLOUD_ALL') && (
+                  <div 
+                    onClick={() => setShowAddForm(true)}
+                    style={{ 
+                      background: 'rgba(255,255,255,0.02)', 
+                      border: '1px dashed var(--border-color)',
+                      borderRadius: 'var(--radius-md)',
+                      padding: '1.5rem',
+                      display: 'flex',
+                      flexDirection: 'column',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      cursor: 'pointer',
+                      transition: 'all 0.2s',
+                      minHeight: '340px',
+                      color: 'var(--text-muted)'
+                    }}
+                    onMouseEnter={(e) => { e.currentTarget.style.borderColor = 'var(--accent-color)'; e.currentTarget.style.color = 'var(--accent-color)'; }}
+                    onMouseLeave={(e) => { e.currentTarget.style.borderColor = 'var(--border-color)'; e.currentTarget.style.color = 'var(--text-muted)'; }}
+                  >
+                    <Plus size={40} style={{ marginBottom: '1rem' }} />
+                    <h3 style={{ fontSize: '1.2rem', fontWeight: 600 }}>Nova Camisa</h3>
+                    <p style={{ fontSize: '0.85rem', marginTop: '0.5rem', textAlign: 'center' }}>Adicionar a este catálogo</p>
+                  </div>
+              )}
+              
+              {displayProducts.length === 0 && (
+                <div style={{ gridColumn: '1 / -1', padding: '2rem 1rem', textAlign: 'center', color: 'var(--text-muted)' }}>
+                  A lista está vazia. Adicione novas camisas pelo botão ao lado.
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+      </main>
+
+      {/* FORMULÁRIO CREATE PRODUCT COM CATEGORIA */}
+      {showAddForm && (
+        <div style={{ position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh', background: 'rgba(0,0,0,0.85)', zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '1rem', backdropFilter: 'blur(5px)' }}>
+          <div style={{ background: 'var(--surface-color)', padding: '2.5rem', borderRadius: 'var(--radius-lg)', border: '1px solid var(--border-color)', width: '100%', maxWidth: '550px', maxHeight: '90vh', overflowY: 'auto', boxShadow: '0 20px 50px rgba(0,0,0,0.5)' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
+               <h2 style={{ fontSize: '1.5rem', display: 'flex', alignItems: 'center', gap: '0.5rem', color: '#fff' }}>
+                 <Database color="#10B981" /> Nova Camisa no Supabase
+               </h2>
+               <button onClick={() => setShowAddForm(false)} style={{ background: 'rgba(255,255,255,0.05)', border: 'none', color: '#fff', cursor: 'pointer', padding: '0.5rem', borderRadius: '50%' }}><X size={20} /></button>
+            </div>
+            
+            <form onSubmit={handleAddProduct} style={{ display: 'flex', flexDirection: 'column', gap: '1.2rem' }}>
+              <div>
+                <label style={{ display: 'block', marginBottom: '0.5rem', color: 'var(--text-muted)', fontSize: '0.9rem' }}>Nome da Camisa *</label>
+                <input required type="text" value={newProduct.name} onChange={e => setNewProduct({...newProduct, name: e.target.value})} placeholder="Ex: Flamengo Titular 24/25" style={{ width: '100%', padding: '0.8rem 1rem', background: 'var(--bg-color)', color: '#fff', border: '1px solid var(--border-color)', borderRadius: 'var(--radius-sm)' }} />
+              </div>
+              
+              <div style={{ display: 'flex', gap: '1rem' }}>
+                <div style={{ flex: 1 }}>
+                  <label style={{ display: 'block', marginBottom: '0.5rem', color: 'var(--text-muted)', fontSize: '0.9rem' }}>Preço Venda (CAD) *</label>
+                  <input required type="number" step="0.01" value={newProduct.price} onChange={e => setNewProduct({...newProduct, price: e.target.value})} placeholder="Ex: 69.90" style={{ width: '100%', padding: '0.8rem 1rem', background: 'var(--bg-color)', color: '#fff', border: '1px solid var(--border-color)', borderRadius: 'var(--radius-sm)' }} />
+                </div>
+                <div style={{ flex: 1 }}>
+                  <label style={{ display: 'block', marginBottom: '0.5rem', color: 'var(--text-muted)', fontSize: '0.9rem' }}>Versão *</label>
+                  <select required value={newProduct.version} onChange={e => setNewProduct({...newProduct, version: e.target.value})} style={{ width: '100%', padding: '0.8rem 1rem', background: 'var(--bg-color)', color: '#fff', border: '1px solid var(--border-color)', borderRadius: 'var(--radius-sm)' }}>
+                    <option value="">Selecione...</option>
+                    <option value="Torcedor">Torcedor</option>
+                    <option value="Jogador">Jogador</option>
+                    <option value="Retrô">Retrô</option>
+                  </select>
+                </div>
+              </div>
+
+              <div style={{ display: 'flex', gap: '1rem' }}>
+                <div style={{ flex: 1 }}>
+                  <label style={{ display: 'block', marginBottom: '0.5rem', color: 'var(--text-muted)', fontSize: '0.9rem' }}>Categoria *</label>
+                  <select required value={newProduct.category} onChange={e => setNewProduct({...newProduct, category: e.target.value})} style={{ width: '100%', padding: '0.8rem 1rem', background: 'var(--bg-color)', color: '#fff', border: '1px solid var(--border-color)', borderRadius: 'var(--radius-sm)' }}>
+                    <option value="">Selecione...</option>
+                    {OFFICIAL_CATEGORIES.map(cat => (
+                      <option key={cat} value={cat}>{cat}</option>
+                    ))}
+                  </select>
+                </div>
+                <div style={{ flex: 1 }}>
+                  <label style={{ display: 'block', marginBottom: '0.5rem', color: 'var(--text-muted)', fontSize: '0.9rem' }}>Liga</label>
+                  <input type="text" value={newProduct.league} onChange={e => setNewProduct({...newProduct, league: e.target.value})} placeholder="Ex: La Liga" style={{ width: '100%', padding: '0.8rem 1rem', background: 'var(--bg-color)', color: '#fff', border: '1px solid var(--border-color)', borderRadius: 'var(--radius-sm)' }} />
+                </div>
+              </div>
+
+              <div>
+                <label style={{ display: 'block', marginBottom: '0.5rem', color: 'var(--text-muted)', fontSize: '0.9rem' }}>URL da Imagem *</label>
+                <input required type="url" value={newProduct.image} onChange={e => setNewProduct({...newProduct, image: e.target.value})} placeholder="Ex: https://i.imgur.com/foto.jpg" style={{ width: '100%', padding: '0.8rem 1rem', background: 'var(--bg-color)', color: '#fff', border: '1px solid var(--border-color)', borderRadius: 'var(--radius-sm)' }} />
+              </div>
+
+              <button type="submit" style={{ marginTop: '1.5rem', padding: '1.2rem', background: '#10B981', color: '#fff', fontWeight: 800, borderRadius: 'var(--radius-md)', border: 'none', cursor: 'pointer', fontSize: '1rem', transition: 'all 0.2s', boxShadow: '0 4px 15px rgba(16, 185, 129, 0.3)' }}>
+                INSERIR NO BANCO
+              </button>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* CONFIRMAÇÃO DE DELETE */}
+      {productToDelete && (
+        <div style={{ position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh', background: 'rgba(0,0,0,0.85)', zIndex: 1001, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '1rem', backdropFilter: 'blur(5px)' }}>
+          <div style={{ background: 'var(--surface-color)', padding: '2.5rem', borderRadius: 'var(--radius-lg)', border: '1px solid #EF4444', width: '100%', maxWidth: '400px', display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center', boxShadow: '0 20px 50px rgba(239, 68, 68, 0.3)' }}>
+            <div style={{ width: '70px', height: '70px', borderRadius: '50%', background: 'rgba(239, 68, 68, 0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '1.5rem', color: '#EF4444' }}>
+              <Trash2 size={35} />
+            </div>
+            <h2 style={{ fontSize: '1.5rem', marginBottom: '0.5rem', color: '#fff' }}>Excluir Definitivamente?</h2>
+            <p style={{ color: 'var(--text-muted)', marginBottom: '1rem', fontSize: '0.95rem' }}>Tem certeza que deseja apagar a camisa permanentemente do Supabase?</p>
+            <strong style={{ color: '#EF4444', marginBottom: '2.5rem', display: 'block', padding: '0.8rem', background: 'rgba(239, 68, 68, 0.05)', borderRadius: 'var(--radius-sm)', width: '100%' }}>{productToDelete.name}</strong>
+            
+            <div style={{ display: 'flex', gap: '1rem', width: '100%' }}>
+              <button onClick={() => setProductToDelete(null)} style={{ flex: 1, padding: '1rem', background: 'var(--bg-color)', color: '#fff', border: '1px solid var(--border-color)', borderRadius: 'var(--radius-md)', cursor: 'pointer', fontWeight: 600 }}>
+                Cancelar
+              </button>
+              <button onClick={confirmDelete} style={{ flex: 1, padding: '1rem', background: '#EF4444', color: '#fff', border: 'none', borderRadius: 'var(--radius-md)', cursor: 'pointer', fontWeight: 800 }}>
+                Sim, Excluir
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
+
+export default Admin;

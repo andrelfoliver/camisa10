@@ -1,0 +1,9 @@
+node_modules/
+dist/
+.env*
+.DS_Store
+
++ de 500 Camisas com fundo transparente/
+debug.html
+test_image.jpg
+yupoo_data.json
