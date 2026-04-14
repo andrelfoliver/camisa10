@@ -70,10 +70,10 @@ const TeamsBar = ({ teams = [], onSelectTeam }) => {
             onClick={() => onSelectTeam && onSelectTeam(team.name)}
           >
             <img 
-              src={`https://images.weserv.nl/?url=${team.logo.replace('https://', '')}&output=png&w=80&h=80&fit=contain&bg=transparent`} 
+              src={team.logo} 
               alt={team.name} 
               className="team-logo"
-              onError={(e) => { e.target.style.opacity = '0.3'; }}
+              onError={(e) => { e.target.style.opacity = '0'; }}
             />
           </div>
         ))}
