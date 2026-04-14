@@ -9,7 +9,7 @@ const HeroSection = () => {
 
   useEffect(() => {
     async function loadHero() {
-      const { data, error } = await supabase.from('store_settings').select('value').eq('key', 'hero_bg').single();
+      const { data } = await supabase.from('store_settings').select('value').eq('key', 'hero_bg').single();
       if (data && data.value) {
         setHeroBgUrl(data.value);
         localStorage.setItem('cached_hero_bg', data.value);
@@ -20,36 +20,59 @@ const HeroSection = () => {
 
   return (
     <section className="hero-funnel" style={{ '--hero-bg-url': `url('${heroBgUrl}')` }}>
-      <div className="hero-content">
-        <h1 className="hero-title animate-fade-in" style={{ animationDelay: '0.1s', fontSize: '3.5rem', lineHeight: 1.1 }}>
-          Vista seu time mesmo longe do Brasil 🇧🇷
-        </h1>
-        
-        <p className="hero-subtitle animate-fade-in" style={{ animationDelay: '0.2s' }}>
-          Camisas estilo jogador entregues no Canadá
-        </p>
+      <div className="hero-overlay-texture"></div>
+      
+      <div className="hero-container-modern animate-fade-in">
+        {/* Corner Left Zone */}
+        <div className="hero-zone-west">
+          <div className="hero-tagline-modern">
+            <span className="dot-pulse"></span> 
+            <span>SEASON 26 // WORLDWIDE DROP</span>
+          </div>
 
-        <div className="hero-badges animate-fade-in" style={{ animationDelay: '0.3s' }}>
-          <div className="hero-badge-item">
-            <Truck size={18} color="var(--accent-color)" /> Entrega p/ todo Canadá
-          </div>
-          <div className="hero-badge-item">
-            <ShieldCheck size={18} color="var(--accent-color)" /> Alta qualidade
-          </div>
-          <div className="hero-badge-item">
-            <Clock size={18} color="var(--accent-color)" /> Estoque limitado
-          </div>
+          <h1 className="hero-giant-title">
+            VISTA SEU <span className="outline-text">TIME</span><br />
+            MESMO LONGE DO <span className="accent-glow-text">BRASIL</span>
+          </h1>
+
+          <p className="hero-desc-modern">
+            Alta performance tailandesa 1.1 entregue em todo o território canadense.
+          </p>
         </div>
 
-        <div className="animate-fade-in" style={{ animationDelay: '0.4s', display: 'flex', flexDirection: 'column', gap: '1rem', alignItems: 'center' }}>
-          <a href="#destaque" className="btn-primary btn-massive">
-            Comprar agora
-          </a>
-          <a href="#catalogo" className="btn-secondary" style={{ border: 'none', background: 'transparent', textDecoration: 'underline' }}>
-            Ver todas as camisas
-          </a>
+        {/* Corner Right Zone */}
+        <div className="hero-zone-east">
+          <div className="hero-hud-badges">
+            <div className="hud-item">
+              <div className="hud-icon"><Truck size={18} /></div>
+              <div className="hud-text">
+                <span className="hud-label">LOGÍSTICA</span>
+                <span className="hud-value">TODO CANADÁ</span>
+              </div>
+            </div>
+            <div className="hud-item">
+              <div className="hud-icon"><ShieldCheck size={18} /></div>
+              <div className="hud-text">
+                <span className="hud-label">GARANTIA</span>
+                <span className="hud-value">QUALIDADE 1.1</span>
+              </div>
+            </div>
+          </div>
+
+          <div className="hero-actions-modern">
+            <a href="#destaque" className="btn-hero-massive">
+              COMPRAR AGORA
+              <span className="btn-subtext">Edição Limitada</span>
+            </a>
+            <a href="#catalogo" className="btn-hero-outline">
+              EXPLORAR CATÁLOGO
+            </a>
+          </div>
         </div>
       </div>
+
+      {/* Background Decor */}
+      <div className="hero-decor-line"></div>
     </section>
   );
 };
