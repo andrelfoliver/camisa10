@@ -69,7 +69,7 @@ const Profile = () => {
     } else {
       alert("Depoimento enviado com sucesso! Ele aparecerá no site após a moderação.");
       setContent('');
-      loadMyFeedbacks();
+      loadUserData(); // Chamada correta aqui
     }
     setSubmitting(false);
   };
@@ -148,26 +148,28 @@ const Profile = () => {
                             <p style={{ fontWeight: 600 }}>{new Date(order.created_at).toLocaleDateString()}</p>
                          </div>
                          <div style={{ textAlign: 'right' }}>
-                            <p style={{ color: 'var(--accent-color)', fontWeight: 800, fontSize: '1.1rem' }}>${order.total_price.toFixed(2)}</p>
+                            <p style={{ color: 'var(--accent-color)', fontWeight: 800, fontSize: '1.1rem' }}>
+                              ${Number(order?.total_price || 0).toFixed(2)}
+                            </p>
                             <span style={{ fontSize: '0.75rem', background: 'rgba(255,255,255,0.05)', padding: '2px 8px', borderRadius: '4px', border: '1px solid var(--border-color)' }}>
-                               {order.status === 'pending' ? '🟡 Aguardando WhatsApp' : order.status === 'processing' ? '🔵 Preparando Envio' : '🟢 Enviado'}
+                               {order?.status === 'pending' ? '🟡 Aguardando WhatsApp' : order?.status === 'processing' ? '🔵 Preparando Envio' : '🟢 Enviado'}
                             </span>
                          </div>
                       </div>
                       <div style={{ padding: '1.5rem' }}>
                          <div style={{ marginBottom: '1rem' }}>
-                            {order.items.map((item, idx) => (
+                            {order?.items?.map((item, idx) => (
                                <div key={idx} style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.9rem', marginBottom: '0.4rem' }}>
-                                  <span style={{ color: 'var(--text-main)' }}>{item.quantity}x {item.name} ({item.size})</span>
-                                  <span style={{ color: 'var(--text-muted)' }}>${(item.price * item.quantity).toFixed(2)}</span>
+                                  <span style={{ color: 'var(--text-main)' }}>{item?.quantity || 1}x {item?.name || 'Produto'} ({item?.size || '?'})</span>
+                                  <span style={{ color: 'var(--text-muted)' }}>${(Number(item?.price || 0) * (item?.quantity || 1)).toFixed(2)}</span>
                                </div>
                             ))}
                          </div>
                          <div style={{ display: 'flex', alignItems: 'flex-start', gap: '0.5rem', color: 'var(--text-muted)', fontSize: '0.8rem', background: 'rgba(0,0,0,0.2)', padding: '0.8rem', borderRadius: '4px' }}>
                             <MapPin size={14} style={{ marginTop: '2px' }} />
                             <div>
-                               <p>Entrega: {order.shipping_address.street}{order.shipping_address.apartment ? ', Apt ' + order.shipping_address.apartment : ''}</p>
-                               <p>{order.shipping_address.city}, {order.shipping_address.province} {order.shipping_address.postalCode}</p>
+                               <p>Entrega: {order?.shipping_address?.street || 'Endereço não informado'}{order?.shipping_address?.apartment ? ', Apt ' + order.shipping_address.apartment : ''}</p>
+                               <p>{order?.shipping_address?.city || ''}{order?.shipping_address?.province ? ', ' + order.shipping_address.province : ''} {order?.shipping_address?.postalCode || ''}</p>
                             </div>
                          </div>
                       </div>
