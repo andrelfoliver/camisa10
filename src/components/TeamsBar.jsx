@@ -38,19 +38,16 @@ const TeamsBar = ({ teams = [], onSelectTeam }) => {
             display: flex;
             align-items: center;
             justify-content: center;
-            background: white;
-            border: 1px solid rgba(255,255,255,0.2);
-            border-radius: 50%;
-            padding: 12px;
+            background: transparent;
+            border: none;
+            padding: 4px;
             transition: all 0.3s ease;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
             cursor: pointer;
+            filter: drop-shadow(0 10px 15px rgba(0,0,0,0.5));
           }
           .team-item:hover {
             transform: scale(1.15);
-            background: #fff;
-            box-shadow: 0 0 25px var(--accent-glow);
-            border-color: var(--accent-color);
+            filter: drop-shadow(0 12px 25px var(--accent-glow));
           }
           .team-logo {
             max-width: 100%;
