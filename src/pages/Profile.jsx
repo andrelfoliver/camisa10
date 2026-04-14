@@ -144,8 +144,8 @@ const Profile = () => {
                     <div key={order.id} style={{ background: 'var(--surface-color)', borderRadius: 'var(--radius-md)', border: '1px solid var(--border-color)', overflow: 'hidden' }}>
                       <div style={{ padding: '1.5rem', borderBottom: '1px solid var(--border-color)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                          <div>
-                            <p style={{ color: 'var(--text-muted)', fontSize: '0.8rem', textTransform: 'uppercase', marginBottom: '0.2rem' }}>Pedido #{order.id.slice(0, 8)}</p>
-                            <p style={{ fontWeight: 600 }}>{new Date(order.created_at).toLocaleDateString()}</p>
+                            <p style={{ color: 'var(--text-muted)', fontSize: '0.8rem', textTransform: 'uppercase', marginBottom: '0.2rem' }}>Pedido #{order?.id?.slice(0, 8) || '......'}</p>
+                            <p style={{ fontWeight: 600 }}>{order?.created_at ? new Date(order.created_at).toLocaleDateString() : '--/--/----'}</p>
                          </div>
                          <div style={{ textAlign: 'right' }}>
                             <p style={{ color: 'var(--accent-color)', fontWeight: 800, fontSize: '1.1rem' }}>
