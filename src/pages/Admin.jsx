@@ -593,6 +593,7 @@ const Admin = () => {
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(380px, 1fr))', gap: '1.5rem' }}>
                 {orders.filter(order => !orderFilter || order.user_id === orderFilter).map(order => (
                   <div key={order.id} className="glass-panel" style={{ padding: '1.5rem', borderRadius: 'var(--radius-lg)', border: '1px solid var(--border-color)' }}>
+                    {/* ... item render ... */}
                     <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '1rem' }}>
                       <div>
                         <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)', fontWeight: 800 }}>#{order?.id?.slice(0,8) || '......'}</span>
@@ -634,6 +635,12 @@ const Admin = () => {
                     </div>
                   </div>
                 ))}
+                
+                {orders.filter(order => !orderFilter || order.user_id === orderFilter).length === 0 && (
+                  <div style={{ gridColumn: '1 / -1', textAlign: 'center', padding: '5rem', background: 'rgba(255,255,255,0.02)', borderRadius: '12px', border: '1px dashed var(--border-color)' }}>
+                    <p style={{ color: 'var(--text-muted)', fontSize: '1.1rem' }}>Nenhum pedido encontrado para este filtro.</p>
+                  </div>
+                )}
               </div>
             </div>
           ) : supplierTab === 'CLIENTES' ? (
