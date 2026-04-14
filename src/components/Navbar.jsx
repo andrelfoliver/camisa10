@@ -14,8 +14,8 @@ const Navbar = () => {
 
   return (
     <>
-      <div style={{ background: 'var(--accent-color)', color: '#000', padding: '0.6rem', textAlign: 'center', fontSize: '0.9rem', fontWeight: 700 }}>
-        🎉 Promoção de Lançamento: Entrega em Domicílio GRÁTIS exclusiva para moradores de Calgary!
+      <div style={{ background: '#111111', color: '#f5c518', padding: '0.6rem', textAlign: 'center', fontSize: '0.9rem', fontWeight: 700 }}>
+        🚀 Entrega prioritária para Calgary
       </div>
       <nav className="glass-panel" style={{
         position: 'sticky', top: 0, zIndex: 100, borderBottom: '1px solid var(--border-color)', padding: '1rem 0'
