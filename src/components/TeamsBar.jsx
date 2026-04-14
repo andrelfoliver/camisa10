@@ -50,10 +50,10 @@ const TeamsBar = ({ teams = [], onSelectTeam }) => {
             filter: drop-shadow(0 12px 25px var(--accent-glow));
           }
           .team-logo {
-            max-width: 100%;
-            max-height: 100%;
+            width: 72px;
+            height: 72px;
             object-fit: contain;
-            /* Garantimos que a imagem não tenha filtros que a escureçam */
+            display: block;
             filter: none;
           }
         `}
