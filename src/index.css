@@ -276,7 +276,7 @@ button {
 .hero-funnel {
   position: relative;
   width: 100%;
-  min-height: 80vh;
+  min-height: 65vh;
   display: flex;
   align-items: center;
   overflow: hidden;
@@ -319,7 +319,7 @@ button {
   width: 100%;
   max-width: 1400px;
   margin: 0 auto;
-  padding: 80px 4rem 4rem 4rem;
+  padding: 60px 4rem 2rem 4rem;
   display: flex;
   justify-content: space-between;
   align-items: center;
