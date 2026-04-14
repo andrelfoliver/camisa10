@@ -171,15 +171,19 @@ const Home = () => {
         // Distribuição inteligente para garantir que Mocks não fiquem de fora enquanto Supabase enche
         allUnified.forEach(p => {
           const cat = (p.category || '').toLowerCase();
-          const lg = (p.league || '').toLowerCase();
+          const pName = (p.name || '').toLowerCase();
+          const pTeam = (p.team || '').toLowerCase();
           
-          if(cat === 'seleções' || cat.includes('selec') || lg.includes('selec')) mapCat['Seleções'].push(p);
-          else if(cat === 'brasileirão' || cat.includes('brasil') || lg.includes('brasil')) mapCat['Brasileirão'].push(p);
-          else if(cat === 'internacionais' || cat.includes('europa') || cat.includes('europe') || lg.includes('premier') || lg.includes('liga')) mapCat['Internacionais'].push(p);
-          else if(cat === 'lançamentos' || cat.includes('lançament')) mapCat['Lançamentos'].push(p);
-          else if(cat === 'retrô' || cat.includes('retro')) mapCat['Retrô'].push(p);
+          const isClub = BR_2026_TEAMS.some(t => t.name.toLowerCase() === pTeam);
+
+          if (isClub) mapCat['Brasileirão'].push(p);
+          else if (cat === 'seleções' || cat === 'selecoes' || pName.includes('seleção') || pName.includes('selecao') || (pName.includes('brasil') && !isClub)) {
+            mapCat['Seleções'].push(p);
+          }
+          else if (cat === 'internacionais' || cat.includes('europa') || cat.includes('europe')) mapCat['Internacionais'].push(p);
+          else if (cat === 'lançamentos' || cat.includes('lançament')) mapCat['Lançamentos'].push(p);
+          else if (cat === 'retrô' || cat.includes('retro')) mapCat['Retrô'].push(p);
           else {
-             // Fallback para itens sem categoria definida caírem em Lançamentos (se for novo) ou Brasileirao (por padrão)
              mapCat['Lançamentos'].push(p);
           }
         });

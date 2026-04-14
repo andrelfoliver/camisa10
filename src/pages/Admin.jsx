@@ -300,15 +300,22 @@ const Admin = () => {
     allAdminProducts.filter(p => {
       const catTarget = supplierTab.replace('CAT_', '');
       const pCat = (p.category || '').toLowerCase();
-      const pLeague = (p.league || '').toLowerCase();
+      const pName = (p.name || '').toLowerCase();
+      const pTeam = (p.team || '').toLowerCase();
       
+      const isClub = BR_2026_TEAMS.some(t => t.name.toLowerCase() === pTeam);
+
       if (catTarget === 'Brasileirão') {
-        const isBr = pCat === 'brasileirão' || pCat === 'brasileirao' || pCat.includes('brasil') || pLeague.includes('brasil');
-        return isBr;
+        return isClub;
       }
       
+      if (catTarget === 'Seleções') {
+        const isSelecao = pCat === 'seleções' || pCat === 'selecoes' || pName.includes('seleção') || pName.includes('selecao') || (pName.includes('brasil') && !isClub);
+        return isSelecao;
+      }
+
       if (catTarget === 'Lançamentos') {
-        return pCat === 'lançamentos' || pCat === 'lancamentos' || pCat.includes('lança');
+        return pCat === 'lançamentos' || pCat === 'lancamentos';
       }
 
       return p.category === catTarget;
