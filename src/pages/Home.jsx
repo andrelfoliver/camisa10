@@ -153,8 +153,9 @@ const Home = () => {
          
          const isClub = (teamsData || []).some(t => t.name.toLowerCase() === pTeam);
          const isSelecao = cat === 'seleções' || cat === 'selecoes' || pName.includes('seleção') || pName.includes('selecao') || (pName.includes('brasil') && !isClub);
+         const isBrasileirao = isClub || cat === 'brasileirão' || cat === 'brasileirao' || cat.includes('brasileiro');
 
-         if (isClub) mapCat['Brasileirão'].push(p);
+         if (isBrasileirao) mapCat['Brasileirão'].push(p);
          else if (isSelecao) mapCat['Seleções'].push(p);
          else if (cat === 'internacionais' || cat.includes('europa') || cat.includes('europe')) mapCat['Internacionais'].push(p);
          else if (cat === 'lançamentos' || cat.includes('lançament')) mapCat['Lançamentos'].push(p);
