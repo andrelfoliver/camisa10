@@ -1,6 +1,6 @@
 import React from 'react';
 
-const TeamsBar = () => {
+const TeamsBar = ({ onSelectTeam }) => {
   const teams = [
     { name: 'Flamengo', logo: 'https://upload.wikimedia.org/wikipedia/commons/2/2e/Flamengo_brazilian_multi-sport_club_logo.svg' },
     { name: 'Palmeiras', logo: 'https://upload.wikimedia.org/wikipedia/commons/1/10/Palmeiras_logo.svg' },
@@ -17,7 +17,6 @@ const TeamsBar = () => {
     { name: 'Bahia', logo: 'https://upload.wikimedia.org/wikipedia/pt/thumb/8/84/Esporte_Clube_Bahia_logo.svg/1200px-Esporte_Clube_Bahia_logo.svg.png' },
   ];
 
-  // Duplicamos a lista para criar o efeito infinito sem gaps
   const fullTrack = [...teams, ...teams];
 
   return (
@@ -40,6 +39,9 @@ const TeamsBar = () => {
             width: max-content;
             animation: marquee 40s linear infinite;
           }
+          .teams-track:hover {
+            animation-play-state: paused;
+          }
           .team-item {
             width: 80px;
             height: 80px;
@@ -53,6 +55,7 @@ const TeamsBar = () => {
             padding: 12px;
             transition: all 0.3s ease;
             filter: grayscale(0.2) brightness(0.9);
+            cursor: pointer;
           }
           .team-item:hover {
             filter: grayscale(0) brightness(1.2);
@@ -71,7 +74,12 @@ const TeamsBar = () => {
       
       <div className="teams-track">
         {fullTrack.map((team, index) => (
-          <div key={index} className="team-item" title={team.name}>
+          <div 
+            key={index} 
+            className="team-item" 
+            title={team.name}
+            onClick={() => onSelectTeam && onSelectTeam(team.name)}
+          >
             <img src={team.logo} alt={team.name} className="team-logo" />
           </div>
         ))}

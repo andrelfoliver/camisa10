@@ -81,6 +81,8 @@ const Home = () => {
   const [queridinhas, setQueridinhas] = useState([]);
   const [testimonials, setTestimonials] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [activeTeamFilter, setActiveTeamFilter] = useState(null);
+  const [allProductsData, setAllProductsData] = useState([]);
   
   // As 5 Categorias Oficiais
   const [storeSections, setStoreSections] = useState({
@@ -182,6 +184,7 @@ const Home = () => {
         });
 
         setStoreSections(mapCat);
+        setAllProductsData(allUnified);
 
       } else {
         // Fallback Completo
@@ -195,6 +198,7 @@ const Home = () => {
            else mapCat['Internacionais'].push(p);
         });
         setStoreSections(mapCat);
+        setAllProductsData(allUnified);
       }
       const { data: testData } = await supabase.from('testimonials').select('*').eq('status', 'approved').order('date', { ascending: false });
       if(testData) setTestimonials(testData);
@@ -208,7 +212,43 @@ const Home = () => {
     <div style={{ paddingBottom: '4rem' }}>
       {/* 1. HERO */}
       <HeroSection />
-      <TeamsBar />
+      <TeamsBar onSelectTeam={(team) => {
+        setActiveTeamFilter(team);
+        setTimeout(() => {
+          document.getElementById('filtro-time')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }, 100);
+      }} />
+
+      {/* SEÇÃO DE FILTRO DINÂMICO POR TIME */}
+      {activeTeamFilter && (
+        <section id="filtro-time" className="section-padding" style={{ background: 'linear-gradient(to bottom, #000, var(--surface-color))', borderBottom: '2px solid var(--accent-color)' }}>
+          <div className="container">
+             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
+                <h2 style={{ fontSize: '2.5rem', display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                  <span style={{ color: 'var(--accent-color)' }}>{activeTeamFilter.toUpperCase()}</span> NO CANADÁ 🇧🇷🍁
+                </h2>
+                <button 
+                  onClick={() => setActiveTeamFilter(null)}
+                  style={{ background: 'transparent', color: 'var(--text-muted)', border: '1px solid var(--border-color)', padding: '0.6rem 1.2rem', borderRadius: '4px', fontWeight: 700, cursor: 'pointer' }}
+                >
+                  Limpar Filtro
+                </button>
+             </div>
+
+             <div className="grid-products">
+                {allProductsData
+                  .filter(p => p.team?.toLowerCase().includes(activeTeamFilter.toLowerCase()) || p.name?.toLowerCase().includes(activeTeamFilter.toLowerCase()))
+                  .map(product => <ProductCard key={product.id} product={product} />)
+                }
+                {allProductsData.filter(p => p.team?.toLowerCase().includes(activeTeamFilter.toLowerCase()) || p.name?.toLowerCase().includes(activeTeamFilter.toLowerCase())).length === 0 && (
+                  <div style={{ gridColumn: '1 / -1', textAlign: 'center', padding: '4rem', color: 'var(--text-muted)', border: '1px dashed var(--border-color)', borderRadius: '12px' }}>
+                    Nenhuma camisa do {activeTeamFilter} encontrada no momento. Tente outro clube!
+                  </div>
+                )}
+             </div>
+          </div>
+        </section>
+      )}
 
       {/* 2. PROVA E CONFIANÇA (ICONOS MOVIDOS PARA O TOPO) */}
       <section className="section-padding" style={{ background: 'var(--surface-color)', borderBottom: '1px solid var(--border-color)' }}>
