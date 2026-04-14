@@ -512,9 +512,9 @@ const Admin = () => {
                   
                   <div style={{ marginTop: '2rem', borderTop: '1px solid var(--border-color)', paddingTop: '2rem' }}>
                     <h2 style={{ display: 'flex', alignItems: 'center', gap: '0.8rem', marginBottom: '1.5rem', fontSize: '1.5rem', color: '#10B981' }}>
-                       <Package color="#10B981" /> Desconto Progressivo (Subtração na Peça)
+                       <Package color="#10B981" /> Desconto Progressivo (Valor Total)
                     </h2>
-                    <p style={{ color: 'var(--text-muted)', marginBottom: '1.5rem', fontSize: '0.9rem' }}>Os valores abaixo configuram quantos dólares serão subtraídos do preço base de <strong>cada camisa</strong> dependendo do volume na sacola.</p>
+                    <p style={{ color: 'var(--text-muted)', marginBottom: '1.5rem', fontSize: '0.9rem' }}>Os valores abaixo configuram quantos dólares serão subtraídos do **valor total do carrinho** dependendo do volume de peças.</p>
                     
                     {pricing.discounts.map((discount, index) => (
                       <div key={index} style={{ display: 'flex', gap: '1rem', marginBottom: '1rem' }}>
@@ -527,7 +527,7 @@ const Admin = () => {
                             }} style={{ width: '100%', padding: '0.8rem', background: 'var(--bg-color)', color: '#fff', border: '1px solid var(--border-color)', borderRadius: '4px' }} />
                          </div>
                          <div style={{ flex: 1 }}>
-                            <label style={{ display: 'block', marginBottom: '0.3rem', color: 'var(--text-muted)', fontSize: '0.8rem' }}>Desconto (Subtração) por Peça</label>
+                            <label style={{ display: 'block', marginBottom: '0.3rem', color: 'var(--text-muted)', fontSize: '0.8rem' }}>Desconto Total ($ OFF)</label>
                             <input required type="number" step="0.01" value={discount.amount} onChange={(e) => {
                                const newDiscounts = [...pricing.discounts];
                                newDiscounts[index].amount = parseFloat(e.target.value);

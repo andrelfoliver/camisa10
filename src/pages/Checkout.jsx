@@ -260,6 +260,18 @@ const Checkout = () => {
                 </div>
               ))}
             </div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.8rem', borderBottom: '1px solid var(--border-color)', paddingBottom: '1.5rem', marginBottom: '1.5rem' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', color: 'var(--text-main)' }}>
+                 <span>Subtotal</span>
+                 <span>${subtotal.toFixed(2)}</span>
+              </div>
+              {discount > 0 && (
+                <div style={{ display: 'flex', justifyContent: 'space-between', color: '#10B981', fontWeight: 600 }}>
+                   <span>Desconto Progressivo</span>
+                   <span>- ${discount.toFixed(2)}</span>
+                </div>
+              )}
+            </div>
             <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '1.25rem', fontWeight: 'bold', marginBottom: '2rem' }}>
               <span>Total CAD</span>
               <span style={{ color: 'var(--accent-color)' }}>${cartTotal.toFixed(2)}</span>

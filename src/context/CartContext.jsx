@@ -88,7 +88,7 @@ export const CartProvider = ({ children }) => {
     const matchedDiscount = sortedDiscounts.find(d => totalItems >= d.qty);
     
     if (matchedDiscount) {
-       discount = matchedDiscount.amount * totalItems;
+       discount = matchedDiscount.amount;
     }
 
     return {
