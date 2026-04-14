@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from '../services/supabase';
 import { useAuth } from '../context/AuthContext';
-import { Save, Check, Crown, Heart, Database, HardDrive, Star, LogOut, Package, Plus, Trash2, X, Users, Image, DollarSign, MapPin, RefreshCw } from 'lucide-react';
-import { BR_2026_TEAMS } from '../data/teams';
+import { Save, Check, Crown, Heart, Database, HardDrive, Star, LogOut, Package, Plus, Trash2, X, Users, Image, DollarSign, MapPin, RefreshCw, Shield } from 'lucide-react';
 import { migrateProductsToSupabase } from '../services/migration';
+import { migrateTeamsToSupabase } from '../services/migration_teams';
 import WhatsAppIcon from '../components/WhatsAppIcon';
 import { Link, Navigate } from 'react-router-dom';
 
@@ -21,6 +21,8 @@ const Admin = () => {
   
   const [productToDelete, setProductToDelete] = useState(null);
   const [editingProduct, setEditingProduct] = useState(null);
+  const [teams, setTeams] = useState([]);
+  const [editingTeam, setEditingTeam] = useState(null);
 
   const handleUpdateProduct = async (e) => {
     e.preventDefault();
@@ -112,6 +114,28 @@ const Admin = () => {
     );
   };
 
+  const [isMigratingTeams, setIsMigratingTeams] = useState(false);
+  const handleTeamsMigration = () => {
+    showConfirm(
+      'Configurar Escudos Dinâmicos',
+      'Deseja migrar a lista de times para o banco de dados? Isso permitirá que você altere os logos manualmente pelo painel.',
+      async () => {
+        setIsMigratingTeams(true);
+        try {
+          const { successCount, message } = await migrateTeamsToSupabase();
+          showAlert('Sucesso!', message);
+          // Recarregar times
+          const { data } = await supabase.from('teams').select('*').order('name');
+          if (data) setTeams(data);
+        } catch (err) {
+          showAlert('Erro na Migração', err.message);
+        } finally {
+          setIsMigratingTeams(false);
+        }
+      }
+    );
+  };
+
   useEffect(() => {
     const savedQueridinhas = localStorage.getItem('queridinhas_ids');
     const savedBestSeller = localStorage.getItem('best_seller_id');
@@ -159,14 +183,27 @@ const Admin = () => {
       if(data) setOrders(data);
     }
     
+    async function fetchTeams() {
+      try {
+        const { data, error } = await supabase.from('teams').select('*').order('name');
+        if (data) setTeams(data);
+        if (error && error.code === '42P01') {
+          console.warn("Tabela 'teams' não encontrada. O usuário precisa executar o SQL de migração.");
+        }
+      } catch (e) {
+        console.error("Erro ao buscar times:", e);
+      }
+    }
+    
     if (isAdmin) {
       loadProducts();
       loadCustomers();
       loadSettings();
       loadTestimonials();
       loadOrders();
+      fetchTeams();
     }
-  }, [isAdmin]);
+  }, [isAdmin, supplierTab]);
 
   
   const handleSavePricing = async (e) => {
@@ -344,7 +381,7 @@ const Admin = () => {
       const pName = (p.name || '').toLowerCase();
       const pTeam = (p.team || '').toLowerCase();
       
-      const isClub = BR_2026_TEAMS.some(t => t.name.toLowerCase() === pTeam);
+      const isClub = teams.some(t => t.name.toLowerCase() === pTeam);
 
       if (catTarget === 'brasileirão') {
         return isClub || pCat === 'brasileirão';
@@ -439,6 +476,12 @@ const Admin = () => {
           >
             <Star size={18} /> Depoimentos
           </button>
+          <button 
+            onClick={() => setSupplierTab('TEAMS')}
+            style={{ padding: '0.8rem 1rem', borderRadius: 'var(--radius-md)', display: 'flex', alignItems: 'center', gap: '0.8rem', width: '100%', textAlign: 'left', background: supplierTab === 'TEAMS' ? '#10B981' : 'transparent', color: supplierTab === 'TEAMS' ? '#fff' : 'var(--text-main)', fontWeight: supplierTab === 'TEAMS' ? 700 : 500, transition: 'all 0.2s' }}
+          >
+            <Shield size={18} /> Escudos Oficiais
+          </button>
 
         </nav>
 
@@ -464,6 +507,7 @@ const Admin = () => {
                supplierTab === 'CONFIG' ? 'Configuração de Interface' : 
                supplierTab === 'PRICING' ? 'Tabela de Preços Globais' : 
                supplierTab === 'TESTIMONIALS' ? 'Gestão de Depoimentos' : 
+               supplierTab === 'TEAMS' ? 'Gestão de Escudos Oficiais' :
                supplierTab === 'CLOUD_ALL' ? 'Todo o Banco na Nuvem' :
  
                `${supplierTab.replace('CAT_', '')}`}
@@ -499,6 +543,17 @@ const Admin = () => {
             {(supplierTab.startsWith('CAT_') || supplierTab === 'CLOUD_ALL') && (
               <button onClick={() => setShowAddForm(true)} className="btn-primary" style={{ background: '#10B981', color: '#fff', boxShadow: '0 4px 15px rgba(16, 185, 129, 0.3)' }}>
                 <Plus size={18} /> Nova Camisa
+              </button>
+            )}
+            {supplierTab === 'TEAMS' && teams.length === 0 && (
+              <button 
+                onClick={handleTeamsMigration} 
+                disabled={isMigratingTeams}
+                className="btn-primary" 
+                style={{ background: '#10B981', color: '#fff' }}
+              >
+                <RefreshCw size={18} className={isMigratingTeams ? 'spinning' : ''} /> 
+                {isMigratingTeams ? 'IMPORTANDO...' : 'IMPORTAR ESCUDOS OFICIAIS'}
               </button>
             )}
             {isCatalogTab && (
@@ -573,7 +628,103 @@ const Admin = () => {
                 )}
               </div>
             </div>
-          
+          ) : supplierTab === 'TEAMS' ? (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
+              {/* ALERTA DE TABELA AUSENTE */}
+              {teams.length === 0 && !isMigratingTeams && (
+                <div style={{ background: 'rgba(239, 68, 68, 0.1)', padding: '2rem', borderRadius: 'var(--radius-md)', border: '1px solid #EF4444', textAlign: 'center' }}>
+                  <Shield size={48} color="#EF4444" style={{ marginBottom: '1rem' }} />
+                  <h3 style={{ color: '#fff', marginBottom: '1rem' }}>Tabela de Escudos não encontrada</h3>
+                  <p style={{ color: 'var(--text-muted)', marginBottom: '1.5rem', maxWidth: '500px', margin: '0 auto 1.5rem' }}>
+                    Parece que você ainda não executou o script SQL no Supabase. Para gerenciar os escudos, clique no botão abaixo para tentar criar e importar os dados iniciais.
+                  </p>
+                  <button 
+                    onClick={handleTeamsMigration} 
+                    className="btn-primary" 
+                    style={{ background: '#EF4444', color: '#fff' }}
+                  >
+                    <RefreshCw size={18} className={isMigratingTeams ? 'spinning' : ''} /> 
+                    {isMigratingTeams ? 'CONFIGURANDO...' : 'CONFIGURAR BANCO DE ESCUDOS'}
+                  </button>
+                </div>
+              )}
+
+              {teams.length > 0 && (
+                <>
+                  <div style={{ background: 'rgba(16, 185, 129, 0.1)', padding: '1.5rem', borderRadius: 'var(--radius-md)', border: '1px solid rgba(16, 185, 129, 0.2)', marginBottom: '1rem' }}>
+                    <p style={{ color: '#10B981', fontSize: '0.9rem', margin: 0 }}>
+                      <strong>Dica Profissional:</strong> Você pode usar URLs da Wikipedia (Wikimedia) ou subir seus próprios logos no Storage. Os logos aqui definidos aparecem nos filtros e carrosséis da loja.
+                    </p>
+                  </div>
+
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '1.5rem' }}>
+                    {teams.map(team => (
+                      <div key={team.id} className="glass-panel" style={{ padding: '1.5rem', borderRadius: 'var(--radius-md)', display: 'flex', gap: '1rem', alignItems: 'center' }}>
+                        <div style={{ width: '60px', height: '60px', background: '#fff', borderRadius: '8px', padding: '0.5rem', display: 'flex', alignItems: 'center', justifyContent: 'center', border: '1px solid var(--border-color)' }}>
+                          <img src={team.logo} alt={team.name} style={{ maxWidth: '100%', maxHeight: '100%', objectFit: 'contain' }} />
+                        </div>
+                        <div style={{ flex: 1 }}>
+                          <h4 style={{ color: '#fff', fontSize: '1rem', marginBottom: '0.5rem' }}>{team.name}</h4>
+                          <button 
+                            onClick={() => setEditingTeam(team)}
+                            style={{ background: 'var(--accent-color)', color: '#000', border: 'none', padding: '0.4rem 0.8rem', borderRadius: '4px', fontSize: '0.75rem', fontWeight: 700, cursor: 'pointer' }}
+                          >
+                            Trocar Escudo
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </>
+              )}
+
+              {editingTeam && (
+                <div style={{ position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh', background: 'rgba(0,0,0,0.85)', zInex: 2000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '1rem', backdropFilter: 'blur(10px)' }}>
+                  <div style={{ background: 'var(--surface-color)', padding: '2.5rem', borderRadius: 'var(--radius-lg)', border: '1px solid var(--border-color)', width: '100%', maxWidth: '500px' }}>
+                    <h2 style={{ color: '#fff', marginBottom: '1.5rem', display: 'flex', alignItems: 'center', gap: '0.8rem' }}>
+                      <Shield color="var(--accent-color)" /> Alterar Escudo: {editingTeam.name}
+                    </h2>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+                      <div>
+                        <label style={{ color: 'var(--text-muted)', fontSize: '0.9rem', display: 'block', marginBottom: '0.5rem' }}>URL do Novo Escudo (SVG ou PNG c/ transparência)</label>
+                        <input 
+                          type="url" 
+                          value={editingTeam.logo} 
+                          onChange={e => setEditingTeam({...editingTeam, logo: e.target.value})}
+                          placeholder="https://..." 
+                          style={{ width: '100%', padding: '1rem', background: 'var(--bg-color)', color: '#fff', border: '1px solid var(--border-color)', borderRadius: '4px' }}
+                        />
+                      </div>
+                      
+                      <div style={{ background: 'rgba(0,0,0,0.3)', padding: '1.5rem', borderRadius: '8px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '1rem' }}>
+                        <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>PREVIEW NO FUNDO BRANCO:</span>
+                        <div style={{ width: '100px', height: '100px', background: '#fff', borderRadius: '8px', padding: '1rem', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                          <img src={editingTeam.logo} alt="Preview" style={{ maxWidth: '100%', maxHeight: '100%', objectFit: 'contain' }} />
+                        </div>
+                      </div>
+
+                      <div style={{ display: 'flex', gap: '1rem' }}>
+                        <button onClick={() => setEditingTeam(null)} style={{ flex: 1, padding: '1rem', background: 'transparent', color: '#fff', border: '1px solid var(--border-color)', borderRadius: '4px' }}>Cancelar</button>
+                        <button 
+                          onClick={async () => {
+                            const { error } = await supabase.from('teams').update({ logo: editingTeam.logo }).eq('id', editingTeam.id);
+                            if (error) showAlert('Erro', error.message);
+                            else {
+                              showAlert('Sucesso', 'Escudo atualizado com sucesso!');
+                              setTeams(teams.map(t => t.id === editingTeam.id ? editingTeam : t));
+                              setEditingTeam(null);
+                            }
+                          }}
+                          style={{ flex: 1, padding: '1rem', background: 'var(--accent-color)', color: '#000', fontWeight: 800, border: 'none', borderRadius: '4px' }}
+                        >
+                          Salvar Alteração
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
           ) : supplierTab === 'PRICING' ? (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem', maxWidth: '800px' }}>
               <div className="glass-panel" style={{ padding: '2.5rem', borderRadius: 'var(--radius-lg)' }}>
@@ -822,7 +973,7 @@ const Admin = () => {
                       {product.team && (
                         <div style={{ display: 'flex', alignItems: 'center', gap: '0.3rem', background: 'rgba(16, 185, 129, 0.1)', color: '#10B981', padding: '0.2rem 0.5rem', borderRadius: '4px' }}>
                           <img 
-                            src={BR_2026_TEAMS.find(t => t.name === product.team)?.logo} 
+                            src={teams.find(t => t.name === product.team)?.logo} 
                             alt="" 
                             style={{ width: '14px', height: '14px', objectFit: 'contain' }} 
                             onError={(e) => e.currentTarget.style.display = 'none'}
@@ -990,19 +1141,19 @@ const Admin = () => {
                   <label style={{ display: 'block', marginBottom: '0.5rem', color: 'var(--text-muted)', fontSize: '0.9rem' }}>Liga</label>
                   <input type="text" value={newProduct.league} onChange={e => setNewProduct({...newProduct, league: e.target.value})} placeholder="Ex: La Liga" style={{ width: '100%', padding: '0.8rem 1rem', background: 'var(--bg-color)', color: '#fff', border: '1px solid var(--border-color)', borderRadius: 'var(--radius-sm)' }} />
                 </div>
-                <div style={{ flex: 1 }}>
-                  <label style={{ display: 'block', marginBottom: '0.5rem', color: 'var(--text-muted)', fontSize: '0.9rem' }}>Time</label>
-                  <select 
-                    value={newProduct.team} 
-                    onChange={e => setNewProduct({...newProduct, team: e.target.value})} 
-                    style={{ width: '100%', padding: '0.8rem 1rem', background: 'var(--bg-color)', color: '#fff', border: '1px solid var(--border-color)', borderRadius: 'var(--radius-sm)' }}
-                  >
-                    <option value="">Nacional / Outros</option>
-                    {BR_2026_TEAMS.map(team => (
-                      <option key={team.name} value={team.name}>{team.name}</option>
-                    ))}
-                  </select>
-                </div>
+                    <div style={{ flex: 1 }}>
+                      <label style={{ display: 'block', marginBottom: '0.5rem', color: 'var(--text-muted)', fontSize: '0.9rem' }}>Time</label>
+                      <select 
+                        value={newProduct.team} 
+                        onChange={e => setNewProduct({...newProduct, team: e.target.value})} 
+                        style={{ width: '100%', padding: '0.8rem 1rem', background: 'var(--bg-color)', color: '#fff', border: '1px solid var(--border-color)', borderRadius: 'var(--radius-sm)' }}
+                      >
+                        <option value="">Nacional / Outros</option>
+                        {teams.map(team => (
+                          <option key={team.id} value={team.name}>{team.name}</option>
+                        ))}
+                      </select>
+                    </div>
               </div>
 
               <div>
@@ -1139,8 +1290,8 @@ const Admin = () => {
                     style={{ width: '100%', padding: '0.8rem 1rem', background: 'var(--bg-color)', color: '#fff', border: '1px solid var(--border-color)', borderRadius: 'var(--radius-sm)' }}
                   >
                     <option value="">Nacional / Outros</option>
-                    {BR_2026_TEAMS.map(team => (
-                      <option key={team.name} value={team.name}>{team.name}</option>
+                    {teams.map(team => (
+                      <option key={team.id} value={team.name}>{team.name}</option>
                     ))}
                   </select>
                 </div>

@@ -8,6 +8,7 @@ import { Filter, ChevronDown, ChevronRight, X } from 'lucide-react';
 const CategoryPage = () => {
   const { category_id } = useParams();
   const [products, setProducts] = useState([]);
+  const [teams, setTeams] = useState([]);
   const [loading, setLoading] = useState(true);
   const [mobileFilterOpen, setMobileFilterOpen] = useState(false);
   
@@ -28,8 +29,10 @@ const CategoryPage = () => {
       setLoading(true);
       // Puxar do Supabase
       const { data: supabaseData } = await supabase.from('products').select('*').order('id', { ascending: false });
+      const { data: teamsData } = await supabase.from('teams').select('*');
       
       const allProducts = getAllProducts(supabaseData || []);
+      if(teamsData) setTeams(teamsData);
       
       // Filtrar baseado no category_id
       let filtered = allProducts;
@@ -38,7 +41,12 @@ const CategoryPage = () => {
       } else if (category_id === 'europeus') {
         filtered = allProducts.filter(p => String(p.category).includes('Europe') || ['Premier League', 'La Liga', 'Serie A', 'Ligue 1', 'Bundesliga'].includes(p.league));
       } else if (category_id === 'brasileirao') {
-        filtered = allProducts.filter(p => String(p.league).includes('Brasil') || String(p.category).includes('Brasil'));
+        const teamNames = (teamsData || []).map(t => t.name.toLowerCase());
+        filtered = allProducts.filter(p => 
+          String(p.league).includes('Brasil') || 
+          String(p.category).includes('Brasil') ||
+          teamNames.includes(String(p.team).toLowerCase())
+        );
       } else if (categoryNames[category_id]) {
          filtered = allProducts.filter(p => String(p.league).toLowerCase() === categoryNames[category_id].toLowerCase());
       }
