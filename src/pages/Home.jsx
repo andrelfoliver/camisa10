@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import HeroSection from '../components/HeroSection';
+import TeamsBar from '../components/TeamsBar';
 import ProductCard from '../components/ProductCard';
 import { supabase } from '../services/supabase';
 import { ShieldCheck, Truck, Star, Package, Lock, CheckCircle2, AlertTriangle, ChevronDown, ChevronUp, ChevronRight } from 'lucide-react';
@@ -207,6 +208,7 @@ const Home = () => {
     <div style={{ paddingBottom: '4rem' }}>
       {/* 1. HERO */}
       <HeroSection />
+      <TeamsBar />
 
       {/* 2. PROVA E CONFIANÇA (ICONOS MOVIDOS PARA O TOPO) */}
       <section className="section-padding" style={{ background: 'var(--surface-color)', borderBottom: '1px solid var(--border-color)' }}>
