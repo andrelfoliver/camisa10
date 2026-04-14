@@ -19,6 +19,7 @@ const Profile = () => {
 
   const [activeTab, setActiveTab] = useState('pedidos');
   const [myFeedbacks, setMyFeedbacks] = useState([]);
+  const [myOrders, setMyOrders] = useState([]);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   
@@ -29,13 +30,20 @@ const Profile = () => {
 
   useEffect(() => {
     if (user) {
-      loadMyFeedbacks();
+      loadUserData();
     }
   }, [user]);
 
-  const loadMyFeedbacks = async () => {
-    const { data } = await supabase.from('testimonials').select('*').eq('user_id', user.id).order('created_at', { ascending: false });
-    if (data) setMyFeedbacks(data);
+  const loadUserData = async () => {
+    setLoading(true);
+    // 1. Feedbacks
+    const { data: feeds } = await supabase.from('testimonials').select('*').eq('user_id', user.id).order('created_at', { ascending: false });
+    if (feeds) setMyFeedbacks(feeds);
+
+    // 2. Pedidos
+    const { data: orders } = await supabase.from('orders').select('*').eq('user_id', user.id).order('created_at', { ascending: false });
+    if (orders) setMyOrders(orders);
+
     setLoading(false);
   };
 
@@ -116,18 +124,58 @@ const Profile = () => {
         <div className="glass-panel" style={{ padding: '3rem', borderRadius: 'var(--radius-md)' }}>
           
           {activeTab === 'pedidos' && (
-            <>
-              <h2 style={{ marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}><Package /> Pedidos Recentes</h2>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
+              <h2 style={{ marginBottom: '0.5rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}><Package /> Meus Pedidos</h2>
               
-              <div style={{ background: 'rgba(255,255,255,0.02)', padding: '3rem 2rem', textAlign: 'center', borderRadius: 'var(--radius-sm)', border: '1px solid var(--border-color)' }}>
-                <Calendar size={48} color="var(--text-muted)" style={{ marginBottom: '1rem' }} />
-                <h3 style={{ fontSize: '1.2rem', color: '#fff', marginBottom: '0.5rem' }}>Nenhum pedido encontrado.</h3>
-                <p style={{ color: 'var(--text-muted)' }}>Você ainda não garantiu a sua armadura. Visite as coleções para escolher a sua!</p>
-                <button onClick={() => navigate('/colecao/lancamentos')} className="btn-primary" style={{ marginTop: '2rem' }}>
-                  Explorar Coleção
-                </button>
-              </div>
-            </>
+              {loading ? (
+                <p style={{ color: 'var(--text-muted)' }}>Buscando suas armaduras...</p>
+              ) : myOrders.length === 0 ? (
+                <div style={{ background: 'rgba(255,255,255,0.02)', padding: '3rem 2rem', textAlign: 'center', borderRadius: 'var(--radius-sm)', border: '1px solid var(--border-color)' }}>
+                  <Calendar size={48} color="var(--text-muted)" style={{ marginBottom: '1rem' }} />
+                  <h3 style={{ fontSize: '1.2rem', color: '#fff', marginBottom: '0.5rem' }}>Nenhum pedido encontrado.</h3>
+                  <p style={{ color: 'var(--text-muted)' }}>Você ainda não garantiu a sua armadura. Visite as coleções para escolher a sua!</p>
+                  <button onClick={() => navigate('/colecao/lancamentos')} className="btn-primary" style={{ marginTop: '2rem' }}>
+                    Explorar Coleção
+                  </button>
+                </div>
+              ) : (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+                  {myOrders.map(order => (
+                    <div key={order.id} style={{ background: 'var(--surface-color)', borderRadius: 'var(--radius-md)', border: '1px solid var(--border-color)', overflow: 'hidden' }}>
+                      <div style={{ padding: '1.5rem', borderBottom: '1px solid var(--border-color)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                         <div>
+                            <p style={{ color: 'var(--text-muted)', fontSize: '0.8rem', textTransform: 'uppercase', marginBottom: '0.2rem' }}>Pedido #{order.id.slice(0, 8)}</p>
+                            <p style={{ fontWeight: 600 }}>{new Date(order.created_at).toLocaleDateString()}</p>
+                         </div>
+                         <div style={{ textAlign: 'right' }}>
+                            <p style={{ color: 'var(--accent-color)', fontWeight: 800, fontSize: '1.1rem' }}>${order.total_price.toFixed(2)}</p>
+                            <span style={{ fontSize: '0.75rem', background: 'rgba(255,255,255,0.05)', padding: '2px 8px', borderRadius: '4px', border: '1px solid var(--border-color)' }}>
+                               {order.status === 'pending' ? '🟡 Aguardando WhatsApp' : order.status === 'processing' ? '🔵 Preparando Envio' : '🟢 Enviado'}
+                            </span>
+                         </div>
+                      </div>
+                      <div style={{ padding: '1.5rem' }}>
+                         <div style={{ marginBottom: '1rem' }}>
+                            {order.items.map((item, idx) => (
+                               <div key={idx} style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.9rem', marginBottom: '0.4rem' }}>
+                                  <span style={{ color: 'var(--text-main)' }}>{item.quantity}x {item.name} ({item.size})</span>
+                                  <span style={{ color: 'var(--text-muted)' }}>${(item.price * item.quantity).toFixed(2)}</span>
+                               </div>
+                            ))}
+                         </div>
+                         <div style={{ display: 'flex', alignItems: 'flex-start', gap: '0.5rem', color: 'var(--text-muted)', fontSize: '0.8rem', background: 'rgba(0,0,0,0.2)', padding: '0.8rem', borderRadius: '4px' }}>
+                            <MapPin size={14} style={{ marginTop: '2px' }} />
+                            <div>
+                               <p>Entrega: {order.shipping_address.street}{order.shipping_address.apartment ? ', Apt ' + order.shipping_address.apartment : ''}</p>
+                               <p>{order.shipping_address.city}, {order.shipping_address.province} {order.shipping_address.postalCode}</p>
+                            </div>
+                         </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
           )}
 
           {activeTab === 'feedback' && (

@@ -41,6 +41,7 @@ const Admin = () => {
   const [newProduct, setNewProduct] = useState({ name: '', price: '', image: '', category: '', league: '', team: '', version: '' });
   
   const [customers, setCustomers] = useState([]);
+  const [orders, setOrders] = useState([]);
   const [testimonials, setTestimonials] = useState([]);
   const [heroUrl, setHeroUrl] = useState('');
   const [showAddTestimonial, setShowAddTestimonial] = useState(false);
@@ -110,12 +111,18 @@ const Admin = () => {
       const { data } = await supabase.from('testimonials').select('*').order('date', { ascending: false });
       if(data) setTestimonials(data);
     }
+
+    async function loadOrders() {
+      const { data } = await supabase.from('orders').select('*').order('created_at', { ascending: false });
+      if(data) setOrders(data);
+    }
     
     if (isAdmin) {
       loadProducts();
       loadCustomers();
       loadSettings();
       loadTestimonials();
+      loadOrders();
     }
   }, [isAdmin]);
 
@@ -169,11 +176,17 @@ const Admin = () => {
 
   const handleDeleteTestimonial = async (id) => {
     if(!window.confirm("Apagar este depoimento definitivamente?")) return;
-    const { error } = await supabase.from('testimonials').delete().eq('id', id);
-    if(error) {
-      alert("Erro ao deletar: " + error.message);
+    const { error: deleteError } = await supabase.from('testimonials').delete().eq('id', id);
+    if(deleteError) alert("Erro ao excluir!");
+    else setTestimonials(testimonials.filter(t => t.id !== id));
+  };
+
+  const handleUpdateOrderStatus = async (orderId, newStatus) => {
+    const { error } = await supabase.from('orders').update({ status: newStatus }).eq('id', orderId);
+    if (error) {
+      alert("Erro ao atualizar status: " + error.message);
     } else {
-      setTestimonials(testimonials.filter(t => t.id !== id));
+      setOrders(orders.map(o => o.id === orderId ? { ...o, status: newStatus } : o));
     }
   };
 
@@ -323,10 +336,17 @@ const Admin = () => {
 
           <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '1px', marginTop: '1.5rem', marginBottom: '0.5rem', fontWeight: 800 }}>Gestão & Integrações</p>
           <button 
-            onClick={() => setSupplierTab('CLIENTES')}
-            style={{ padding: '0.8rem 1rem', borderRadius: 'var(--radius-md)', display: 'flex', alignItems: 'center', gap: '0.8rem', width: '100%', textAlign: 'left', background: supplierTab === 'CLIENTES' ? '#10B981' : 'transparent', color: supplierTab === 'CLIENTES' ? '#fff' : 'var(--text-main)', fontWeight: supplierTab === 'CLIENTES' ? 700 : 500, transition: 'all 0.2s' }}
+            onClick={() => setSupplierTab('PEDIDOS')}
+            style={{ padding: '0.8rem 1.5rem', background: supplierTab === 'PEDIDOS' ? 'var(--accent-color)' : 'transparent', color: supplierTab === 'PEDIDOS' ? '#000' : 'var(--text-muted)', border: 'none', borderRadius: '4px', cursor: 'pointer', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '0.5rem' }}
           >
-            <Users size={18} /> CRM / Clientes
+            <Package size={18} /> PEDIDOS
+          </button>
+
+          <button 
+            onClick={() => setSupplierTab('CLIENTES')}
+            style={{ padding: '0.8rem 1.5rem', background: supplierTab === 'CLIENTES' ? 'var(--accent-color)' : 'transparent', color: supplierTab === 'CLIENTES' ? '#000' : 'var(--text-muted)', border: 'none', borderRadius: '4px', cursor: 'pointer', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '0.5rem' }}
+          >
+            <Users size={18} /> CLIENTES
           </button>
           
           <button 
@@ -558,26 +578,93 @@ const Admin = () => {
                 )}
               </div>
             </div>
+          ) : supplierTab === 'PEDIDOS' ? (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem', maxWidth: '1200px' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(380px, 1fr))', gap: '1.5rem' }}>
+                {orders.map(order => (
+                  <div key={order.id} className="glass-panel" style={{ padding: '1.5rem', borderRadius: 'var(--radius-lg)', border: '1px solid var(--border-color)' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '1rem' }}>
+                      <div>
+                        <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)', fontWeight: 800 }}>#{order.id.slice(0,8)}</span>
+                        <h4 style={{ color: '#fff', fontSize: '1.1rem' }}>{order.customer_name}</h4>
+                        <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>{order.customer_email}</p>
+                      </div>
+                      <div style={{ textAlign: 'right' }}>
+                        <p style={{ color: 'var(--accent-color)', fontWeight: 800, fontSize: '1.2rem' }}>${order.total_price.toFixed(2)}</p>
+                        <p style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>{new Date(order.created_at).toLocaleString()}</p>
+                      </div>
+                    </div>
+
+                    <div style={{ background: 'rgba(0,0,0,0.2)', padding: '1rem', borderRadius: '4px', marginBottom: '1rem' }}>
+                      {order.items.map((item, i) => (
+                        <p key={i} style={{ fontSize: '0.85rem', color: '#fff' }}>{item.quantity}x {item.name} ({item.size})</p>
+                      ))}
+                    </div>
+
+                    <div style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginBottom: '1.5rem' }}>
+                       <p style={{ marginBottom: '0.3rem' }}><MapPin size={12} /> {order.shipping_address.street}, {order.shipping_address.apartment ? 'Apt ' + order.shipping_address.apartment + ', ' : ''}</p>
+                       <p>{order.shipping_address.city}, {order.shipping_address.province} {order.shipping_address.postalCode}</p>
+                    </div>
+
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                       <select 
+                         value={order.status} 
+                         onChange={(e) => handleUpdateOrderStatus(order.id, e.target.value)}
+                         style={{ flex: 1, padding: '0.5rem', background: 'var(--bg-color)', color: '#fff', border: '1px solid var(--border-color)', borderRadius: '4px', fontSize: '0.8rem' }}
+                       >
+                         <option value="pending">🟡 Pendente (WhatsApp)</option>
+                         <option value="processing">🔵 Preparando</option>
+                         <option value="shipped">🟢 Enviado</option>
+                         <option value="completed">✅ Finalizado</option>
+                         <option value="cancelled">🔴 Cancelado</option>
+                       </select>
+                       <button onClick={() => window.open(`https://wa.me/?text=${encodeURIComponent('Olá ' + order.customer_name + ', referente ao seu pedido na Camisa10...')}`, '_blank')} style={{ padding: '0.5rem', borderRadius: '4px', background: '#25D366', color: '#fff', border: 'none', cursor: 'pointer' }}>
+                         <WhatsAppIcon size={18} />
+                       </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
           ) : supplierTab === 'CLIENTES' ? (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', maxWidth: '900px' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', maxWidth: '1000px' }}>
               {customers.length === 0 ? (
                  <div style={{ textAlign: 'center', padding: '4rem 2rem', background: 'var(--surface-color)', borderRadius: 'var(--radius-lg)', border: '1px dashed var(--border-color)' }}>
                     <Users size={48} color="var(--text-muted)" style={{ marginBottom: '1rem' }} />
                     <h3 style={{ color: '#fff', marginBottom: '0.5rem' }}>Nenhum usuário espelhado</h3>
-                    <p style={{ color: 'var(--text-muted)' }}>Os clientes cadastrados via Google demoram alguns minutos para serem sincronizados ou o Trigger de auth do Supabase ainda não foi acionado.</p>
+                    <p style={{ color: 'var(--text-muted)' }}>Os clientes cadastrados via Google demoram alguns minutos para serem sincronizados.</p>
                  </div>
               ) : (
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(400px, 1fr))', gap: '1.5rem' }}>
-                  {customers.map(customer => (
-                    <div key={customer.id} style={{ background: 'var(--surface-color)', padding: '1.5rem', borderRadius: 'var(--radius-lg)', border: '1px solid var(--border-color)', display: 'flex', alignItems: 'center', gap: '1.5rem', transition: 'all 0.2s', cursor: 'pointer' }} className="customer-card">
-                      <img src={customer.avatar_url || 'https://via.placeholder.com/60'} alt="Avatar" style={{ width: '60px', height: '60px', borderRadius: '50%', border: '2px solid rgba(255,255,255,0.1)' }} />
-                      <div>
-                        <h3 style={{ fontSize: '1.1rem', marginBottom: '0.2rem', color: '#fff' }}>{customer.full_name || 'Usuário'}</h3>
-                        <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem' }}>{customer.email}</p>
-                        <p style={{ color: 'var(--accent-color)', fontSize: '0.75rem', marginTop: '0.3rem', fontWeight: 600 }}>Cadastrado: {new Date(customer.created_at).toLocaleDateString()}</p>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(450px, 1fr))', gap: '1.5rem' }}>
+                  {customers.map(customer => {
+                    const customerOrders = orders.filter(o => o.user_id === customer.id);
+                    return (
+                      <div key={customer.id} style={{ background: 'var(--surface-color)', padding: '1.5rem', borderRadius: 'var(--radius-lg)', border: '1px solid var(--border-color)', display: 'flex', flexDirection: 'column', gap: '1.2rem', transition: 'all 0.2s' }} className="customer-card">
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '1.2rem' }}>
+                          <img src={customer.avatar_url || 'https://via.placeholder.com/60'} alt="Avatar" style={{ width: '60px', height: '60px', borderRadius: '50%', border: '2px solid rgba(255,255,255,0.1)' }} />
+                          <div style={{ flex: 1 }}>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                               <h3 style={{ fontSize: '1.1rem', color: '#fff', margin: 0 }}>{customer.full_name || 'Usuário'}</h3>
+                               <span style={{ fontSize: '0.65rem', background: 'var(--accent-color)', color: '#000', padding: '2px 6px', borderRadius: '4px', fontWeight: 900 }}>{customerOrders.length} PEDIDOS</span>
+                            </div>
+                            <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem' }}>{customer.email}</p>
+                          </div>
+                        </div>
+
+                        {(customer.street || customer.city) ? (
+                          <div style={{ background: 'rgba(0,0,0,0.2)', padding: '1rem', borderRadius: '4px', fontSize: '0.8rem' }}>
+                            <p style={{ color: 'var(--text-muted)', fontWeight: 800, fontSize: '0.65rem', textTransform: 'uppercase', marginBottom: '0.5rem' }}>Endereço de Entrega:</p>
+                            <p style={{ color: '#fff' }}>{customer.street}{customer.apartment ? ', Apt ' + customer.apartment : ''}</p>
+                            <p style={{ color: '#fff' }}>{customer.city}, {customer.province} {customer.postal_code}</p>
+                          </div>
+                        ) : (
+                          <div style={{ background: 'rgba(255,255,255,0.02)', padding: '1rem', borderRadius: '4px', textAlign: 'center' }}>
+                             <p style={{ color: 'var(--text-muted)', fontSize: '0.8rem' }}>Sem endereço cadastrado</p>
+                          </div>
+                        )}
                       </div>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
               )}
             </div>
