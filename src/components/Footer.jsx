@@ -33,6 +33,7 @@ const Footer = () => {
       </div>
       <div className="container" style={{ borderTop: '1px solid var(--border-color)', paddingTop: '2rem', textAlign: 'center', color: 'var(--text-muted)', fontSize: '0.85rem' }}>
         &copy; {new Date().getFullYear()} Camisa10. Todos os direitos reservados.
+        <div style={{ marginTop: '0.5rem', opacity: 0.5, fontSize: '0.7rem' }}>SISTEMA CRM ATUALIZADO V2.0.4</div>
       </div>
     </footer>
   );
