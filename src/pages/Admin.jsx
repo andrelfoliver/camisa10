@@ -1,11 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from '../services/supabase';
 import { useAuth } from '../context/AuthContext';
-import { Save, Check, Crown, Heart, Database, HardDrive, Star, LogOut, Package, Plus, Trash2, X, Users, Image, DollarSign, MapPin } from 'lucide-react';
+import { Save, Check, Crown, Heart, Database, HardDrive, Star, LogOut, Package, Plus, Trash2, X, Users, Image, DollarSign, MapPin, RefreshCw } from 'lucide-react';
 import { BR_2026_TEAMS } from '../data/teams';
+import { migrateProductsToSupabase } from '../services/migration';
 import WhatsAppIcon from '../components/WhatsAppIcon';
-import { Link, Navigate } from 'react-router-dom';
-import { brasil2025Products } from '../data/brasil2025';
 
 const Admin = () => {
   const { user, isAdmin, loading: authLoading, signOut } = useAuth();
@@ -66,12 +65,26 @@ const Admin = () => {
   const [orderFilter, setOrderFilter] = useState(null);
 
 
-  const geralProducts = Array.from({ length: 418 }, (_, i) => ({
-    id: `geral_${i + 1}`,
-    name: `Camisa Geral #${i + 1}`,
-    image: `/camisas/@carinhacriativo (${i + 1}).png`,
-    price: 69.90,
-  }));
+  const [isMigrating, setIsMigrating] = useState(false);
+
+  const handleMigration = async () => {
+    if (!window.confirm('Deseja importar os 450+ produtos iniciais do sistema para o seu banco de dados Supabase? Isso deve ser feito apenas uma vez.')) return;
+    
+    setIsMigrating(true);
+    try {
+      const { successCount, errors } = await migrateProductsToSupabase();
+      if (errors.length > 0) {
+        alert(`Migração concluída com alguns avisos. ${successCount} itens importados.`);
+      } else {
+        alert(`Sucesso! ${successCount} produtos importados para o Supabase.`);
+      }
+      window.location.reload();
+    } catch (err) {
+      alert('Erro na migração: ' + err.message);
+    } finally {
+      setIsMigrating(false);
+    }
+  };
 
   useEffect(() => {
     const savedQueridinhas = localStorage.getItem('queridinhas_ids');
@@ -283,42 +296,31 @@ const Admin = () => {
   const getUniversalProduct = (idStr) => {
     if (!idStr) return null;
     const sId = String(idStr);
-    return products.find(p => String(p.id) === sId) 
-        || brasil2025Products.find(p => String(p.id) === sId)
-        || geralProducts.find(p => String(p.id) === sId);
+    return products.find(p => String(p.id) === sId);
   }
   
   const bestSellerName = bestSellerId ? (getUniversalProduct(bestSellerId)?.name || `ID: ${bestSellerId}`) : 'Nenhum Definido';
 
-  const allAdminProducts = [
-    ...products.map(p => ({ ...p, isLocal: false })),
-    ...brasil2025Products.map(p => ({ ...p, isLocal: true, id: p.id })),
-    ...geralProducts.map(p => ({ ...p, isLocal: true, id: p.id }))
-  ];
-
-  const displayProducts = supplierTab === 'CLOUD_ALL' ? allAdminProducts :
-    allAdminProducts.filter(p => {
+  const displayProducts = !supplierTab.startsWith('CAT_') ? (supplierTab === 'CLOUD_ALL' ? products : []) :
+    products.filter(p => {
       const catTarget = supplierTab.replace('CAT_', '');
       const pCat = (p.category || '').toLowerCase();
       const pName = (p.name || '').toLowerCase();
       const pTeam = (p.team || '').toLowerCase();
-      const pId = String(p.id);
       
       const isClub = BR_2026_TEAMS.some(t => t.name.toLowerCase() === pTeam);
-      const isSelecao = pCat === 'seleções' || pCat === 'selecoes' || pName.includes('seleção') || pName.includes('selecao') || (pName.includes('brasil') && !isClub);
 
       if (catTarget === 'Brasileirão') {
-        // Mostra clubes oficiais OU camisas gerais que o usuário já selecionou (conforme print)
-        return isClub || (pId.startsWith('geral_') && catalogIds.includes(pId) && !isSelecao);
+        return isClub;
       }
       
       if (catTarget === 'Seleções') {
+        const isSelecao = pCat === 'seleções' || pCat === 'selecoes' || pName.includes('seleção') || pName.includes('selecao') || (pName.includes('brasil') && !isClub);
         return isSelecao;
       }
 
       if (catTarget === 'Lançamentos') {
-        // Se estiver no catálogo e for das novas ou tiver a categoria Lançamentos
-        return pCat === 'lançamentos' || pCat === 'lancamentos' || (pId.startsWith('geral_') && catalogIds.includes(pId) && parseInt(pId.replace('geral_', '')) > 400);
+        return pCat === 'lançamentos' || pCat === 'lancamentos';
       }
 
       return p.category === catTarget;
@@ -433,6 +435,17 @@ const Admin = () => {
             <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem', marginTop: '0.2rem' }}>Painel Central de Gerenciamento Camisa10.</p>
           </div>
           <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
+            {supplierTab === 'CLOUD_ALL' && products.length < 50 && (
+              <button 
+                onClick={handleMigration} 
+                disabled={isMigrating}
+                className="btn-primary" 
+                style={{ background: 'rgba(255,255,255,0.05)', color: '#fff', border: '1px solid var(--border-color)', opacity: isMigrating ? 0.5 : 1 }}
+              >
+                <RefreshCw size={18} className={isMigrating ? 'spinning' : ''} /> 
+                {isMigrating ? 'Migrando...' : 'Sincronizar Mock com Nuvem'}
+              </button>
+            )}
             {supplierTab === 'TESTIMONIALS' && (
               <button onClick={() => setShowAddTestimonial(true)} className="btn-primary" style={{ background: '#A855F7', color: '#fff' }}>
                 <Plus size={18} /> Novo Histórico (2022)
