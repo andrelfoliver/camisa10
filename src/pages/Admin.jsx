@@ -62,6 +62,7 @@ const Admin = () => {
     ]
   };
   const [pricing, setPricing] = useState(defaultPricing);
+  const [orderFilter, setOrderFilter] = useState(null);
 
 
   const geralProducts = Array.from({ length: 418 }, (_, i) => ({
@@ -581,8 +582,16 @@ const Admin = () => {
             </div>
           ) : supplierTab === 'PEDIDOS' ? (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem', maxWidth: '1200px' }}>
+              {orderFilter && (
+                <div style={{ background: 'var(--surface-color)', padding: '1rem 1.5rem', borderRadius: '8px', border: '1px solid var(--accent-color)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+                   <p style={{ margin: 0, fontWeight: 700, color: 'var(--accent-color)' }}>
+                     Mostrando pedidos de: {customers.find(c => c.id === orderFilter)?.full_name || 'Usuário Selecionado'}
+                   </p>
+                   <button onClick={() => setOrderFilter(null)} style={{ background: 'transparent', color: '#fff', border: '1px solid #fff', padding: '0.4rem 1rem', borderRadius: '4px', cursor: 'pointer', fontSize: '0.8rem' }}>Exibir Todos</button>
+                </div>
+              )}
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(380px, 1fr))', gap: '1.5rem' }}>
-                {orders.map(order => (
+                {orders.filter(order => !orderFilter || order.user_id === orderFilter).map(order => (
                   <div key={order.id} className="glass-panel" style={{ padding: '1.5rem', borderRadius: 'var(--radius-lg)', border: '1px solid var(--border-color)' }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '1rem' }}>
                       <div>
@@ -640,7 +649,14 @@ const Admin = () => {
                   {customers.map(customer => {
                     const customerOrders = orders.filter(o => o.user_id === customer.id);
                     return (
-                      <div key={customer.id} style={{ background: 'var(--surface-color)', padding: '1.5rem', borderRadius: 'var(--radius-lg)', border: '1px solid var(--border-color)', display: 'flex', flexDirection: 'column', gap: '1.2rem', transition: 'all 0.2s' }} className="customer-card">
+                      <div 
+                        key={customer.id} 
+                        onClick={() => { setOrderFilter(customer.id); setSupplierTab('PEDIDOS'); }}
+                        style={{ background: 'var(--surface-color)', padding: '1.5rem', borderRadius: 'var(--radius-lg)', border: '1px solid var(--border-color)', display: 'flex', flexDirection: 'column', gap: '1.2rem', transition: 'all 0.2s', cursor: 'pointer' }} 
+                        className="customer-card"
+                        onMouseEnter={(e) => { e.currentTarget.style.borderColor = 'var(--accent-color)'; e.currentTarget.style.transform = 'translateY(-2px)'; }}
+                        onMouseLeave={(e) => { e.currentTarget.style.borderColor = 'var(--border-color)'; e.currentTarget.style.transform = 'translateY(0)'; }}
+                      >
                         <div style={{ display: 'flex', alignItems: 'center', gap: '1.2rem' }}>
                           <img src={customer.avatar_url || 'https://via.placeholder.com/60'} alt="Avatar" style={{ width: '60px', height: '60px', borderRadius: '50%', border: '2px solid rgba(255,255,255,0.1)' }} />
                           <div style={{ flex: 1 }}>
