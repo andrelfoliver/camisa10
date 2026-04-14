@@ -436,7 +436,7 @@ const Admin = () => {
             <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem', marginTop: '0.2rem' }}>Painel Central de Gerenciamento Camisa10.</p>
           </div>
           <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
-            {products.length < 50 && (
+            {products.length < 1000 && (
               <button 
                 onClick={handleMigration} 
                 disabled={isMigrating}
