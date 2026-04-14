@@ -35,6 +35,17 @@ const ProductCard = ({ product }) => {
       {product.id === 1 && <div className="badge">🇧🇷 Sucesso</div>}
       {product.id === 2 && <div className="badge" style={{background: '#EF4444', color: '#fff'}}>🔥 Mais Vendido</div>}
       {product.id === 3 && <div className="badge" style={{background: '#FFB81C', color: '#000'}}>⭐ Novo</div>}
+      {product.version && (
+        <div className="badge" style={{ 
+          top: product.id <= 3 ? '40px' : '15px', 
+          background: 'rgba(255,255,255,0.1)', 
+          color: 'var(--text-muted)',
+          fontSize: '0.65rem',
+          border: '1px solid rgba(255,255,255,0.1)'
+        }}>
+          {product.version}
+        </div>
+      )}
 
       <div 
         onClick={handleView}
