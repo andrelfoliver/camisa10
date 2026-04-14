@@ -35,12 +35,17 @@ export const migrateProductsToSupabase = async () => {
   let errors = [];
 
   for (let i = 0; i < allToMigrate.length; i += CHUNK_SIZE) {
-    const chunk = allToMigrate.slice(i, i + CHUNK_SIZE);
+    const chunk = allToMigrate.slice(i, i + CHUNK_SIZE).map(p => ({
+      ...p,
+      price: Number(p.price),
+      inventory: Number(p.inventory || 0)
+    }));
+    
     const { data, error } = await supabase.from('products').insert(chunk).select();
     
     if (error) {
-      console.error(`Erro no bloco ${i}:`, error.message);
-      errors.push(error.message);
+      console.error(`DETALHES DO ERRO NO BLOCO ${i}:`, error);
+      errors.push(`${error.message} (${error.details || 'sem detalhes'})`);
     } else {
       successCount += chunk.length;
       console.log(`Progresso: ${successCount} produtos migrados...`);

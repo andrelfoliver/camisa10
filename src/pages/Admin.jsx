@@ -81,13 +81,13 @@ const Admin = () => {
         try {
           const { successCount, errors } = await migrateProductsToSupabase();
           if (errors.length > 0) {
-            showAlert('Concluído com Avisos', `Migração concluída. ${successCount} itens importados.`);
+            showAlert('Aviso de Migração', `Migração parcial. Erros encontrados: ${errors.join(' | ')}`);
           } else {
             showAlert('Sucesso Total!', `${successCount} produtos importados para o seu banco de dados Supabase.`);
+            setTimeout(() => window.location.reload(), 3000);
           }
-          setTimeout(() => window.location.reload(), 2000);
         } catch (err) {
-          showAlert('Erro na Migração', err.message);
+          showAlert('CATASTROFE NA MIGRAÇÃO', `Erro técnico: ${err.message}. Verifique a política de RLS no Supabase.`);
         } finally {
           setIsMigrating(false);
         }
@@ -223,7 +223,7 @@ const Admin = () => {
     
     const { data, error } = await supabase.from('products').insert([prodToInsert]).select();
     if (error) {
-      alert("Erro ao adicionar! Detalhes: " + error.message);
+      showAlert("Erro ao adicionar!", `${error.message} | Detalhes: ${error.details || 'Nenhum detalhe adicional'}`);
       return;
     }
     
