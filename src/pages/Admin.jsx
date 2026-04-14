@@ -5,6 +5,7 @@ import { Save, Check, Crown, Heart, Database, HardDrive, Star, LogOut, Package, 
 import { BR_2026_TEAMS } from '../data/teams';
 import { migrateProductsToSupabase } from '../services/migration';
 import WhatsAppIcon from '../components/WhatsAppIcon';
+import { Link, Navigate } from 'react-router-dom';
 
 const Admin = () => {
   const { user, isAdmin, loading: authLoading, signOut } = useAuth();
