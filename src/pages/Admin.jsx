@@ -31,13 +31,17 @@ const Admin = () => {
     
     const { id, created_at, league, version, inventory, description, ...dataToSend } = editingProduct;
     
-    // Garantir que preco seja numero e remover campos extras para o Supabase
+    // Garantir que preco seja numero e incluir agora todas as colunas suportadas
     const sanitizedData = {
       name: dataToSend.name,
       price: Number(dataToSend.price),
       image: dataToSend.image,
       category: dataToSend.category,
-      team: dataToSend.team
+      team: dataToSend.team,
+      league: dataToSend.league,
+      version: dataToSend.version,
+      inventory: Number(dataToSend.inventory || 0),
+      description: dataToSend.description
     };
 
     const { error } = await supabase.from('products').update(sanitizedData).eq('id', id);
@@ -237,7 +241,11 @@ const Admin = () => {
       price: Number(newProduct.price),
       image: newProduct.image,
       category: newProduct.category,
-      team: newProduct.team
+      team: newProduct.team,
+      league: newProduct.league,
+      version: newProduct.version,
+      inventory: Number(newProduct.inventory || 0),
+      description: newProduct.description
     };
     
     const { data, error } = await supabase.from('products').insert([sanitizedData]).select();
