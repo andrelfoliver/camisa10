@@ -159,20 +159,6 @@ const Home = () => {
         setStoreSections(mapCat);
         setAllProductsData(allUnified);
 
-      } else {
-        // Fallback Completo
-        setBestSeller(defaultQueridinhasMock[1]);
-        setQueridinhas(defaultQueridinhasMock);
-        
-        const allUnified = getAllProducts([]);
-        const mapCat = { 'Seleções': [], 'Brasileirão': [], 'Internacionais': [], 'Lançamentos': [], 'Retrô': [] };
-        allUnified.forEach(p => {
-           if(p.league?.toLowerCase().includes('brasil')) mapCat['Brasileirão'].push(p);
-           else mapCat['Internacionais'].push(p);
-        });
-        setStoreSections(mapCat);
-        setAllProductsData(allUnified);
-      }
       const { data: testData } = await supabase.from('testimonials').select('*').eq('status', 'approved').order('date', { ascending: false });
       if(testData) setTestimonials(testData);
 
