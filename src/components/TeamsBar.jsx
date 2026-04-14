@@ -38,25 +38,26 @@ const TeamsBar = ({ teams = [], onSelectTeam }) => {
             display: flex;
             align-items: center;
             justify-content: center;
-            background: rgba(255,255,255,0.03);
-            border: 1px solid rgba(255,255,255,0.1);
+            background: white;
+            border: 1px solid rgba(255,255,255,0.2);
             border-radius: 50%;
             padding: 12px;
             transition: all 0.3s ease;
-            filter: grayscale(0.2) brightness(0.9);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
             cursor: pointer;
           }
           .team-item:hover {
-            filter: grayscale(0) brightness(1.2);
+            transform: scale(1.15);
+            background: #fff;
+            box-shadow: 0 0 25px var(--accent-glow);
             border-color: var(--accent-color);
-            transform: scale(1.1);
-            background: rgba(219, 254, 135, 0.05);
-            box-shadow: 0 0 20px rgba(219, 254, 135, 0.15);
           }
           .team-logo {
             max-width: 100%;
             max-height: 100%;
             object-fit: contain;
+            /* Garantimos que a imagem não tenha filtros que a escureçam */
+            filter: none;
           }
         `}
       </style>
