@@ -1,18 +1,69 @@
-import React, { useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
-import { LogOut, Package, Star, Calendar } from 'lucide-react';
+import { LogOut, Package, Star, Calendar, MessageSquare, CheckCircle2, Clock } from 'lucide-react';
 import { Navigate, useNavigate } from 'react-router-dom';
+import { supabase } from '../services/supabase';
 
 const Profile = () => {
-  const { user, signOut, isAdmin } = useAuth();
+  const { user, signOut, isAdmin, loading: authLoading } = useAuth();
   const navigate = useNavigate();
-
-  if (!user) return <Navigate to="/auth" />;
-  if (isAdmin) return <Navigate to="/admin" />;
 
   const handleLogout = async () => {
     await signOut();
     navigate('/');
+  };
+
+  if (authLoading) return <div style={{ minHeight: '80vh', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-muted)' }}>Carregando perfil...</div>;
+  if (!user) return <Navigate to="/auth" />;
+  if (isAdmin) return <Navigate to="/admin" />;
+
+  const [activeTab, setActiveTab] = useState('pedidos');
+  const [myFeedbacks, setMyFeedbacks] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [submitting, setSubmitting] = useState(false);
+  
+  // States para o Form
+  const [rating, setRating] = useState(5);
+  const [content, setContent] = useState('');
+  const [location, setLocation] = useState('');
+
+  useEffect(() => {
+    if (user) {
+      loadMyFeedbacks();
+    }
+  }, [user]);
+
+  const loadMyFeedbacks = async () => {
+    const { data } = await supabase.from('testimonials').select('*').eq('user_id', user.id).order('created_at', { ascending: false });
+    if (data) setMyFeedbacks(data);
+    setLoading(false);
+  };
+
+  const handleSubmitFeedback = async (e) => {
+    e.preventDefault();
+    setSubmitting(true);
+
+    const feedbackData = {
+      user_id: user.id,
+      name: user.user_metadata?.full_name || 'Torcedor',
+      content,
+      rating,
+      location: location || 'Canadá',
+      avatar_url: user.user_metadata?.avatar_url || null,
+      date: new Date().toISOString().split('T')[0],
+      status: 'pending' // Forçado pelo default do banco também
+    };
+
+    const { error } = await supabase.from('testimonials').insert([feedbackData]);
+
+    if (error) {
+      alert("Erro ao enviar feedback: " + error.message);
+    } else {
+      alert("Depoimento enviado com sucesso! Ele aparecerá no site após a moderação.");
+      setContent('');
+      loadMyFeedbacks();
+    }
+    setSubmitting(false);
   };
 
   return (
@@ -36,14 +87,20 @@ const Profile = () => {
         <div className="glass-panel" style={{ padding: '2rem', borderRadius: 'var(--radius-md)', height: 'fit-content' }}>
           <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: '1rem' }}>
             <li>
-              <button style={{ width: '100%', textAlign: 'left', display: 'flex', alignItems: 'center', gap: '1rem', color: 'var(--accent-color)', fontWeight: 600, fontSize: '1.1rem', padding: '0.5rem 0' }}>
+              <button 
+                onClick={() => setActiveTab('pedidos')}
+                style={{ width: '100%', textAlign: 'left', display: 'flex', alignItems: 'center', gap: '1rem', color: activeTab === 'pedidos' ? 'var(--accent-color)' : 'var(--text-main)', fontWeight: activeTab === 'pedidos' ? 600 : 400, fontSize: '1.1rem', padding: '0.5rem 0', transition: 'all 0.2s' }}
+              >
                 <Package size={20} /> Meus Pedidos
               </button>
             </li>
             <hr style={{ borderColor: 'var(--border-color)', margin: '0.5rem 0' }} />
             <li>
-              <button style={{ width: '100%', textAlign: 'left', display: 'flex', alignItems: 'center', gap: '1rem', color: 'var(--text-main)', fontSize: '1.1rem', padding: '0.5rem 0' }}>
-                <Star size={20} /> Lista de Desejos
+              <button 
+                onClick={() => setActiveTab('feedback')}
+                style={{ width: '100%', textAlign: 'left', display: 'flex', alignItems: 'center', gap: '1rem', color: activeTab === 'feedback' ? 'var(--accent-color)' : 'var(--text-main)', fontWeight: activeTab === 'feedback' ? 600 : 400, fontSize: '1.1rem', padding: '0.5rem 0', transition: 'all 0.2s' }}
+              >
+                <MessageSquare size={20} /> Meu Feedback
               </button>
             </li>
             <hr style={{ borderColor: 'var(--border-color)', margin: '0.5rem 0' }} />
@@ -57,16 +114,109 @@ const Profile = () => {
 
         {/* Content Area */}
         <div className="glass-panel" style={{ padding: '3rem', borderRadius: 'var(--radius-md)' }}>
-          <h2 style={{ marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}><Package /> Pedidos Recentes</h2>
           
-          <div style={{ background: 'rgba(255,255,255,0.02)', padding: '3rem 2rem', textAlign: 'center', borderRadius: 'var(--radius-sm)', border: '1px solid var(--border-color)' }}>
-             <Calendar size={48} color="var(--text-muted)" style={{ marginBottom: '1rem' }} />
-             <h3 style={{ fontSize: '1.2rem', color: '#fff', marginBottom: '0.5rem' }}>Nenhum pedido encontrado.</h3>
-             <p style={{ color: 'var(--text-muted)' }}>Você ainda não garantiu a sua armadura. Visite as coleções para escolher a sua!</p>
-             <button onClick={() => navigate('/colecao/lancamentos')} className="btn-primary" style={{ marginTop: '2rem' }}>
-               Explorar Coleção
-             </button>
-          </div>
+          {activeTab === 'pedidos' && (
+            <>
+              <h2 style={{ marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}><Package /> Pedidos Recentes</h2>
+              
+              <div style={{ background: 'rgba(255,255,255,0.02)', padding: '3rem 2rem', textAlign: 'center', borderRadius: 'var(--radius-sm)', border: '1px solid var(--border-color)' }}>
+                <Calendar size={48} color="var(--text-muted)" style={{ marginBottom: '1rem' }} />
+                <h3 style={{ fontSize: '1.2rem', color: '#fff', marginBottom: '0.5rem' }}>Nenhum pedido encontrado.</h3>
+                <p style={{ color: 'var(--text-muted)' }}>Você ainda não garantiu a sua armadura. Visite as coleções para escolher a sua!</p>
+                <button onClick={() => navigate('/colecao/lancamentos')} className="btn-primary" style={{ marginTop: '2rem' }}>
+                  Explorar Coleção
+                </button>
+              </div>
+            </>
+          )}
+
+          {activeTab === 'feedback' && (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '2.5rem' }}>
+              <div>
+                <h2 style={{ marginBottom: '0.5rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>O que você achou da Camisa10? 🗣️</h2>
+                <p style={{ color: 'var(--text-muted)', marginBottom: '2rem' }}>Sua opinião nos ajuda a crescer e ajuda outros brasileiros no Canadá!</p>
+                
+                <form onSubmit={handleSubmitFeedback} style={{ background: 'rgba(255,255,255,0.02)', padding: '2rem', borderRadius: 'var(--radius-md)', border: '1px solid var(--border-color)' }}>
+                   <div style={{ marginBottom: '1.5rem' }}>
+                      <label style={{ display: 'block', marginBottom: '0.5rem', color: 'var(--text-muted)' }}>Nota para sua experiência:</label>
+                      <div style={{ display: 'flex', gap: '0.5rem' }}>
+                        {[1,2,3,4,5].map(star => (
+                           <button 
+                             key={star} 
+                             type="button"
+                             onClick={() => setRating(star)}
+                             style={{ background: 'transparent', border: 'none', cursor: 'pointer', padding: 0 }}
+                           >
+                              <Star size={30} fill={star <= rating ? '#FFB81C' : 'transparent'} color={star <= rating ? '#FFB81C' : 'var(--text-muted)'} />
+                           </button>
+                        ))}
+                      </div>
+                   </div>
+
+                   <div style={{ marginBottom: '1.5rem' }}>
+                      <label style={{ display: 'block', marginBottom: '0.5rem', color: 'var(--text-muted)' }}>De onde você comprou? (Cidade, Província)</label>
+                      <input 
+                        type="text" 
+                        value={location} 
+                        onChange={e => setLocation(e.target.value)} 
+                        placeholder="Ex: Toronto, ON" 
+                        style={{ width: '100%', padding: '1rem', background: 'var(--bg-color)', border: '1px solid var(--border-color)', borderRadius: '4px', color: '#fff' }} 
+                      />
+                   </div>
+
+                   <div style={{ marginBottom: '2rem' }}>
+                      <label style={{ display: 'block', marginBottom: '0.5rem', color: 'var(--text-muted)' }}>Seu comentário:</label>
+                      <textarea 
+                        required
+                        value={content} 
+                        onChange={e => setContent(e.target.value)} 
+                        rows={4}
+                        placeholder="Conte sua experiência com o produto, entrega e atendimento..."
+                        style={{ width: '100%', padding: '1rem', background: 'var(--bg-color)', border: '1px solid var(--border-color)', borderRadius: '4px', color: '#fff', resize: 'none' }} 
+                      />
+                   </div>
+
+                   <button type="submit" disabled={submitting} className="btn-primary" style={{ width: '100%', justifyContent: 'center', opacity: submitting ? 0.7 : 1 }}>
+                     {submitting ? 'Enviando...' : 'Publicar Depoimento'}
+                   </button>
+                </form>
+              </div>
+
+              <div>
+                <h3 style={{ marginBottom: '1.5rem' }}>Meus Depoimentos Enviados</h3>
+                {loading ? (
+                  <p style={{ color: 'var(--text-muted)' }}>Carregando histórico...</p>
+                ) : myFeedbacks.length === 0 ? (
+                  <p style={{ color: 'var(--text-muted)', textAlign: 'center', padding: '2rem', border: '1px dashed var(--border-color)', borderRadius: 'var(--radius-sm)' }}>Você ainda não enviou feedbacks.</p>
+                ) : (
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                    {myFeedbacks.map(f => (
+                      <div key={f.id} style={{ padding: '1.5rem', background: 'rgba(255,255,255,0.01)', border: '1px solid var(--border-color)', borderRadius: 'var(--radius-md)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                        <div style={{ flex: 1 }}>
+                           <div style={{ display: 'flex', gap: '2px', marginBottom: '0.5rem' }}>
+                              {Array.from({ length: 5 }).map((_, i) => <Star key={i} size={14} fill={i < f.rating ? '#FFB81C' : 'transparent'} color={i < f.rating ? '#FFB81C' : 'var(--text-muted)'} />)}
+                           </div>
+                           <p style={{ fontSize: '0.95rem', color: '#fff', marginBottom: '0.3rem' }}>"{f.content}"</p>
+                           <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Enviado em: {new Date(f.created_at).toLocaleDateString()}</p>
+                        </div>
+                        <div style={{ marginLeft: '1.5rem', textAlign: 'right' }}>
+                           {f.status === 'approved' ? (
+                             <span style={{ color: '#10B981', display: 'flex', alignItems: 'center', gap: '0.4rem', fontSize: '0.85rem', fontWeight: 600 }}>
+                                <CheckCircle2 size={16} /> Publicado
+                             </span>
+                           ) : (
+                             <span style={{ color: 'var(--accent-color)', display: 'flex', alignItems: 'center', gap: '0.4rem', fontSize: '0.85rem', fontWeight: 600 }}>
+                                <Clock size={16} /> Em Análise
+                             </span>
+                           )}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
         </div>
 
       </div>

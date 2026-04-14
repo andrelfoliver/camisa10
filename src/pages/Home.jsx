@@ -78,6 +78,7 @@ const ProductShowcaseCard = ({ product }) => {
 const Home = () => {
   const [bestSeller, setBestSeller] = useState(null);
   const [queridinhas, setQueridinhas] = useState([]);
+  const [testimonials, setTestimonials] = useState([]);
   const [loading, setLoading] = useState(true);
   
   // As 5 Categorias Oficiais
@@ -194,6 +195,9 @@ const Home = () => {
         });
         setStoreSections(mapCat);
       }
+      const { data: testData } = await supabase.from('testimonials').select('*').eq('status', 'approved').order('date', { ascending: false });
+      if(testData) setTestimonials(testData);
+
       setLoading(false);
     }
     fetchHomeData();
@@ -363,25 +367,54 @@ const Home = () => {
         </div>
       </section>
 
-      {/* 8. PROVA SOCIAL */}
-      <section className="section-padding container" style={{ textAlign: 'center' }}>
-        <h2 style={{ fontSize: '2.5rem', marginBottom: '3rem' }}>O que nossos clientes dizem</h2>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '2rem' }}>
-          <div className="glass-panel" style={{ padding: '2rem', textAlign: 'left', borderRadius: 'var(--radius-md)' }}>
-            <div style={{ color: 'var(--accent-color)', marginBottom: '1rem', display: 'flex' }}><Star fill="currentColor"/><Star fill="currentColor"/><Star fill="currentColor"/><Star fill="currentColor"/><Star fill="currentColor"/></div>
-            <p style={{ fontSize: '1.1rem', marginBottom: '1rem', fontStyle: 'italic' }}>"Qualidade absurda, parece original!"</p>
-            <p style={{ color: 'var(--text-muted)', fontWeight: 600 }}>— Ricardo T.</p>
-          </div>
-          <div className="glass-panel" style={{ padding: '2rem', textAlign: 'left', borderRadius: 'var(--radius-md)' }}>
-            <div style={{ color: 'var(--accent-color)', marginBottom: '1rem', display: 'flex' }}><Star fill="currentColor"/><Star fill="currentColor"/><Star fill="currentColor"/><Star fill="currentColor"/><Star fill="currentColor"/></div>
-            <p style={{ fontSize: '1.1rem', marginBottom: '1rem', fontStyle: 'italic' }}>"Chegou rápido em Toronto!"</p>
-            <p style={{ color: 'var(--text-muted)', fontWeight: 600 }}>— Fernando S.</p>
-          </div>
-          <div className="glass-panel" style={{ padding: '2rem', textAlign: 'left', borderRadius: 'var(--radius-md)' }}>
-            <div style={{ color: 'var(--accent-color)', marginBottom: '1rem', display: 'flex' }}><Star fill="currentColor"/><Star fill="currentColor"/><Star fill="currentColor"/><Star fill="currentColor"/><Star fill="currentColor"/></div>
-            <p style={{ fontSize: '1.1rem', marginBottom: '1rem', fontStyle: 'italic' }}>"Já comprei 2, top demais!"</p>
-            <p style={{ color: 'var(--text-muted)', fontWeight: 600 }}>— Paulo M.</p>
-          </div>
+      {/* 8. PROVA SOCIAL (CARROSSEL DINÂMICO) */}
+      <section className="section-padding container" style={{ textAlign: 'center', overflow: 'hidden' }}>
+        <h2 style={{ fontSize: '3rem', fontWeight: 900, marginBottom: '1rem' }}>Voz da Arquibancada 🗣️</h2>
+        <p style={{ color: 'var(--text-muted)', marginBottom: '3.5rem', fontSize: '1.2rem' }}>
+          Desde 2022, conectando brasileiros em todo o Canadá com seus mantos favoritos.
+        </p>
+
+        <div className="testimonials-track hide-scrollbar" style={{ display: 'flex', gap: '2rem', overflowX: 'auto', padding: '1rem 0.5rem 3rem', scrollSnapType: 'x mandatory' }}>
+          {testimonials.length > 0 ? (
+            testimonials.map(t => (
+              <div key={t.id} style={{ minWidth: '320px', maxWidth: '350px', background: 'var(--surface-color)', padding: '2.5rem', borderRadius: 'var(--radius-lg)', border: '1px solid var(--border-color)', textAlign: 'left', position: 'relative', scrollSnapAlign: 'center', boxShadow: '0 10px 30px rgba(0,0,0,0.3)' }}>
+                <div style={{ position: 'absolute', top: '-12px', right: '20px', background: 'var(--accent-color)', color: '#000', fontSize: '0.7rem', fontWeight: 900, padding: '0.3rem 0.8rem', borderRadius: '4px', textTransform: 'uppercase' }}>
+                  Cliente desde {new Date(t.date).getFullYear()}
+                </div>
+                
+                <div style={{ color: '#FFB81C', marginBottom: '1.2rem', display: 'flex', gap: '2px' }}>
+                  {Array.from({ length: t.rating }).map((_, i) => <Star key={i} size={16} fill="#FFB81C" />)}
+                </div>
+
+                <p style={{ fontSize: '1.1rem', marginBottom: '2rem', fontStyle: 'italic', color: '#fff', lineHeight: 1.6 }}>"{t.content}"</p>
+                
+                <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                  {t.avatar_url ? (
+                    <img src={t.avatar_url} alt={t.name} style={{ width: '40px', height: '40px', borderRadius: '50%', border: '2px solid var(--accent-color)' }} />
+                  ) : (
+                    <div style={{ width: '40px', height: '40px', borderRadius: '50%', background: 'linear-gradient(45deg, var(--accent-color), #fff)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 900, color: '#000', fontSize: '0.9rem' }}>
+                      {t.name.charAt(0)}
+                    </div>
+                  )}
+                  <div>
+                    <p style={{ fontWeight: 800, color: '#fff', fontSize: '1rem' }}>{t.name}</p>
+                    <p style={{ color: 'var(--text-muted)', fontSize: '0.8rem' }}>{t.location}</p>
+                  </div>
+                </div>
+              </div>
+            ))
+          ) : (
+            // Fallback caso não tenha nada no banco ainda
+            [1,2,3].map(i => (
+              <div key={i} style={{ minWidth: '320px', background: 'var(--surface-color)', padding: '2.5rem', borderRadius: 'var(--radius-lg)', border: '1px solid var(--border-color)', textAlign: 'left', opacity: 0.5 }}>
+                 <p style={{ color: 'var(--text-muted)' }}>Depoimento carregando...</p>
+              </div>
+            ))
+          )}
+        </div>
+        
+        <div style={{ display: 'flex', justifyContent: 'center', gap: '1rem', marginTop: '1rem' }}>
+           <p style={{ fontSize: '0.9rem', color: 'var(--text-muted)' }}>Deslize lateralmente para ler mais →</p>
         </div>
       </section>
 
