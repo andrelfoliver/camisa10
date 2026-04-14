@@ -278,7 +278,7 @@ button {
   width: 100%;
   min-height: 95vh;
   display: flex;
-  align-items: flex-end;
+  align-items: center;
   overflow: hidden;
   background: #000;
 }
@@ -319,10 +319,10 @@ button {
   width: 100%;
   max-width: 1400px;
   margin: 0 auto;
-  padding: 0 4rem 4rem 4rem;
+  padding: 80px 4rem 4rem 4rem;
   display: flex;
   justify-content: space-between;
-  align-items: flex-end;
+  align-items: center;
   gap: 2rem;
 }
 
