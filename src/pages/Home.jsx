@@ -173,15 +173,21 @@ const Home = () => {
           const cat = (p.category || '').toLowerCase();
           const pName = (p.name || '').toLowerCase();
           const pTeam = (p.team || '').toLowerCase();
+          const pId = String(p.id);
           
           const isClub = BR_2026_TEAMS.some(t => t.name.toLowerCase() === pTeam);
+          const isSelecao = cat === 'seleções' || cat === 'selecoes' || pName.includes('seleção') || pName.includes('selecao') || (pName.includes('brasil') && !isClub);
 
-          if (isClub) mapCat['Brasileirão'].push(p);
-          else if (cat === 'seleções' || cat === 'selecoes' || pName.includes('seleção') || pName.includes('selecao') || (pName.includes('brasil') && !isClub)) {
+          if (isClub || (pId.startsWith('geral_') && cIds.includes(pId) && !isSelecao)) {
+            mapCat['Brasileirão'].push(p);
+          }
+          else if (isSelecao) {
             mapCat['Seleções'].push(p);
           }
           else if (cat === 'internacionais' || cat.includes('europa') || cat.includes('europe')) mapCat['Internacionais'].push(p);
-          else if (cat === 'lançamentos' || cat.includes('lançament')) mapCat['Lançamentos'].push(p);
+          else if (cat === 'lançamentos' || cat.includes('lançament') || (pId.startsWith('geral_') && cIds.includes(pId) && parseInt(pId.replace('geral_', '')) > 400)) {
+            mapCat['Lançamentos'].push(p);
+          }
           else if (cat === 'retrô' || cat.includes('retro')) mapCat['Retrô'].push(p);
           else {
              mapCat['Lançamentos'].push(p);

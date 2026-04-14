@@ -296,26 +296,29 @@ const Admin = () => {
     ...geralProducts.map(p => ({ ...p, isLocal: true, id: p.id }))
   ];
 
-  const displayProducts = !supplierTab.startsWith('CAT_') ? (supplierTab === 'CLOUD_ALL' ? products : []) :
+  const displayProducts = supplierTab === 'CLOUD_ALL' ? allAdminProducts :
     allAdminProducts.filter(p => {
       const catTarget = supplierTab.replace('CAT_', '');
       const pCat = (p.category || '').toLowerCase();
       const pName = (p.name || '').toLowerCase();
       const pTeam = (p.team || '').toLowerCase();
+      const pId = String(p.id);
       
       const isClub = BR_2026_TEAMS.some(t => t.name.toLowerCase() === pTeam);
+      const isSelecao = pCat === 'seleções' || pCat === 'selecoes' || pName.includes('seleção') || pName.includes('selecao') || (pName.includes('brasil') && !isClub);
 
       if (catTarget === 'Brasileirão') {
-        return isClub;
+        // Mostra clubes oficiais OU camisas gerais que o usuário já selecionou (conforme print)
+        return isClub || (pId.startsWith('geral_') && catalogIds.includes(pId) && !isSelecao);
       }
       
       if (catTarget === 'Seleções') {
-        const isSelecao = pCat === 'seleções' || pCat === 'selecoes' || pName.includes('seleção') || pName.includes('selecao') || (pName.includes('brasil') && !isClub);
         return isSelecao;
       }
 
       if (catTarget === 'Lançamentos') {
-        return pCat === 'lançamentos' || pCat === 'lancamentos';
+        // Se estiver no catálogo e for das novas ou tiver a categoria Lançamentos
+        return pCat === 'lançamentos' || pCat === 'lancamentos' || (pId.startsWith('geral_') && catalogIds.includes(pId) && parseInt(pId.replace('geral_', '')) > 400);
       }
 
       return p.category === catTarget;
