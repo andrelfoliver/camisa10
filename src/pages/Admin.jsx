@@ -22,9 +22,16 @@ const Admin = () => {
   const [productToDelete, setProductToDelete] = useState(null);
   const [editingProduct, setEditingProduct] = useState(null);
 
-    const { id, created_at, league, version, inventory, description, ...dataToSend } = prodToUpdate;
+  const handleUpdateProduct = async (e) => {
+    e.preventDefault();
+    setSaved(false);
     
-    // Garantir que preco seja numero e remover campos extras
+    // Pegar o produto sendo editado (garantir que existe)
+    if (!editingProduct) return;
+    
+    const { id, created_at, league, version, inventory, description, ...dataToSend } = editingProduct;
+    
+    // Garantir que preco seja numero e remover campos extras para o Supabase
     const sanitizedData = {
       name: dataToSend.name,
       price: Number(dataToSend.price),
@@ -38,7 +45,7 @@ const Admin = () => {
        showAlert("Erro ao editar!", error.message);
        return;
     }
-    setProducts(products.map(p => p.id === id ? prodToUpdate : p));
+    setProducts(products.map(p => p.id === id ? { ...editingProduct, ...sanitizedData } : p));
     setEditingProduct(null);
     setSaved(true);
     setTimeout(() => setSaved(false), 3000);
