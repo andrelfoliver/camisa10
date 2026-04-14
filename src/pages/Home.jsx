@@ -76,6 +76,7 @@ const ProductShowcaseCard = ({ product }) => {
 
 
 const Home = () => {
+  // Estado inicial limpo - O site agora é 100% dinâmico via Supabase
   const [bestSeller, setBestSeller] = useState(null);
   const [queridinhas, setQueridinhas] = useState([]);
   const [testimonials, setTestimonials] = useState([]);
@@ -83,7 +84,6 @@ const Home = () => {
   const [activeTeamFilter, setActiveTeamFilter] = useState(null);
   const [allProductsData, setAllProductsData] = useState([]);
   
-  // As 5 Categorias Oficiais
   const [storeSections, setStoreSections] = useState({
     'Seleções': [],
     'Brasileirão': [],
@@ -91,14 +91,6 @@ const Home = () => {
     'Lançamentos': [],
     'Retrô': []
   });
-
-  // Defaults usando diretamente o catálogo Brasil 2025 para cobrir mobiles/novos acessos sem localStorage
-  const defaultQueridinhasMock = [
-    brasil2025Products[2], // br25_home_torcedor
-    brasil2025Products[0], // br25_home_jogador
-    brasil2025Products[1], // br25_away_jogador
-    brasil2025Products[3]  // br25_away_torcedor
-  ];
   
   useEffect(() => {
     async function fetchHomeData() {
