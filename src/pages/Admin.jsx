@@ -304,27 +304,27 @@ const Admin = () => {
 
   const displayProducts = !supplierTab.startsWith('CAT_') ? (supplierTab === 'CLOUD_ALL' ? products : []) :
     products.filter(p => {
-      const catTarget = supplierTab.replace('CAT_', '');
+      const catTarget = supplierTab.replace('CAT_', '').toLowerCase();
       const pCat = (p.category || '').toLowerCase();
       const pName = (p.name || '').toLowerCase();
       const pTeam = (p.team || '').toLowerCase();
       
       const isClub = BR_2026_TEAMS.some(t => t.name.toLowerCase() === pTeam);
 
-      if (catTarget === 'Brasileirão') {
-        return isClub;
+      if (catTarget === 'brasileirão') {
+        return isClub || pCat === 'brasileirão';
       }
       
-      if (catTarget === 'Seleções') {
+      if (catTarget === 'seleções') {
         const isSelecao = pCat === 'seleções' || pCat === 'selecoes' || pName.includes('seleção') || pName.includes('selecao') || (pName.includes('brasil') && !isClub);
         return isSelecao;
       }
 
-      if (catTarget === 'Lançamentos') {
+      if (catTarget === 'lançamentos') {
         return pCat === 'lançamentos' || pCat === 'lancamentos';
       }
 
-      return p.category === catTarget;
+      return pCat === catTarget;
     });
 
   if (!isAdmin) {
@@ -436,7 +436,7 @@ const Admin = () => {
             <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem', marginTop: '0.2rem' }}>Painel Central de Gerenciamento Camisa10.</p>
           </div>
           <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
-            {supplierTab === 'CLOUD_ALL' && products.length < 50 && (
+            {products.length < 50 && (
               <button 
                 onClick={handleMigration} 
                 disabled={isMigrating}

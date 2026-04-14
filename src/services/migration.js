@@ -9,7 +9,7 @@ export const migrateProductsToSupabase = async () => {
     name: `Camisa Geral #${i + 1}`,
     image: `/camisas/@carinhacriativo (${i + 1}).png`,
     price: 69.90,
-    category: 'Lançamentos', // Fallback inicial
+    category: 'Brasileirão', // Mudado de Lançamentos para Brasileirão
     league: 'Geral',
     description: 'Camisa de alta performance importada.',
     inventory: 50
