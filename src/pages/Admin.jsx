@@ -440,10 +440,19 @@ const Admin = () => {
                 onClick={handleMigration} 
                 disabled={isMigrating}
                 className="btn-primary" 
-                style={{ background: 'rgba(255,255,255,0.05)', color: '#fff', border: '1px solid var(--border-color)', opacity: isMigrating ? 0.5 : 1 }}
+                style={{ 
+                  background: 'linear-gradient(135deg, #3B82F6 0%, #2563EB 100%)', 
+                  color: '#fff', 
+                  padding: '1rem 2rem',
+                  fontSize: '1rem',
+                  fontWeight: 800,
+                  boxShadow: '0 10px 20px rgba(59, 130, 246, 0.3)',
+                  border: 'none',
+                  animation: 'pulse 2s infinite'
+                }}
               >
-                <RefreshCw size={18} className={isMigrating ? 'spinning' : ''} /> 
-                {isMigrating ? 'Migrando...' : 'Sincronizar Mock com Nuvem'}
+                <RefreshCw size={20} className={isMigrating ? 'spinning' : ''} style={{ marginRight: '0.8rem' }} /> 
+                {isMigrating ? 'INICIANDO MIGRAÇÃO...' : 'SINCRONIZAR PRODUTOS COM SUPABASE'}
               </button>
             )}
             {supplierTab === 'TESTIMONIALS' && (
