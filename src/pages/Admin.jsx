@@ -290,8 +290,17 @@ const Admin = () => {
   
   const bestSellerName = bestSellerId ? (getUniversalProduct(bestSellerId)?.name || `ID: ${bestSellerId}`) : 'Nenhum Definido';
 
-  const displayProducts = supplierTab.startsWith('CAT_') ? products.filter(p => p.category === supplierTab.replace('CAT_', '')) :
-                          supplierTab === 'CLOUD_ALL' ? products : [];
+  const displayProducts = !supplierTab.startsWith('CAT_') ? (supplierTab === 'CLOUD_ALL' ? products : []) :
+    products.filter(p => {
+      const catTarget = supplierTab.replace('CAT_', '');
+      const pCat = (p.category || '').toLowerCase();
+      const pLeague = (p.league || '').toLowerCase();
+      
+      if (catTarget === 'Brasileirão') {
+        return pCat === 'brasileirão' || pCat === 'brasileirao' || pCat.includes('brasil') || pLeague.includes('brasil');
+      }
+      return p.category === catTarget;
+    });
 
   if (!isAdmin) {
     if (!user) {
