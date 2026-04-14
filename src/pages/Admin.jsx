@@ -22,12 +22,18 @@ const Admin = () => {
   const [productToDelete, setProductToDelete] = useState(null);
   const [editingProduct, setEditingProduct] = useState(null);
 
-  const handleUpdateProduct = async (e) => {
-    e.preventDefault();
-    setSaved(false);
-    const prodToUpdate = { ...editingProduct, price: parseFloat(editingProduct.price) };
-    const { id, created_at, ...dataToUpdate } = prodToUpdate;
-    const { error } = await supabase.from('products').update(dataToUpdate).eq('id', id);
+    const { id, created_at, league, version, inventory, description, ...dataToSend } = prodToUpdate;
+    
+    // Garantir que preco seja numero e remover campos extras
+    const sanitizedData = {
+      name: dataToSend.name,
+      price: Number(dataToSend.price),
+      image: dataToSend.image,
+      category: dataToSend.category,
+      team: dataToSend.team
+    };
+
+    const { error } = await supabase.from('products').update(sanitizedData).eq('id', id);
     if(error){
        showAlert("Erro ao editar!", error.message);
        return;
@@ -219,9 +225,15 @@ const Admin = () => {
     e.preventDefault();
     setSaved(false);
     
-    const prodToInsert = { ...newProduct, price: parseFloat(newProduct.price) };
+    const sanitizedData = {
+      name: newProduct.name,
+      price: Number(newProduct.price),
+      image: newProduct.image,
+      category: newProduct.category,
+      team: newProduct.team
+    };
     
-    const { data, error } = await supabase.from('products').insert([prodToInsert]).select();
+    const { data, error } = await supabase.from('products').insert([sanitizedData]).select();
     if (error) {
       showAlert("Erro ao adicionar!", `${error.message} | Detalhes: ${error.details || 'Nenhum detalhe adicional'}`);
       return;
