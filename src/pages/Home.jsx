@@ -5,8 +5,6 @@ import ProductCard from '../components/ProductCard';
 import { supabase } from '../services/supabase';
 import { ShieldCheck, Truck, Star, Package, Lock, CheckCircle2, AlertTriangle, ChevronDown, ChevronUp, ChevronRight } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import { brasil2025Products } from '../data/brasil2025';
-import { getAllProducts } from '../data/mockProducts';
 import { BR_2026_TEAMS } from '../data/teams';
 
 const FAQItem = ({ question, answer }) => {
@@ -112,87 +110,51 @@ const Home = () => {
       let bId = savedBestSeller ? JSON.parse(savedBestSeller) : null;
       let cIds = savedCatalog ? JSON.parse(savedCatalog) : [];
 
-      const geralProducts = Array.from({ length: 418 }, (_, i) => ({
-        id: `geral_${i + 1}`,
-        name: `Camisa Torcedor/Geral #${i + 1}`,
-        image: `/camisas/@carinhacriativo (${i + 1}).png`,
-        price: 69.90,
-      }));
-
-      const getProductById = (id, supabaseData) => {
-        if (!id) return null;
-        if (String(id).startsWith('geral_')) {
-          return geralProducts.find(p => p.id === id);
-        }
-        if (String(id).startsWith('br25_')) {
-          return brasil2025Products.find(p => p.id === id);
-        }
-        return supabaseData.find(d => String(d.id) === String(id));
-      };
-
-      if(bId || qIds.length > 0 || cIds.length > 0) {
-        const fetchIds = [...new Set([...qIds, ...cIds])];
-        if(bId && !fetchIds.includes(bId)) fetchIds.push(bId);
-        
-        // Filter out local 'geral_' and 'br25_' images before asking Supabase
-        const supabaseIds = fetchIds.filter(id => !String(id).startsWith('geral_') && !String(id).startsWith('br25_'));
-        
+      if(bId || qIds.length > 0) {
         let supabaseData = [];
-        if (supabaseIds.length > 0) {
-          const { data } = await supabase.from('products').select('*').in('id', supabaseIds);
+        const fetchIds = [...new Set([...qIds, bId ? [bId] : []].flat())];
+        
+        if (fetchIds.length > 0) {
+          const { data } = await supabase.from('products').select('*').in('id', fetchIds);
           if (data) supabaseData = data;
         }
 
         if (bId) {
-          setBestSeller(getProductById(bId, supabaseData) || defaultQueridinhasMock[1]);
-        } else {
-          setBestSeller(defaultQueridinhasMock[1]);
+          setBestSeller(supabaseData.find(d => String(d.id) === String(bId)));
         }
 
         if (qIds.length > 0) {
-          // Sort to preserve order of localStorage
-          const sortedQ = qIds.map(id => getProductById(id, supabaseData)).filter(Boolean);
-          setQueridinhas(sortedQ.length > 0 ? sortedQ : defaultQueridinhasMock);
-        } else {
-          setQueridinhas(defaultQueridinhasMock);
+          const sortedQ = qIds.map(id => supabaseData.find(d => String(d.id) === String(id))).filter(Boolean);
+          setQueridinhas(sortedQ);
         }
+      }
 
-        const { data: dbData } = await supabase.from('products').select('*').order('id', { ascending: false });
-        const allUnified = getAllProducts(dbData || []);
+      const { data: dbData } = await supabase.from('products').select('*').order('id', { ascending: false });
+      const allUnified = dbData || [];
+      
+      const mapCat = {
+        'Seleções': [],
+        'Brasileirão': [],
+        'Internacionais': [],
+        'Lançamentos': [],
+        'Retrô': []
+      };
+      
+      allUnified.forEach(p => {
+        const cat = (p.category || '').toLowerCase();
+        const pName = (p.name || '').toLowerCase();
+        const pTeam = (p.team || '').toLowerCase();
         
-        const mapCat = {
-          'Seleções': [],
-          'Brasileirão': [],
-          'Internacionais': [],
-          'Lançamentos': [],
-          'Retrô': []
-        };
-        
-        // Distribuição inteligente para garantir que Mocks não fiquem de fora enquanto Supabase enche
-        allUnified.forEach(p => {
-          const cat = (p.category || '').toLowerCase();
-          const pName = (p.name || '').toLowerCase();
-          const pTeam = (p.team || '').toLowerCase();
-          const pId = String(p.id);
-          
-          const isClub = BR_2026_TEAMS.some(t => t.name.toLowerCase() === pTeam);
-          const isSelecao = cat === 'seleções' || cat === 'selecoes' || pName.includes('seleção') || pName.includes('selecao') || (pName.includes('brasil') && !isClub);
+        const isClub = BR_2026_TEAMS.some(t => t.name.toLowerCase() === pTeam);
+        const isSelecao = cat === 'seleções' || cat === 'selecoes' || pName.includes('seleção') || pName.includes('selecao') || (pName.includes('brasil') && !isClub);
 
-          if (isClub || (pId.startsWith('geral_') && cIds.includes(pId) && !isSelecao)) {
-            mapCat['Brasileirão'].push(p);
-          }
-          else if (isSelecao) {
-            mapCat['Seleções'].push(p);
-          }
-          else if (cat === 'internacionais' || cat.includes('europa') || cat.includes('europe')) mapCat['Internacionais'].push(p);
-          else if (cat === 'lançamentos' || cat.includes('lançament') || (pId.startsWith('geral_') && cIds.includes(pId) && parseInt(pId.replace('geral_', '')) > 400)) {
-            mapCat['Lançamentos'].push(p);
-          }
-          else if (cat === 'retrô' || cat.includes('retro')) mapCat['Retrô'].push(p);
-          else {
-             mapCat['Lançamentos'].push(p);
-          }
-        });
+        if (isClub) mapCat['Brasileirão'].push(p);
+        else if (isSelecao) mapCat['Seleções'].push(p);
+        else if (cat === 'internacionais' || cat.includes('europa') || cat.includes('europe')) mapCat['Internacionais'].push(p);
+        else if (cat === 'lançamentos' || cat.includes('lançament')) mapCat['Lançamentos'].push(p);
+        else if (cat === 'retrô' || cat.includes('retro')) mapCat['Retrô'].push(p);
+        else mapCat['Lançamentos'].push(p);
+      });
 
         setStoreSections(mapCat);
         setAllProductsData(allUnified);
@@ -219,23 +181,22 @@ const Home = () => {
     fetchHomeData();
   }, []);
 
-  // Se não houver nenhum time tagueado no banco, mostramos uma lista padrão para não ficar vazio
   const activeTeams = BR_2026_TEAMS.filter(team => 
     allProductsData.some(p => (p.team || '').toLowerCase() === team.name.toLowerCase())
   );
-
-  const teamsToDisplay = activeTeams.length > 0 ? activeTeams : BR_2026_TEAMS.slice(0, 12);
 
   return (
     <div style={{ paddingBottom: '4rem' }}>
       {/* 1. HERO */}
       <HeroSection />
-      <TeamsBar teams={teamsToDisplay} onSelectTeam={(team) => {
-        setActiveTeamFilter(team);
-        setTimeout(() => {
-          document.getElementById('filtro-time')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-        }, 100);
-      }} />
+      {activeTeams.length > 0 && (
+        <TeamsBar teams={activeTeams} onSelectTeam={(team) => {
+          setActiveTeamFilter(team);
+          setTimeout(() => {
+            document.getElementById('filtro-time')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+          }, 100);
+        }} />
+      )}
 
       {/* SEÇÃO DE FILTRO DINÂMICO POR TIME */}
       {activeTeamFilter && (
