@@ -5,7 +5,8 @@ import ProductCard from '../components/ProductCard';
 import { supabase } from '../services/supabase';
 import { ShieldCheck, Truck, Star, Package, Lock, CheckCircle2, AlertTriangle, ChevronDown, ChevronUp, ChevronRight } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import { BR_2026_TEAMS } from '../data/teams';
+// O arquivo teams.js agora é usado apenas como fallback ou referência inicial
+// import { BR_2026_TEAMS } from '../data/teams';
 
 const FAQItem = ({ question, answer }) => {
   const [isOpen, setIsOpen] = useState(false);
@@ -83,6 +84,7 @@ const Home = () => {
   const [loading, setLoading] = useState(true);
   const [activeTeamFilter, setActiveTeamFilter] = useState(null);
   const [allProductsData, setAllProductsData] = useState([]);
+  const [dbTeams, setDbTeams] = useState([]);
   
   const [storeSections, setStoreSections] = useState({
     'Seleções': [],
@@ -104,11 +106,20 @@ const Home = () => {
 
       if(bId || qIds.length > 0) {
         let supabaseData = [];
-        const fetchIds = [...new Set([...qIds, bId ? [bId] : []].flat())];
+        // Filtramos para garantir que apenas IDs numéricos (ou que pareçam IDs válidos para o seu banco) sejam enviados
+        // Isso evita o erro 400 caso existam lixos ou IDs de mocks no localStorage
+        const rawIds = [...new Set([...qIds, bId ? [bId] : []].flat())];
+        const fetchIds = rawIds
+          .map(id => {
+            const parsed = parseInt(id);
+            return isNaN(parsed) ? null : parsed;
+          })
+          .filter(Boolean);
         
         if (fetchIds.length > 0) {
-          const { data } = await supabase.from('products').select('*').in('id', fetchIds);
+          const { data, error } = await supabase.from('products').select('*').in('id', fetchIds);
           if (data) supabaseData = data;
+          if (error) console.error("Erro ao buscar queridinhas/destaque:", error);
         }
 
         if (bId) {
@@ -124,42 +135,42 @@ const Home = () => {
       const { data: dbData } = await supabase.from('products').select('*').order('id', { ascending: false });
       const allUnified = dbData || [];
       
-      const mapCat = {
-        'Seleções': [],
-        'Brasileirão': [],
-        'Internacionais': [],
-        'Lançamentos': [],
-        'Retrô': []
-      };
-      
-      allUnified.forEach(p => {
-        const cat = (p.category || '').toLowerCase();
-        const pName = (p.name || '').toLowerCase();
-        const pTeam = (p.team || '').toLowerCase();
-        
-        const isClub = BR_2026_TEAMS.some(t => t.name.toLowerCase() === pTeam);
-        const isSelecao = cat === 'seleções' || cat === 'selecoes' || pName.includes('seleção') || pName.includes('selecao') || (pName.includes('brasil') && !isClub);
+       const { data: teamsData } = await supabase.from('teams').select('*').order('name');
+       if(teamsData) setDbTeams(teamsData);
 
-        if (isClub) mapCat['Brasileirão'].push(p);
-        else if (isSelecao) mapCat['Seleções'].push(p);
-        else if (cat === 'internacionais' || cat.includes('europa') || cat.includes('europe')) mapCat['Internacionais'].push(p);
-        else if (cat === 'lançamentos' || cat.includes('lançament')) mapCat['Lançamentos'].push(p);
-        else if (cat === 'retrô' || cat.includes('retro')) mapCat['Retrô'].push(p);
-        else mapCat['Lançamentos'].push(p);
-      });
+       const mapCat = {
+         'Seleções': [],
+         'Brasileirão': [],
+         'Internacionais': [],
+         'Lançamentos': [],
+         'Retrô': []
+       };
+       
+       allUnified.forEach(p => {
+         const cat = (p.category || '').toLowerCase();
+         const pName = (p.name || '').toLowerCase();
+         const pTeam = (p.team || '').toLowerCase();
+         
+         const isClub = (teamsData || []).some(t => t.name.toLowerCase() === pTeam);
+         const isSelecao = cat === 'seleções' || cat === 'selecoes' || pName.includes('seleção') || pName.includes('selecao') || (pName.includes('brasil') && !isClub);
 
-        setStoreSections(mapCat);
-        setAllProductsData(allUnified);
+         if (isClub) mapCat['Brasileirão'].push(p);
+         else if (isSelecao) mapCat['Seleções'].push(p);
+         else if (cat === 'internacionais' || cat.includes('europa') || cat.includes('europe')) mapCat['Internacionais'].push(p);
+         else if (cat === 'lançamentos' || cat.includes('lançament')) mapCat['Lançamentos'].push(p);
+         else if (cat === 'retrô' || cat.includes('retro')) mapCat['Retrô'].push(p);
+         else mapCat['Lançamentos'].push(p);
+       });
 
-      const { data: testData } = await supabase.from('testimonials').select('*').eq('status', 'approved').order('date', { ascending: false });
-      if(testData) setTestimonials(testData);
+       setStoreSections(mapCat);
+       setAllProductsData(allUnified);
 
       setLoading(false);
     }
     fetchHomeData();
   }, []);
 
-  const activeTeams = BR_2026_TEAMS.filter(team => 
+  const activeTeams = dbTeams.filter(team => 
     allProductsData.some(p => (p.team || '').toLowerCase() === team.name.toLowerCase())
   );
 
