@@ -69,7 +69,11 @@ const TeamsBar = ({ teams = [], onSelectTeam }) => {
             title={team.name}
             onClick={() => onSelectTeam && onSelectTeam(team.name)}
           >
-            <img src={team.logo} alt={team.name} className="team-logo" referrerPolicy="no-referrer" />
+            <img 
+              src={`https://images.weserv.nl/?url=${encodeURIComponent(team.logo)}&default=https://camisa10.vercel.app/favicon.png`} 
+              alt={team.name} 
+              className="team-logo" 
+            />
           </div>
         ))}
       </div>
