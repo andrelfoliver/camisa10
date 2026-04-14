@@ -29,19 +29,19 @@ const Admin = () => {
     // Pegar o produto sendo editado (garantir que existe)
     if (!editingProduct) return;
     
-    const { id, created_at, league, version, inventory, description, ...dataToSend } = editingProduct;
+    const { id, created_at, ...rest } = editingProduct;
     
     // Garantir que preco seja numero e incluir agora todas as colunas suportadas
     const sanitizedData = {
-      name: dataToSend.name,
-      price: Number(dataToSend.price),
-      image: dataToSend.image,
-      category: dataToSend.category,
-      team: dataToSend.team,
-      league: dataToSend.league,
-      version: dataToSend.version,
-      inventory: Number(dataToSend.inventory || 0),
-      description: dataToSend.description
+      name: rest.name,
+      price: Number(rest.price),
+      image: rest.image,
+      category: rest.category,
+      team: rest.team,
+      league: rest.league,
+      version: rest.version,
+      inventory: Number(rest.inventory || 0),
+      description: rest.description
     };
 
     const { error } = await supabase.from('products').update(sanitizedData).eq('id', id);
