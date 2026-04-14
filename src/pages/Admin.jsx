@@ -29,7 +29,7 @@ const Admin = () => {
     const { id, created_at, ...dataToUpdate } = prodToUpdate;
     const { error } = await supabase.from('products').update(dataToUpdate).eq('id', id);
     if(error){
-       alert("Erro ao editar! " + error.message);
+       showAlert("Erro ao editar!", error.message);
        return;
     }
     setProducts(products.map(p => p.id === id ? prodToUpdate : p));
@@ -67,24 +67,32 @@ const Admin = () => {
 
 
   const [isMigrating, setIsMigrating] = useState(false);
+  const [modal, setModal] = useState({ show: false, title: '', message: '', onConfirm: null, type: 'alert' });
 
-  const handleMigration = async () => {
-    if (!window.confirm('Deseja importar os 450+ produtos iniciais do sistema para o seu banco de dados Supabase? Isso deve ser feito apenas uma vez.')) return;
-    
-    setIsMigrating(true);
-    try {
-      const { successCount, errors } = await migrateProductsToSupabase();
-      if (errors.length > 0) {
-        alert(`Migração concluída com alguns avisos. ${successCount} itens importados.`);
-      } else {
-        alert(`Sucesso! ${successCount} produtos importados para o Supabase.`);
+  const showAlert = (title, message) => setModal({ show: true, title, message, onConfirm: null, type: 'alert' });
+  const showConfirm = (title, message, onConfirm) => setModal({ show: true, title, message, onConfirm, type: 'confirm' });
+
+  const handleMigration = () => {
+    showConfirm(
+      'Sincronizar Catálogo',
+      'Deseja importar os 450+ produtos iniciais do sistema para o seu banco de dados Supabase? Isso deve ser feito apenas uma vez.',
+      async () => {
+        setIsMigrating(true);
+        try {
+          const { successCount, errors } = await migrateProductsToSupabase();
+          if (errors.length > 0) {
+            showAlert('Concluído com Avisos', `Migração concluída. ${successCount} itens importados.`);
+          } else {
+            showAlert('Sucesso Total!', `${successCount} produtos importados para o seu banco de dados Supabase.`);
+          }
+          setTimeout(() => window.location.reload(), 2000);
+        } catch (err) {
+          showAlert('Erro na Migração', err.message);
+        } finally {
+          setIsMigrating(false);
+        }
       }
-      window.location.reload();
-    } catch (err) {
-      alert('Erro na migração: ' + err.message);
-    } finally {
-      setIsMigrating(false);
-    }
+    );
   };
 
   useEffect(() => {
@@ -1144,6 +1152,45 @@ const Admin = () => {
               </button>
               <button onClick={confirmDelete} style={{ flex: 1, padding: '1rem', background: '#EF4444', color: '#fff', border: 'none', borderRadius: 'var(--radius-md)', cursor: 'pointer', fontWeight: 800 }}>
                 Sim, Excluir
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* MODAL SISTEMA (ALERT/CONFIRM) */}
+      {modal.show && (
+        <div style={{ position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh', background: 'rgba(0,0,0,0.8)', backdropFilter: 'blur(8px)', zIndex: 10000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '1.5rem', animation: 'fadeIn 0.3s ease-out' }}>
+          <div style={{ background: 'var(--surface-color)', border: '1px solid var(--border-color)', borderRadius: 'var(--radius-lg)', padding: '2.5rem', width: '100%', maxWidth: '450px', boxShadow: '0 25px 50px rgba(0,0,0,0.5)', position: 'relative' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '1.5rem' }}>
+              <div style={{ width: '40px', height: '40px', borderRadius: '50%', background: modal.type === 'confirm' ? 'rgba(59, 130, 246, 0.1)' : 'rgba(255,184,28,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: modal.type === 'confirm' ? '#3B82F6' : '#FFB81C' }}>
+                <Check size={20} />
+              </div>
+              <h2 style={{ fontSize: '1.5rem', fontWeight: 800, color: '#fff' }}>{modal.title}</h2>
+            </div>
+            
+            <p style={{ color: 'var(--text-muted)', fontSize: '1.05rem', lineHeight: 1.6, marginBottom: '2.5rem' }}>
+              {modal.message}
+            </p>
+
+            <div style={{ display: 'flex', gap: '1rem' }}>
+              {modal.type === 'confirm' && (
+                <button 
+                  onClick={() => setModal({ ...modal, show: false })}
+                  style={{ flex: 1, padding: '1rem', background: 'transparent', color: 'var(--text-muted)', border: '1px solid var(--border-color)', borderRadius: 'var(--radius-md)', fontWeight: 600, cursor: 'pointer' }}
+                >
+                  Cancelar
+                </button>
+              )}
+              <button 
+                onClick={() => {
+                  if (modal.onConfirm) modal.onConfirm();
+                  setModal({ ...modal, show: false });
+                }}
+                className="btn-primary"
+                style={{ flex: 1, padding: '1rem', background: modal.type === 'confirm' ? '#3B82F6' : 'var(--accent-color)', color: modal.type === 'confirm' ? '#fff' : '#000', border: 'none', borderRadius: 'var(--radius-md)', fontWeight: 800, cursor: 'pointer' }}
+              >
+                {modal.type === 'confirm' ? 'Confirmar' : 'Entendido'}
               </button>
             </div>
           </div>
