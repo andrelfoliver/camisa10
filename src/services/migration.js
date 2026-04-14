@@ -35,13 +35,11 @@ export const migrateProductsToSupabase = async () => {
   let errors = [];
 
   for (let i = 0; i < allToMigrate.length; i += CHUNK_SIZE) {
-    const chunk = allToMigrate.slice(i, i + CHUNK_SIZE).map(p => {
-      const { inventory, league, description, team, version, ...rest } = p;
-      return {
-        ...rest,
-        price: Number(rest.price)
-      };
-    });
+    const chunk = allToMigrate.slice(i, i + CHUNK_SIZE).map(p => ({
+      ...p,
+      price: Number(p.price),
+      inventory: Number(p.inventory || 0)
+    }));
     
     const { data, error } = await supabase.from('products').insert(chunk).select();
     
