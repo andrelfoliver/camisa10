@@ -209,15 +209,18 @@ const Home = () => {
     fetchHomeData();
   }, []);
 
+  // Se não houver nenhum time tagueado no banco, mostramos uma lista padrão para não ficar vazio
   const activeTeams = BR_2026_TEAMS.filter(team => 
     allProductsData.some(p => (p.team || '').toLowerCase() === team.name.toLowerCase())
   );
+
+  const teamsToDisplay = activeTeams.length > 0 ? activeTeams : BR_2026_TEAMS.slice(0, 12);
 
   return (
     <div style={{ paddingBottom: '4rem' }}>
       {/* 1. HERO */}
       <HeroSection />
-      <TeamsBar teams={activeTeams} onSelectTeam={(team) => {
+      <TeamsBar teams={teamsToDisplay} onSelectTeam={(team) => {
         setActiveTeamFilter(team);
         setTimeout(() => {
           document.getElementById('filtro-time')?.scrollIntoView({ behavior: 'smooth', block: 'start' });

@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { supabase } from '../services/supabase';
 import { useAuth } from '../context/AuthContext';
 import { Save, Check, Crown, Heart, Database, HardDrive, Star, LogOut, Package, Plus, Trash2, X, Users, Image, DollarSign, MapPin } from 'lucide-react';
+import { BR_2026_TEAMS } from '../data/teams';
 import WhatsAppIcon from '../components/WhatsAppIcon';
 import { Link, Navigate } from 'react-router-dom';
 import { brasil2025Products } from '../data/brasil2025';
@@ -730,7 +731,15 @@ const Admin = () => {
                     <div style={{ display:'flex', justifyContent: 'space-between', color: 'var(--text-muted)', fontSize: '0.8rem', marginBottom: '1.5rem', alignItems: 'center' }}>
                       <span style={{ maxWidth: '40%', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>REF: {sId}</span>
                       {product.team && (
-                        <span style={{ background: 'rgba(16, 185, 129, 0.1)', color: '#10B981', padding: '0.2rem 0.5rem', borderRadius: '4px', textTransform: 'uppercase', fontWeight: 700, fontSize: '0.65rem' }}>{product.team}</span>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.3rem', background: 'rgba(16, 185, 129, 0.1)', color: '#10B981', padding: '0.2rem 0.5rem', borderRadius: '4px' }}>
+                          <img 
+                            src={BR_2026_TEAMS.find(t => t.name === product.team)?.logo} 
+                            alt="" 
+                            style={{ width: '14px', height: '14px', objectFit: 'contain' }} 
+                            onError={(e) => e.currentTarget.style.display = 'none'}
+                          />
+                          <span style={{ textTransform: 'uppercase', fontWeight: 700, fontSize: '0.65rem' }}>{product.team}</span>
+                        </div>
                       )}
                       <span style={{ color: 'var(--accent-color)', fontWeight: 800 }}>${product.price ? product.price.toFixed(2) : '0.00'}</span>
                     </div>
@@ -894,7 +903,16 @@ const Admin = () => {
                 </div>
                 <div style={{ flex: 1 }}>
                   <label style={{ display: 'block', marginBottom: '0.5rem', color: 'var(--text-muted)', fontSize: '0.9rem' }}>Time</label>
-                  <input type="text" value={newProduct.team} onChange={e => setNewProduct({...newProduct, team: e.target.value})} placeholder="Ex: Flamengo" style={{ width: '100%', padding: '0.8rem 1rem', background: 'var(--bg-color)', color: '#fff', border: '1px solid var(--border-color)', borderRadius: 'var(--radius-sm)' }} />
+                  <select 
+                    value={newProduct.team} 
+                    onChange={e => setNewProduct({...newProduct, team: e.target.value})} 
+                    style={{ width: '100%', padding: '0.8rem 1rem', background: 'var(--bg-color)', color: '#fff', border: '1px solid var(--border-color)', borderRadius: 'var(--radius-sm)' }}
+                  >
+                    <option value="">Nacional / Outros</option>
+                    {BR_2026_TEAMS.map(team => (
+                      <option key={team.name} value={team.name}>{team.name}</option>
+                    ))}
+                  </select>
                 </div>
               </div>
 
@@ -1026,7 +1044,16 @@ const Admin = () => {
                 </div>
                 <div style={{ flex: 1 }}>
                   <label style={{ display: 'block', marginBottom: '0.5rem', color: 'var(--text-muted)', fontSize: '0.9rem' }}>Time</label>
-                  <input type="text" value={editingProduct.team} onChange={e => setEditingProduct({...editingProduct, team: e.target.value})} placeholder="Ex: Flamengo" style={{ width: '100%', padding: '0.8rem 1rem', background: 'var(--bg-color)', color: '#fff', border: '1px solid var(--border-color)', borderRadius: 'var(--radius-sm)' }} />
+                  <select 
+                    value={editingProduct.team} 
+                    onChange={e => setEditingProduct({...editingProduct, team: e.target.value})} 
+                    style={{ width: '100%', padding: '0.8rem 1rem', background: 'var(--bg-color)', color: '#fff', border: '1px solid var(--border-color)', borderRadius: 'var(--radius-sm)' }}
+                  >
+                    <option value="">Nacional / Outros</option>
+                    {BR_2026_TEAMS.map(team => (
+                      <option key={team.name} value={team.name}>{team.name}</option>
+                    ))}
+                  </select>
                 </div>
               </div>
 
