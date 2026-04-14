@@ -586,30 +586,30 @@ const Admin = () => {
                   <div key={order.id} className="glass-panel" style={{ padding: '1.5rem', borderRadius: 'var(--radius-lg)', border: '1px solid var(--border-color)' }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '1rem' }}>
                       <div>
-                        <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)', fontWeight: 800 }}>#{order.id.slice(0,8)}</span>
-                        <h4 style={{ color: '#fff', fontSize: '1.1rem' }}>{order.customer_name}</h4>
-                        <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>{order.customer_email}</p>
+                        <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)', fontWeight: 800 }}>#{order?.id?.slice(0,8) || '......'}</span>
+                        <h4 style={{ color: '#fff', fontSize: '1.1rem' }}>{order?.customer_name || 'Cliente'}</h4>
+                        <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>{order?.customer_email || ''}</p>
                       </div>
                       <div style={{ textAlign: 'right' }}>
-                        <p style={{ color: 'var(--accent-color)', fontWeight: 800, fontSize: '1.2rem' }}>${order.total_price.toFixed(2)}</p>
-                        <p style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>{new Date(order.created_at).toLocaleString()}</p>
+                        <p style={{ color: 'var(--accent-color)', fontWeight: 800, fontSize: '1.2rem' }}>${Number(order?.total_price || 0).toFixed(2)}</p>
+                        <p style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>{order?.created_at ? new Date(order.created_at).toLocaleString() : ''}</p>
                       </div>
                     </div>
 
                     <div style={{ background: 'rgba(0,0,0,0.2)', padding: '1rem', borderRadius: '4px', marginBottom: '1rem' }}>
-                      {order.items.map((item, i) => (
-                        <p key={i} style={{ fontSize: '0.85rem', color: '#fff' }}>{item.quantity}x {item.name} ({item.size})</p>
+                      {order?.items?.map((item, i) => (
+                        <p key={i} style={{ fontSize: '0.85rem', color: '#fff' }}>{item?.quantity || 1}x {item?.name || 'Produto'} ({item?.size || '?'})</p>
                       ))}
                     </div>
 
                     <div style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginBottom: '1.5rem' }}>
-                       <p style={{ marginBottom: '0.3rem' }}><MapPin size={12} /> {order.shipping_address.street}, {order.shipping_address.apartment ? 'Apt ' + order.shipping_address.apartment + ', ' : ''}</p>
-                       <p>{order.shipping_address.city}, {order.shipping_address.province} {order.shipping_address.postalCode}</p>
+                       <p style={{ marginBottom: '0.3rem' }}><MapPin size={12} /> {order?.shipping_address?.street || 'Sem endereço'}{order?.shipping_address?.apartment ? ', Apt ' + order.shipping_address.apartment + ', ' : ''}</p>
+                       <p>{order?.shipping_address?.city || ''}{order?.shipping_address?.province ? ', ' + order.shipping_address.province : ''} {order?.shipping_address?.postalCode || ''}</p>
                     </div>
 
                     <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
                        <select 
-                         value={order.status} 
+                         value={order?.status || 'pending'} 
                          onChange={(e) => handleUpdateOrderStatus(order.id, e.target.value)}
                          style={{ flex: 1, padding: '0.5rem', background: 'var(--bg-color)', color: '#fff', border: '1px solid var(--border-color)', borderRadius: '4px', fontSize: '0.8rem' }}
                        >
@@ -619,7 +619,7 @@ const Admin = () => {
                          <option value="completed">✅ Finalizado</option>
                          <option value="cancelled">🔴 Cancelado</option>
                        </select>
-                       <button onClick={() => window.open(`https://wa.me/?text=${encodeURIComponent('Olá ' + order.customer_name + ', referente ao seu pedido na Camisa10...')}`, '_blank')} style={{ padding: '0.5rem', borderRadius: '4px', background: '#25D366', color: '#fff', border: 'none', cursor: 'pointer' }}>
+                       <button onClick={() => window.open(`https://wa.me/?text=${encodeURIComponent('Olá ' + (order?.customer_name || '') + ', referente ao seu pedido na Camisa10...')}`, '_blank')} style={{ padding: '0.5rem', borderRadius: '4px', background: '#25D366', color: '#fff', border: 'none', cursor: 'pointer' }}>
                          <WhatsAppIcon size={18} />
                        </button>
                     </div>
@@ -652,11 +652,11 @@ const Admin = () => {
                           </div>
                         </div>
 
-                        {(customer.street || customer.city) ? (
+                        {(customer?.street || customer?.city) ? (
                           <div style={{ background: 'rgba(0,0,0,0.2)', padding: '1rem', borderRadius: '4px', fontSize: '0.8rem' }}>
                             <p style={{ color: 'var(--text-muted)', fontWeight: 800, fontSize: '0.65rem', textTransform: 'uppercase', marginBottom: '0.5rem' }}>Endereço de Entrega:</p>
                             <p style={{ color: '#fff' }}>{customer.street}{customer.apartment ? ', Apt ' + customer.apartment : ''}</p>
-                            <p style={{ color: '#fff' }}>{customer.city}, {customer.province} {customer.postal_code}</p>
+                            <p style={{ color: '#fff' }}>{customer.city}{customer.province ? ', ' + customer.province : ''} {customer.postal_code || ''}</p>
                           </div>
                         ) : (
                           <div style={{ background: 'rgba(255,255,255,0.02)', padding: '1rem', borderRadius: '4px', textAlign: 'center' }}>
