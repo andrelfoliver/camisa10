@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
-import { LogOut, Package, Star, Calendar, MessageSquare, CheckCircle2, Clock } from 'lucide-react';
+import { LogOut, Package, Star, Calendar, MessageSquare, CheckCircle2, Clock, MapPin } from 'lucide-react';
 import { Navigate, useNavigate } from 'react-router-dom';
 import { supabase } from '../services/supabase';
 
