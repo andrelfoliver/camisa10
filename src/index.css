@@ -283,6 +283,35 @@ button {
   background: #000;
 }
 
+@media (max-width: 768px) {
+  /* Hero ocupa a tela toda, imagem posicionada no topo para mostrar o rosto */
+  .hero-funnel {
+    min-height: 88svh;
+    height: auto;
+    overflow: hidden;
+    align-items: flex-end;
+  }
+  /* Posicionar imagem de fundo no centro */
+  .hero-funnel::before {
+    background-position: center center !important;
+    background-size: cover !important;
+  }
+  /* Gradiente mais forte de baixo para cima para proteger texto */
+  .hero-funnel::after {
+    background: linear-gradient(
+      to top,
+      rgba(0,0,0,1) 0%,
+      rgba(0,0,0,0.95) 30%,
+      rgba(0,0,0,0.5) 55%,
+      rgba(0,0,0,0) 75%
+    ) !important;
+  }
+  /* Esconder tagline para liberar espaço */
+  .hero-tagline-modern {
+    display: none;
+  }
+}
+
 .hero-funnel::before {
   content: '';
   position: absolute;
@@ -332,6 +361,14 @@ button {
     align-items: center;
     text-align: center;
     padding: 0 1.5rem 3rem 1.5rem;
+  }
+}
+
+@media (max-width: 768px) {
+  .hero-container-modern {
+    padding: 0 1.5rem 2.5rem 1.5rem;
+    justify-content: flex-end;
+    width: 100%;
   }
 }
 
@@ -493,6 +530,7 @@ button {
   opacity: 0.6;
   text-transform: uppercase;
   letter-spacing: 1px;
+  margin: 0 0 0.2rem 0;
 }
 
 .btn-hero-outline {
@@ -519,6 +557,20 @@ button {
   height: 4px;
   background: var(--accent-color);
   z-index: 6;
+}
+
+@media (max-width: 768px) {
+  .hero-decor-line {
+    display: none;
+  }
+  .btn-hero-massive {
+    width: 100%;
+    padding: 1.2rem 2rem;
+  }
+  .hero-giant-title {
+    font-size: clamp(2rem, 9vw, 3rem);
+    letter-spacing: -1px;
+  }
 }
 
 .btn-massive {

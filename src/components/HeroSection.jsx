@@ -25,47 +25,39 @@ const HeroSection = () => {
       <div className="hero-container-modern animate-fade-in">
         {/* Corner Left Zone */}
         <div className="hero-zone-west">
-          <div className="hero-tagline-modern">
-            <span className="dot-pulse"></span> 
-            <span>SEASON 26 // WORLDWIDE DROP</span>
-          </div>
-
           <h1 className="hero-giant-title">
             VISTA SEU <span className="outline-text">TIME</span><br />
             MESMO LONGE DO <span className="accent-glow-text">BRASIL</span>
           </h1>
 
-          <p className="hero-desc-modern">
-            Alta performance tailandesa 1.1 entregue em todo o território canadense.
-          </p>
         </div>
 
         {/* Corner Right Zone */}
         <div className="hero-zone-east">
+          {/* Prova social — abaixo da foto, fora da imagem */}
+          <p style={{ fontSize: '0.85rem', color: '#fff', textAlign: 'center', margin: '0 0 0.4rem 0', opacity: 0.9 }}>⭐ +200 clientes satisfeitos no Canadá</p>
+
           <div className="hero-hud-badges">
             <div className="hud-item">
               <div className="hud-icon"><Truck size={18} /></div>
               <div className="hud-text">
-                <span className="hud-label">LOGÍSTICA</span>
-                <span className="hud-value">TODO CANADÁ</span>
+                <span className="hud-value">Todo o Canadá</span>
               </div>
             </div>
             <div className="hud-item">
               <div className="hud-icon"><ShieldCheck size={18} /></div>
               <div className="hud-text">
-                <span className="hud-label">GARANTIA</span>
-                <span className="hud-value">QUALIDADE 1.1</span>
+                <span className="hud-value">Entrega garantida</span>
               </div>
             </div>
           </div>
 
           <div className="hero-actions-modern">
             <a href="#destaque" className="btn-hero-massive">
-              COMPRAR AGORA
-              <span className="btn-subtext">Edição Limitada</span>
+              GARANTIR MINHA CAMISA
             </a>
             <a href="#catalogo" className="btn-hero-outline">
-              EXPLORAR CATÁLOGO
+              Ver todas as camisas
             </a>
           </div>
         </div>
