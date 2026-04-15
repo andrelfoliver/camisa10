@@ -1,0 +1,17 @@
+UPDATE public.teams SET logo = 'https://upload.wikimedia.org/wikipedia/en/e/eb/Manchester_City_FC_badge.svg' WHERE name = 'Manchester City';
+UPDATE public.teams SET logo = 'https://upload.wikimedia.org/wikipedia/en/7/7a/Manchester_United_FC_crest.svg' WHERE name = 'Manchester United';
+UPDATE public.teams SET logo = 'https://upload.wikimedia.org/wikipedia/commons/0/05/FC_Internazionale_Milano_2021.svg' WHERE name = 'Inter de Milão';
+UPDATE public.teams SET logo = 'https://upload.wikimedia.org/wikipedia/commons/d/d0/Logo_of_AC_Milan.svg' WHERE name = 'AC Milan';
+UPDATE public.teams SET logo = 'https://upload.wikimedia.org/wikipedia/en/5/5c/Inter_Miami_CF_logo.svg' WHERE name = 'Inter Miami';
+UPDATE public.teams SET logo = 'https://upload.wikimedia.org/wikipedia/en/5/56/Real_Madrid_CF.svg' WHERE name = 'Real Madrid';
+UPDATE public.teams SET logo = 'https://upload.wikimedia.org/wikipedia/en/4/47/FC_Barcelona_%28crest%29.svg' WHERE name = 'Barcelona';
+UPDATE public.teams SET logo = 'https://upload.wikimedia.org/wikipedia/en/a/a7/Paris_Saint-Germain_F.C..svg' WHERE name = 'PSG';
+UPDATE public.teams SET logo = 'https://upload.wikimedia.org/wikipedia/commons/b/bc/Juventus_FC_2017_icon_%28black%29.svg' WHERE name = 'Juventus';
+UPDATE public.teams SET logo = 'https://upload.wikimedia.org/wikipedia/en/c/cc/Chelsea_FC.svg' WHERE name = 'Chelsea';
+UPDATE public.teams SET logo = 'https://upload.wikimedia.org/wikipedia/en/5/53/Arsenal_FC.svg' WHERE name = 'Arsenal';
+UPDATE public.teams SET logo = 'https://upload.wikimedia.org/wikipedia/en/0/0c/Liverpool_FC.svg' WHERE name = 'Liverpool';
+UPDATE public.teams SET logo = 'https://upload.wikimedia.org/wikipedia/commons/1/1b/FC_Bayern_M%C3%BCnchen_logo_%282017%29.svg' WHERE name = 'Bayern de Munique';
+UPDATE public.teams SET logo = 'https://upload.wikimedia.org/wikipedia/commons/6/67/Borussia_Dortmund_logo.svg' WHERE name = 'Borussia Dortmund';
+UPDATE public.teams SET logo = 'https://upload.wikimedia.org/wikipedia/commons/2/28/Escudo_Boca.svg' WHERE name = 'Boca Juniors';
+UPDATE public.teams SET logo = 'https://upload.wikimedia.org/wikipedia/commons/3/3f/Logo_River_Plate.png' WHERE name = 'River Plate';
+UPDATE public.teams SET logo = 'https://upload.wikimedia.org/wikipedia/en/2/2c/Al_Nassr_FC_Logo.svg' WHERE name = 'Al-Nassr';

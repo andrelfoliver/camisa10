@@ -3,16 +3,16 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { supabase } from '../services/supabase';
 import { useCart } from '../context/CartContext';
 import { brasil2025Products } from '../data/brasil2025';
-import { 
-  ShieldCheck, Truck, Star, CheckCircle2, ChevronDown, ChevronUp 
+import {
+  ShieldCheck, Truck, Star, CheckCircle2, ChevronDown, ChevronUp
 } from 'lucide-react';
 
 const FAQItem = ({ question, answer }) => {
   const [isOpen, setIsOpen] = useState(false);
   return (
     <div style={{ borderBottom: '1px solid var(--border-color)', padding: '1rem 0' }}>
-      <button 
-        onClick={() => setIsOpen(!isOpen)} 
+      <button
+        onClick={() => setIsOpen(!isOpen)}
         style={{ width: '100%', display: 'flex', justifyContent: 'space-between', alignItems: 'center', textAlign: 'left', fontWeight: 600, fontSize: '1.1rem', color: 'var(--text-main)', background: 'transparent', border: 'none', cursor: 'pointer' }}
       >
         {question}
@@ -27,17 +27,17 @@ const ProductPage = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const { addToCart, pricingConfig } = useCart();
-  
+
   const [product, setProduct] = useState(null);
   const [loading, setLoading] = useState(true);
-  
+
   // Gallery Logic
   const [activeImage, setActiveImage] = useState('');
 
   // Form Customization Options
   const [selectedSize, setSelectedSize] = useState('M');
   const sizes = ['S', 'M', 'L', 'XL', '2XL', '3XL', '4XL'];
-  
+
   const [isCustomized, setIsCustomized] = useState(false);
   const [customName, setCustomName] = useState('');
   const [customNumber, setCustomNumber] = useState('');
@@ -57,7 +57,7 @@ const ProductPage = () => {
         setLoading(false);
         return;
       }
-      
+
       if (id.startsWith('geral_')) {
         const idx = parseInt(id.replace('geral_', ''));
         const p = {
@@ -82,9 +82,9 @@ const ProductPage = () => {
         setLoading(false);
         return;
       }
-      
+
       const { data } = await supabase.from('products').select('*').eq('id', id).single();
-      if(data) {
+      if (data) {
         setProduct({ ...data, gallery: [data.image] });
         setActiveImage(data.image);
       }
@@ -98,9 +98,9 @@ const ProductPage = () => {
 
   const handleAdd = (buyNow = false) => {
     for (let i = 0; i < quantity; i++) {
-        addToCart(product, selectedSize, { nameNumber: isCustomized, customName, customNumber });
+      addToCart(product, selectedSize, { nameNumber: isCustomized, customName, customNumber });
     }
-    if(buyNow) navigate('/checkout');
+    if (buyNow) navigate('/checkout');
   };
 
   const basePrice = product.price || 69.90;
@@ -111,24 +111,24 @@ const ProductPage = () => {
 
   return (
     <div style={{ paddingBottom: '5rem', minHeight: '100vh' }}>
-      
+
       <section className="container" style={{ padding: '2rem 1.5rem', maxWidth: '1200px', margin: '0 auto' }}>
         <div className="checkout-grid">
-          
+
           {/* Lado Esquerdo - Galeria */}
           <div className="gallery-layout">
             <div className="gallery-thumbs">
               {product.gallery?.map((img, i) => (
-                <img 
-                  key={i} 
-                  src={img} 
-                  alt={`Gallery ${i}`} 
-                  style={{ 
-                    width: '80px', height: '80px', objectFit: 'cover', cursor: 'pointer', 
-                    border: activeImage === img ? '2px solid var(--accent-color)' : '1px solid var(--border-color)', 
-                    borderRadius: '8px', background: 'var(--surface-color)' 
-                  }} 
-                  onClick={() => setActiveImage(img)} 
+                <img
+                  key={i}
+                  src={img}
+                  alt={`Gallery ${i}`}
+                  style={{
+                    width: '80px', height: '80px', objectFit: 'cover', cursor: 'pointer',
+                    border: activeImage === img ? '2px solid var(--accent-color)' : '1px solid var(--border-color)',
+                    borderRadius: '8px', background: 'var(--surface-color)'
+                  }}
+                  onClick={() => setActiveImage(img)}
                 />
               ))}
             </div>
@@ -139,15 +139,15 @@ const ProductPage = () => {
 
           {/* Lado Direito - Form de Checkout */}
           <div style={{ display: 'flex', flexDirection: 'column', padding: '1rem 0', minWidth: 0 }}>
-            
+
             <div style={{ background: '#1f2937', color: '#fff', padding: '0.8rem 1rem', borderRadius: '4px', textAlign: 'center', fontWeight: 600, fontSize: '0.9rem', marginBottom: '1.5rem', width: '100%', lineHeight: 1.4 }}>
               🚀 Desconto progressivo: na compra de 2 ou mais camisas você economiza! 🚀
             </div>
 
             <h1 style={{ fontSize: '2.5rem', marginBottom: '0.5rem', lineHeight: 1.2, fontWeight: 800 }}>{product.name}</h1>
-            
+
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: '#FCD34D', marginBottom: '1.5rem' }}>
-              <Star fill="currentColor"/><Star fill="currentColor"/><Star fill="currentColor"/><Star fill="currentColor"/><Star fill="currentColor"/> 
+              <Star fill="currentColor" /><Star fill="currentColor" /><Star fill="currentColor" /><Star fill="currentColor" /><Star fill="currentColor" />
               <span className="text-muted" style={{ fontSize: '1rem', color: 'var(--text-muted)' }}> | 1 Avaliações | 0 Perguntas</span>
             </div>
 
@@ -165,24 +165,24 @@ const ProductPage = () => {
             {/* Promocao Fixa */}
             <div style={{ color: '#EF4444', fontWeight: 800, marginBottom: '0.2rem' }}>DESCONTO PROGRESSIVO</div>
             <div style={{ fontSize: '0.9rem', marginBottom: '1.5rem', color: 'var(--text-muted)' }}>Na compra de 2 ou mais itens, o desconto é aplicado na sua sacola!</div>
-            
+
             {/* Tabela Visual Dinamica */}
             {pricingConfig?.discounts && pricingConfig.discounts.length > 0 && (
-               <div style={{ background: 'var(--surface-color)', border: '1px solid var(--border-color)', borderRadius: '8px', padding: '1rem', marginBottom: '2rem' }}>
-                 <p style={{ fontWeight: 800, color: 'var(--text-main)', marginBottom: '0.8rem', fontSize: '0.95rem' }}>🔥 Tabela de Atacado / Combos</p>
-                 <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-                   <div style={{ display: 'flex', justifyContent: 'space-between', paddingBottom: '0.3rem', borderBottom: '1px dashed var(--border-color)', color: 'var(--text-muted)' }}>
-                     <span>1 peça</span>
-                     <span style={{ fontWeight: 600 }}>Preço normal</span>
-                   </div>
-                   {[...pricingConfig.discounts].sort((a,b)=>a.qty-b.qty).map((d, index) => (
-                     <div key={index} style={{ display: 'flex', justifyContent: 'space-between', paddingBottom: '0.3rem', borderBottom: index < pricingConfig.discounts.length - 1 ? '1px dashed var(--border-color)' : 'none', color: '#10B981', fontWeight: 600 }}>
-                       <span>{d.qty} peças</span>
-                       <span>- $ {d.amount.toFixed(2)} por unidade</span>
-                     </div>
-                   ))}
-                 </div>
-               </div>
+              <div style={{ background: 'var(--surface-color)', border: '1px solid var(--border-color)', borderRadius: '8px', padding: '1rem', marginBottom: '2rem' }}>
+                <p style={{ fontWeight: 800, color: 'var(--text-main)', marginBottom: '0.8rem', fontSize: '0.95rem' }}>🔥 Tabela de Atacado / Combos</p>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', paddingBottom: '0.3rem', borderBottom: '1px dashed var(--border-color)', color: 'var(--text-muted)' }}>
+                    <span>1 peça</span>
+                    <span style={{ fontWeight: 600 }}>Preço normal</span>
+                  </div>
+                  {[...pricingConfig.discounts].sort((a, b) => a.qty - b.qty).map((d, index) => (
+                    <div key={index} style={{ display: 'flex', justifyContent: 'space-between', paddingBottom: '0.3rem', borderBottom: index < pricingConfig.discounts.length - 1 ? '1px dashed var(--border-color)' : 'none', color: '#10B981', fontWeight: 600 }}>
+                      <span>{d.qty} peças</span>
+                      <span>- $ {d.amount.toFixed(2)} por unidade</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
             )}
 
             {/* Customization Toggle */}
@@ -201,21 +201,21 @@ const ProductPage = () => {
             {/* Sizes */}
             <div style={{ marginBottom: '2.5rem' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
-                <p style={{ fontWeight: 600 }}>Tamanho: <span style={{fontWeight: 800, color: 'var(--accent-color)'}}>{selectedSize}</span></p>
+                <p style={{ fontWeight: 600 }}>Tamanho: <span style={{ fontWeight: 800, color: 'var(--accent-color)' }}>{selectedSize}</span></p>
                 <span style={{ color: 'var(--text-muted)', fontSize: '0.9rem' }}>Tamanhos plussize (2XL ao 4XL) possuem pequeno acréscimo.</span>
               </div>
               <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
                 {sizes.map(s => (
-                  <button 
-                    key={s} 
-                    onClick={() => setSelectedSize(s)} 
-                    style={{ 
-                      border: `2px solid ${selectedSize === s ? 'var(--accent-color)' : 'var(--border-color)'}`, 
-                      padding: '0.5rem 1rem', 
-                      background: selectedSize === s ? 'var(--surface-hover)' : 'transparent', 
-                      color: 'var(--text-main)', 
-                      minWidth: '50px', 
-                      borderRadius: '4px', 
+                  <button
+                    key={s}
+                    onClick={() => setSelectedSize(s)}
+                    style={{
+                      border: `2px solid ${selectedSize === s ? 'var(--accent-color)' : 'var(--border-color)'}`,
+                      padding: '0.5rem 1rem',
+                      background: selectedSize === s ? 'var(--surface-hover)' : 'transparent',
+                      color: 'var(--text-main)',
+                      minWidth: '50px',
+                      borderRadius: '4px',
                       cursor: 'pointer',
                       fontWeight: selectedSize === s ? 700 : 400
                     }}
@@ -230,22 +230,22 @@ const ProductPage = () => {
             {isCustomized && (
               <div style={{ marginBottom: '2.5rem', background: 'var(--surface-hover)', padding: '1.5rem', borderRadius: '8px', border: '1px solid var(--border-color)' }}>
                 <p style={{ fontWeight: 600, marginBottom: '0.5rem' }}>Insira o Nome</p>
-                <input 
-                  type="text" 
-                  placeholder="Ex: Roberto" 
-                  value={customName} 
-                  onChange={e => setCustomName(e.target.value)} 
-                  style={{ width: '100%', padding: '1rem', border: '1px solid var(--border-color)', borderRadius: '4px', marginBottom: '1.5rem', background: 'var(--surface-color)', color: 'var(--text-main)', fontSize: '1.1rem' }} 
+                <input
+                  type="text"
+                  placeholder="Ex: Roberto"
+                  value={customName}
+                  onChange={e => setCustomName(e.target.value)}
+                  style={{ width: '100%', padding: '1rem', border: '1px solid var(--border-color)', borderRadius: '4px', marginBottom: '1.5rem', background: 'var(--surface-color)', color: 'var(--text-main)', fontSize: '1.1rem' }}
                 />
-                
+
                 <p style={{ fontWeight: 600, marginBottom: '0.5rem' }}>Insira o Número (até 2)</p>
-                <input 
-                  type="text" 
-                  placeholder="Ex: 10" 
-                  maxLength="2" 
-                  value={customNumber} 
-                  onChange={e => setCustomNumber(e.target.value)} 
-                  style={{ width: '100%', padding: '1rem', border: '1px solid var(--border-color)', borderRadius: '4px', background: 'var(--surface-color)', color: 'var(--text-main)', fontSize: '1.1rem' }} 
+                <input
+                  type="text"
+                  placeholder="Ex: 10"
+                  maxLength="2"
+                  value={customNumber}
+                  onChange={e => setCustomNumber(e.target.value)}
+                  style={{ width: '100%', padding: '1rem', border: '1px solid var(--border-color)', borderRadius: '4px', background: 'var(--surface-color)', color: 'var(--text-main)', fontSize: '1.1rem' }}
                 />
               </div>
             )}
@@ -261,7 +261,7 @@ const ProductPage = () => {
                 COMPRAR AGORA
               </button>
             </div>
-            
+
             {/* Medidas Table */}
             <div style={{ background: 'var(--surface-color)', borderRadius: '8px', padding: '1.5rem', overflowX: 'auto', border: '1px solid var(--border-color)' }}>
               <h3 style={{ marginBottom: '1.5rem', color: 'var(--text-main)', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>📏 Guia de Medidas Oficial</h3>
@@ -320,15 +320,15 @@ const ProductPage = () => {
       {/* 8. PROVA SOCIAL */}
       <section className="container" style={{ padding: '5rem 1.5rem', textAlign: 'center', borderTop: '1px solid var(--border-color)', marginTop: '3rem' }}>
         <h2 style={{ fontSize: '2.5rem', marginBottom: '1rem' }}>O que nossos clientes dizem</h2>
-        <p className="text-muted" style={{ textAlign: 'center', marginBottom: '3rem', fontSize: '1.2rem' }}>Já somos <strong style={{color: 'var(--accent-color)'}}>+100 clientes</strong> no Canadá! 🍁</p>
+        <p className="text-muted" style={{ textAlign: 'center', marginBottom: '3rem', fontSize: '1.2rem' }}>Já somos <strong style={{ color: 'var(--accent-color)' }}>+200 clientes</strong> no Canadá! 🍁</p>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '2rem' }}>
           <div className="glass-panel" style={{ padding: '2rem', textAlign: 'left', borderRadius: '8px' }}>
-            <div style={{ color: 'var(--accent-color)', marginBottom: '1rem', display: 'flex' }}><Star fill="currentColor"/><Star fill="currentColor"/><Star fill="currentColor"/><Star fill="currentColor"/><Star fill="currentColor"/></div>
+            <div style={{ color: 'var(--accent-color)', marginBottom: '1rem', display: 'flex' }}><Star fill="currentColor" /><Star fill="currentColor" /><Star fill="currentColor" /><Star fill="currentColor" /><Star fill="currentColor" /></div>
             <p style={{ fontSize: '1.1rem', marginBottom: '1rem', fontStyle: 'italic' }}>"Qualidade absurda, parece original!"</p>
             <p className="text-muted" style={{ fontWeight: 600 }}>— Ricardo T.</p>
           </div>
           <div className="glass-panel" style={{ padding: '2rem', textAlign: 'left', borderRadius: '8px' }}>
-            <div style={{ color: 'var(--accent-color)', marginBottom: '1rem', display: 'flex' }}><Star fill="currentColor"/><Star fill="currentColor"/><Star fill="currentColor"/><Star fill="currentColor"/><Star fill="currentColor"/></div>
+            <div style={{ color: 'var(--accent-color)', marginBottom: '1rem', display: 'flex' }}><Star fill="currentColor" /><Star fill="currentColor" /><Star fill="currentColor" /><Star fill="currentColor" /><Star fill="currentColor" /></div>
             <p style={{ fontSize: '1.1rem', marginBottom: '1rem', fontStyle: 'italic' }}>"Chegou rápido em Toronto!"</p>
             <p className="text-muted" style={{ fontWeight: 600 }}>— Fernando S.</p>
           </div>
@@ -353,7 +353,7 @@ const ProductPage = () => {
           <p className="text-muted" style={{ fontSize: '1.2rem' }}>Garantimos a qualidade do produto e suporte completo ao cliente via WhatsApp.</p>
         </div>
       </section>
-      
+
     </div>
   );
 };

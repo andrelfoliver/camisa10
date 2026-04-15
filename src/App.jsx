@@ -13,6 +13,7 @@ import CategoryPage from './pages/CategoryPage';
 import Auth from './pages/Auth';
 import Profile from './pages/Profile';
 import WhatsAppIcon from './components/WhatsAppIcon';
+import SalesPopup from './components/SalesPopup';
 
 const ScrollToTop = () => {
   const { pathname } = useLocation();
@@ -53,6 +54,12 @@ const AppLayout = () => {
       >
         <WhatsAppIcon size={32} />
       </a>
+      
+      {/* 
+        Sales Popup Widget
+        Only display on storefront pages, hide on Admin to reduce noise. 
+      */}
+      {!isAdminPage && <SalesPopup />}
     </div>
   );
 };
