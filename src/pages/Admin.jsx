@@ -269,6 +269,23 @@ const Admin = () => {
     }
   };
 
+  const sendWhatsAppStatus = (order, type) => {
+    const templates = {
+      pending: `Olá *${order.customer_name}*, tudo bem? Passando para avisar que recebemos seu pedido **#${order.id.slice(0,8)}** na Camisa10! 👕 Em breve te passamos as instruções para o Interac e-Transfer.`,
+      processing: `Olá *${order.customer_name}*, seu pedido **#${order.id.slice(0,8)}** já entrou em preparação! 👕 Estamos conferindo cada detalhe para que chegue perfeito para você.`,
+      shipped: `Grande notícia, *${order.customer_name}*! 🚀 Seu pedido **#${order.id.slice(0,8)}** acaba de ser despachado. Logo você estará com seu novo manto em mãos!`,
+      completed: `Olá *${order.customer_name}*, o sistema indica que seu pedido **#${order.id.slice(0,8)}** foi entregue! 📦 Esperamos que goste da qualidade. Se puder, tira uma foto e marca a gente no Instagram @camisa10.ca! 🔥`,
+      cancelled: `Olá *${order.customer_name}*, infelizmente seu pedido **#${order.id.slice(0,8)}** precisou ser cancelado. :( Caso tenha alguma dúvida, estamos à disposição aqui no WhatsApp.`
+    };
+
+    const message = templates[type] || templates.pending;
+    const phone = order.customer_phone ? order.customer_phone.replace(/\D/g, '') : '';
+    // Se for numero do canada (10 digitos), adicionar prefixo 1
+    const formattedPhone = (phone.length === 10) ? `1${phone}` : phone;
+    
+    window.open(`https://wa.me/${formattedPhone}?text=${encodeURIComponent(message)}`, '_blank');
+  };
+
   const handleAddProduct = async (e) => {
     e.preventDefault();
     setSaved(false);
@@ -865,21 +882,38 @@ const Admin = () => {
                        <p>{order?.shipping_address?.city || ''}{order?.shipping_address?.province ? ', ' + order.shipping_address.province : ''} {order?.shipping_address?.postalCode || ''}</p>
                     </div>
 
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-                       <select 
-                         value={order?.status || 'pending'} 
-                         onChange={(e) => handleUpdateOrderStatus(order.id, e.target.value)}
-                         style={{ flex: 1, padding: '0.5rem', background: 'var(--bg-color)', color: '#fff', border: '1px solid var(--border-color)', borderRadius: '4px', fontSize: '0.8rem' }}
-                       >
-                         <option value="pending">🟡 Pendente (WhatsApp)</option>
-                         <option value="processing">🔵 Preparando</option>
-                         <option value="shipped">🟢 Enviado</option>
-                         <option value="completed">✅ Finalizado</option>
-                         <option value="cancelled">🔴 Cancelado</option>
-                       </select>
-                       <button onClick={() => window.open(`https://wa.me/?text=${encodeURIComponent('Olá ' + (order?.customer_name || '') + ', referente ao seu pedido na Camisa10...')}`, '_blank')} style={{ padding: '0.5rem', borderRadius: '4px', background: '#25D366', color: '#fff', border: 'none', cursor: 'pointer' }}>
-                         <WhatsAppIcon size={18} />
-                       </button>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.8rem' }}>
+                       <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                          <select 
+                            value={order?.status || 'pending'} 
+                            onChange={(e) => handleUpdateOrderStatus(order.id, e.target.value)}
+                            style={{ flex: 1, padding: '0.5rem', background: 'var(--bg-color)', color: '#fff', border: '1px solid var(--border-color)', borderRadius: '4px', fontSize: '0.8rem' }}
+                          >
+                            <option value="pending">🟡 Pendente (WhatsApp)</option>
+                            <option value="processing">🔵 Preparando</option>
+                            <option value="shipped">🟢 Enviado</option>
+                            <option value="completed">✅ Finalizado</option>
+                            <option value="cancelled">🔴 Cancelado</option>
+                          </select>
+                       </div>
+
+                       <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
+                          <button onClick={() => sendWhatsAppStatus(order, 'pending')} title="Notificar Pendente" style={{ flex: 1, padding: '0.5rem', borderRadius: '4px', background: 'rgba(255,184,28,0.1)', color: '#FFB81C', border: '1px solid rgba(255,184,28,0.2)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                            <WhatsAppIcon size={14} /> <span style={{fontSize: '0.65rem', marginLeft: '4px', fontWeight: 700}}>PENDENTE</span>
+                          </button>
+                          <button onClick={() => sendWhatsAppStatus(order, 'processing')} title="Notificar Preparando" style={{ flex: 1, padding: '0.5rem', borderRadius: '4px', background: 'rgba(59, 130, 246, 0.1)', color: '#3B82F6', border: '1px solid rgba(59, 130, 246, 0.2)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                            <WhatsAppIcon size={14} /> <span style={{fontSize: '0.65rem', marginLeft: '4px', fontWeight: 700}}>PREPARAR</span>
+                          </button>
+                          <button onClick={() => sendWhatsAppStatus(order, 'shipped')} title="Notificar Enviado" style={{ flex: 1, padding: '0.5rem', borderRadius: '4px', background: 'rgba(16, 185, 129, 0.1)', color: '#10B981', border: '1px solid rgba(16, 185, 129, 0.2)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                            <WhatsAppIcon size={14} /> <span style={{fontSize: '0.65rem', marginLeft: '4px', fontWeight: 700}}>ENVIADO</span>
+                          </button>
+                          <button onClick={() => sendWhatsAppStatus(order, 'completed')} title="Notificar Finalizado" style={{ flex: 1, padding: '0.5rem', borderRadius: '4px', background: 'rgba(168, 85, 247, 0.1)', color: '#A855F7', border: '1px solid rgba(168, 85, 247, 0.2)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                            <WhatsAppIcon size={14} /> <span style={{fontSize: '0.65rem', marginLeft: '4px', fontWeight: 700}}>ENTREGUE</span>
+                          </button>
+                          <button onClick={() => sendWhatsAppStatus(order, 'cancelled')} title="Notificar Cancelado" style={{ flex: 1, padding: '0.5rem', borderRadius: '4px', background: 'rgba(239, 68, 68, 0.1)', color: '#EF4444', border: '1px solid rgba(239, 68, 68, 0.2)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                            <WhatsAppIcon size={14} /> <span style={{fontSize: '0.65rem', marginLeft: '4px', fontWeight: 700}}>CANCELAR</span>
+                          </button>
+                       </div>
                     </div>
                   </div>
                 ))}
