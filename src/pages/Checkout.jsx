@@ -8,7 +8,7 @@ import { supabase } from '../services/supabase';
 import { useEffect } from 'react';
 
 const Checkout = () => {
-  const { cartItems, cartTotal } = useCart();
+  const { cartItems, cartTotal, subtotal, discount } = useCart();
   const { user } = useAuth();
   const navigate = useNavigate();
   
