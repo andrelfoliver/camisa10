@@ -532,26 +532,6 @@ const Admin = () => {
             <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem', marginTop: '0.2rem' }}>Painel Central de Gerenciamento Camisa10.</p>
           </div>
           <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
-            {products.length < 1000 && (
-              <button 
-                onClick={handleMigration} 
-                disabled={isMigrating}
-                className="btn-primary" 
-                style={{ 
-                  background: 'linear-gradient(135deg, #3B82F6 0%, #2563EB 100%)', 
-                  color: '#fff', 
-                  padding: '1rem 2rem',
-                  fontSize: '1rem',
-                  fontWeight: 800,
-                  boxShadow: '0 10px 20px rgba(59, 130, 246, 0.3)',
-                  border: 'none',
-                  animation: 'pulse 2s infinite'
-                }}
-              >
-                <RefreshCw size={20} className={isMigrating ? 'spinning' : ''} style={{ marginRight: '0.8rem' }} /> 
-                {isMigrating ? 'INICIANDO MIGRAÇÃO...' : 'SINCRONIZAR PRODUTOS COM SUPABASE'}
-              </button>
-            )}
             {supplierTab === 'TESTIMONIALS' && (
               <button onClick={() => setShowAddTestimonial(true)} className="btn-primary" style={{ background: '#A855F7', color: '#fff' }}>
                 <Plus size={18} /> Novo Histórico (2022)
