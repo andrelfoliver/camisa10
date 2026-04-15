@@ -7,7 +7,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
-:root{--black:#111;--yellow:#f5c518;--border:#e8e8e8;--bg:#f5f5f5;--white:#fff;--green:#27ae60;--red:#e74c3c}
+:root{--black:#111;--yellow:#f5c518;--border:#e8e8e8;--bg:#f5f5f5;--white:#fff;--green:#27ae60;--red:#e74c3c;--blue:#3498db}
 body{font-family:'Montserrat',sans-serif;background:var(--bg);color:var(--black);font-size:13px}
 
 header{background:var(--black);padding:16px 24px;display:flex;align-items:center;justify-content:space-between}
@@ -21,15 +21,17 @@ header{background:var(--black);padding:16px 24px;display:flex;align-items:center
 .panel-left{background:var(--white);border-right:1px solid var(--border);display:flex;flex-direction:column;overflow:hidden}
 .panel-title{padding:16px 20px;border-bottom:1px solid var(--border);font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:1px;color:#888}
 
-.config-section{padding:16px 20px;border-bottom:1px solid var(--border)}
-.config-section label{display:block;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:#888;margin-bottom:6px}
+.config-section{padding:16px 20px;border-bottom:1px solid var(--border);background:#fafafa}
+.config-section label{display:flex;justify-content:space-between;align-items:center;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:#888;margin-bottom:6px}
 .config-section input,
-.config-section select{width:100%;border:1.5px solid var(--border);border-radius:4px;padding:8px 10px;font-family:'Montserrat',sans-serif;font-size:12px;font-weight:500;outline:none;transition:border-color 0.15s}
+.config-section select{width:100%;border:1.5px solid var(--border);border-radius:4px;padding:8px 10px;font-family:'Montserrat',sans-serif;font-size:12px;font-weight:500;outline:none;transition:border-color 0.15s;margin-bottom:8px}
 .config-section input:focus,
 .config-section select:focus{border-color:var(--black)}
-.hint{font-size:10px;color:#aaa;margin-top:4px;line-height:1.4}
+.hint{font-size:10px;color:#888;margin-top:2px;line-height:1.4}
+.api-link{color:var(--blue);text-decoration:none;font-weight:600}
+.api-link:hover{text-decoration:underline}
 
-.upload-area{margin:16px 20px;border:2px dashed var(--border);border-radius:6px;padding:20px;text-align:center;cursor:pointer;transition:all 0.15s}
+.upload-area{margin:16px 20px;border:2px dashed var(--border);border-radius:6px;padding:20px;text-align:center;cursor:pointer;transition:all 0.15s;background:#fff}
 .upload-area:hover{border-color:var(--black);background:#fafafa}
 .upload-area.drag{border-color:var(--yellow);background:#fffbea}
 .upload-icon{font-size:2rem;margin-bottom:8px}
@@ -37,7 +39,7 @@ header{background:var(--black);padding:16px 24px;display:flex;align-items:center
 .upload-sub{font-size:10px;color:#aaa;margin-top:4px}
 #fileInput{display:none}
 
-.queue-list{flex:1;overflow-y:auto;padding:8px 0}
+.queue-list{flex:1;overflow-y:auto;padding:8px 0;background:#fff}
 .queue-item{display:flex;align-items:center;gap:10px;padding:8px 20px;border-bottom:1px solid #f5f5f5;transition:background 0.1s}
 .queue-item:hover{background:#fafafa}
 .qi-thumb{width:44px;height:44px;border-radius:4px;object-fit:cover;background:#f0f0f0;flex-shrink:0}
@@ -45,17 +47,17 @@ header{background:var(--black);padding:16px 24px;display:flex;align-items:center
 .qi-name{font-size:11px;font-weight:700;color:var(--black);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .qi-status{font-size:10px;margin-top:2px;font-weight:600}
 .qi-status.pending{color:#aaa}
-.qi-status.processing{color:#f39c12}
+.qi-status.processing{color:var(--blue)}
 .qi-status.done{color:var(--green)}
 .qi-status.error{color:var(--red)}
 .qi-badge{width:8px;height:8px;border-radius:50%;flex-shrink:0}
 .qi-badge.pending{background:#ddd}
-.qi-badge.processing{background:#f39c12;animation:pulse 1s infinite}
+.qi-badge.processing{background:var(--blue);animation:pulse 1s infinite}
 .qi-badge.done{background:var(--green)}
 .qi-badge.error{background:var(--red)}
 @keyframes pulse{0%,100%{opacity:1}50%{opacity:0.3}}
 
-.action-bar{padding:16px 20px;border-top:1px solid var(--border);display:flex;flex-direction:column;gap:8px}
+.action-bar{padding:16px 20px;border-top:1px solid var(--border);display:flex;flex-direction:column;gap:8px;background:#fff}
 .btn{border:none;border-radius:4px;padding:10px 16px;font-family:'Montserrat',sans-serif;font-size:12px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;transition:all 0.15s;text-transform:uppercase;letter-spacing:0.5px}
 .btn-primary{background:var(--black);color:var(--white)}
 .btn-primary:hover:not(:disabled){background:#333}
@@ -76,8 +78,8 @@ header{background:var(--black);padding:16px 24px;display:flex;align-items:center
 
 .result-card{background:var(--white);border:1px solid var(--border);border-radius:6px;overflow:hidden;transition:box-shadow 0.15s}
 .result-card:hover{box-shadow:0 2px 12px rgba(0,0,0,0.08)}
-.result-card.edited{border-color:var(--yellow)}
-.rc-img{width:100%;aspect-ratio:1;object-fit:cover;background:#f5f5f5}
+.result-card.edited{border-color:var(--yellow);box-shadow:0 0 0 2px rgba(245,197,24,0.3)}
+.rc-img{width:100%;aspect-ratio:1;object-fit:contain;background:#f5f5f5}
 .rc-body{padding:10px 12px}
 .rc-id{font-size:9px;font-weight:700;color:#aaa;text-transform:uppercase;letter-spacing:1px}
 .rc-name{font-size:11px;font-weight:700;color:var(--black);margin:3px 0;line-height:1.3}
@@ -87,7 +89,7 @@ header{background:var(--black);padding:16px 24px;display:flex;align-items:center
 .rc-row{display:flex;gap:4px;margin-top:4px}
 .rc-select{flex:1;border:1px solid var(--border);border-radius:3px;padding:4px 6px;font-size:10px;font-family:'Montserrat',sans-serif;outline:none}
 .rc-select:focus{border-color:var(--yellow)}
-.rc-badge{display:inline-block;padding:2px 7px;border-radius:3px;font-size:9px;font-weight:800;text-transform:uppercase;letter-spacing:0.5px;margin-top:4px}
+.rc-badge{display:inline-block;padding:2px 7px;border-radius:3px;font-size:9px;font-weight:800;text-transform:uppercase;letter-spacing:0.5px;margin-top:6px}
 .rc-badge.identified{background:#e8f5e9;color:#2e7d32}
 .rc-badge.pending{background:#fff3e0;color:#e65100}
 .rc-badge.error{background:#ffebee;color:#c62828}
@@ -100,8 +102,10 @@ header{background:var(--black);padding:16px 24px;display:flex;align-items:center
 .progress-bar{height:3px;background:var(--border);overflow:hidden}
 .progress-fill{height:100%;background:var(--yellow);transition:width 0.3s}
 
-.log-panel{background:#1a1a1a;color:#00ff88;font-family:monospace;font-size:10px;padding:10px 20px;height:80px;overflow-y:auto;border-top:1px solid #333}
-.log-line{line-height:1.6}
+.log-panel{background:#1a1a1a;color:#00ff88;font-family:monospace;font-size:10px;padding:10px 20px;height:120px;overflow-y:auto;border-top:1px solid #333}
+.log-line{line-height:1.6;margin-bottom:2px}
+.log-line.error{color:#ff5555}
+.log-line.warn{color:#ffcc00}
 
 /* CSV MODAL */
 .modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:100;align-items:center;justify-content:center}
@@ -111,69 +115,73 @@ header{background:var(--black);padding:16px 24px;display:flex;align-items:center
 .modal-head h2{font-size:14px;font-weight:800;text-transform:uppercase;letter-spacing:1px}
 .modal-close{background:none;border:none;cursor:pointer;font-size:1.3rem;color:#888}
 .modal-body{flex:1;overflow:auto;padding:16px 24px}
-.csv-preview{background:#1a1a1a;color:#00ff88;font-family:monospace;font-size:11px;padding:16px;border-radius:4px;white-space:pre;overflow:auto;max-height:300px}
+.csv-preview{background:#1a1a1a;color:#00ff88;font-family:monospace;font-size:11px;padding:16px;border-radius:4px;white-space:pre;overflow:auto;max-height:300px;line-height:1.4}
 .modal-foot{padding:16px 24px;border-top:1px solid var(--border);display:flex;gap:8px;justify-content:flex-end}
-.sql-preview{background:#1a1a1a;color:#61dafb;font-family:monospace;font-size:10px;padding:16px;border-radius:4px;white-space:pre;overflow:auto;max-height:200px;margin-top:12px}
+.sql-preview{background:#1a1a1a;color:#61dafb;font-family:monospace;font-size:10px;padding:16px;border-radius:4px;white-space:pre;overflow:auto;max-height:200px;margin-top:12px;line-height:1.4}
 </style>
 </head>
 <body>
 
 <header>
-  <div class="logo">CAMISA<span>10</span> — Identificador</div>
+  <div class="logo">CAMISA<span>10</span> — Auto Identificador (Gemini)</div>
   <div class="status-bar" id="statusBar">Aguardando imagens...</div>
 </header>
 
 <div class="main">
   <!-- LEFT -->
   <div class="panel-left">
-    <div class="panel-title">Configuração</div>
+    <div class="panel-title">Configuração da API (Grátis)</div>
 
     <div class="config-section">
-      <label>Base URL das imagens</label>
-      <input type="text" id="baseUrl" value="https://camisa10-ca.vercel.app" placeholder="https://camisa10-ca.vercel.app">
-      <div class="hint">URL base do seu site para carregar as imagens</div>
-    </div>
+      <label>
+        CHAVE DE API GEMINI
+        <a href="https://aistudio.google.com/app/apikey" target="_blank" class="api-link">Pegar chave grátis →</a>
+      </label>
+      <div style="display:flex;gap:10px;margin-bottom:8px">
+        <input type="password" id="geminiKey" placeholder="Cole sua chave AIzaSy..." onchange="saveConfig()" style="flex:1;margin-bottom:0">
+        <button class="btn btn-outline" style="padding:8px 12px" onclick="loadModels()">Validar</button>
+      </div>
 
-    <div class="config-section">
-      <label>Modo de entrada</label>
-      <select id="inputMode" onchange="toggleInputMode()">
-        <option value="upload">Upload de imagens locais</option>
-        <option value="csv">Importar CSV do Supabase</option>
+      <label>Modelo de Inteligência Artificial</label>
+      <select id="geminiModel" style="margin-bottom:8px" onchange="saveConfig()">
+        <option value="gemini-2.0-flash">Gemini 2.0 Flash (Mais Recente)</option>
+        <option value="gemini-1.5-flash-latest">Gemini 1.5 Flash (Latest)</option>
+        <option value="gemini-1.5-flash">Gemini 1.5 Flash (Padrão)</option>
+        <option value="gemini-1.5-pro">Gemini 1.5 Pro</option>
+        <option value="gemini-pro-vision">Gemini Pro Vision</option>
       </select>
+      
+      <div class="hint">Cole a chave e clique em Validar para buscar o modelo compatível com sua conta.</div>
     </div>
 
-    <div id="uploadSection">
-      <div class="upload-area" onclick="document.getElementById('fileInput').click()" id="dropZone">
+    <!-- ALWAYS USE UPLOAD FOR EASIER WORKFLOW -->
+    <div id="uploadSection" style="padding:16px 20px;">
+      <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:#888;margin-bottom:6px">Selecione as Imagens</div>
+      <div class="upload-area" onclick="document.getElementById('fileInput').click()" id="dropZone" style="margin:0;">
         <div class="upload-icon">📁</div>
-        <div class="upload-text">Clique ou arraste as imagens</div>
-        <div class="upload-sub">PNG, JPG, WEBP — múltiplos arquivos</div>
+        <div class="upload-text">Clique aqui e selecione as fotos</div>
+        <div class="upload-sub">Selecione todas as imagens genéricas na pasta "public/camisas/" do seu computador.</div>
       </div>
       <input type="file" id="fileInput" accept="image/*" multiple onchange="handleFiles(this.files)">
     </div>
 
-    <div id="csvSection" style="display:none;padding:16px 20px">
-      <label style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:#888;display:block;margin-bottom:6px">CSV do Supabase</label>
-      <input type="file" id="csvInput" accept=".csv" onchange="loadCSV(this)" style="width:100%;font-size:11px">
-      <div style="font-size:10px;color:#aaa;margin-top:6px">Exporte a tabela products do Supabase como CSV</div>
-    </div>
-
-    <div class="panel-title" style="margin-top:4px">Fila (<span id="queueCount">0</span>)</div>
+    <div class="panel-title" style="margin-top:0">Fila (<span id="queueCount">0</span>)</div>
     <div class="queue-list" id="queueList">
       <div style="padding:20px;text-align:center;color:#aaa;font-size:11px">Nenhuma imagem carregada</div>
     </div>
 
     <div class="log-panel" id="logPanel">
-      <div class="log-line">► Sistema pronto. Aguardando imagens...</div>
+      <div class="log-line">► Dica: Não precisamos mais do arquivo CSV! Apenas coloque sua chave API e clique na caixa de "Upload" para selecionar as fotos e geraríamos os scripts de banco.</div>
     </div>
 
     <div class="action-bar">
       <button class="btn btn-primary" id="btnRun" onclick="runIdentification()" disabled>
-        ▶ Identificar Camisas
+        ▶ Iniciar OCR com Gemini
       </button>
       <button class="btn btn-success" id="btnExport" onclick="showExport()" disabled>
-        ↓ Exportar CSV / SQL
+        ↓ Exportar SQL de Atualização
       </button>
-      <button class="btn btn-outline" onclick="clearAll()">Limpar tudo</button>
+      <button class="btn btn-outline" onclick="clearAll()">Limpar fila</button>
     </div>
   </div>
 
@@ -181,14 +189,14 @@ header{background:var(--black);padding:16px 24px;display:flex;align-items:center
   <div class="panel-right">
     <div class="progress-bar"><div class="progress-fill" id="progressFill" style="width:0%"></div></div>
     <div class="results-header">
-      <div class="results-title">Resultados</div>
+      <div class="results-title">Resultados Visuais</div>
       <div class="results-count" id="resultsCount">0 identificadas</div>
     </div>
     <div class="results-grid" id="resultsGrid">
       <div class="empty-state" style="grid-column:1/-1">
-        <div class="empty-icon">⚽</div>
-        <div class="empty-text">Nenhuma camisa identificada ainda</div>
-        <div class="empty-sub">Faça upload das imagens ou importe o CSV<br>do Supabase e clique em "Identificar Camisas"</div>
+        <div class="empty-icon">🤖</div>
+        <div class="empty-text">Inteligência Artificial pronta!</div>
+        <div class="empty-sub">Importe as imagens e insira sua chave da API. Eu olharei foto por foto para identificar os times e as ligas automaticamente.</div>
       </div>
     </div>
   </div>
@@ -198,86 +206,79 @@ header{background:var(--black);padding:16px 24px;display:flex;align-items:center
 <div class="modal-overlay" id="exportModal">
   <div class="modal">
     <div class="modal-head">
-      <h2>Exportar Dados</h2>
+      <h2>Exportar Banco de Dados</h2>
       <button class="modal-close" onclick="document.getElementById('exportModal').classList.remove('on')">×</button>
     </div>
     <div class="modal-body">
-      <div style="font-size:12px;font-weight:600;margin-bottom:8px">CSV para importar no Supabase:</div>
-      <div class="csv-preview" id="csvPreview"></div>
-      <div style="font-size:12px;font-weight:600;margin:16px 0 8px">SQL UPDATE (cole no SQL Editor do Supabase):</div>
+      <p style="font-size:11px;color:#555;margin-bottom:12px;line-height:1.4">
+        Aqui está o código <b>SQL</b> para você atualizar seu banco de dados em lote no Supabase de uma única vez. Acesse <b>SQL Editor</b> > Novo Query e cole o conteúdo abaixo. O script atualizará direto com base no nome do arquivo da imagem!
+      </p>
+      <div style="font-size:12px;font-weight:800;margin-top:16px;color:var(--black)">SCRIPT SQL FINAL:</div>
       <div class="sql-preview" id="sqlPreview"></div>
     </div>
     <div class="modal-foot">
-      <button class="btn btn-outline" onclick="copySQL()">Copiar SQL</button>
-      <button class="btn btn-primary" onclick="downloadCSV()">↓ Baixar CSV</button>
+      <button class="btn btn-primary" onclick="copySQL()">Copiar SQL</button>
     </div>
   </div>
 </div>
 
 <script>
-const TEAMS_DB = {
-  // Brasileirão
-  'flamengo': {time:'Flamengo', liga:'Brasileirão', pais:'Brasil'},
-  'palmeiras': {time:'Palmeiras', liga:'Brasileirão', pais:'Brasil'},
-  'corinthians': {time:'Corinthians', liga:'Brasileirão', pais:'Brasil'},
-  'são paulo': {time:'São Paulo', liga:'Brasileirão', pais:'Brasil'},
-  'botafogo': {time:'Botafogo', liga:'Brasileirão', pais:'Brasil'},
-  'fluminense': {time:'Fluminense', liga:'Brasileirão', pais:'Brasil'},
-  'vasco': {time:'Vasco da Gama', liga:'Brasileirão', pais:'Brasil'},
-  'grêmio': {time:'Grêmio', liga:'Brasileirão', pais:'Brasil'},
-  'internacional': {time:'Internacional', liga:'Brasileirão', pais:'Brasil'},
-  'atlético mineiro': {time:'Atlético Mineiro', liga:'Brasileirão', pais:'Brasil'},
-  'cruzeiro': {time:'Cruzeiro', liga:'Brasileirão', pais:'Brasil'},
-  'santos': {time:'Santos', liga:'Brasileirão', pais:'Brasil'},
-  'bahia': {time:'Bahia', liga:'Brasileirão', pais:'Brasil'},
-  // Internacionais
-  'real madrid': {time:'Real Madrid', liga:'La Liga', pais:'Espanha'},
-  'barcelona': {time:'Barcelona', liga:'La Liga', pais:'Espanha'},
-  'atlético de madrid': {time:'Atlético de Madrid', liga:'La Liga', pais:'Espanha'},
-  'manchester united': {time:'Manchester United', liga:'Premier League', pais:'Inglaterra'},
-  'manchester city': {time:'Manchester City', liga:'Premier League', pais:'Inglaterra'},
-  'liverpool': {time:'Liverpool', liga:'Premier League', pais:'Inglaterra'},
-  'chelsea': {time:'Chelsea', liga:'Premier League', pais:'Inglaterra'},
-  'arsenal': {time:'Arsenal', liga:'Premier League', pais:'Inglaterra'},
-  'tottenham': {time:'Tottenham', liga:'Premier League', pais:'Inglaterra'},
-  'ac milan': {time:'AC Milan', liga:'Serie A', pais:'Itália'},
-  'inter de milão': {time:'Inter de Milão', liga:'Serie A', pais:'Itália'},
-  'juventus': {time:'Juventus', liga:'Serie A', pais:'Itália'},
-  'napoli': {time:'Napoli', liga:'Serie A', pais:'Itália'},
-  'psg': {time:'PSG', liga:'Ligue 1', pais:'França'},
-  'paris saint-germain': {time:'PSG', liga:'Ligue 1', pais:'França'},
-  'bayern': {time:'Bayern de Munique', liga:'Bundesliga', pais:'Alemanha'},
-  'borussia dortmund': {time:'Borussia Dortmund', liga:'Bundesliga', pais:'Alemanha'},
-  'boca juniors': {time:'Boca Juniors', liga:'Liga Profesional', pais:'Argentina'},
-  'river plate': {time:'River Plate', liga:'Liga Profesional', pais:'Argentina'},
-  // Seleções
-  'brasil': {time:'Brasil', liga:'Seleções', pais:'Brasil'},
-  'argentina': {time:'Argentina', liga:'Seleções', pais:'Argentina'},
-  'espanha': {time:'Espanha', liga:'Seleções', pais:'Espanha'},
-  'portugal': {time:'Portugal', liga:'Seleções', pais:'Portugal'},
-  'alemanha': {time:'Alemanha', liga:'Seleções', pais:'Alemanha'},
-  'frança': {time:'França', liga:'Seleções', pais:'França'},
-  'inglaterra': {time:'Inglaterra', liga:'Seleções', pais:'Inglaterra'},
-  'itália': {time:'Itália', liga:'Seleções', pais:'Itália'},
+// Load saved config
+window.onload = () => {
+  const k = localStorage.getItem('camisa10_gemini_key');
+  const m = localStorage.getItem('camisa10_gemini_model');
+  if (k) document.getElementById('geminiKey').value = k;
+  if (m) document.getElementById('geminiModel').value = m;
 };
 
-let queue = []; // {id, name, imgSrc, file, status, result}
+function saveConfig() {
+  localStorage.setItem('camisa10_gemini_key', document.getElementById('geminiKey').value);
+  localStorage.setItem('camisa10_gemini_model', document.getElementById('geminiModel').value);
+}
+
+async function loadModels() {
+    const key = document.getElementById('geminiKey').value.trim();
+    if (!key) return alert('Cole a chave antes de validar.');
+    try {
+        log('Buscando modelos disponíveis na sua chave...');
+        const res = await fetch(\`https://generativelanguage.googleapis.com/v1beta/models?key=\${key}\`);
+        if(!res.ok) throw new Error('Falha na autenticação da chave! Verifique se copiou corretamente.');
+        const data = await res.json();
+        
+        // Populate standard defaults
+        let options = '<option value="gemini-2.0-flash">Gemini 2.0 Flash (Mais Recente)</option>';
+        options += '<option value="gemini-1.5-flash-latest">Gemini 1.5 Flash (Padrão)</option>';
+        
+        // Add models retrieved from API
+        if (data.models) {
+            data.models.forEach(m => {
+                const name = m.name.replace('models/', '');
+                if (name.includes('vision') || name.includes('flash') || name.includes('pro')) {
+                    options += \`<option value="\${name}">\${name}</option>\`;
+                }
+            });
+        }
+        
+        document.getElementById('geminiModel').innerHTML = options;
+        log('Chave validada! Modelos atualizados na lista.', 'done');
+        saveConfig();
+    } catch(e) {
+        log('Erro ao validar chave: ' + e.message, 'error');
+    }
+}
+
+let queue = [];
 let results = {};
 let isRunning = false;
 
-function log(msg) {
+function log(msg, type = '') {
   const panel = document.getElementById('logPanel');
   const line = document.createElement('div');
-  line.className = 'log-line';
-  line.textContent = '► ' + msg;
+  line.className = 'log-line ' + type;
+  const time = new Date().toLocaleTimeString('pt-BR', {hour12:false});
+  line.textContent = \`[\${time}] \${msg}\`;
   panel.appendChild(line);
   panel.scrollTop = panel.scrollHeight;
-}
-
-function toggleInputMode() {
-  const mode = document.getElementById('inputMode').value;
-  document.getElementById('uploadSection').style.display = mode === 'upload' ? 'block' : 'none';
-  document.getElementById('csvSection').style.display = mode === 'csv' ? 'block' : 'none';
 }
 
 // DRAG & DROP
@@ -295,47 +296,14 @@ function handleFiles(files) {
   arr.forEach(file => {
     const id = 'file_' + Date.now() + '_' + Math.random().toString(36).slice(2);
     const imgSrc = URL.createObjectURL(file);
-    // Extract number from filename like "@carinhacriativo (42).png"
-    const numMatch = file.name.match(/\((\d+)\)/);
+    const numMatch = file.name.match(/\\((\\d+)\\)/);
     const num = numMatch ? numMatch[1] : file.name;
-    queue.push({ id, num, name: file.name, imgSrc, file, status: 'pending', result: null, dbId: null });
+    const isImageUpload = true;
+    queue.push({ id, num, name: file.name, imgSrc, file, status: 'pending', result: null, isImageUpload });
   });
   renderQueue();
   updateButtons();
-  log(`${arr.length} imagens adicionadas à fila.`);
-}
-
-function loadCSV(input) {
-  const file = input.files[0];
-  if (!file) return;
-  const reader = new FileReader();
-  reader.onload = e => {
-    const lines = e.target.result.split('\n');
-    const headers = lines[0].split(',');
-    const idIdx = headers.indexOf('id');
-    const nameIdx = headers.indexOf('name');
-    const imgIdx = headers.indexOf('image');
-
-    let added = 0;
-    for (let i = 1; i < lines.length; i++) {
-      const cols = lines[i].split(',');
-      if (!cols[nameIdx] || !cols[nameIdx].includes('Geral')) continue;
-      const dbId = cols[idIdx];
-      const name = cols[nameIdx];
-      const imgPath = cols[imgIdx];
-      const numMatch = imgPath && imgPath.match(/\((\d+)\)/);
-      if (!numMatch) continue;
-      const num = numMatch[1];
-      const baseUrl = document.getElementById('baseUrl').value.trim().replace(/\/$/, '');
-      const imgSrc = baseUrl + '/camisas/@carinhacriativo%20(' + num + ').png';
-      queue.push({ id: 'csv_' + dbId, num, name, imgSrc, file: null, status: 'pending', result: null, dbId });
-      added++;
-    }
-    renderQueue();
-    updateButtons();
-    log(`CSV carregado: ${added} produtos "Camisa Geral" encontrados.`);
-  };
-  reader.readAsText(file);
+  log(\`\${arr.length} imagens adicionadas à fila de processamento.\`);
 }
 
 function renderQueue() {
@@ -345,21 +313,21 @@ function renderQueue() {
     list.innerHTML = '<div style="padding:20px;text-align:center;color:#aaa;font-size:11px">Nenhuma imagem carregada</div>';
     return;
   }
-  list.innerHTML = queue.map(item => `
+  list.innerHTML = queue.map(item => \`
     <div class="queue-item">
-      <img class="qi-thumb" src="${item.imgSrc}" alt="" onerror="this.src='data:image/svg+xml,<svg xmlns=\\'http://www.w3.org/2000/svg\\' viewBox=\\'0 0 40 40\\'><rect width=\\'40\\' height=\\'40\\' fill=\\'%23f0f0f0\\'/></svg>'">
-      <div class="qi-info">
-        <div class="qi-name">#${item.num} — ${item.dbId ? 'ID:'+item.dbId : item.name.slice(0,20)}</div>
-        <div class="qi-status ${item.status}">${
+        <img class="qi-thumb" crossorigin="anonymous" src="\${item.imgSrc}" alt="" onerror="this.src='data:image/svg+xml,<svg xmlns=\\'http://www.w3.org/2000/svg\\' viewBox=\\'0 0 40 40\\'><rect width=\\'40\\' height=\\'40\\' fill=\\'%23f0f0f0\\'/></svg>'">
+        <div class="qi-info">
+        <div class="qi-name">#\${item.num} — Arquivo: \${item.name.slice(0,20)}</div>
+        <div class="qi-status \${item.status}">\${
           item.status === 'pending' ? 'Aguardando' :
-          item.status === 'processing' ? 'Identificando...' :
+          item.status === 'processing' ? 'Analisando via Gemini...' :
           item.status === 'done' ? (item.result ? item.result.time : 'Identificado') :
           'Erro'
         }</div>
       </div>
-      <div class="qi-badge ${item.status}"></div>
+      <div class="qi-badge \${item.status}"></div>
     </div>
-  `).join('');
+  \`).join('');
 }
 
 function updateButtons() {
@@ -367,79 +335,99 @@ function updateButtons() {
   const doneCount = queue.filter(i => i.status === 'done').length;
   document.getElementById('btnExport').disabled = doneCount === 0;
   document.getElementById('resultsCount').textContent = doneCount + ' identificadas';
-  document.getElementById('statusBar').textContent = `${queue.length} na fila · ${doneCount} identificadas`;
+  document.getElementById('statusBar').textContent = \`\${queue.length} na fila · \${doneCount} concluídas\`;
 }
 
 async function runIdentification() {
-  if (isRunning) return;
-  isRunning = true;
-  document.getElementById('btnRun').disabled = true;
-  log('Iniciando identificação...');
+    const key = document.getElementById('geminiKey').value.trim();
+    const activeModel = document.getElementById('geminiModel').value;
 
-  const pending = queue.filter(i => i.status === 'pending');
-  const total = pending.length;
-  let done = 0;
-
-  for (const item of pending) {
-    item.status = 'processing';
-    renderQueue();
-    log(`Identificando #${item.num}...`);
-
-    try {
-      // Convert image to base64
-      const b64 = await imageToBase64(item.imgSrc, item.file);
-
-      // Call Claude API
-      const response = await fetch('https://api.anthropic.com/v1/messages', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          model: 'claude-sonnet-4-20250514',
-          max_tokens: 300,
-          messages: [{
-            role: 'user',
-            content: [
-              {
-                type: 'image',
-                source: { type: 'base64', media_type: 'image/png', data: b64 }
-              },
-              {
-                type: 'text',
-                text: 'Identifique esta camisa de futebol. Responda APENAS JSON sem markdown: {"time":"nome do time","liga":"nome da liga","temporada":"AAAA/AA","tipo":"Titular|Reserva|Terceiro|Retro","pais":"pais"}'
-              }
-            ]
-          }]
-        })
-      });
-
-      const data = await response.json();
-      let text = data.content[0].text.trim();
-      text = text.replace(/```json|```/g, '').trim();
-      const parsed = JSON.parse(text);
-
-      item.result = parsed;
-      item.status = 'done';
-      log(`✓ #${item.num}: ${parsed.time} — ${parsed.tipo} ${parsed.temporada}`);
-    } catch(err) {
-      item.status = 'error';
-      item.result = { time: 'Não identificado', liga: '', temporada: '', tipo: '', pais: '' };
-      log(`✗ #${item.num}: Erro — ${err.message}`);
+    if (!key) {
+        alert('Por favor, cole a Chave de API do Google Gemini antes de iniciar.');
+        return;
     }
 
-    done++;
-    const pct = Math.round((done / total) * 100);
-    document.getElementById('progressFill').style.width = pct + '%';
-    renderQueue();
-    renderResults();
+    if (isRunning) return;
+    isRunning = true;
+    document.getElementById('btnRun').disabled = true;
+    log(\`Iniciando análise visual com \${activeModel}...\`);
+
+    const delayMs = 4000; // Hardcoded delay to save API free limits
+    const pending = queue.filter(i => i.status === 'pending' || i.status === 'error');
+    const total = pending.length;
+    let done = 0;
+
+    for (const item of pending) {
+        if(!isRunning) break;
+        
+        item.status = 'processing';
+        renderQueue();
+        log(\`Lendo Pixels de #\${item.num}...\`, 'warn');
+
+        try {
+            const b64 = await imageToBase64(item.imgSrc, item.file);
+            
+            // GOOGLE GEMINI API FETCH
+            const response = await fetch(\`https://generativelanguage.googleapis.com/v1beta/models/\${activeModel}:generateContent?key=\${key}\`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    contents: [{
+                        parts: [
+                            { text: 'Determine a quais time pertence a camisa com a maior precisão possível. O foco da loja são clubes europeus (Premier League, Bundesliga, Serie A, etc), times brasileiros (Serie A) e Seleções Internacionais. Responda APENAS E EXATAMENTE um JSON SEM CRASES MARDKOWN com chaves exatas minúsculas: "time", "liga" (exato como: Brasileirão, La Liga, Premier League, Seleções, Serie A, Internacional, etc), "temporada" (ex: 2024/25), "tipo" (Titular, Reserva). Preencha com valores lógicos.' },
+                            { inlineData: { mimeType: 'image/png', data: b64 } }
+                        ]
+                    }],
+                    generationConfig: {
+                        responseMimeType: "application/json"
+                    }
+                })
+            });
+
+            if (!response.ok) {
+                const errorData = await response.json().catch(()=>({}));
+                throw new Error(errorData.error?.message || \`HTTP \${response.status}\`);
+            }
+
+            const data = await response.json();
+            const text = data.candidates?.[0]?.content?.parts?.[0]?.text?.trim() || "{}";
+            
+            let parsed;
+            try {
+                parsed = JSON.parse(text);
+            } catch(e) {
+                const clean = text.replace(/\`\`\`json|\`\`\`/g, '').trim();
+                parsed = JSON.parse(clean);
+            }
+
+            if(!parsed.time || parsed.time === "Desconhecido") parsed.time = "";
+            if(!parsed.liga) parsed.liga = "";
+
+            item.result = parsed;
+            item.status = 'done';
+            log(\`✓ #\${item.num}: \${parsed.time} (\${parsed.tipo})\`, 'done');
+        } catch(err) {
+            item.status = 'error';
+            item.result = { time: '', liga: '', temporada: '', tipo: '' };
+            log(\`✗ #\${item.num}: Falha — \${err.message}\`, 'error');
+        }
+
+        done++;
+        const pct = Math.round((done / total) * 100);
+        document.getElementById('progressFill').style.width = pct + '%';
+        renderQueue();
+        renderResults();
+        updateButtons();
+
+        if (done < total && isRunning) {
+            log(\`Reduzindo ritmo (restando \${delayMs/1000}s) para poupar quota de API grátis...\`);
+            await sleep(delayMs);
+        }
+    }
+
+    isRunning = false;
     updateButtons();
-
-    // Small delay to avoid rate limiting
-    await sleep(500);
-  }
-
-  isRunning = false;
-  updateButtons();
-  log(`Concluído! ${done} camisas processadas.`);
+    log(\`Análise em lote finalizada! 🎉\`, 'done');
 }
 
 async function imageToBase64(url, file) {
@@ -451,15 +439,6 @@ async function imageToBase64(url, file) {
       reader.readAsDataURL(file);
     });
   }
-  // Fetch from URL
-  const resp = await fetch(url);
-  const blob = await resp.blob();
-  return new Promise((res, rej) => {
-    const reader = new FileReader();
-    reader.onload = () => res(reader.result.split(',')[1]);
-    reader.onerror = rej;
-    reader.readAsDataURL(blob);
-  });
 }
 
 function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
@@ -471,23 +450,33 @@ function renderResults() {
 
   grid.innerHTML = done.map(item => {
     const r = item.result || {};
-    const nomeSugerido = r.time ? `${r.time} ${r.tipo} ${r.temporada}`.trim() : '';
-    return `
-    <div class="result-card ${results[item.id] && results[item.id].edited ? 'edited' : ''}" id="card_${item.id}">
-      <img class="rc-img" src="${item.imgSrc}" alt="" onerror="this.src='data:image/svg+xml,<svg xmlns=\\'http://www.w3.org/2000/svg\\' viewBox=\\'0 0 200 200\\'><rect width=\\'200\\' height=\\'200\\' fill=\\'%23f0f0f0\\'/></svg>'">
+    let parts = ['Camisa'];
+    if(r.time) parts.push(r.time);
+    if(r.tipo) parts.push(r.tipo);
+    if(r.temporada) parts.push(r.temporada);
+    
+    let nomeSugerido = parts.join(' ').trim();
+    if(nomeSugerido === 'Camisa') nomeSugerido = ''; 
+
+    return \`
+    <div class="result-card \${results[item.id] && results[item.id].edited ? 'edited' : ''}" id="card_\${item.id}">
+      <img class="rc-img" crossorigin="anonymous" src="\${item.imgSrc}" alt="" onerror="this.src='data:image/svg+xml,<svg xmlns=\\'http://www.w3.org/2000/svg\\' viewBox=\\'0 0 200 200\\'><rect width=\\'200\\' height=\\'200\\' fill=\\'%23f0f0f0\\'/></svg>'">
       <div class="rc-body">
-        <div class="rc-id">IMG #${item.num}${item.dbId ? ' · DB #'+item.dbId : ''}</div>
-        <div class="rc-name">${nomeSugerido || 'Não identificado'}</div>
-        <span class="rc-badge ${item.status === 'done' ? 'identified' : 'error'}">${item.status === 'done' ? '✓ Identificado' : '✗ Erro'}</span>
+        <div class="rc-id">ARQUIVO: \${item.name}</div>
+        <div class="rc-name">\${nomeSugerido || 'Revisar Detalhes'}</div>
+        <span class="rc-badge \${item.status === 'done' ? 'identified' : 'error'}">\${item.status === 'done' ? '✓ IDENTIFICADA' : '✗ ERRO DE LEITURA'}</span>
+        
         <div class="rc-edit">
-          <input class="rc-input" id="name_${item.id}" value="${nomeSugerido}" placeholder="Nome do produto" oninput="markEdited('${item.id}')">
+          <input class="rc-input" id="name_\${item.id}" value="\${nomeSugerido}" placeholder="Nome do Produto Final" oninput="markEdited('\${item.id}')">
           <div class="rc-row">
-            <input class="rc-input rc-select" id="team_${item.id}" value="${r.time||''}" placeholder="Time" oninput="markEdited('${item.id}')">
-            <input class="rc-input rc-select" id="liga_${item.id}" value="${r.liga||''}" placeholder="Liga" oninput="markEdited('${item.id}')">
+            <input class="rc-input rc-select" id="time_\${item.id}" value="\${r.time||''}" placeholder="Time" oninput="markEdited('\${item.id}')">
+          </div>
+          <div class="rc-row">
+            <input class="rc-input rc-select" id="liga_\${item.id}" value="\${r.liga||''}" placeholder="Liga (Brasileirão...)" oninput="markEdited('\${item.id}')">
           </div>
         </div>
       </div>
-    </div>`;
+    </div>\`;
   }).join('');
 }
 
@@ -498,63 +487,49 @@ function markEdited(id) {
   if (card) card.classList.add('edited');
 }
 
-function generateCSV() {
-  const rows = ['id,name,team,league,identified_name'];
-  const done = queue.filter(i => i.status === 'done');
-  done.forEach(item => {
-    if (!item.dbId) return;
-    const name = document.getElementById('name_' + item.id)?.value || '';
-    const team = document.getElementById('team_' + item.id)?.value || '';
-    const liga = document.getElementById('liga_' + item.id)?.value || '';
-    rows.push(`${item.dbId},"${name}","${team}","${liga}","${name}"`);
-  });
-  return rows.join('\n');
-}
-
 function generateSQL() {
-  const done = queue.filter(i => i.status === 'done' && i.dbId);
+  const done = queue.filter(i => i.status === 'done');
   const stmts = done.map(item => {
     const name = (document.getElementById('name_' + item.id)?.value || '').replace(/'/g, "''");
-    const team = (document.getElementById('team_' + item.id)?.value || '').replace(/'/g, "''");
-    const liga = (document.getElementById('liga_' + item.id)?.value || '').replace(/'/g, "''");
-    return `UPDATE products SET name='${name}', team='${team}', league='${liga}' WHERE id=${item.dbId};`;
-  });
-  return stmts.join('\n');
+    const team = (document.getElementById('time_' + item.id)?.value || '').trim().replace(/'/g, "''");
+    const liga = (document.getElementById('liga_' + item.id)?.value || '').trim().replace(/'/g, "''");
+    
+    if(!name || (!team && !liga)) return null;
+
+    // Remove any path and just keep filename to make LIKE query robust
+    const filename = item.name.replace(/\\/g, '/').split('/').pop();
+
+    return \`UPDATE products SET name='\${name}', team='\${team}', league='\${liga}', category=LOWER(REPLACE(REPLACE('\${liga}', ' ', ''), 'ã', 'a')) WHERE image LIKE '%\${filename}%';\`;
+    
+  }).filter(Boolean);
+  return stmts.join('\\n');
 }
 
 function showExport() {
-  document.getElementById('csvPreview').textContent = generateCSV();
-  document.getElementById('sqlPreview').textContent = generateSQL();
+  document.getElementById('sqlPreview').textContent = generateSQL() || '-- Nenhuma query gerada ou falta preenchimento de campos.';
   document.getElementById('exportModal').classList.add('on');
 }
 
-function downloadCSV() {
-  const csv = generateCSV();
-  const blob = new Blob([csv], { type: 'text/csv' });
-  const a = document.createElement('a');
-  a.href = URL.createObjectURL(blob);
-  a.download = 'camisas_identificadas.csv';
-  a.click();
-}
-
 function copySQL() {
-  navigator.clipboard.writeText(generateSQL()).then(() => alert('SQL copiado!'));
+  const sql = document.getElementById('sqlPreview').textContent;
+  navigator.clipboard.writeText(sql).then(() => alert('Instruções copiadas com sucesso!'));
 }
 
 function clearAll() {
-  queue = [];
-  results = {};
-  isRunning = false;
-  renderQueue();
-  document.getElementById('resultsGrid').innerHTML = `
-    <div class="empty-state" style="grid-column:1/-1">
-      <div class="empty-icon">⚽</div>
-      <div class="empty-text">Nenhuma camisa identificada ainda</div>
-      <div class="empty-sub">Faça upload das imagens ou importe o CSV<br>do Supabase e clique em "Identificar Camisas"</div>
-    </div>`;
-  document.getElementById('progressFill').style.width = '0%';
-  updateButtons();
-  log('Fila limpa.');
+  if(confirm('Limpar toda a fila e perder o progresso?')) {
+      queue = [];
+      results = {};
+      isRunning = false;
+      renderQueue();
+      document.getElementById('resultsGrid').innerHTML = \`
+        <div class="empty-state" style="grid-column:1/-1">
+          <div class="empty-icon">🤖</div>
+          <div class="empty-text">Inteligência Artificial pronta!</div>
+        </div>\`;
+      document.getElementById('progressFill').style.width = '0%';
+      updateButtons();
+      log('Fila limpa.');
+  }
 }
 </script>
 </body>

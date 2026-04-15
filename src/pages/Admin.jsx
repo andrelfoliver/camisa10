@@ -429,6 +429,39 @@ const Admin = () => {
     setTimeout(() => setSaved(false), 3000);
   };
 
+  const handleAutoFill = (productState, setter) => {
+    if (!productState.name) return;
+    const lowerName = productState.name.toLowerCase();
+    let updates = {};
+    
+    // Identifica Versão
+    if (lowerName.includes('jogador') || lowerName.includes('player')) updates.version = 'Jogador';
+    else if (lowerName.includes('retrô') || lowerName.includes('retro')) updates.version = 'Retrô';
+    else updates.version = 'Torcedor';
+    
+    // Identifica Time e Liga
+    if (teams && teams.length > 0) {
+      const matchedTeam = [...teams].sort((a,b) => b.name.length - a.name.length).find(t => lowerName.includes(t.name.toLowerCase()));
+      if (matchedTeam) {
+         updates.team = matchedTeam.name;
+         updates.league = matchedTeam.league;
+         // Categorias oficiais ['Seleções', 'Brasileirão', 'Internacionais', 'Lançamentos', 'Retrô']
+         if (matchedTeam.league === 'Brasileirão' || matchedTeam.league === 'Seleções') {
+             updates.category = matchedTeam.league;
+         } else {
+             updates.category = 'Internacionais';
+         }
+      } else {
+         if (lowerName.includes('seleção') || lowerName.includes('selecao') || lowerName.includes('espanha') || lowerName.includes('argentina') || lowerName.includes('brasil')) {
+            updates.category = 'Seleções';
+            updates.league = 'Seleções';
+         }
+      }
+    }
+    
+    setter({ ...productState, ...updates });
+  };
+
   // BUSCADOR UNIVERSAL
   const getUniversalProduct = (idStr) => {
     if (!idStr) return null;
@@ -445,14 +478,12 @@ const Admin = () => {
       const pName = (p.name || '').toLowerCase();
       const pTeam = (p.team || '').toLowerCase();
       
-      const isClub = teams.some(t => t.name.toLowerCase() === pTeam);
-
       if (catTarget === 'brasileirão') {
-        return isClub || pCat === 'brasileirão';
+        return pCat === 'brasileirão' || p.league === 'Brasileirão';
       }
       
       if (catTarget === 'seleções') {
-        const isSelecao = pCat === 'seleções' || pCat === 'selecoes' || pName.includes('seleção') || pName.includes('selecao') || (pName.includes('brasil') && !isClub);
+        const isSelecao = pCat === 'seleções' || pCat === 'selecoes' || pName.includes('seleção') || pName.includes('selecao') || p.league === 'Seleções';
         return isSelecao;
       }
 
@@ -1078,7 +1109,10 @@ const Admin = () => {
                       {(supplierTab.startsWith('CAT_') || supplierTab === 'CLOUD_ALL') && (
                         <div style={{ display: 'flex', gap: '0.5rem', width: '100%', marginTop: '0.5rem' }}>
                           <button 
-                            onClick={() => setEditingProduct(product)}
+                            onClick={() => {
+                              const productToEdit = { ...product };
+                              setEditingProduct(productToEdit);
+                            }}
                             title="Editar Dados da Camisa"
                             style={{ flex: 1, padding: '0.5rem', borderRadius: '4px', background: 'rgba(59, 130, 246, 0.1)', color: '#3B82F6', border: '1px solid rgba(59, 130, 246, 0.3)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', transition: 'all 0.2s', fontSize: '0.85rem' }}
                           >
@@ -1147,7 +1181,16 @@ const Admin = () => {
             
             <form onSubmit={handleAddProduct} style={{ display: 'flex', flexDirection: 'column', gap: '1.2rem' }}>
               <div>
-                <label style={{ display: 'block', marginBottom: '0.5rem', color: 'var(--text-muted)', fontSize: '0.9rem' }}>Nome da Camisa *</label>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
+                  <label style={{ margin: 0, color: 'var(--text-muted)', fontSize: '0.9rem' }}>Nome da Camisa *</label>
+                  <button 
+                    type="button" 
+                    onClick={() => handleAutoFill(newProduct, setNewProduct)}
+                    style={{ background: 'rgba(168, 85, 247, 0.15)', color: '#D8B4FE', border: '1px solid rgba(168, 85, 247, 0.3)', padding: '0.2rem 0.6rem', borderRadius: '4px', fontSize: '0.75rem', cursor: 'pointer', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '0.3rem' }}
+                  >
+                    🪄 Autopreencher Info
+                  </button>
+                </div>
                 <input required type="text" value={newProduct.name} onChange={e => setNewProduct({...newProduct, name: e.target.value})} placeholder="Ex: Flamengo Titular 24/25" style={{ width: '100%', padding: '0.8rem 1rem', background: 'var(--bg-color)', color: '#fff', border: '1px solid var(--border-color)', borderRadius: 'var(--radius-sm)' }} />
               </div>
               
@@ -1300,7 +1343,16 @@ const Admin = () => {
             
             <form onSubmit={handleUpdateProduct} style={{ display: 'flex', flexDirection: 'column', gap: '1.2rem' }}>
               <div>
-                <label style={{ display: 'block', marginBottom: '0.5rem', color: 'var(--text-muted)', fontSize: '0.9rem' }}>Nome da Camisa *</label>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
+                  <label style={{ margin: 0, color: 'var(--text-muted)', fontSize: '0.9rem' }}>Nome da Camisa *</label>
+                  <button 
+                    type="button" 
+                    onClick={() => handleAutoFill(editingProduct, setEditingProduct)}
+                    style={{ background: 'rgba(168, 85, 247, 0.15)', color: '#D8B4FE', border: '1px solid rgba(168, 85, 247, 0.3)', padding: '0.2rem 0.6rem', borderRadius: '4px', fontSize: '0.75rem', cursor: 'pointer', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '0.3rem' }}
+                  >
+                    🪄 Autopreencher Info
+                  </button>
+                </div>
                 <input required type="text" value={editingProduct.name} onChange={e => setEditingProduct({...editingProduct, name: e.target.value})} style={{ width: '100%', padding: '0.8rem 1rem', background: 'var(--bg-color)', color: '#fff', border: '1px solid var(--border-color)', borderRadius: 'var(--radius-sm)' }} />
               </div>
 
