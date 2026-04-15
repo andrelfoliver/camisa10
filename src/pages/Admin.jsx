@@ -392,14 +392,27 @@ const Admin = () => {
     const { error } = await supabase.from('store_settings').upsert(settings, { onConflict: 'key' });
     
     if (error) {
-      console.error("Erro ao salvar configurações:", error);
+      console.error("❌ Erro ao salvar configurações:", error);
       // Fallback manual caso upsert falhe
+      let success = true;
       for (const s of settings) {
-        await supabase.from('store_settings').upsert(s, { onConflict: 'key' });
+        const { error: singleError } = await supabase.from('store_settings').upsert(s, { onConflict: 'key' });
+        if (singleError) {
+          success = false;
+          console.error(`❌ Erro individual (${s.key}):`, singleError);
+        }
       }
+      
+      if (!success) {
+        showAlert("Erro Parcial", "Algumas configurações não puderam ser salvas no banco. Verifique o console.");
+      } else {
+        setSaved(true);
+      }
+    } else {
+      console.log("✅ Configurações salvas com sucesso no Supabase.");
+      setSaved(true);
     }
     
-    setSaved(true);
     setTimeout(() => setSaved(false), 3000);
   };
 
