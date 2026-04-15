@@ -180,15 +180,20 @@ const Home = () => {
          const pTeam = (p.team || '').toLowerCase();
          
          const isClub = (teamsData || []).some(t => t.name.toLowerCase() === pTeam);
-         const isSelecao = cat === 'seleções' || cat === 'selecoes' || pName.includes('seleção') || pName.includes('selecao') || (pName.includes('brasil') && !isClub);
-         const isBrasileirao = isClub || cat === 'brasileirão' || cat === 'brasileirao' || cat.includes('brasileiro');
+         const isBrasileirao = cat === 'brasileirão' || cat === 'brasileirao' || cat.includes('brasileiro') || (p.league && p.league.toLowerCase() === 'brasileirão');
+         const isSelecao = cat === 'seleções' || cat === 'selecoes' || pName.includes('seleção') || pName.includes('selecao') || (p.league && p.league.toLowerCase() === 'seleções');
+         const isRetro = cat === 'retrô' || cat.includes('retro') || (p.version || '').toLowerCase().includes('retrô') || pName.includes('retrô');
+         const isInternacional = cat === 'internacionais' || cat.includes('europa') || cat.includes('europe') || (p.league && p.league !== 'Brasileirão' && p.league !== 'Seleções');
 
-         if (isBrasileirao) mapCat['Brasileirão'].push(p);
-         else if (isSelecao) mapCat['Seleções'].push(p);
-         else if (cat === 'internacionais' || cat.includes('europa') || cat.includes('europe')) mapCat['Internacionais'].push(p);
-         else if (cat === 'lançamentos' || cat.includes('lançament')) mapCat['Lançamentos'].push(p);
-         else if (cat === 'retrô' || cat.includes('retro')) mapCat['Retrô'].push(p);
-         else mapCat['Lançamentos'].push(p);
+         // Permitir que uma camisa apareça em mais de uma sessão na Home
+         let added = false;
+         if (isBrasileirao) { mapCat['Brasileirão'].push(p); added = true; }
+         if (isSelecao) { mapCat['Seleções'].push(p); added = true; }
+         if (isInternacional && !isSelecao && !isBrasileirao) { mapCat['Internacionais'].push(p); added = true; }
+         if (isRetro) { mapCat['Retrô'].push(p); added = true; }
+         if (cat === 'lançamentos' || cat.includes('lançament')) { mapCat['Lançamentos'].push(p); added = true; }
+         
+         if (!added) mapCat['Lançamentos'].push(p); // Fallback
        });
 
        setStoreSections(mapCat);
@@ -200,7 +205,7 @@ const Home = () => {
   }, []);
 
   const activeTeams = dbTeams.filter(team => 
-    allProductsData.some(p => (p.team || '').toLowerCase() === team.name.toLowerCase())
+    team.league !== 'Seleções' && allProductsData.some(p => (p.team || '').toLowerCase() === team.name.toLowerCase())
   );
 
   return (

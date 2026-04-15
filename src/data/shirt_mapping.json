@@ -1,0 +1,2444 @@
+{
+  "@carinhacriativo (1).png": {
+    "time": "Real Madrid",
+    "liga": "La Liga",
+    "temporada": "22/23",
+    "tipo": "Titular"
+  },
+  "@carinhacriativo (2).png": {
+    "time": "Flamengo",
+    "liga": "Brasileirão",
+    "temporada": "Retrô Lubrax",
+    "tipo": "Titular"
+  },
+  "@carinhacriativo (3).png": {
+    "time": "Flamengo",
+    "liga": "Brasileirão",
+    "temporada": "Retrô Manga Longa",
+    "tipo": "Titular"
+  },
+  "@carinhacriativo (4).png": {
+    "time": "Chelsea",
+    "liga": "Premier League",
+    "temporada": "12/13",
+    "tipo": "Titular"
+  },
+  "@carinhacriativo (5).png": {
+    "time": "Real Madrid",
+    "liga": "La Liga",
+    "temporada": "21/22",
+    "tipo": "Titular (Benzema 9)"
+  },
+  "@carinhacriativo (6).png": {
+    "time": "Real Madrid",
+    "liga": "La Liga",
+    "temporada": "19/20",
+    "tipo": "Titular (Gold trim)"
+  },
+  "@carinhacriativo (7).png": {
+    "time": "Real Madrid",
+    "liga": "La Liga",
+    "temporada": "17/18",
+    "tipo": "Titular (Blue trim)"
+  },
+  "@carinhacriativo (8).png": {
+    "time": "Real Madrid",
+    "liga": "La Liga",
+    "temporada": "Retrô 99/00",
+    "tipo": "Titular (Teka)"
+  },
+  "@carinhacriativo (9).png": {
+    "time": "Santos",
+    "liga": "Brasileirão",
+    "temporada": "2012",
+    "tipo": "Terceira (Azul)"
+  },
+  "@carinhacriativo (10).png": {
+    "time": "Inter de Milão",
+    "liga": "Serie A",
+    "temporada": "Retrô 98/99",
+    "tipo": "Titular (Pirelli)"
+  },
+  "@carinhacriativo (11).png": {
+    "time": "Manchester United",
+    "liga": "Premier League",
+    "temporada": "23/24",
+    "tipo": "Titular (Manga Longa)"
+  },
+  "@carinhacriativo (12).png": {
+    "time": "Barcelona",
+    "liga": "La Liga",
+    "temporada": "Retrô 01/02",
+    "tipo": "Reserva (Dourada)"
+  },
+  "@carinhacriativo (13).png": {
+    "time": "Argentina",
+    "liga": "Seleções",
+    "temporada": "2022/24",
+    "tipo": "Titular (3 Estrelas)"
+  },
+  "@carinhacriativo (14).png": {
+    "time": "Espanha",
+    "liga": "Seleções",
+    "temporada": "2024",
+    "tipo": "Titular (Lamine Yamal 19)"
+  },
+  "@carinhacriativo (15).png": {
+    "time": "Real Madrid",
+    "liga": "La Liga",
+    "temporada": "16/17",
+    "tipo": "Reserva (Roxa - Manga Longa)"
+  },
+  "@carinhacriativo (16).png": {
+    "time": "Real Madrid",
+    "liga": "La Liga",
+    "temporada": "23/24",
+    "tipo": "Terceira (Preta - Rodrygo 11)"
+  },
+  "@carinhacriativo (17).png": {
+    "time": "Real Madrid",
+    "liga": "La Liga",
+    "temporada": "14/15",
+    "tipo": "Reserva (Rosa)"
+  },
+  "@carinhacriativo (18).png": {
+    "time": "Manchester United",
+    "liga": "Premier League",
+    "temporada": "Retrô 07/08",
+    "tipo": "Titular (AIG)"
+  },
+  "@carinhacriativo (19).png": {
+    "time": "Manchester United",
+    "liga": "Premier League",
+    "temporada": "Retrô 07/08",
+    "tipo": "Titular (Final Moscow)"
+  },
+  "@carinhacriativo (20).png": {
+    "time": "Milan",
+    "liga": "Serie A",
+    "temporada": "Retrô 06/07",
+    "tipo": "Titular (Manga Longa)"
+  },
+  "@carinhacriativo (21).png": {
+    "time": "Milan",
+    "liga": "Serie A",
+    "temporada": "Retrô 06/07",
+    "tipo": "Titular"
+  },
+  "@carinhacriativo (22).png": {
+    "time": "PSG",
+    "liga": "International",
+    "temporada": "Retrô 95/96",
+    "tipo": "Titular (Costas)"
+  },
+  "@carinhacriativo (23).png": {
+    "time": "Real Madrid",
+    "liga": "La Liga",
+    "temporada": "Retrô 99/00",
+    "tipo": "Reserva (Preta - Teka)"
+  },
+  "@carinhacriativo (24).png": {
+    "time": "PSG",
+    "liga": "International",
+    "temporada": "Retrô 98/00",
+    "tipo": "Titular (Opel)"
+  },
+  "@carinhacriativo (25).png": {
+    "time": "Real Madrid",
+    "liga": "La Liga",
+    "temporada": "17/18",
+    "tipo": "Terceira (Turquesa - Manga Longa)"
+  },
+  "@carinhacriativo (26).png": {
+    "time": "Barcelona",
+    "liga": "La Liga",
+    "temporada": "Retrô 10/11",
+    "tipo": "Titular (Unicef)"
+  },
+  "@carinhacriativo (27).png": {
+    "time": "Al-Hilal",
+    "liga": "International",
+    "temporada": "23/24",
+    "tipo": "Titular (Neymar Jr 10)"
+  },
+  "@carinhacriativo (28).png": {
+    "time": "Alemanha",
+    "liga": "Seleções",
+    "temporada": "2024",
+    "tipo": "Titular (Havertz 7)"
+  },
+  "@carinhacriativo (29).png": {
+    "time": "Croácia",
+    "liga": "Seleções",
+    "temporada": "2024",
+    "tipo": "Titular (Modric 10)"
+  },
+  "@carinhacriativo (30).png": {
+    "time": "Flamengo",
+    "liga": "Brasileirão",
+    "temporada": "2024",
+    "tipo": "Reserva (Branca)"
+  },
+  "@carinhacriativo (31).png": {
+    "time": "Flamengo",
+    "liga": "Brasileirão",
+    "temporada": "2024",
+    "tipo": "Titular (De La Cruz 18)"
+  },
+  "@carinhacriativo (32).png": {
+    "time": "França",
+    "liga": "Seleções",
+    "temporada": "2024",
+    "tipo": "Titular (Mbappé 10)"
+  },
+  "@carinhacriativo (33).png": {
+    "time": "Inglaterra",
+    "liga": "Seleções",
+    "temporada": "2024",
+    "tipo": "Titular (Bellingham 10)"
+  },
+  "@carinhacriativo (34).png": {
+    "time": "Portugal",
+    "liga": "Seleções",
+    "temporada": "2024",
+    "tipo": "Titular (Ronaldo 7)"
+  },
+  "@carinhacriativo (35).png": {
+    "time": "Portugal",
+    "liga": "Seleções",
+    "temporada": "2024",
+    "tipo": "Reserva (Ronaldo 7 - Pattern)"
+  },
+  "@carinhacriativo (36).png": {
+    "time": "PSG",
+    "liga": "Internacional",
+    "temporada": "23/24",
+    "tipo": "Titular (Dembélé 10)"
+  },
+  "@carinhacriativo (37).png": {
+    "time": "Real Madrid",
+    "liga": "La Liga",
+    "temporada": "24/25",
+    "tipo": "Titular (Mbappé 9)"
+  },
+  "@carinhacriativo (38).png": {
+    "time": "Flamengo",
+    "liga": "Brasileirão",
+    "temporada": "2024",
+    "tipo": "Reserva (De La Cruz 18)"
+  },
+  "@carinhacriativo (39).png": {
+    "time": "Brasil",
+    "liga": "Seleções",
+    "temporada": "2024",
+    "tipo": "Titular (Pattern)"
+  },
+  "@carinhacriativo (40).png": {
+    "time": "Barcelona",
+    "liga": "La Liga",
+    "temporada": "Retrô 11/12",
+    "tipo": "Titular (Qatar Foundation)"
+  },
+  "@carinhacriativo (41).png": {
+    "time": "Brasil",
+    "liga": "Seleções",
+    "temporada": "Retrô 2002",
+    "tipo": "Titular"
+  },
+  "@carinhacriativo (42).png": {
+    "time": "Brasil",
+    "liga": "Seleções",
+    "temporada": "Retrô 2004",
+    "tipo": "Titular (T90 Style)"
+  },
+  "@carinhacriativo (43).png": {
+    "time": "Brasil",
+    "liga": "Seleções",
+    "temporada": "Retrô 2004",
+    "tipo": "Reserva (Azul - T90 Style)"
+  },
+  "@carinhacriativo (44).png": {
+    "time": "Manchester United",
+    "liga": "Premier League",
+    "temporada": "22/23",
+    "tipo": "Titular"
+  },
+  "@carinhacriativo (45).png": {
+    "time": "Holanda",
+    "liga": "Seleções",
+    "temporada": "2024",
+    "tipo": "Titular"
+  },
+  "@carinhacriativo (46).png": {
+    "time": "Real Madrid",
+    "liga": "La Liga",
+    "temporada": "Retrô 16/17",
+    "tipo": "Reserva (Roxa)"
+  },
+  "@carinhacriativo (47).png": {
+    "time": "Manchester United",
+    "liga": "Premier League",
+    "temporada": "22/23",
+    "tipo": "Titular (Perspectiva)"
+  },
+  "@carinhacriativo (48).png": {
+    "time": "Arsenal",
+    "liga": "Premier League",
+    "temporada": "23/24",
+    "tipo": "Titular"
+  },
+  "@carinhacriativo (49).png": {
+    "time": "Arsenal",
+    "liga": "Premier League",
+    "temporada": "23/24",
+    "tipo": "Titular (Lateral)"
+  },
+  "@carinhacriativo (50).png": {
+    "time": "Real Madrid",
+    "liga": "La Liga",
+    "temporada": "Retrô 14/15",
+    "tipo": "Titular (Manga Longa)"
+  },
+  "@carinhacriativo (51).png": {
+    "time": "Real Madrid",
+    "liga": "La Liga",
+    "temporada": "Retrô 06/07",
+    "tipo": "Reserva (Preta - Manga Longa)"
+  },
+  "@carinhacriativo (52).png": {
+    "time": "Real Madrid",
+    "liga": "La Liga",
+    "temporada": "Retrô 13/14",
+    "tipo": "Reserva (Laranja - Manga Longa)"
+  },
+  "@carinhacriativo (53).png": {
+    "time": "Brasil",
+    "liga": "Seleções",
+    "temporada": "2024",
+    "tipo": "Titular (Pattern - Perspectiva)"
+  },
+  "@carinhacriativo (54).png": {
+    "time": "Manchester United",
+    "liga": "Premier League",
+    "temporada": "22/23",
+    "tipo": "Titular (Lado)"
+  },
+  "@carinhacriativo (55).png": {
+    "time": "Barcelona",
+    "liga": "La Liga",
+    "temporada": "Retrô 13/14",
+    "tipo": "Titular (Qatar Airways)"
+  },
+  "@carinhacriativo (56).png": {
+    "time": "Barcelona",
+    "liga": "La Liga",
+    "temporada": "Retrô 18/19",
+    "tipo": "Titular (Rakuten)"
+  },
+  "@carinhacriativo (57).png": {
+    "time": "Real Madrid",
+    "liga": "La Liga",
+    "temporada": "Retrô 16/17",
+    "tipo": "Reserva (Roxa - Sem Número)"
+  },
+  "@carinhacriativo (58).png": {
+    "time": "Barcelona",
+    "liga": "La Liga",
+    "temporada": "Retrô 12/13",
+    "tipo": "Titular (Qatar Foundation - Fade)"
+  },
+  "@carinhacriativo (59).png": {
+    "time": "Real Madrid",
+    "liga": "La Liga",
+    "temporada": "Retrô 17/18",
+    "tipo": "Titular"
+  },
+  "@carinhacriativo (60).png": {
+    "time": "Manchester United",
+    "liga": "Premier League",
+    "temporada": "22/23",
+    "tipo": "Reserva (Branca)"
+  },
+  "@carinhacriativo (61).png": {
+    "time": "Barcelona",
+    "liga": "La Liga",
+    "temporada": "14/15",
+    "tipo": "Titular"
+  },
+  "@carinhacriativo (62).png": {
+    "time": "Barcelona",
+    "liga": "La Liga",
+    "temporada": "20/21",
+    "tipo": "Titular"
+  },
+  "@carinhacriativo (63).png": {
+    "time": "Borussia Dortmund",
+    "liga": "Bundesliga",
+    "temporada": "22/23",
+    "tipo": "Especial (Blackout)"
+  },
+  "@carinhacriativo (64).png": {
+    "time": "Manchester City",
+    "liga": "Premier League",
+    "temporada": "22/23",
+    "tipo": "Titular (Haaland 9 - Costas)"
+  },
+  "@carinhacriativo (65).png": {
+    "time": "Manchester United",
+    "liga": "Premier League",
+    "temporada": "18/19",
+    "tipo": "Reserva (Rosa)"
+  },
+  "@carinhacriativo (66).png": {
+    "time": "Argentina",
+    "liga": "Seleções",
+    "temporada": "2024",
+    "tipo": "Titular (Costas)"
+  },
+  "@carinhacriativo (67).png": {
+    "time": "Argentina",
+    "liga": "Seleções",
+    "temporada": "2024",
+    "tipo": "Titular"
+  },
+  "@carinhacriativo (68).png": {
+    "time": "Brasil",
+    "liga": "Seleções",
+    "temporada": "2024",
+    "tipo": "Titular (Costas)"
+  },
+  "@carinhacriativo (69).png": {
+    "time": "França",
+    "liga": "Seleções",
+    "temporada": "2024",
+    "tipo": "Reserva (Mbappé 10)"
+  },
+  "@carinhacriativo (70).png": {
+    "time": "Real Madrid",
+    "liga": "La Liga",
+    "temporada": "21/22",
+    "tipo": "Titular (Modric 10)"
+  },
+  "@carinhacriativo (71).png": {
+    "time": "Real Madrid",
+    "liga": "La Liga",
+    "temporada": "23/24",
+    "tipo": "Reserva (Carvajal 2 - Costas)"
+  },
+  "@carinhacriativo (72).png": {
+    "time": "Manchester City",
+    "liga": "Premier League",
+    "temporada": "22/23",
+    "tipo": "Titular"
+  },
+  "@carinhacriativo (73).png": {
+    "time": "Brasil",
+    "liga": "Seleções",
+    "temporada": "Retrô 2016",
+    "tipo": "Titular"
+  },
+  "@carinhacriativo (74).png": {
+    "time": "Barcelona",
+    "liga": "La Liga",
+    "temporada": "16/17",
+    "tipo": "Reserva (Roxa)"
+  },
+  "@carinhacriativo (75).png": {
+    "time": "Vasco da Gama",
+    "liga": "Brasileirão",
+    "temporada": "23/24",
+    "tipo": "Titular"
+  },
+  "@carinhacriativo (76).png": {
+    "time": "Palmeiras",
+    "liga": "Brasileirão",
+    "temporada": "2024",
+    "tipo": "Titular (110 Anos)"
+  },
+  "@carinhacriativo (77).png": {
+    "time": "São Paulo",
+    "liga": "Brasileirão",
+    "temporada": "2024",
+    "tipo": "Titular"
+  },
+  "@carinhacriativo (78).png": {
+    "time": "Grêmio",
+    "liga": "Brasileirão",
+    "temporada": "Retrô 2005",
+    "tipo": "Titular (Kappa)"
+  },
+  "@carinhacriativo (79).png": {
+    "time": "Chelsea",
+    "liga": "Premier League",
+    "temporada": "21/22",
+    "tipo": "Titular"
+  },
+  "@carinhacriativo (80).png": {
+    "time": "Grêmio",
+    "liga": "Brasileirão",
+    "temporada": "Retrô 2005",
+    "tipo": "Titular (Kappa - Repetida)"
+  },
+  "@carinhacriativo (81).png": {
+    "time": "Palmeiras",
+    "liga": "Brasileirão",
+    "temporada": "2024",
+    "tipo": "Titular"
+  },
+  "@carinhacriativo (82).png": {
+    "time": "Borussia Dortmund",
+    "liga": "Bundesliga",
+    "temporada": "23/24",
+    "tipo": "Titular"
+  },
+  "@carinhacriativo (83).png": {
+    "time": "Argentina",
+    "liga": "Seleções",
+    "temporada": "2024",
+    "tipo": "Titular (Repetida)"
+  },
+  "@carinhacriativo (84).png": {
+    "time": "Atlético de Madrid",
+    "liga": "La Liga",
+    "temporada": "22/23",
+    "tipo": "Titular"
+  },
+  "@carinhacriativo (85).png": {
+    "time": "Flamengo",
+    "liga": "Brasileirão",
+    "temporada": "2024",
+    "tipo": "Titular (Manga Longa)"
+  },
+  "@carinhacriativo (86).png": {
+    "time": "Botafogo",
+    "liga": "Brasileirão",
+    "temporada": "2024",
+    "tipo": "Titular (Costas)"
+  },
+  "@carinhacriativo (87).png": {
+    "time": "Botafogo",
+    "liga": "Brasileirão",
+    "temporada": "2024",
+    "tipo": "Titular"
+  },
+  "@carinhacriativo (88).png": {
+    "time": "Santos",
+    "liga": "Brasileirão",
+    "temporada": "2024",
+    "tipo": "Reserva (Listrada)"
+  },
+  "@carinhacriativo (89).png": {
+    "time": "Santos",
+    "liga": "Brasileirão",
+    "temporada": "2024",
+    "tipo": "Titular"
+  },
+  "@carinhacriativo (90).png": {
+    "time": "Corinthians",
+    "liga": "Brasileirão",
+    "temporada": "2024",
+    "tipo": "Especial (Anti-Racismo)"
+  },
+  "@carinhacriativo (91).png": {
+    "time": "Real Madrid",
+    "liga": "La Liga",
+    "temporada": "23/24",
+    "tipo": "Terceira (Preta - Vini Jr 7)"
+  },
+  "@carinhacriativo (92).png": {
+    "time": "Real Madrid",
+    "liga": "La Liga",
+    "temporada": "23/24",
+    "tipo": "Titular (Camavinga 12 - Costas)"
+  },
+  "@carinhacriativo (93).png": {
+    "time": "Real Madrid",
+    "liga": "La Liga",
+    "temporada": "23/24",
+    "tipo": "Titular (Bellingham 5)"
+  },
+  "@carinhacriativo (94).png": {
+    "time": "Real Madrid",
+    "liga": "La Liga",
+    "temporada": "23/24",
+    "tipo": "Titular (Bellingham 5 - Manga Longa)"
+  },
+  "@carinhacriativo (95).png": {
+    "time": "Argentina",
+    "liga": "Seleções",
+    "temporada": "2022/24",
+    "tipo": "Titular (Messi 10 - 3 Estrelas)"
+  },
+  "@carinhacriativo (96).png": {
+    "time": "Real Madrid",
+    "liga": "La Liga",
+    "temporada": "24/25",
+    "tipo": "Titular"
+  },
+  "@carinhacriativo (97).png": {
+    "time": "Real Madrid",
+    "liga": "La Liga",
+    "temporada": "24/25",
+    "tipo": "Titular (Mbappé 9 - Costas)"
+  },
+  "@carinhacriativo (98).png": {
+    "time": "Real Madrid",
+    "liga": "Especiais",
+    "temporada": "2024",
+    "tipo": "Edição Especial Balmain"
+  },
+  "@carinhacriativo (99).png": {
+    "time": "Real Madrid",
+    "liga": "Especiais",
+    "temporada": "2024",
+    "tipo": "Edição Especial Balmain (Costas)"
+  },
+  "@carinhacriativo (100).png": {
+    "time": "Espanha",
+    "liga": "Seleções",
+    "temporada": "2024",
+    "tipo": "Titular (Carvajal 2 - Costas)"
+  },
+  "@carinhacriativo (101).png": {
+    "time": "Espanha",
+    "liga": "Seleções",
+    "temporada": "2024",
+    "tipo": "Titular (Carvajal 2)"
+  },
+  "@carinhacriativo (102).png": {
+    "time": "Manchester United",
+    "liga": "Premier League",
+    "temporada": "Retrô 2008",
+    "tipo": "Titular (Final Moscow)"
+  },
+  "@carinhacriativo (103).png": {
+    "time": "Real Madrid",
+    "liga": "La Liga",
+    "temporada": "21/22",
+    "tipo": "Reserva (Azul Graffiti - Costas)"
+  },
+  "@carinhacriativo (104).png": {
+    "time": "Real Madrid",
+    "liga": "La Liga",
+    "temporada": "21/22",
+    "tipo": "Reserva (Azul Graffiti)"
+  },
+  "@carinhacriativo (105).png": {
+    "time": "Bayern de Munique",
+    "liga": "Bundesliga",
+    "temporada": "24/25",
+    "tipo": "Titular (Kane 9 - Costas)"
+  },
+  "@carinhacriativo (106).png": {
+    "time": "Bayern de Munique",
+    "liga": "Bundesliga",
+    "temporada": "24/25",
+    "tipo": "Titular"
+  },
+  "@carinhacriativo (107).png": {
+    "time": "Colômbia",
+    "liga": "Seleções",
+    "temporada": "2024",
+    "tipo": "Reserva (Azul/Laranja - Costas)"
+  },
+  "@carinhacriativo (108).png": {
+    "time": "Colômbia",
+    "liga": "Seleções",
+    "temporada": "2024",
+    "tipo": "Reserva (Azul/Laranja)"
+  },
+  "@carinhacriativo (109).png": {
+    "time": "Cruzeiro",
+    "liga": "Brasileirão",
+    "temporada": "2024",
+    "tipo": "Titular (Costas)"
+  },
+  "@carinhacriativo (110).png": {
+    "time": "Cruzeiro",
+    "liga": "Brasileirão",
+    "temporada": "2024",
+    "tipo": "Titular"
+  },
+  "@carinhacriativo (111).png": {
+    "time": "Real Madrid",
+    "liga": "La Liga",
+    "temporada": "23/24",
+    "tipo": "Terceira (Preta)"
+  },
+  "@carinhacriativo (112).png": {
+    "time": "Real Madrid",
+    "liga": "La Liga",
+    "temporada": "23/24",
+    "tipo": "Titular"
+  },
+  "@carinhacriativo (113).png": {
+    "time": "Borussia Dortmund",
+    "liga": "Bundesliga",
+    "temporada": "22/23",
+    "tipo": "Titular (Costas)"
+  },
+  "@carinhacriativo (114).png": {
+    "time": "Brasil",
+    "liga": "Seleções",
+    "temporada": "2024",
+    "tipo": "Titular"
+  },
+  "@carinhacriativo (115).png": {
+    "time": "Palmeiras",
+    "liga": "Brasileirão",
+    "temporada": "Retrô 1993",
+    "tipo": "Titular (Parmalat)"
+  },
+  "@carinhacriativo (116).png": {
+    "time": "Real Madrid",
+    "liga": "La Liga",
+    "temporada": "Retrô 16/17",
+    "tipo": "Reserva (Roxa)"
+  },
+  "@carinhacriativo (117).png": {
+    "time": "Real Madrid",
+    "liga": "La Liga",
+    "temporada": "23/24",
+    "tipo": "Reserva (Azul Marinho)"
+  },
+  "@carinhacriativo (118).png": {
+    "time": "Real Madrid",
+    "liga": "La Liga",
+    "temporada": "23/24",
+    "tipo": "Titular (Repetida)"
+  },
+  "@carinhacriativo (119).png": {
+    "time": "Real Madrid",
+    "liga": "La Liga",
+    "temporada": "21/22",
+    "tipo": "Titular"
+  },
+  "@carinhacriativo (120).png": {
+    "time": "Real Madrid",
+    "liga": "La Liga",
+    "temporada": "21/22",
+    "tipo": "Titular (Repetida)"
+  },
+  "@carinhacriativo (121).png": {
+    "time": "Santos",
+    "liga": "Brasileirão",
+    "temporada": "2024",
+    "tipo": "Especial (Charlie Brown Jr)"
+  },
+  "@carinhacriativo (122).png": {
+    "time": "Santos",
+    "liga": "Brasileirão",
+    "temporada": "2024",
+    "tipo": "Especial (Charlie Brown Jr - Costas)"
+  },
+  "@carinhacriativo (123).png": {
+    "time": "Portugal",
+    "liga": "Seleções",
+    "temporada": "2024",
+    "tipo": "Titular"
+  },
+  "@carinhacriativo (124).png": {
+    "time": "Manchester City",
+    "liga": "Premier League",
+    "temporada": "24/25",
+    "tipo": "Titular"
+  },
+  "@carinhacriativo (125).png": {
+    "time": "Vasco da Gama",
+    "liga": "Brasileirão",
+    "temporada": "2024",
+    "tipo": "Titular"
+  },
+  "@carinhacriativo (126).png": {
+    "time": "Vasco da Gama",
+    "liga": "Brasileirão",
+    "temporada": "2024",
+    "tipo": "Reserva"
+  },
+  "@carinhacriativo (127).png": {
+    "time": "Flamengo",
+    "liga": "Brasileirão",
+    "temporada": "2024",
+    "tipo": "Especial (1895)"
+  },
+  "@carinhacriativo (128).png": {
+    "time": "Vasco da Gama",
+    "liga": "Brasileirão",
+    "temporada": "2024",
+    "tipo": "Titular (Coutinho 11 - Costas)"
+  },
+  "@carinhacriativo (129).png": {
+    "time": "Vasco da Gama",
+    "liga": "Brasileirão",
+    "temporada": "2024",
+    "tipo": "Reserva (Coutinho 11 - Costas)"
+  },
+  "@carinhacriativo (130).png": {
+    "time": "Barcelona",
+    "liga": "La Liga",
+    "temporada": "14/15",
+    "tipo": "Titular"
+  },
+  "@carinhacriativo (131).png": {
+    "time": "Holanda",
+    "liga": "Seleções",
+    "temporada": "Retrô 2014",
+    "tipo": "Titular"
+  },
+  "@carinhacriativo (132).png": {
+    "time": "Manchester United",
+    "liga": "Premier League",
+    "temporada": "21/22",
+    "tipo": "Titular"
+  },
+  "@carinhacriativo (133).png": {
+    "time": "Real Madrid",
+    "liga": "La Liga",
+    "temporada": "22/23",
+    "tipo": "Titular (120 Anos)"
+  },
+  "@carinhacriativo (134).png": {
+    "time": "Real Madrid",
+    "liga": "La Liga",
+    "temporada": "17/18",
+    "tipo": "Titular"
+  },
+  "@carinhacriativo (135).png": {
+    "time": "Real Madrid",
+    "liga": "La Liga",
+    "temporada": "Retrô 2001",
+    "tipo": "Titular (Centenário)"
+  },
+  "@carinhacriativo (136).png": {
+    "time": "Portugal",
+    "liga": "Seleções",
+    "temporada": "2024",
+    "tipo": "Titular (Ronaldo 7)"
+  },
+  "@carinhacriativo (137).png": {
+    "time": "Portugal",
+    "liga": "Seleções",
+    "temporada": "2024",
+    "tipo": "Titular (Ronaldo 7 - Costas)"
+  },
+  "@carinhacriativo (138).png": {
+    "time": "Brasil",
+    "liga": "Seleções",
+    "temporada": "2017",
+    "tipo": "Reserva (Azul)"
+  },
+  "@carinhacriativo (139).png": {
+    "time": "Argentina",
+    "liga": "Seleções",
+    "temporada": "Retrô 2006",
+    "tipo": "Titular"
+  },
+  "@carinhacriativo (140).png": {
+    "time": "Alemanha",
+    "liga": "Seleções",
+    "temporada": "2024",
+    "tipo": "Titular (Kroos 8)"
+  },
+  "@carinhacriativo (141).png": {
+    "time": "Alemanha",
+    "liga": "Seleções",
+    "temporada": "2024",
+    "tipo": "Titular (Kroos 8 - Costas)"
+  },
+  "@carinhacriativo (142).png": {
+    "time": "Real Madrid",
+    "liga": "La Liga",
+    "temporada": "14/15",
+    "tipo": "Reserva (Rosa)"
+  },
+  "@carinhacriativo (143).png": {
+    "time": "Portugal",
+    "liga": "Seleções",
+    "temporada": "2024",
+    "tipo": "Titular (Similar)"
+  },
+  "@carinhacriativo (144).png": {
+    "time": "Real Madrid",
+    "liga": "La Liga",
+    "temporada": "24/25",
+    "tipo": "Titular (Similar)"
+  },
+  "@carinhacriativo (145).png": {
+    "time": "França",
+    "liga": "Seleções",
+    "temporada": "2024",
+    "tipo": "Titular"
+  },
+  "@carinhacriativo (146).png": {
+    "time": "Real Madrid",
+    "liga": "La Liga",
+    "temporada": "13/14",
+    "tipo": "Titular"
+  },
+  "@carinhacriativo (147).png": {
+    "time": "Real Madrid",
+    "liga": "La Liga",
+    "temporada": "13/14",
+    "tipo": "Titular (Costas)"
+  },
+  "@carinhacriativo (148).png": {
+    "time": "França",
+    "liga": "Seleções",
+    "temporada": "2018",
+    "tipo": "Titular"
+  },
+  "@carinhacriativo (149).png": {
+    "time": "França",
+    "liga": "Seleções",
+    "temporada": "2018",
+    "tipo": "Titular (Costas)"
+  },
+  "@carinhacriativo (150).png": {
+    "time": "Chelsea",
+    "liga": "Premier League",
+    "temporada": "24/25",
+    "tipo": "Titular"
+  },
+  "@carinhacriativo (151).png": {
+    "time": "Real Madrid",
+    "liga": "La Liga",
+    "temporada": "23/24",
+    "tipo": "Titular (Modric 10 - Costas)"
+  },
+  "@carinhacriativo (152).png": {
+    "time": "Real Madrid",
+    "liga": "La Liga",
+    "temporada": "23/24",
+    "tipo": "Titular (Bellingham 5 - Costas)"
+  },
+  "@carinhacriativo (153).png": {
+    "time": "Real Madrid",
+    "liga": "La Liga",
+    "temporada": "23/24",
+    "tipo": "Titular"
+  },
+  "@carinhacriativo (154).png": {
+    "time": "Vasco da Gama",
+    "liga": "Brasileirão",
+    "temporada": "2024",
+    "tipo": "Titular (Payet 10)"
+  },
+  "@carinhacriativo (155).png": {
+    "time": "Vasco da Gama",
+    "liga": "Brasileirão",
+    "temporada": "2024",
+    "tipo": "Reserva (Payet 10)"
+  },
+  "@carinhacriativo (156).png": {
+    "time": "São Paulo",
+    "liga": "Brasileirão",
+    "temporada": "2024",
+    "tipo": "Titular (Galoppo 14)"
+  },
+  "@carinhacriativo (157).png": {
+    "time": "São Paulo",
+    "liga": "Brasileirão",
+    "temporada": "2024",
+    "tipo": "Reserva (Galoppo 14)"
+  },
+  "@carinhacriativo (158).png": {
+    "time": "Palmeiras",
+    "liga": "Brasileirão",
+    "temporada": "2024",
+    "tipo": "Titular (Rony 10)"
+  },
+  "@carinhacriativo (159).png": {
+    "time": "Palmeiras",
+    "liga": "Brasileirão",
+    "temporada": "2024",
+    "tipo": "Reserva (Rony 10)"
+  },
+  "@carinhacriativo (160).png": {
+    "time": "México",
+    "liga": "Seleções",
+    "temporada": "2024",
+    "tipo": "Titular (Alvarado 10)"
+  },
+  "@carinhacriativo (161).png": {
+    "time": "Grêmio",
+    "liga": "Brasileirão",
+    "temporada": "2024",
+    "tipo": "Titular (Cristaldo 10)"
+  },
+  "@carinhacriativo (162).png": {
+    "time": "Corinthians",
+    "liga": "Brasileirão",
+    "temporada": "2024",
+    "tipo": "Titular (Yuri Alberto 9)"
+  },
+  "@carinhacriativo (163).png": {
+    "time": "Corinthians",
+    "liga": "Brasileirão",
+    "temporada": "2024",
+    "tipo": "Reserva (Yuri Alberto 9)"
+  },
+  "@carinhacriativo (164).png": {
+    "time": "Colômbia",
+    "liga": "Seleções",
+    "temporada": "2024",
+    "tipo": "Titular (James Rodriguez 10)"
+  },
+  "@carinhacriativo (165).png": {
+    "time": "Chile",
+    "liga": "Seleções",
+    "temporada": "2024",
+    "tipo": "Titular (Alexis Sanchez 10)"
+  },
+  "@carinhacriativo (166).png": {
+    "time": "Atlético Mineiro",
+    "liga": "Brasileirão",
+    "temporada": "2024",
+    "tipo": "Titular (Hulk 7)"
+  },
+  "@carinhacriativo (167).png": {
+    "time": "Argentina",
+    "liga": "Seleções",
+    "temporada": "2024",
+    "tipo": "Titular (Messi 10)"
+  },
+  "@carinhacriativo (168).png": {
+    "time": "Espanha",
+    "liga": "Seleções",
+    "temporada": "2024",
+    "tipo": "Titular (Lamine Yamal 19)"
+  },
+  "@carinhacriativo (169).png": {
+    "time": "Borussia Dortmund",
+    "liga": "Bundesliga",
+    "temporada": "19/20",
+    "tipo": "Titular"
+  },
+  "@carinhacriativo (170).png": {
+    "time": "Liverpool",
+    "liga": "Premier League",
+    "temporada": "22/23",
+    "tipo": "Especial (LeBron James)"
+  },
+  "@carinhacriativo (171).png": {
+    "time": "Corinthians",
+    "liga": "Brasileirão",
+    "temporada": "2024",
+    "tipo": "Reserva (Blackout)"
+  },
+  "@carinhacriativo (172).png": {
+    "time": "Corinthians",
+    "liga": "Brasileirão",
+    "temporada": "2024",
+    "tipo": "Reserva (Blackout - Costas)"
+  },
+  "@carinhacriativo (173).png": {
+    "time": "PSG",
+    "liga": "Ligue 1",
+    "temporada": "21/22",
+    "tipo": "Titular (Jordan)"
+  },
+  "@carinhacriativo (174).png": {
+    "time": "Real Madrid",
+    "liga": "La Liga",
+    "temporada": "23/24",
+    "tipo": "Titular (V2)"
+  },
+  "@carinhacriativo (175).png": {
+    "time": "Real Madrid",
+    "liga": "La Liga",
+    "temporada": "23/24",
+    "tipo": "Titular (Vini Jr 7 - Costas)"
+  },
+  "@carinhacriativo (176).png": {
+    "time": "Barcelona",
+    "liga": "La Liga",
+    "temporada": "12/13",
+    "tipo": "Titular"
+  },
+  "@carinhacriativo (177).png": {
+    "time": "Fluminense",
+    "liga": "Brasileirão",
+    "temporada": "2012",
+    "tipo": "Especial (Grená)"
+  },
+  "@carinhacriativo (178).png": {
+    "time": "Atlético de Madrid",
+    "liga": "La Liga",
+    "temporada": "13/14",
+    "tipo": "Titular"
+  },
+  "@carinhacriativo (179).png": {
+    "time": "Real Madrid",
+    "liga": "La Liga",
+    "temporada": "17/18",
+    "tipo": "Reserva (Azul)"
+  },
+  "@carinhacriativo (180).png": {
+    "time": "Palmeiras",
+    "liga": "Brasileirão",
+    "temporada": "2024",
+    "tipo": "Reserva"
+  },
+  "@carinhacriativo (181).png": {
+    "time": "Bayern de Munique",
+    "liga": "Bundesliga",
+    "temporada": "24/25",
+    "tipo": "Terceiro (Bege - Trefoil - Costas)"
+  },
+  "@carinhacriativo (182).png": {
+    "time": "Bayern de Munique",
+    "liga": "Bundesliga",
+    "temporada": "24/25",
+    "tipo": "Terceiro (Bege - Trefoil)"
+  },
+  "@carinhacriativo (183).png": {
+    "time": "AS Roma",
+    "liga": "Serie A",
+    "temporada": "24/25",
+    "tipo": "Titular"
+  },
+  "@carinhacriativo (184).png": {
+    "time": "Aston Villa",
+    "liga": "Premier League",
+    "temporada": "24/25",
+    "tipo": "Reserva"
+  },
+  "@carinhacriativo (185).png": {
+    "time": "Borussia Dortmund",
+    "liga": "Bundesliga",
+    "temporada": "24/25",
+    "tipo": "Titular"
+  },
+  "@carinhacriativo (186).png": {
+    "time": "Borussia Dortmund",
+    "liga": "Bundesliga",
+    "temporada": "24/25",
+    "tipo": "Titular (Adeyemi 27 - Costas)"
+  },
+  "@carinhacriativo (187).png": {
+    "time": "Aston Villa",
+    "liga": "Premier League",
+    "temporada": "24/25",
+    "tipo": "Titular"
+  },
+  "@carinhacriativo (188).png": {
+    "time": "Milan",
+    "liga": "Serie A",
+    "temporada": "24/25",
+    "tipo": "Titular"
+  },
+  "@carinhacriativo (189).png": {
+    "time": "Juventus",
+    "liga": "Serie A",
+    "temporada": "23/24",
+    "tipo": "Titular (Zebra)"
+  },
+  "@carinhacriativo (190).png": {
+    "time": "Juventus",
+    "liga": "Serie A",
+    "temporada": "23/24",
+    "tipo": "Titular (Zebra - Costas)"
+  },
+  "@carinhacriativo (191).png": {
+    "time": "Milan",
+    "liga": "Serie A",
+    "temporada": "08/09",
+    "tipo": "Retrô (Ronaldinho 80 - Costas)"
+  },
+  "@carinhacriativo (192).png": {
+    "time": "Palmeiras",
+    "liga": "Brasileirão",
+    "temporada": "2024",
+    "tipo": "Titular (Costas)"
+  },
+  "@carinhacriativo (193).png": {
+    "time": "Palmeiras",
+    "liga": "Brasileirão",
+    "temporada": "2024",
+    "tipo": "Titular (Frente)"
+  },
+  "@carinhacriativo (194).png": {
+    "time": "Real Madrid",
+    "liga": "La Liga",
+    "temporada": "24/25",
+    "tipo": "Reserva (Laranja - Manga Longa - Costas)"
+  },
+  "@carinhacriativo (195).png": {
+    "time": "Real Madrid",
+    "liga": "La Liga",
+    "temporada": "24/25",
+    "tipo": "Reserva (Laranja - Manga Longa)"
+  },
+  "@carinhacriativo (196).png": {
+    "time": "Manchester United",
+    "liga": "Premier League",
+    "temporada": "08/09",
+    "tipo": "Retrô (Azul - Manga Longa)"
+  },
+  "@carinhacriativo (197).png": {
+    "time": "Real Madrid",
+    "liga": "La Liga",
+    "temporada": "24/25",
+    "tipo": "Reserva (Laranja)"
+  },
+  "@carinhacriativo (198).png": {
+    "time": "Bayern de Munique",
+    "liga": "Bundesliga",
+    "temporada": "14/15",
+    "tipo": "Retrô (Listrada)"
+  },
+  "@carinhacriativo (199).png": {
+    "time": "Bayern de Munique",
+    "liga": "Bundesliga",
+    "temporada": "14/15",
+    "tipo": "Retrô (Listrada - Costas)"
+  },
+  "@carinhacriativo (200).png": {
+    "time": "Real Madrid",
+    "liga": "La Liga",
+    "temporada": "24/25",
+    "tipo": "Reserva (Laranja - Costas)"
+  },
+  "@carinhacriativo (201).png": {
+    "time": "Inglaterra",
+    "liga": "Seleções",
+    "temporada": "2024",
+    "tipo": "Titular (Bellingham 10 - Costas)"
+  },
+  "@carinhacriativo (202).png": {
+    "time": "Inglaterra",
+    "liga": "Seleções",
+    "temporada": "2024",
+    "tipo": "Titular (Bellingham 10)"
+  },
+  "@carinhacriativo (203).png": {
+    "time": "Napoli",
+    "liga": "Serie A",
+    "temporada": "24/25",
+    "tipo": "Titular"
+  },
+  "@carinhacriativo (204).png": {
+    "time": "Napoli",
+    "liga": "Serie A",
+    "temporada": "24/25",
+    "tipo": "Titular (Costas)"
+  },
+  "@carinhacriativo (205).png": {
+    "time": "França",
+    "liga": "Seleções",
+    "temporada": "2024",
+    "tipo": "Titular (Mbappé 10 - Costas)"
+  },
+  "@carinhacriativo (206).png": {
+    "time": "França",
+    "liga": "Seleções",
+    "temporada": "2024",
+    "tipo": "Titular (Mbappé 10)"
+  },
+  "@carinhacriativo (207).png": {
+    "time": "Borussia Dortmund",
+    "liga": "Bundesliga",
+    "temporada": "24/25",
+    "tipo": "Especial (Preta)"
+  },
+  "@carinhacriativo (208).png": {
+    "time": "Real Madrid",
+    "liga": "La Liga",
+    "temporada": "24/25",
+    "tipo": "Titular"
+  },
+  "@carinhacriativo (209).png": {
+    "time": "Real Madrid",
+    "liga": "La Liga",
+    "temporada": "24/25",
+    "tipo": "Titular (Costas)"
+  },
+  "@carinhacriativo (210).png": {
+    "time": "Real Madrid",
+    "liga": "La Liga",
+    "temporada": "24/25",
+    "tipo": "Terceiro (Cinza - Costas)"
+  },
+  "@carinhacriativo (211).png": {
+    "time": "Cruzeiro",
+    "liga": "Brasileirão",
+    "temporada": "24/25",
+    "tipo": "Titular (Costas)"
+  },
+  "@carinhacriativo (212).png": {
+    "time": "Cruzeiro",
+    "liga": "Brasileirão",
+    "temporada": "24/25",
+    "tipo": "Titular"
+  },
+  "@carinhacriativo (213).png": {
+    "time": "Atlético Mineiro",
+    "liga": "Brasileirão",
+    "temporada": "2024",
+    "tipo": "Titular (Costas)"
+  },
+  "@carinhacriativo (214).png": {
+    "time": "Atlético Mineiro",
+    "liga": "Brasileirão",
+    "temporada": "2024",
+    "tipo": "Titular"
+  },
+  "@carinhacriativo (215).png": {
+    "time": "Real Madrid",
+    "liga": "La Liga",
+    "temporada": "23/24",
+    "tipo": "Reserva (Azul Marinho - Costas)"
+  },
+  "@carinhacriativo (216).png": {
+    "time": "Real Madrid",
+    "liga": "La Liga",
+    "temporada": "23/24",
+    "tipo": "Reserva (Azul Marinho)"
+  },
+  "@carinhacriativo (217).png": {
+    "time": "Manchester United",
+    "liga": "Premier League",
+    "temporada": "24/25",
+    "tipo": "Titular (Costas)"
+  },
+  "@carinhacriativo (218).png": {
+    "time": "Manchester United",
+    "liga": "Premier League",
+    "temporada": "24/25",
+    "tipo": "Titular"
+  },
+  "@carinhacriativo (219).png": {
+    "time": "Palmeiras",
+    "liga": "Brasileirão",
+    "temporada": "2024",
+    "tipo": "Titular (Costas - Outro Ângulo)"
+  },
+  "@carinhacriativo (220).png": {
+    "time": "Real Madrid",
+    "liga": "La Liga",
+    "temporada": "17/18",
+    "tipo": "Reserva (Turquesa)"
+  },
+  "@carinhacriativo (221).png": {
+    "time": "Barcelona",
+    "liga": "La Liga",
+    "temporada": "14/15",
+    "tipo": "Titular"
+  },
+  "@carinhacriativo (222).png": {
+    "time": "Real Madrid",
+    "liga": "La Liga",
+    "temporada": "22/23",
+    "tipo": "Titular (Benzema 9 - Costas)"
+  },
+  "@carinhacriativo (223).png": {
+    "time": "Real Madrid",
+    "liga": "La Liga",
+    "temporada": "22/23",
+    "tipo": "Titular (Benzema 9 - Costas - Duplicada)"
+  },
+  "@carinhacriativo (224).png": {
+    "time": "Flamengo",
+    "liga": "Brasileirão",
+    "temporada": "1995",
+    "tipo": "Retrô (Centenário)"
+  },
+  "@carinhacriativo (225).png": {
+    "time": "Real Madrid",
+    "liga": "La Liga",
+    "temporada": "17/18",
+    "tipo": "Titular"
+  },
+  "@carinhacriativo (226).png": {
+    "time": "Real Madrid",
+    "liga": "La Liga",
+    "temporada": "16/17",
+    "tipo": "Reserva (Roxa)"
+  },
+  "@carinhacriativo (227).png": {
+    "time": "Bayer Leverkusen",
+    "liga": "Bundesliga",
+    "temporada": "23/24",
+    "tipo": "Titular"
+  },
+  "@carinhacriativo (228).png": {
+    "time": "Bayer Leverkusen",
+    "liga": "Bundesliga",
+    "temporada": "23/24",
+    "tipo": "Titular (Costas)"
+  },
+  "@carinhacriativo (229).png": {
+    "time": "Napoli",
+    "liga": "Serie A",
+    "temporada": "23/24",
+    "tipo": "Titular (Costas)"
+  },
+  "@carinhacriativo (230).png": {
+    "time": "Real Madrid",
+    "liga": "La Liga",
+    "temporada": "24/25",
+    "tipo": "Terceiro (Cinza Padrão - Costas)"
+  },
+  "@carinhacriativo (231).png": {
+    "time": "Bayern de Munique",
+    "liga": "Bundesliga",
+    "temporada": "24/25",
+    "tipo": "Titular (Costas)"
+  },
+  "@carinhacriativo (232).png": {
+    "time": "Real Madrid",
+    "liga": "La Liga",
+    "temporada": "23/24",
+    "tipo": "Reserva (Azul Padrão - Costas)"
+  },
+  "@carinhacriativo (233).png": {
+    "time": "Bayern de Munique",
+    "liga": "Bundesliga",
+    "temporada": "24/25",
+    "tipo": "Titular"
+  },
+  "@carinhacriativo (234).png": {
+    "time": "Napoli",
+    "liga": "Serie A",
+    "temporada": "23/24",
+    "tipo": "Titular"
+  },
+  "@carinhacriativo (235).png": {
+    "time": "Santos",
+    "liga": "Brasileirão",
+    "temporada": "2024",
+    "tipo": "Especial (Charlie Brown Jr)"
+  },
+  "@carinhacriativo (236).png": {
+    "time": "Real Madrid",
+    "liga": "La Liga",
+    "temporada": "21/22",
+    "tipo": "Titular"
+  },
+  "@carinhacriativo (237).png": {
+    "time": "Borussia Dortmund",
+    "liga": "Bundesliga",
+    "temporada": "23/24",
+    "tipo": "Especial (Preta/Amarela - Costas)"
+  },
+  "@carinhacriativo (238).png": {
+    "time": "Real Madrid",
+    "liga": "La Liga",
+    "temporada": "23/24",
+    "tipo": "Reserva (Azul Padrão)"
+  },
+  "@carinhacriativo (239).png": {
+    "time": "Arsenal",
+    "liga": "Premier League",
+    "temporada": "05/06",
+    "tipo": "Retrô (Highbury Farewell)"
+  },
+  "@carinhacriativo (240).png": {
+    "time": "Vasco da Gama",
+    "liga": "Brasileirão",
+    "temporada": "2024",
+    "tipo": "Titular (Costas)"
+  },
+  "@carinhacriativo (241).png": {
+    "time": "Vasco da Gama",
+    "liga": "Brasileirão",
+    "temporada": "2024",
+    "tipo": "Titular"
+  },
+  "@carinhacriativo (242).png": {
+    "time": "Inter de Milão",
+    "liga": "Serie A",
+    "temporada": "23/24",
+    "tipo": "Titular (Costas)"
+  },
+  "@carinhacriativo (243).png": {
+    "time": "Inter de Milão",
+    "liga": "Serie A",
+    "temporada": "23/24",
+    "tipo": "Titular"
+  },
+  "@carinhacriativo (244).png": {
+    "time": "AS Roma",
+    "liga": "Serie A",
+    "temporada": "23/24",
+    "tipo": "Titular (Costas)"
+  },
+  "@carinhacriativo (245).png": {
+    "time": "AS Roma",
+    "liga": "Serie A",
+    "temporada": "23/24",
+    "tipo": "Titular"
+  },
+  "@carinhacriativo (246).png": {
+    "time": "Bélgica",
+    "liga": "Seleções",
+    "temporada": "2024",
+    "tipo": "Titular (Costas)"
+  },
+  "@carinhacriativo (247).png": {
+    "time": "Bélgica",
+    "liga": "Seleções",
+    "temporada": "2024",
+    "tipo": "Titular"
+  },
+  "@carinhacriativo (248).png": {
+    "time": "Alemanha",
+    "liga": "Seleções",
+    "temporada": "2024",
+    "tipo": "Titular (Costas)"
+  },
+  "@carinhacriativo (249).png": {
+    "time": "Alemanha",
+    "liga": "Seleções",
+    "temporada": "2024",
+    "tipo": "Titular"
+  },
+  "@carinhacriativo (250).png": {
+    "time": "Real Madrid",
+    "liga": "La Liga",
+    "temporada": "14/15",
+    "tipo": "Reserva (Rosa)"
+  },
+  "@carinhacriativo (251).png": {
+    "time": "Real Madrid",
+    "liga": "La Liga",
+    "temporada": "14/15",
+    "tipo": "Reserva (Rosa - Costas)"
+  },
+  "@carinhacriativo (252).png": {
+    "time": "Barcelona",
+    "liga": "La Liga",
+    "temporada": "04/05",
+    "tipo": "Retrô (Costas)"
+  },
+  "@carinhacriativo (253).png": {
+    "time": "Barcelona",
+    "liga": "La Liga",
+    "temporada": "04/05",
+    "tipo": "Retrô"
+  },
+  "@carinhacriativo (254).png": {
+    "time": "Brasil",
+    "liga": "Seleções",
+    "temporada": "2004",
+    "tipo": "Retrô (Azul - Costas)"
+  },
+  "@carinhacriativo (255).png": {
+    "time": "Brasil",
+    "liga": "Seleções",
+    "temporada": "2004",
+    "tipo": "Retrô (Azul)"
+  },
+  "@carinhacriativo (256).png": {
+    "time": "Real Madrid",
+    "liga": "La Liga",
+    "temporada": "16/17",
+    "tipo": "Reserva (Roxa - Duplicada)"
+  },
+  "@carinhacriativo (257).png": {
+    "time": "Real Madrid",
+    "liga": "La Liga",
+    "temporada": "16/17",
+    "tipo": "Reserva (Roxa - Costas)"
+  },
+  "@carinhacriativo (258).png": {
+    "time": "Real Madrid",
+    "liga": "La Liga",
+    "temporada": "17/18",
+    "tipo": "Terceiro (Preta/Turquesa - Costas)"
+  },
+  "@carinhacriativo (259).png": {
+    "time": "Real Madrid",
+    "liga": "La Liga",
+    "temporada": "17/18",
+    "tipo": "Terceiro (Preta/Turquesa)"
+  },
+  "@carinhacriativo (260).png": {
+    "time": "Fluminense",
+    "liga": "Brasileirão",
+    "temporada": "2024",
+    "tipo": "Titular (Costas)"
+  },
+  "@carinhacriativo (261).png": {
+    "time": "Fluminense",
+    "liga": "Brasileirão",
+    "temporada": "2024",
+    "tipo": "Titular"
+  },
+  "@carinhacriativo (262).png": {
+    "time": "Inter de Milão",
+    "liga": "Serie A",
+    "temporada": "24/25",
+    "tipo": "Titular (Frente)"
+  },
+  "@carinhacriativo (263).png": {
+    "time": "Inter de Milão",
+    "liga": "Serie A",
+    "temporada": "24/25",
+    "tipo": "Titular (Costas)"
+  },
+  "@carinhacriativo (264).png": {
+    "time": "Inter de Milão",
+    "liga": "Serie A",
+    "temporada": "24/25",
+    "tipo": "Titular (Detalhe)"
+  },
+  "@carinhacriativo (265).png": {
+    "time": "Barcelona",
+    "liga": "La Liga",
+    "temporada": "24/25",
+    "tipo": "Titular"
+  },
+  "@carinhacriativo (266).png": {
+    "time": "Barcelona",
+    "liga": "La Liga",
+    "temporada": "24/25",
+    "tipo": "Titular (Costas)"
+  },
+  "@carinhacriativo (267).png": {
+    "time": "Inter Miami",
+    "liga": "MLS",
+    "temporada": "2024",
+    "tipo": "Titular (Costas)"
+  },
+  "@carinhacriativo (268).png": {
+    "time": "Inter Miami",
+    "liga": "MLS",
+    "temporada": "2024",
+    "tipo": "Titular"
+  },
+  "@carinhacriativo (269).png": {
+    "time": "Croácia",
+    "liga": "Seleções",
+    "temporada": "2024",
+    "tipo": "Reserva (Costas)"
+  },
+  "@carinhacriativo (270).png": {
+    "time": "Croácia",
+    "liga": "Seleções",
+    "temporada": "2024",
+    "tipo": "Reserva"
+  },
+  "@carinhacriativo (271).png": {
+    "time": "Vasco da Gama",
+    "liga": "Brasileirão",
+    "temporada": "2024",
+    "tipo": "Reserva"
+  },
+  "@carinhacriativo (272).png": {
+    "time": "Botafogo",
+    "liga": "Brasileirão",
+    "temporada": "2024",
+    "tipo": "Titular"
+  },
+  "@carinhacriativo (273).png": {
+    "time": "Botafogo",
+    "liga": "Brasileirão",
+    "temporada": "2024",
+    "tipo": "Titular (Costas)"
+  },
+  "@carinhacriativo (274).png": {
+    "time": "Barcelona",
+    "liga": "La Liga",
+    "temporada": "95/97",
+    "tipo": "Retrô (Reserva - Costas)"
+  },
+  "@carinhacriativo (275).png": {
+    "time": "Barcelona",
+    "liga": "La Liga",
+    "temporada": "95/97",
+    "tipo": "Retrô (Reserva)"
+  },
+  "@carinhacriativo (276).png": {
+    "time": "Arsenal",
+    "liga": "Premier League",
+    "temporada": "05/06",
+    "tipo": "Retrô (Highbury Farewell - Costas)"
+  },
+  "@carinhacriativo (277).png": {
+    "time": "Argentina",
+    "liga": "Seleções",
+    "temporada": "2006",
+    "tipo": "Retrô (Costas)"
+  },
+  "@carinhacriativo (278).png": {
+    "time": "Argentina",
+    "liga": "Seleções",
+    "temporada": "2006",
+    "tipo": "Retrô"
+  },
+  "@carinhacriativo (279).png": {
+    "time": "Al-Nassr",
+    "liga": "Saudi Pro League",
+    "temporada": "24/25",
+    "tipo": "Titular"
+  },
+  "@carinhacriativo (280).png": {
+    "time": "Al-Nassr",
+    "liga": "Saudi Pro League",
+    "temporada": "24/25",
+    "tipo": "Titular (Costas)"
+  },
+  "@carinhacriativo (281).png": {
+    "time": "Real Madrid",
+    "liga": "La Liga",
+    "temporada": "17/18",
+    "tipo": "Titular (Ronaldo 7 - Costas)"
+  },
+  "@carinhacriativo (282).png": {
+    "time": "Milan",
+    "liga": "Serie A",
+    "temporada": "24/25",
+    "tipo": "Titular"
+  },
+  "@carinhacriativo (283).png": {
+    "time": "PSG",
+    "liga": "Ligue 1",
+    "temporada": "24/25",
+    "tipo": "Titular (Costas)"
+  },
+  "@carinhacriativo (284).png": {
+    "time": "PSG",
+    "liga": "Ligue 1",
+    "temporada": "24/25",
+    "tipo": "Titular"
+  },
+  "@carinhacriativo (285).png": {
+    "time": "Liverpool",
+    "liga": "Premier League",
+    "temporada": "24/25",
+    "tipo": "Titular (Costas)"
+  },
+  "@carinhacriativo (286).png": {
+    "time": "Liverpool",
+    "liga": "Premier League",
+    "temporada": "24/25",
+    "tipo": "Titular"
+  },
+  "@carinhacriativo (287).png": {
+    "time": "Real Madrid",
+    "liga": "La Liga",
+    "temporada": "23/24",
+    "tipo": "Terceiro (Preta/Dourada)"
+  },
+  "@carinhacriativo (288).png": {
+    "time": "Atlético de Madrid",
+    "liga": "La Liga",
+    "temporada": "22/23",
+    "tipo": "Titular (Costas)"
+  },
+  "@carinhacriativo (289).png": {
+    "time": "Atlético de Madrid",
+    "liga": "La Liga",
+    "temporada": "22/23",
+    "tipo": "Titular"
+  },
+  "@carinhacriativo (290).png": {
+    "time": "Borussia Dortmund",
+    "liga": "Bundesliga",
+    "temporada": "23/24",
+    "tipo": "Titular (Costas)"
+  },
+  "@carinhacriativo (291).png": {
+    "time": "Borussia Dortmund",
+    "liga": "Bundesliga",
+    "temporada": "23/24",
+    "tipo": "Titular"
+  },
+  "@carinhacriativo (292).png": {
+    "time": "Real Madrid",
+    "liga": "La Liga",
+    "temporada": "24/25",
+    "tipo": "Titular (Detalhe)"
+  },
+  "@carinhacriativo (293).png": {
+    "time": "Bayern de Munique",
+    "liga": "Bundesliga",
+    "temporada": "24/25",
+    "tipo": "Titular (Costas)"
+  },
+  "@carinhacriativo (294).png": {
+    "time": "Bayern de Munique",
+    "liga": "Bundesliga",
+    "temporada": "24/25",
+    "tipo": "Titular (Frente)"
+  },
+  "@carinhacriativo (295).png": {
+    "time": "França",
+    "liga": "Seleções",
+    "temporada": "2024",
+    "tipo": "Titular"
+  },
+  "@carinhacriativo (296).png": {
+    "time": "Brasil",
+    "liga": "Seleções",
+    "temporada": "2024",
+    "tipo": "Titular"
+  },
+  "@carinhacriativo (297).png": {
+    "time": "Real Madrid",
+    "liga": "La Liga",
+    "temporada": "24/25",
+    "tipo": "Titular (Detalhe 2)"
+  },
+  "@carinhacriativo (298).png": {
+    "time": "Palmeiras",
+    "liga": "Brasileirão",
+    "temporada": "2024",
+    "tipo": "Titular"
+  },
+  "@carinhacriativo (299).png": {
+    "time": "Real Madrid",
+    "liga": "La Liga",
+    "temporada": "24/25",
+    "tipo": "Titular"
+  },
+  "@carinhacriativo (300).png": {
+    "time": "Manchester United",
+    "liga": "Premier League",
+    "temporada": "08/09",
+    "tipo": "Retrô (Preta/Vermelha)"
+  },
+  "@carinhacriativo (301).png": {
+    "time": "Real Madrid",
+    "liga": "La Liga",
+    "temporada": "23/24",
+    "tipo": "Especial (Cinza)"
+  },
+  "@carinhacriativo (302).png": {
+    "time": "Manchester United",
+    "liga": "Premier League",
+    "temporada": "07/09",
+    "tipo": "Retrô (Titular)"
+  },
+  "@carinhacriativo (303).png": {
+    "time": "Milan",
+    "liga": "Serie A",
+    "temporada": "06/07",
+    "tipo": "Retrô (Titular - Costas)"
+  },
+  "@carinhacriativo (304).png": {
+    "time": "Manchester United",
+    "liga": "Premier League",
+    "temporada": "07/08",
+    "tipo": "Retrô (Final Moscow)"
+  },
+  "@carinhacriativo (305).png": {
+    "time": "Chelsea",
+    "liga": "Premier League",
+    "temporada": "03/05",
+    "tipo": "Retrô (Reserva)"
+  },
+  "@carinhacriativo (306).png": {
+    "time": "Barcelona",
+    "liga": "La Liga",
+    "temporada": "16/17",
+    "tipo": "Retrô (Titular)"
+  },
+  "@carinhacriativo (307).png": {
+    "time": "Barcelona",
+    "liga": "La Liga",
+    "temporada": "16/17",
+    "tipo": "Retrô (Neymar Jr 11 - Costas)"
+  },
+  "@carinhacriativo (308).png": {
+    "time": "Milan",
+    "liga": "Serie A",
+    "temporada": "06/07",
+    "tipo": "Retrô (Titular)"
+  },
+  "@carinhacriativo (309).png": {
+    "time": "Real Madrid",
+    "liga": "La Liga",
+    "temporada": "05/06",
+    "tipo": "Retrô (Reserva - Costas)"
+  },
+  "@carinhacriativo (310).png": {
+    "time": "Chelsea",
+    "liga": "Premier League",
+    "temporada": "03/05",
+    "tipo": "Retrô (Reserva - Costas)"
+  },
+  "@carinhacriativo (311).png": {
+    "time": "Inter de Milão",
+    "liga": "Serie A",
+    "temporada": "05/06",
+    "tipo": "Retrô (Titular - Costas)"
+  },
+  "@carinhacriativo (312).png": {
+    "time": "Barcelona",
+    "liga": "La Liga",
+    "temporada": "11/12",
+    "tipo": "Retrô (Titular - Costas)"
+  },
+  "@carinhacriativo (313).png": {
+    "time": "Manchester United",
+    "liga": "Premier League",
+    "temporada": "06/07",
+    "tipo": "Retrô (Goleiro Preta - Costas)"
+  },
+  "@carinhacriativo (314).png": {
+    "time": "São Paulo",
+    "liga": "Brasileirão",
+    "temporada": "00/01",
+    "tipo": "Retrô (Motorola - Costas)"
+  },
+  "@carinhacriativo (315).png": {
+    "time": "Fluminense",
+    "liga": "Brasileirão",
+    "temporada": "2012",
+    "tipo": "Retrô (Costas)"
+  },
+  "@carinhacriativo (316).png": {
+    "time": "Atlético de Madrid",
+    "liga": "La Liga",
+    "temporada": "04/05",
+    "tipo": "Retrô (Costas)"
+  },
+  "@carinhacriativo (317).png": {
+    "time": "PSG",
+    "liga": "Ligue 1",
+    "temporada": "95/96",
+    "tipo": "Retrô (Titular - Costas)"
+  },
+  "@carinhacriativo (318).png": {
+    "time": "Flamengo",
+    "liga": "Brasileirão",
+    "temporada": "1995",
+    "tipo": "Retrô (Centenário - Costas)"
+  },
+  "@carinhacriativo (319).png": {
+    "time": "Parma",
+    "liga": "Serie A",
+    "temporada": "98/99",
+    "tipo": "Retrô"
+  },
+  "@carinhacriativo (320).png": {
+    "time": "Manchester United",
+    "liga": "Premier League",
+    "temporada": "07/08",
+    "tipo": "Retrô (Goleiro Azul - Costas)"
+  },
+  "@carinhacriativo (321).png": {
+    "time": "PSG",
+    "liga": "Ligue 1",
+    "temporada": "95/96",
+    "tipo": "Retrô (Reserva - Costas)"
+  },
+  "@carinhacriativo (322).png": {
+    "time": "São Paulo",
+    "liga": "Brasileirão",
+    "temporada": "04/05",
+    "tipo": "Retrô (LG - Costas)"
+  },
+  "@carinhacriativo (323).png": {
+    "time": "Grêmio",
+    "liga": "Brasileirão",
+    "temporada": "95/96",
+    "tipo": "Retrô (Chevrolet - Costas)"
+  },
+  "@carinhacriativo (324).png": {
+    "time": "Arsenal",
+    "liga": "Premier League",
+    "temporada": "05/06",
+    "tipo": "Retrô (Highbury Farewell 2 - Costas)"
+  },
+  "@carinhacriativo (325).png": {
+    "time": "Barcelona",
+    "liga": "La Liga",
+    "temporada": "98/99",
+    "tipo": "Retrô (Titular - Costas)"
+  },
+  "@carinhacriativo (326).png": {
+    "time": "Santos",
+    "liga": "Brasileirão",
+    "temporada": "2011",
+    "tipo": "Retrô (BMG - Costas)"
+  },
+  "@carinhacriativo (327).png": {
+    "time": "Borussia Dortmund",
+    "liga": "Bundesliga",
+    "temporada": "22/23",
+    "tipo": "Titular (Costas)"
+  },
+  "@carinhacriativo (328).png": {
+    "time": "Barcelona",
+    "liga": "La Liga",
+    "temporada": "98/99",
+    "tipo": "Retrô (Titular 2 - Costas)"
+  },
+  "@carinhacriativo (329).png": {
+    "time": "Real Madrid",
+    "liga": "La Liga",
+    "temporada": "14/15",
+    "tipo": "Retrô (Dragão - Costas)"
+  },
+  "@carinhacriativo (330).png": {
+    "time": "Flamengo",
+    "liga": "Brasileirão",
+    "temporada": "2008",
+    "tipo": "Retrô (Reserva - Costas)"
+  },
+  "@carinhacriativo (331).png": {
+    "time": "Real Madrid",
+    "liga": "La Liga",
+    "temporada": "99/00",
+    "tipo": "Retrô (Goleiro Teka)"
+  },
+  "@carinhacriativo (332).png": {
+    "time": "Barcelona",
+    "liga": "La Liga",
+    "temporada": "12/13",
+    "tipo": "Retrô (Titular)"
+  },
+  "@carinhacriativo (333).png": {
+    "time": "Inter de Milão",
+    "liga": "Serie A",
+    "temporada": "09/10",
+    "tipo": "Retrô (Final Madrid)"
+  },
+  "@carinhacriativo (334).png": {
+    "time": "São Paulo",
+    "liga": "Brasileirão",
+    "temporada": "00/01",
+    "tipo": "Retrô (Motorola)"
+  },
+  "@carinhacriativo (335).png": {
+    "time": "Real Madrid",
+    "liga": "La Liga",
+    "temporada": "15/16",
+    "tipo": "Retrô (Goleiro Preta)"
+  },
+  "@carinhacriativo (336).png": {
+    "time": "Fluminense",
+    "liga": "Brasileirão",
+    "temporada": "2012",
+    "tipo": "Retrô (Titular)"
+  },
+  "@carinhacriativo (337).png": {
+    "time": "Atlético de Madrid",
+    "liga": "La Liga",
+    "temporada": "13/14",
+    "tipo": "Retrô (Titular)"
+  },
+  "@carinhacriativo (338).png": {
+    "time": "PSG",
+    "liga": "Ligue 1",
+    "temporada": "01/02",
+    "tipo": "Retrô (Opel)"
+  },
+  "@carinhacriativo (339).png": {
+    "time": "Real Madrid",
+    "liga": "La Liga",
+    "temporada": "17/18",
+    "tipo": "Retrô (Goleiro Verde)"
+  },
+  "@carinhacriativo (340).png": {
+    "time": "São Paulo",
+    "liga": "Brasileirão",
+    "temporada": "04/05",
+    "tipo": "Retrô (LG)"
+  },
+  "@carinhacriativo (341).png": {
+    "time": "Parma",
+    "liga": "Serie A",
+    "temporada": "98/99",
+    "tipo": "Retrô (Costas)"
+  },
+  "@carinhacriativo (342).png": {
+    "time": "PSG",
+    "liga": "Ligue 1",
+    "temporada": "01/02",
+    "tipo": "Retrô (Opel 2)"
+  },
+  "@carinhacriativo (343).png": {
+    "time": "Brasil",
+    "liga": "Seleções",
+    "temporada": "2024",
+    "tipo": "Titular (Costas)"
+  },
+  "@carinhacriativo (344).png": {
+    "time": "Barcelona",
+    "liga": "La Liga",
+    "temporada": "10/11",
+    "tipo": "Retrô (Titular)"
+  },
+  "@carinhacriativo (345).png": {
+    "time": "Grêmio",
+    "liga": "Brasileirão",
+    "temporada": "2003",
+    "tipo": "Retrô (Astra)"
+  },
+  "@carinhacriativo (346).png": {
+    "time": "Arsenal",
+    "liga": "Premier League",
+    "temporada": "11/12",
+    "tipo": "Retrô (125 Anos)"
+  },
+  "@carinhacriativo (347).png": {
+    "time": "Borussia Dortmund",
+    "liga": "Bundesliga",
+    "temporada": "12/13",
+    "tipo": "Retrô (Titular)"
+  },
+  "@carinhacriativo (348).png": {
+    "time": "Santos",
+    "liga": "Brasileirão",
+    "temporada": "2012",
+    "tipo": "Retrô (Centenário)"
+  },
+  "@carinhacriativo (349).png": {
+    "time": "Real Madrid",
+    "liga": "La Liga",
+    "temporada": "14/15",
+    "tipo": "Retrô (Dragão)"
+  },
+  "@carinhacriativo (350).png": {
+    "time": "Barcelona",
+    "liga": "La Liga",
+    "temporada": "08/09",
+    "tipo": "Retrô (Final Roma)"
+  },
+  "@carinhacriativo (351).png": {
+    "time": "Flamengo",
+    "liga": "Brasileirão",
+    "temporada": "99/00",
+    "tipo": "Retrô (Lubrax)"
+  },
+  "@carinhacriativo (352).png": {
+    "time": "Barcelona",
+    "liga": "La Liga",
+    "temporada": "16/17",
+    "tipo": "Retrô (Messi 10 - Costas)"
+  },
+  "@carinhacriativo (353).png": {
+    "time": "São Paulo",
+    "liga": "Brasileirão",
+    "temporada": "2024",
+    "tipo": "Titular (Costas)"
+  },
+  "@carinhacriativo (354).png": {
+    "time": "São Paulo",
+    "liga": "Brasileirão",
+    "temporada": "2024",
+    "tipo": "Titular"
+  },
+  "@carinhacriativo (355).png": {
+    "time": "Flamengo",
+    "liga": "Brasileirão",
+    "temporada": "10/11",
+    "tipo": "Retrô (Manga Longa - Costas)"
+  },
+  "@carinhacriativo (356).png": {
+    "time": "Flamengo",
+    "liga": "Brasileirão",
+    "temporada": "10/11",
+    "tipo": "Retrô (Manga Longa)"
+  },
+  "@carinhacriativo (357).png": {
+    "time": "Barcelona",
+    "liga": "La Liga",
+    "temporada": "14/15",
+    "tipo": "Retrô (Neymar 11 - Costas)"
+  },
+  "@carinhacriativo (358).png": {
+    "time": "Barcelona",
+    "liga": "La Liga",
+    "temporada": "24/25",
+    "tipo": "Titular (Costas)"
+  },
+  "@carinhacriativo (359).png": {
+    "time": "Barcelona",
+    "liga": "La Liga",
+    "temporada": "24/25",
+    "tipo": "Titular"
+  },
+  "@carinhacriativo (360).png": {
+    "time": "RB Leipzig",
+    "liga": "Bundesliga",
+    "temporada": "23/24",
+    "tipo": "Titular (Costas)"
+  },
+  "@carinhacriativo (361).png": {
+    "time": "Santos",
+    "liga": "Brasileirão",
+    "temporada": "2024",
+    "tipo": "Titular (Costas)"
+  },
+  "@carinhacriativo (362).png": {
+    "time": "Santos",
+    "liga": "Brasileirão",
+    "temporada": "2024",
+    "tipo": "Titular"
+  },
+  "@carinhacriativo (363).png": {
+    "time": "Milan",
+    "liga": "Serie A",
+    "temporada": "23/24",
+    "tipo": "Titular (Costas)"
+  },
+  "@carinhacriativo (364).png": {
+    "time": "Milan",
+    "liga": "Serie A",
+    "temporada": "23/24",
+    "tipo": "Titular"
+  },
+  "@carinhacriativo (365).png": {
+    "time": "Santos",
+    "liga": "Brasileirão",
+    "temporada": "2012",
+    "tipo": "Retrô (Costas)"
+  },
+  "@carinhacriativo (366).png": {
+    "time": "Barcelona",
+    "liga": "La Liga",
+    "temporada": "16/17",
+    "tipo": "Retrô (Reserva - Costas)"
+  },
+  "@carinhacriativo (367).png": {
+    "time": "RB Leipzig",
+    "liga": "Bundesliga",
+    "temporada": "23/24",
+    "tipo": "Titular"
+  },
+  "@carinhacriativo (368).png": {
+    "time": "Real Madrid",
+    "liga": "La Liga",
+    "temporada": "24/25",
+    "tipo": "Titular (Manga Longa)"
+  },
+  "@carinhacriativo (369).png": {
+    "time": "Santos",
+    "liga": "Brasileirão",
+    "temporada": "2012",
+    "tipo": "Retrô (Titular)"
+  },
+  "@carinhacriativo (370).png": {
+    "time": "Barcelona",
+    "liga": "La Liga",
+    "temporada": "16/17",
+    "tipo": "Retrô (Reserva)"
+  },
+  "@carinhacriativo (371).png": {
+    "time": "Barcelona",
+    "liga": "La Liga",
+    "temporada": "24/25",
+    "tipo": "Titular (Manga Longa)"
+  },
+  "@carinhacriativo (372).png": {
+    "time": "Bahia",
+    "liga": "Brasileirão",
+    "temporada": "2024",
+    "tipo": "Quarto Uniforme"
+  },
+  "@carinhacriativo (373).png": {
+    "time": "Grêmio",
+    "liga": "Brasileirão",
+    "temporada": "2024",
+    "tipo": "Titular"
+  },
+  "@carinhacriativo (374).png": {
+    "time": "Grêmio",
+    "liga": "Brasileirão",
+    "temporada": "2024",
+    "tipo": "Titular (Ângulo)"
+  },
+  "@carinhacriativo (375).png": {
+    "time": "Portugal",
+    "liga": "Seleções",
+    "temporada": "2024",
+    "tipo": "Ronaldo 7 (Costas)"
+  },
+  "@carinhacriativo (376).png": {
+    "time": "Portugal",
+    "liga": "Seleções",
+    "temporada": "2024",
+    "tipo": "Titular"
+  },
+  "@carinhacriativo (377).png": {
+    "time": "Real Madrid",
+    "liga": "La Liga",
+    "temporada": "24/25",
+    "tipo": "Uniforme de Treino"
+  },
+  "@carinhacriativo (378).png": {
+    "time": "Barcelona",
+    "liga": "La Liga",
+    "temporada": "24/25",
+    "tipo": "Reserva"
+  },
+  "@carinhacriativo (379).png": {
+    "time": "Barcelona",
+    "liga": "La Liga",
+    "temporada": "24/25",
+    "tipo": "Titular (Manga Curta)"
+  },
+  "@carinhacriativo (380).png": {
+    "time": "Argentina",
+    "liga": "Seleções",
+    "temporada": "2024",
+    "tipo": "Titular"
+  },
+  "@carinhacriativo (381).png": {
+    "time": "Juventus",
+    "liga": "Serie A",
+    "temporada": "24/25",
+    "tipo": "Titular"
+  },
+  "@carinhacriativo (382).png": {
+    "time": "Vasco",
+    "liga": "Brasileirão",
+    "temporada": "2024",
+    "tipo": "Terceiro Uniforme (Dinamite)"
+  },
+  "@carinhacriativo (383).png": {
+    "time": "Vasco",
+    "liga": "Brasileirão",
+    "temporada": "2024",
+    "tipo": "Terceiro Uniforme (Costas)"
+  },
+  "@carinhacriativo (384).png": {
+    "time": "Internacional",
+    "liga": "Brasileirão",
+    "temporada": "2024",
+    "tipo": "Reserva (Costas)"
+  },
+  "@carinhacriativo (385).png": {
+    "time": "Real Madrid",
+    "liga": "La Liga",
+    "temporada": "24/25",
+    "tipo": "Titular"
+  },
+  "@carinhacriativo (386).png": {
+    "time": "Flamengo",
+    "liga": "Brasileirão",
+    "temporada": "2024",
+    "tipo": "Reserva"
+  },
+  "@carinhacriativo (387).png": {
+    "time": "Flamengo",
+    "liga": "Brasileirão",
+    "temporada": "2024",
+    "tipo": "Titular"
+  },
+  "@carinhacriativo (388).png": {
+    "time": "Vasco",
+    "liga": "Brasileirão",
+    "temporada": "23/24",
+    "tipo": "Terceiro Uniforme (Resposta Histórica)"
+  },
+  "@carinhacriativo (389).png": {
+    "time": "Real Madrid",
+    "liga": "La Liga",
+    "temporada": "24/25",
+    "tipo": "Titular 2"
+  },
+  "@carinhacriativo (390).png": {
+    "time": "Real Madrid",
+    "liga": "La Liga",
+    "temporada": "24/25",
+    "tipo": "Terceiro Uniforme"
+  },
+  "@carinhacriativo (391).png": {
+    "time": "Barcelona",
+    "liga": "La Liga",
+    "temporada": "24/25",
+    "tipo": "Titular (Versão Jogador)"
+  },
+  "@carinhacriativo (392).png": {
+    "time": "Bahia",
+    "liga": "Brasileirão",
+    "temporada": "2024",
+    "tipo": "Titular"
+  },
+  "@carinhacriativo (393).png": {
+    "time": "Espanha",
+    "liga": "Seleções",
+    "temporada": "2024",
+    "tipo": "Titular"
+  },
+  "@carinhacriativo (394).png": {
+    "time": "Argentina",
+    "liga": "Seleções",
+    "temporada": "2024",
+    "tipo": "Titular (Costas)"
+  },
+  "@carinhacriativo (395).png": {
+    "time": "Flamengo",
+    "liga": "Brasileirão",
+    "temporada": "Retrô",
+    "tipo": "Titular (Adidas Originals)"
+  },
+  "@carinhacriativo (396).png": {
+    "time": "Botafogo",
+    "liga": "Brasileirão",
+    "temporada": "2024",
+    "tipo": "Reserva"
+  },
+  "@carinhacriativo (397).png": {
+    "time": "Botafogo",
+    "liga": "Brasileirão",
+    "temporada": "2024",
+    "tipo": "Titular"
+  },
+  "@carinhacriativo (398).png": {
+    "time": "Botafogo",
+    "liga": "Brasileirão",
+    "temporada": "2024",
+    "tipo": "Reserva (Costas - Soares 9)"
+  },
+  "@carinhacriativo (399).png": {
+    "time": "Internacional",
+    "liga": "Brasileirão",
+    "temporada": "2024",
+    "tipo": "Titular"
+  },
+  "@carinhacriativo (400).png": {
+    "time": "Fluminense",
+    "liga": "Brasileirão",
+    "temporada": "2024",
+    "tipo": "Titular"
+  },
+  "@carinhacriativo (401).png": {
+    "time": "Grêmio",
+    "liga": "Brasileirão",
+    "temporada": "2024",
+    "tipo": "Titular (Costas - 10)"
+  },
+  "@carinhacriativo (402).png": {
+    "time": "Internacional",
+    "liga": "Brasileirão",
+    "temporada": "2024",
+    "tipo": "Titular 2"
+  },
+  "@carinhacriativo (403).png": {
+    "time": "Vasco",
+    "liga": "Brasileirão",
+    "temporada": "23/24",
+    "tipo": "Terceiro Uniforme (Costas)"
+  },
+  "@carinhacriativo (404).png": {
+    "time": "Juventus",
+    "liga": "Serie A",
+    "temporada": "24/25",
+    "tipo": "Terceiro Uniforme"
+  },
+  "@carinhacriativo (405).png": {
+    "time": "Flamengo",
+    "liga": "Brasileirão",
+    "temporada": "2024",
+    "tipo": "Treino (Azul)"
+  },
+  "@carinhacriativo (406).png": {
+    "time": "Flamengo",
+    "liga": "Brasileirão",
+    "temporada": "2024",
+    "tipo": "Quarto Uniforme (Blackout)"
+  },
+  "@carinhacriativo (407).png": {
+    "time": "Barcelona",
+    "liga": "La Liga",
+    "temporada": "15/16",
+    "tipo": "Retrô (Titular)"
+  }
+}
