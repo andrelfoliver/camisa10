@@ -16,6 +16,19 @@ const Admin = () => {
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   const OFFICIAL_CATEGORIES = ['Seleções', 'Brasileirão', 'Internacionais', 'Lançamentos', 'Retrô'];
+  const OFFICIAL_LEAGUES = [
+    'Seleções', 
+    'Brasileirão', 
+    'La Liga', 
+    'Premier League', 
+    'Serie A', 
+    'Ligue 1', 
+    'Bundesliga', 
+    'Liga Profesional', 
+    'Saudi Pro League', 
+    'MLS',
+    'Outras Ligas / Outros'
+  ];
   const [supplierTab, setSupplierTab] = useState('CAT_Lançamentos');
   const [showAddForm, setShowAddForm] = useState(false);
   
@@ -1194,7 +1207,16 @@ const Admin = () => {
                 </div>
                 <div style={{ flex: 1 }}>
                   <label style={{ display: 'block', marginBottom: '0.5rem', color: 'var(--text-muted)', fontSize: '0.9rem' }}>Liga</label>
-                  <input type="text" value={newProduct.league} onChange={e => setNewProduct({...newProduct, league: e.target.value})} placeholder="Ex: La Liga" style={{ width: '100%', padding: '0.8rem 1rem', background: 'var(--bg-color)', color: '#fff', border: '1px solid var(--border-color)', borderRadius: 'var(--radius-sm)' }} />
+                  <select 
+                    value={newProduct.league} 
+                    onChange={e => setNewProduct({...newProduct, league: e.target.value})} 
+                    style={{ width: '100%', padding: '0.8rem 1rem', background: 'var(--bg-color)', color: '#fff', border: '1px solid var(--border-color)', borderRadius: 'var(--radius-sm)' }}
+                  >
+                    <option value="">Selecione a Liga...</option>
+                    {OFFICIAL_LEAGUES.map(league => (
+                      <option key={league} value={league}>{league}</option>
+                    ))}
+                  </select>
                 </div>
                     <div style={{ flex: 1 }}>
                       <label style={{ display: 'block', marginBottom: '0.5rem', color: 'var(--text-muted)', fontSize: '0.9rem' }}>Time</label>
@@ -1204,9 +1226,12 @@ const Admin = () => {
                         style={{ width: '100%', padding: '0.8rem 1rem', background: 'var(--bg-color)', color: '#fff', border: '1px solid var(--border-color)', borderRadius: 'var(--radius-sm)' }}
                       >
                         <option value="">Nacional / Outros</option>
-                        {teams.map(team => (
-                          <option key={team.id} value={team.name}>{team.name}</option>
-                        ))}
+                        {teams
+                          .filter(team => !newProduct.league || team.league === newProduct.league)
+                          .map(team => (
+                            <option key={team.id} value={team.name}>{team.name}</option>
+                          ))
+                        }
                       </select>
                     </div>
               </div>
@@ -1335,7 +1360,16 @@ const Admin = () => {
               <div style={{ display: 'flex', gap: '1rem' }}>
                 <div style={{ flex: 1 }}>
                   <label style={{ display: 'block', marginBottom: '0.5rem', color: 'var(--text-muted)', fontSize: '0.9rem' }}>Liga</label>
-                  <input type="text" value={editingProduct.league} onChange={e => setEditingProduct({...editingProduct, league: e.target.value})} placeholder="Ex: La Liga" style={{ width: '100%', padding: '0.8rem 1rem', background: 'var(--bg-color)', color: '#fff', border: '1px solid var(--border-color)', borderRadius: 'var(--radius-sm)' }} />
+                  <select 
+                    value={editingProduct.league} 
+                    onChange={e => setEditingProduct({...editingProduct, league: e.target.value})} 
+                    style={{ width: '100%', padding: '0.8rem 1rem', background: 'var(--bg-color)', color: '#fff', border: '1px solid var(--border-color)', borderRadius: 'var(--radius-sm)' }}
+                  >
+                    <option value="">Selecione a Liga...</option>
+                    {OFFICIAL_LEAGUES.map(league => (
+                      <option key={league} value={league}>{league}</option>
+                    ))}
+                  </select>
                 </div>
                 <div style={{ flex: 1 }}>
                   <label style={{ display: 'block', marginBottom: '0.5rem', color: 'var(--text-muted)', fontSize: '0.9rem' }}>Time</label>
@@ -1345,9 +1379,12 @@ const Admin = () => {
                     style={{ width: '100%', padding: '0.8rem 1rem', background: 'var(--bg-color)', color: '#fff', border: '1px solid var(--border-color)', borderRadius: 'var(--radius-sm)' }}
                   >
                     <option value="">Nacional / Outros</option>
-                    {teams.map(team => (
-                      <option key={team.id} value={team.name}>{team.name}</option>
-                    ))}
+                    {teams
+                      .filter(team => !editingProduct.league || team.league === editingProduct.league)
+                      .map(team => (
+                        <option key={team.id} value={team.name}>{team.name}</option>
+                      ))
+                    }
                   </select>
                 </div>
               </div>
