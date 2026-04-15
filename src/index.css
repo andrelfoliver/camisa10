@@ -316,7 +316,7 @@ button {
   content: '';
   position: absolute;
   inset: 0;
-  background: var(--hero-bg-url, transparent) center/cover no-repeat;
+  background: var(--hero-bg-url, transparent) top center/cover no-repeat;
   z-index: 0;
 }
 
@@ -348,7 +348,7 @@ button {
   width: 100%;
   max-width: 1400px;
   margin: 0 auto;
-  padding: 60px 4rem 2rem 4rem;
+  padding: 100px 4rem 2rem 4rem;
   display: flex;
   justify-content: space-between;
   align-items: center;
