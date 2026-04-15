@@ -96,19 +96,37 @@ const Home = () => {
   
   useEffect(() => {
     async function fetchHomeData() {
-      const savedQueridinhas = localStorage.getItem('queridinhas_ids');
-      const savedBestSeller = localStorage.getItem('best_seller_id');
-      const savedCatalog = localStorage.getItem('catalog_ids');
+      // Buscar configurações globais na nuvem (Supabase)
+      const { data: settingsData } = await supabase.from('store_settings').select('*').in('key', ['queridinhas_ids', 'best_seller_id', 'catalog_ids']);
       
-      let qIds = savedQueridinhas ? JSON.parse(savedQueridinhas) : [];
-      let bId = savedBestSeller ? JSON.parse(savedBestSeller) : null;
-      let cIds = savedCatalog ? JSON.parse(savedCatalog) : [];
+      let qIds = [];
+      let bId = null;
+      let cIds = [];
+
+      if (settingsData) {
+        settingsData.forEach(s => {
+          try {
+            const val = JSON.parse(s.value);
+            if (s.key === 'queridinhas_ids') qIds = val;
+            if (s.key === 'best_seller_id') bId = val;
+            if (s.key === 'catalog_ids') cIds = val;
+          } catch(e) {}
+        });
+      }
+
+      // Fallback para localStorage (opcional, para transição suave)
+      if (qIds.length === 0) {
+        const localQ = localStorage.getItem('queridinhas_ids');
+        if (localQ) qIds = JSON.parse(localQ);
+      }
+      if (!bId) {
+        const localB = localStorage.getItem('best_seller_id');
+        if (localB) bId = JSON.parse(localB);
+      }
 
       if(bId || qIds.length > 0) {
         let supabaseData = [];
-        // Filtramos para garantir que apenas IDs numéricos (ou que pareçam IDs válidos para o seu banco) sejam enviados
-        // Isso evita o erro 400 caso existam lixos ou IDs de mocks no localStorage
-        const rawIds = [...new Set([...qIds, bId ? [bId] : []].flat())];
+        const rawIds = [...new Set([...(Array.isArray(qIds) ? qIds : []), bId ? [bId] : []].flat())];
         const fetchIds = rawIds
           .map(id => {
             const parsed = parseInt(id);
@@ -126,7 +144,7 @@ const Home = () => {
           setBestSeller(supabaseData.find(d => String(d.id) === String(bId)));
         }
 
-        if (qIds.length > 0) {
+        if (qIds && qIds.length > 0) {
           const sortedQ = qIds.map(id => supabaseData.find(d => String(d.id) === String(id))).filter(Boolean);
           setQueridinhas(sortedQ);
         }

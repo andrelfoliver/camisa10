@@ -137,14 +137,7 @@ const Admin = () => {
   };
 
   useEffect(() => {
-    const savedQueridinhas = localStorage.getItem('queridinhas_ids');
-    const savedBestSeller = localStorage.getItem('best_seller_id');
-    const savedCatalog = localStorage.getItem('catalog_ids');
-    
-    // Forçando a conversão de todos os IDs carregados para STRING para evitar nulls visuais
-    if (savedQueridinhas) setQueridinhasIds(JSON.parse(savedQueridinhas).map(String));
-    if (savedBestSeller) setBestSellerId(String(JSON.parse(savedBestSeller)));
-    if (savedCatalog) setCatalogIds(JSON.parse(savedCatalog).map(String));
+    // As configurações agora são carregadas via loadSettings() do Supabase
     
     async function loadProducts() {
       const { data } = await supabase.from('products').select('*').order('id', { ascending: false });
@@ -169,6 +162,19 @@ const Admin = () => {
           const parsed = JSON.parse(pricingData.value);
           setPricing(parsed);
         } catch(e) {}
+      }
+
+      // Novas configurações na nuvem
+      const { data: cloudSettings } = await supabase.from('store_settings').select('*').in('key', ['queridinhas_ids', 'best_seller_id', 'catalog_ids']);
+      if(cloudSettings) {
+        cloudSettings.forEach(s => {
+          try {
+            const val = JSON.parse(s.value);
+            if(s.key === 'queridinhas_ids') setQueridinhasIds(val.map(String));
+            if(s.key === 'best_seller_id') setBestSellerId(String(val));
+            if(s.key === 'catalog_ids') setCatalogIds(val.map(String));
+          } catch(e) {}
+        });
       }
     }
 
@@ -374,10 +380,25 @@ const Admin = () => {
     setSaved(false);
   };
 
-  const saveConfiguration = () => {
-    localStorage.setItem('queridinhas_ids', JSON.stringify(queridinhasIds));
-    localStorage.setItem('best_seller_id', JSON.stringify(bestSellerId));
-    localStorage.setItem('catalog_ids', JSON.stringify(catalogIds));
+  const saveConfiguration = async () => {
+    setSaved(false);
+    
+    const settings = [
+      { key: 'queridinhas_ids', value: JSON.stringify(queridinhasIds) },
+      { key: 'best_seller_id', value: JSON.stringify(bestSellerId) },
+      { key: 'catalog_ids', value: JSON.stringify(catalogIds) }
+    ];
+
+    const { error } = await supabase.from('store_settings').upsert(settings, { onConflict: 'key' });
+    
+    if (error) {
+      console.error("Erro ao salvar configurações:", error);
+      // Fallback manual caso upsert falhe
+      for (const s of settings) {
+        await supabase.from('store_settings').upsert(s, { onConflict: 'key' });
+      }
+    }
+    
     setSaved(true);
     setTimeout(() => setSaved(false), 3000);
   };
