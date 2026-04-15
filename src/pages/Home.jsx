@@ -97,21 +97,31 @@ const Home = () => {
   useEffect(() => {
     async function fetchHomeData() {
       // Buscar configurações globais na nuvem (Supabase)
-      const { data: settingsData } = await supabase.from('store_settings').select('*').in('key', ['queridinhas_ids', 'best_seller_id', 'catalog_ids']);
+      const { data: settingsData, error: settingsError } = await supabase.from('store_settings').select('*').in('key', ['queridinhas_ids', 'best_seller_id', 'catalog_ids']);
       
+      if (settingsError) {
+        console.error("❌ Erro ao buscar configurações no Supabase:", settingsError);
+      } else {
+        console.log("✅ Configurações carregadas do Supabase:", settingsData);
+      }
+
       let qIds = [];
       let bId = null;
       let cIds = [];
 
-      if (settingsData) {
+      if (settingsData && settingsData.length > 0) {
         settingsData.forEach(s => {
           try {
             const val = JSON.parse(s.value);
             if (s.key === 'queridinhas_ids') qIds = val;
             if (s.key === 'best_seller_id') bId = val;
             if (s.key === 'catalog_ids') cIds = val;
-          } catch(e) {}
+          } catch(e) {
+            console.error(`❌ Erro ao processar chave ${s.key}:`, e);
+          }
         });
+      } else {
+        console.warn("⚠️ Nenhuma configuração encontrada no Supabase para as chaves solicitadas.");
       }
 
       // Fallback para localStorage (opcional, para transição suave)
