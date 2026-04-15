@@ -5,15 +5,13 @@ import ProductCard from '../components/ProductCard';
 import { supabase } from '../services/supabase';
 import { ShieldCheck, Truck, Star, Package, Lock, CheckCircle2, AlertTriangle, ChevronDown, ChevronUp, ChevronRight } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-// O arquivo teams.js agora é usado apenas como fallback ou referência inicial
-// import { BR_2026_TEAMS } from '../data/teams';
-
+import { useCart } from '../context/CartContext';
 const FAQItem = ({ question, answer }) => {
   const [isOpen, setIsOpen] = useState(false);
   return (
     <div style={{ borderBottom: '1px solid var(--border-color)', padding: '1rem 0' }}>
-      <button 
-        onClick={() => setIsOpen(!isOpen)} 
+      <button
+        onClick={() => setIsOpen(!isOpen)}
         style={{ width: '100%', display: 'flex', justifyContent: 'space-between', alignItems: 'center', textAlign: 'left', fontWeight: 600, fontSize: '1.1rem', color: 'var(--text-main)', background: 'transparent', border: 'none', cursor: 'pointer' }}
       >
         {question}
@@ -27,17 +25,17 @@ const FAQItem = ({ question, answer }) => {
 const ProductShowcaseCard = ({ product }) => {
   const navigate = useNavigate();
 
-  if(!product) return null;
+  if (!product) return null;
 
   return (
     <div style={{ margin: '0 auto', width: '100%', maxWidth: '420px' }}>
-      <div 
+      <div
         onClick={() => navigate(`/produto/${product.id}`)}
-        style={{ 
-          background: 'var(--surface-color)', 
+        style={{
+          background: 'var(--surface-color)',
           border: '1px solid var(--border-color)',
-          padding: '2rem', 
-          borderRadius: 'var(--radius-lg)', 
+          padding: '2rem',
+          borderRadius: 'var(--radius-lg)',
           cursor: 'pointer',
           position: 'relative',
           boxShadow: '0 20px 40px rgba(0,0,0,0.5)'
@@ -77,6 +75,7 @@ const ProductShowcaseCard = ({ product }) => {
 
 
 const Home = () => {
+  const { pricingConfig } = useCart();
   // Estado inicial limpo - O site agora é 100% dinâmico via Supabase
   const [bestSeller, setBestSeller] = useState(null);
   const [queridinhas, setQueridinhas] = useState([]);
@@ -85,7 +84,7 @@ const Home = () => {
   const [activeTeamFilter, setActiveTeamFilter] = useState(null);
   const [allProductsData, setAllProductsData] = useState([]);
   const [dbTeams, setDbTeams] = useState([]);
-  
+
   const [storeSections, setStoreSections] = useState({
     'Seleções': [],
     'Brasileirão': [],
@@ -93,12 +92,12 @@ const Home = () => {
     'Lançamentos': [],
     'Retrô': []
   });
-  
+
   useEffect(() => {
     async function fetchHomeData() {
       // Buscar configurações globais na nuvem (Supabase)
       const { data: settingsData, error: settingsError } = await supabase.from('store_settings').select('*').in('key', ['queridinhas_ids', 'best_seller_id', 'catalog_ids']);
-      
+
       if (settingsError) {
         console.error("❌ Erro ao buscar configurações no Supabase:", settingsError);
       } else {
@@ -116,7 +115,7 @@ const Home = () => {
             if (s.key === 'queridinhas_ids') qIds = val;
             if (s.key === 'best_seller_id') bId = val;
             if (s.key === 'catalog_ids') cIds = val;
-          } catch(e) {
+          } catch (e) {
             console.error(`❌ Erro ao processar chave ${s.key}:`, e);
           }
         });
@@ -134,7 +133,7 @@ const Home = () => {
         if (localB) bId = JSON.parse(localB);
       }
 
-      if(bId || qIds.length > 0) {
+      if (bId || qIds.length > 0) {
         let supabaseData = [];
         const rawIds = [...new Set([...(Array.isArray(qIds) ? qIds : []), bId ? [bId] : []].flat())];
         const fetchIds = rawIds
@@ -143,7 +142,7 @@ const Home = () => {
             return isNaN(parsed) ? null : parsed;
           })
           .filter(Boolean);
-        
+
         if (fetchIds.length > 0) {
           const { data, error } = await supabase.from('products').select('*').in('id', fetchIds);
           if (data) supabaseData = data;
@@ -162,49 +161,49 @@ const Home = () => {
 
       const { data: dbData } = await supabase.from('products').select('*').order('id', { ascending: false });
       const allUnified = dbData || [];
-      
-       const { data: teamsData } = await supabase.from('teams').select('*').order('name');
-       if(teamsData) setDbTeams(teamsData);
 
-       const mapCat = {
-         'Seleções': [],
-         'Brasileirão': [],
-         'Internacionais': [],
-         'Lançamentos': [],
-         'Retrô': []
-       };
-       
-       allUnified.forEach(p => {
-         const cat = (p.category || '').toLowerCase();
-         const pName = (p.name || '').toLowerCase();
-         const pTeam = (p.team || '').toLowerCase();
-         
-         const isClub = (teamsData || []).some(t => t.name.toLowerCase() === pTeam);
-         const isBrasileirao = cat === 'brasileirão' || cat === 'brasileirao' || cat.includes('brasileiro') || (p.league && p.league.toLowerCase() === 'brasileirão');
-         const isSelecao = cat === 'seleções' || cat === 'selecoes' || pName.includes('seleção') || pName.includes('selecao') || (p.league && p.league.toLowerCase() === 'seleções');
-         const isRetro = cat === 'retrô' || cat.includes('retro') || (p.version || '').toLowerCase().includes('retrô') || pName.includes('retrô');
-         const isInternacional = cat === 'internacionais' || cat.includes('europa') || cat.includes('europe') || (p.league && p.league !== 'Brasileirão' && p.league !== 'Seleções');
+      const { data: teamsData } = await supabase.from('teams').select('*').order('name');
+      if (teamsData) setDbTeams(teamsData);
 
-         // Permitir que uma camisa apareça em mais de uma sessão na Home
-         let added = false;
-         if (isBrasileirao) { mapCat['Brasileirão'].push(p); added = true; }
-         if (isSelecao) { mapCat['Seleções'].push(p); added = true; }
-         if (isInternacional && !isSelecao && !isBrasileirao) { mapCat['Internacionais'].push(p); added = true; }
-         if (isRetro) { mapCat['Retrô'].push(p); added = true; }
-         if (cat === 'lançamentos' || cat.includes('lançament')) { mapCat['Lançamentos'].push(p); added = true; }
-         
-         if (!added) mapCat['Lançamentos'].push(p); // Fallback
-       });
+      const mapCat = {
+        'Seleções': [],
+        'Brasileirão': [],
+        'Internacionais': [],
+        'Lançamentos': [],
+        'Retrô': []
+      };
 
-       setStoreSections(mapCat);
-       setAllProductsData(allUnified);
+      allUnified.forEach(p => {
+        const cat = (p.category || '').toLowerCase();
+        const pName = (p.name || '').toLowerCase();
+        const pTeam = (p.team || '').toLowerCase();
+
+        const isClub = (teamsData || []).some(t => t.name.toLowerCase() === pTeam);
+        const isBrasileirao = cat === 'brasileirão' || cat === 'brasileirao' || cat.includes('brasileiro') || (p.league && p.league.toLowerCase() === 'brasileirão');
+        const isSelecao = cat === 'seleções' || cat === 'selecoes' || pName.includes('seleção') || pName.includes('selecao') || (p.league && p.league.toLowerCase() === 'seleções');
+        const isRetro = cat === 'retrô' || cat.includes('retro') || (p.version || '').toLowerCase().includes('retrô') || pName.includes('retrô');
+        const isInternacional = cat === 'internacionais' || cat.includes('europa') || cat.includes('europe') || (p.league && p.league !== 'Brasileirão' && p.league !== 'Seleções');
+
+        // Permitir que uma camisa apareça em mais de uma sessão na Home
+        let added = false;
+        if (isBrasileirao) { mapCat['Brasileirão'].push(p); added = true; }
+        if (isSelecao) { mapCat['Seleções'].push(p); added = true; }
+        if (isInternacional && !isSelecao && !isBrasileirao) { mapCat['Internacionais'].push(p); added = true; }
+        if (isRetro) { mapCat['Retrô'].push(p); added = true; }
+        if (cat === 'lançamentos' || cat.includes('lançament')) { mapCat['Lançamentos'].push(p); added = true; }
+
+        if (!added) mapCat['Lançamentos'].push(p); // Fallback
+      });
+
+      setStoreSections(mapCat);
+      setAllProductsData(allUnified);
 
       setLoading(false);
     }
     fetchHomeData();
   }, []);
 
-  const activeTeams = dbTeams.filter(team => 
+  const activeTeams = dbTeams.filter(team =>
     team.league !== 'Seleções' && allProductsData.some(p => (p.team || '').toLowerCase() === team.name.toLowerCase())
   );
 
@@ -225,29 +224,29 @@ const Home = () => {
       {activeTeamFilter && (
         <section id="filtro-time" className="section-padding" style={{ background: 'linear-gradient(to bottom, #000, var(--surface-color))', borderBottom: '2px solid var(--accent-color)' }}>
           <div className="container">
-             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
-                <h2 style={{ fontSize: '3rem', fontWeight: 900, color: 'var(--accent-color)' }}>
-                  {activeTeamFilter.toUpperCase()}
-                </h2>
-                <button 
-                  onClick={() => setActiveTeamFilter(null)}
-                  style={{ background: 'transparent', color: 'var(--text-muted)', border: '1px solid var(--border-color)', padding: '0.6rem 1.2rem', borderRadius: '4px', fontWeight: 700, cursor: 'pointer' }}
-                >
-                  Ver Todos os Clubes
-                </button>
-             </div>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
+              <h2 style={{ fontSize: '3rem', fontWeight: 900, color: 'var(--accent-color)' }}>
+                {activeTeamFilter.toUpperCase()}
+              </h2>
+              <button
+                onClick={() => setActiveTeamFilter(null)}
+                style={{ background: 'transparent', color: 'var(--text-muted)', border: '1px solid var(--border-color)', padding: '0.6rem 1.2rem', borderRadius: '4px', fontWeight: 700, cursor: 'pointer' }}
+              >
+                Ver Todos os Clubes
+              </button>
+            </div>
 
-             <div className="grid-products">
-                {allProductsData
-                  .filter(p => p.team?.toLowerCase().includes(activeTeamFilter.toLowerCase()) || p.name?.toLowerCase().includes(activeTeamFilter.toLowerCase()))
-                  .map(product => <ProductCard key={product.id} product={product} />)
-                }
-                {allProductsData.filter(p => p.team?.toLowerCase().includes(activeTeamFilter.toLowerCase()) || p.name?.toLowerCase().includes(activeTeamFilter.toLowerCase())).length === 0 && (
-                  <div style={{ gridColumn: '1 / -1', textAlign: 'center', padding: '4rem', color: 'var(--text-muted)', border: '1px dashed var(--border-color)', borderRadius: '12px' }}>
-                    Nenhuma camisa do {activeTeamFilter} encontrada no momento. Tente outro clube!
-                  </div>
-                )}
-             </div>
+            <div className="grid-products">
+              {allProductsData
+                .filter(p => p.team?.toLowerCase().includes(activeTeamFilter.toLowerCase()) || p.name?.toLowerCase().includes(activeTeamFilter.toLowerCase()))
+                .map(product => <ProductCard key={product.id} product={product} />)
+              }
+              {allProductsData.filter(p => p.team?.toLowerCase().includes(activeTeamFilter.toLowerCase()) || p.name?.toLowerCase().includes(activeTeamFilter.toLowerCase())).length === 0 && (
+                <div style={{ gridColumn: '1 / -1', textAlign: 'center', padding: '4rem', color: 'var(--text-muted)', border: '1px dashed var(--border-color)', borderRadius: '12px' }}>
+                  Nenhuma camisa do {activeTeamFilter} encontrada no momento. Tente outro clube!
+                </div>
+              )}
+            </div>
           </div>
         </section>
       )}
@@ -255,7 +254,7 @@ const Home = () => {
       {/* 2. PROVA E CONFIANÇA (ICONOS MOVIDOS PARA O TOPO) */}
       <section className="section-padding" style={{ background: 'var(--surface-color)', borderBottom: '1px solid var(--border-color)' }}>
         <div className="container" style={{ textAlign: 'center' }}>
-          <p style={{ textAlign: 'center', color: 'var(--text-muted)', marginBottom: '2rem', fontSize: '1.2rem' }}>Já somos <strong style={{color: 'var(--accent-color)'}}>+100 clientes</strong> vestindo a paixão no Canadá! 🍁</p>
+          <p style={{ textAlign: 'center', color: 'var(--text-muted)', marginBottom: '2rem', fontSize: '1.2rem' }}>Já somos <strong style={{ color: 'var(--accent-color)' }}>+200 clientes</strong> vestindo a paixão no Canadá! 🍁</p>
           <div style={{ display: 'flex', justifyContent: 'space-around', flexWrap: 'wrap', gap: '2rem' }}>
             <div style={{ flex: 1, minWidth: '200px' }}>
               <Truck size={40} color="var(--accent-color)" style={{ margin: '0 auto 1rem' }} />
@@ -278,7 +277,7 @@ const Home = () => {
         <div className="container" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
           <h2 style={{ fontSize: '3rem', textAlign: 'center', marginBottom: '3rem' }}>A Escolha dos Campeões 🏆</h2>
           {!loading && <ProductShowcaseCard product={bestSeller} />}
-          
+
           <div style={{ marginTop: '3rem', display: 'flex', alignItems: 'center', gap: '0.8rem', background: 'rgba(239, 68, 68, 0.1)', border: '1px solid #EF4444', padding: '1.5rem', borderRadius: 'var(--radius-md)', maxWidth: '600px', width: '100%' }}>
             <AlertTriangle color="#EF4444" size={30} />
             <div style={{ display: 'flex', flexDirection: 'column' }}>
@@ -294,7 +293,7 @@ const Home = () => {
         <div className="container" style={{ paddingLeft: 0, paddingRight: 0 }}>
           <h2 style={{ fontSize: '2.5rem', textAlign: 'center', marginBottom: '1rem', color: '#fff' }}>As Queridinhas 🇧🇷</h2>
           <p style={{ textAlign: 'center', color: 'var(--text-muted)', marginBottom: '3rem', fontSize: '1.2rem' }}>Deslize para ver os mantos sagrados mais pedidos.</p>
-          
+
           <div className="hide-scrollbar" style={{ display: 'flex', overflowX: 'auto', gap: '1.5rem', padding: '0 1.5rem 2rem' }}>
             {!loading && queridinhas.map(product => (
               <div key={product.id} style={{ minWidth: '220px', width: '220px', flexShrink: 0 }}>
@@ -309,47 +308,68 @@ const Home = () => {
       <section className="section-padding container">
         <div style={{ background: 'linear-gradient(135deg, rgba(255,184,28,0.1) 0%, rgba(0,0,0,0) 100%)', border: '1px solid var(--accent-color)', borderRadius: 'var(--radius-lg)', padding: '3rem', textAlign: 'center' }}>
           <h2 style={{ fontSize: '2.5rem', marginBottom: '2rem', color: '#EF4444', fontWeight: 800 }}>🔥 OFERTA ESPECIAL</h2>
-          <div style={{ display: 'flex', justifyContent: 'center', gap: '2rem', flexWrap: 'wrap' }}>
-            {/* Combo 2 Camisas */}
-            <div className="glass-panel" style={{ flex: 1, minWidth: '250px', padding: '2rem', borderRadius: 'var(--radius-md)', display: 'flex', flexDirection: 'column' }}>
-              <h3 style={{ fontSize: '1.5rem', marginBottom: '1rem' }}>2 Camisas</h3>
-              <p style={{ color: 'var(--text-muted)', fontSize: '1rem', marginBottom: '0.2rem' }}>De <del>$149.80</del> por apenas</p>
-              <p style={{ fontSize: '3rem', fontWeight: 800, color: 'var(--text-main)', marginBottom: '1rem', lineHeight: 1 }}>$119.80</p>
-              
-              <div style={{ background: 'rgba(255,255,255,0.05)', padding: '0.8rem', borderRadius: '8px', marginBottom: '1.5rem', fontSize: '0.95rem' }}>
-                <span style={{ display: 'block', marginBottom: '0.2rem' }}>Sai por <strong>$59.90</strong> cada</span>
-                <span style={{ color: '#10B981', fontWeight: 700 }}>💰 Economia de $30.00</span>
-              </div>
-              
-              <div style={{ marginTop: 'auto' }}>
-                <a href="#destaque" className="btn-secondary" style={{ width: '100%', justifyContent: 'center' }}>Aproveitar oferta</a>
-              </div>
-            </div>
+          
+          {(() => {
+            const basePromoPrice = bestSeller?.price || 109.90;
+            const discountAmount2 = (pricingConfig?.discounts || []).find(d => d.qty === 2)?.amount || 15;
+            const discountAmount3 = (pricingConfig?.discounts || []).find(d => d.qty === 3)?.amount || 20;
 
-            {/* Combo 3 Camisas */}
-            <div className="glass-panel" style={{ flex: 1, minWidth: '250px', padding: '2rem', borderRadius: 'var(--radius-md)', border: '2px solid var(--accent-color)', position: 'relative', display: 'flex', flexDirection: 'column' }}>
-              <div className="badge" style={{ background: 'var(--accent-color)', color: '#000', left: '50%', transform: 'translate(-50%, -150%)', width: 'max-content' }}>Maior Desconto</div>
-              <h3 style={{ fontSize: '1.5rem', marginBottom: '1rem' }}>3 Camisas</h3>
-              <p style={{ color: 'var(--text-muted)', fontSize: '1rem', marginBottom: '0.2rem' }}>De <del>$224.70</del> por apenas</p>
-              <p style={{ fontSize: '3rem', fontWeight: 800, color: 'var(--accent-color)', marginBottom: '1rem', lineHeight: 1 }}>$164.70</p>
-              
-              <div style={{ background: 'rgba(219, 254, 135, 0.1)', border: '1px solid rgba(219, 254, 135, 0.3)', padding: '0.8rem', borderRadius: '8px', marginBottom: '1.5rem', fontSize: '0.95rem' }}>
-                <span style={{ display: 'block', color: 'var(--text-main)', marginBottom: '0.2rem' }}>Sai por só <strong>$54.90</strong> cada</span>
-                <span style={{ color: '#10B981', fontWeight: 700 }}>🔥 Você economiza $60.00!</span>
-              </div>
+            const normalPrice2 = basePromoPrice * 2;
+            const discountPerUnit2 = discountAmount2;
+            const finalPricePerUnit2 = basePromoPrice - discountPerUnit2;
+            const finalTotal2 = finalPricePerUnit2 * 2;
+            const savings2 = discountPerUnit2 * 2;
 
-              <div style={{ marginTop: 'auto' }}>
-                <a href="#destaque" className="btn-primary" style={{ width: '100%', justifyContent: 'center' }}>Aproveitar oferta</a>
+            const normalPrice3 = basePromoPrice * 3;
+            const discountPerUnit3 = discountAmount3;
+            const finalPricePerUnit3 = basePromoPrice - discountPerUnit3;
+            const finalTotal3 = finalPricePerUnit3 * 3;
+            const savings3 = discountPerUnit3 * 3;
+
+            return (
+              <div style={{ display: 'flex', justifyContent: 'center', gap: '2rem', flexWrap: 'wrap' }}>
+                {/* Combo 2 Camisas */}
+                <div className="glass-panel" style={{ flex: 1, minWidth: '250px', padding: '2rem', borderRadius: 'var(--radius-md)', display: 'flex', flexDirection: 'column' }}>
+                  <h3 style={{ fontSize: '1.5rem', marginBottom: '1rem' }}>2 Camisas</h3>
+                  <p style={{ color: 'var(--text-muted)', fontSize: '1rem', marginBottom: '0.2rem' }}>De <del>${normalPrice2.toFixed(2)}</del> por apenas</p>
+                  <p style={{ fontSize: '3rem', fontWeight: 800, color: 'var(--text-main)', marginBottom: '1rem', lineHeight: 1 }}>${finalTotal2.toFixed(2)}</p>
+
+                  <div style={{ background: 'rgba(255,255,255,0.05)', padding: '0.8rem', borderRadius: '8px', marginBottom: '1.5rem', fontSize: '0.95rem' }}>
+                    <span style={{ display: 'block', marginBottom: '0.2rem' }}>Sai por <strong>${finalPricePerUnit2.toFixed(2)}</strong> cada</span>
+                    <span style={{ color: '#10B981', fontWeight: 700 }}>💰 Economia de ${savings2.toFixed(2)}</span>
+                  </div>
+
+                  <div style={{ marginTop: 'auto' }}>
+                    <a href="#catalogo" className="btn-secondary" style={{ width: '100%', justifyContent: 'center' }}>Aplicar desconto</a>
+                  </div>
+                </div>
+
+                {/* Combo 3 Camisas */}
+                <div className="glass-panel" style={{ flex: 1, minWidth: '250px', padding: '2rem', borderRadius: 'var(--radius-md)', border: '2px solid var(--accent-color)', position: 'relative', display: 'flex', flexDirection: 'column' }}>
+                  <div className="badge" style={{ background: 'var(--accent-color)', color: '#000', left: '50%', transform: 'translate(-50%, -150%)', width: 'max-content' }}>Maior Desconto</div>
+                  <h3 style={{ fontSize: '1.5rem', marginBottom: '1rem' }}>3 Camisas</h3>
+                  <p style={{ color: 'var(--text-muted)', fontSize: '1rem', marginBottom: '0.2rem' }}>De <del>${normalPrice3.toFixed(2)}</del> por apenas</p>
+                  <p style={{ fontSize: '3rem', fontWeight: 800, color: 'var(--accent-color)', marginBottom: '1rem', lineHeight: 1 }}>${finalTotal3.toFixed(2)}</p>
+
+                  <div style={{ background: 'rgba(219, 254, 135, 0.1)', border: '1px solid rgba(219, 254, 135, 0.3)', padding: '0.8rem', borderRadius: '8px', marginBottom: '1.5rem', fontSize: '0.95rem' }}>
+                    <span style={{ display: 'block', color: 'var(--text-main)', marginBottom: '0.2rem' }}>Sai por só <strong>${finalPricePerUnit3.toFixed(2)}</strong> cada</span>
+                    <span style={{ color: '#10B981', fontWeight: 700 }}>🔥 Você economiza ${savings3.toFixed(2)}!</span>
+                  </div>
+
+                  <div style={{ marginTop: 'auto' }}>
+                    <a href="#catalogo" className="btn-primary" style={{ width: '100%', justifyContent: 'center' }}>Aplicar desconto</a>
+                  </div>
+                </div>
               </div>
-            </div>
-          </div>
-          <p style={{ marginTop: '2rem', color: 'var(--text-muted)' }}>* Adicione a quantidade na sacola e o desconto será aplicado magicamente!</p>
+            );
+          })()}
+          <p style={{ marginTop: '2rem', color: 'var(--text-muted)' }}>* Baseado na camisa <strong style={{color:'var(--accent-color)'}}>{bestSeller ? bestSeller.name : 'Padrão'}</strong>. O desconto se aplica a <strong>qualquer</strong> peça. Adicione à sacola e a mágica acontece!</p>
         </div>
       </section>
 
       {/* 6. CARROSSEIS CATEGORIAS OFICIAIS */}
       <section id="catalogo" className="section-padding container">
-        
+
         {Object.entries(storeSections).map(([catName, products]) => (
           <div key={catName} style={{ marginBottom: '4rem' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: '1.5rem' }}>
@@ -357,9 +377,9 @@ const Home = () => {
                 <h2 style={{ fontSize: '2rem', color: '#fff' }}>{catName}</h2>
                 <p style={{ color: 'var(--text-muted)' }}>As melhores opções em {catName.toLowerCase()}</p>
               </div>
-              <a href={`/colecao/${catName.toLowerCase().replace('ç','c').replace('õ','o').replace('ã','a')}`} style={{ color: 'var(--accent-color)', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '0.5rem' }}>Ver todas <ChevronRight size={16} /></a>
+              <a href={`/colecao/${catName.toLowerCase().replace('ç', 'c').replace('õ', 'o').replace('ã', 'a')}`} style={{ color: 'var(--accent-color)', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '0.5rem' }}>Ver todas <ChevronRight size={16} /></a>
             </div>
-            
+
             <div className="hide-scrollbar" style={{ display: 'flex', overflowX: 'auto', gap: '1.5rem', paddingBottom: '1.5rem' }}>
               {!loading && products.map(product => (
                 <div key={`section-${product.id}`} style={{ minWidth: '220px', width: '220px', flexShrink: 0 }}>
@@ -425,13 +445,13 @@ const Home = () => {
                 <div style={{ position: 'absolute', top: '-12px', right: '20px', background: 'var(--accent-color)', color: '#000', fontSize: '0.7rem', fontWeight: 900, padding: '0.3rem 0.8rem', borderRadius: '4px', textTransform: 'uppercase' }}>
                   Cliente desde {new Date(t.date).getFullYear()}
                 </div>
-                
+
                 <div style={{ color: '#FFB81C', marginBottom: '1.2rem', display: 'flex', gap: '2px' }}>
                   {Array.from({ length: t.rating }).map((_, i) => <Star key={i} size={16} fill="#FFB81C" />)}
                 </div>
 
                 <p style={{ fontSize: '1.1rem', marginBottom: '2rem', fontStyle: 'italic', color: '#fff', lineHeight: 1.6 }}>"{t.content}"</p>
-                
+
                 <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
                   {t.avatar_url ? (
                     <img src={t.avatar_url} alt={t.name} style={{ width: '40px', height: '40px', borderRadius: '50%', border: '2px solid var(--accent-color)' }} />
@@ -449,16 +469,16 @@ const Home = () => {
             ))
           ) : (
             // Fallback caso não tenha nada no banco ainda
-            [1,2,3].map(i => (
+            [1, 2, 3].map(i => (
               <div key={i} style={{ minWidth: '320px', background: 'var(--surface-color)', padding: '2.5rem', borderRadius: 'var(--radius-lg)', border: '1px solid var(--border-color)', textAlign: 'left', opacity: 0.5 }}>
-                 <p style={{ color: 'var(--text-muted)' }}>Depoimento carregando...</p>
+                <p style={{ color: 'var(--text-muted)' }}>Depoimento carregando...</p>
               </div>
             ))
           )}
         </div>
-        
+
         <div style={{ display: 'flex', justifyContent: 'center', gap: '1rem', marginTop: '1rem' }}>
-           <p style={{ fontSize: '0.9rem', color: 'var(--text-muted)' }}>Deslize lateralmente para ler mais →</p>
+          <p style={{ fontSize: '0.9rem', color: 'var(--text-muted)' }}>Deslize lateralmente para ler mais →</p>
         </div>
       </section>
 

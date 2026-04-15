@@ -23,21 +23,23 @@ const logos = {
 
 async function fixLogos() {
   for (const [name, logoUrl] of Object.entries(logos)) {
-    const query = new URLSearchParams({ name: `eq.${name}` }).toString();
+    const query = `name=eq.${encodeURIComponent(name)}`;
     const headers = { 
       'apikey': key, 
       'Authorization': `Bearer ${key}`,
       'Content-Type': 'application/json',
-      'Prefer': 'return=minimal'
+      'Prefer': 'return=representation'
     };
     
     try {
+      console.log(`Updating ${name}...`);
       const res = await fetch(`${url}?${query}`, {
         method: 'PATCH',
         headers,
         body: JSON.stringify({ logo: logoUrl })
       });
-      console.log(`Updated ${name}: Status ${res.status}`);
+      const data = await res.json();
+      console.log(`Updated ${name}: Status ${res.status}, Rows Modified: ${data.length || 0}`);
     } catch (e) {
       console.error(`Failed ${name}: ${e.message}`);
     }
