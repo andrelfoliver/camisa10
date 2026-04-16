@@ -48,6 +48,9 @@ const Home = () => {
 
   useEffect(() => {
     async function fetchHomeData() {
+      let qIds = [];
+      let cIds = [];
+
       // Buscar configurações globais na nuvem (Supabase)
       const { data: settingsData, error: settingsError } = await supabase.from('store_settings').select('*').in('key', ['queridinhas_ids', 'catalog_ids']);
 
@@ -95,6 +98,12 @@ const Home = () => {
 
       const { data: dbData } = await supabase.from('products').select('*').order('id', { ascending: false });
       const allUnified = dbData || [];
+
+      // Fallback automático: Se não houver queridinhas manuais, usa as marcadas como is_bestseller
+      if (qIds.length === 0) {
+        const autoQueridinhas = allUnified.filter(p => p.is_bestseller).slice(0, 6);
+        setQueridinhas(autoQueridinhas);
+      }
 
       const { data: teamsData } = await supabase.from('teams').select('*').order('name');
       if (teamsData) setDbTeams(teamsData);

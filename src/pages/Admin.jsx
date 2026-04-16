@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from '../services/supabase';
 import { useAuth } from '../context/AuthContext';
-import { Save, Check, Crown, Heart, Database, HardDrive, Star, LogOut, Package, Plus, Trash2, X, Users, Image, DollarSign, MapPin, RefreshCw, Shield } from 'lucide-react';
+import { Save, Check, Crown, Heart, Database, HardDrive, Star, LogOut, Package, Plus, Trash2, X, Users, Image, DollarSign, MapPin, RefreshCw, Shield, AlertTriangle } from 'lucide-react';
 import { migrateProductsToSupabase } from '../services/migration';
 import { migrateTeamsToSupabase } from '../services/migration_teams';
 import WhatsAppIcon from '../components/WhatsAppIcon';
@@ -229,9 +229,15 @@ const Admin = () => {
               return;
             }
             const val = JSON.parse(s.value);
-            if(s.key === 'queridinhas_ids') setQueridinhasIds(val.map(String));
-            if(s.key === 'best_seller_id') setBestSellerId(String(val));
-            if(s.key === 'catalog_ids') setCatalogIds(val.map(String));
+            if(s.key === 'queridinhas_ids' && Array.isArray(val)) {
+              setQueridinhasIds(val.map(String));
+            }
+            if(s.key === 'best_seller_id' && val) {
+              setBestSellerId(String(val));
+            }
+            if(s.key === 'catalog_ids' && Array.isArray(val)) {
+              setCatalogIds(val.map(String));
+            }
           } catch(e) {}
         });
       }
@@ -561,6 +567,25 @@ const Admin = () => {
     setTimeout(() => setSaved(false), 3000);
   };
 
+  const cleanOrphanedIds = () => {
+    const validIds = new Set(products.map(p => String(p.id)));
+    const invalidCountQ = queridinhasIds.filter(id => !validIds.has(String(id))).length;
+    const invalidCountC = catalogIds.filter(id => !validIds.has(String(id))).length;
+
+    if (invalidCountQ === 0 && invalidCountC === 0) {
+      showAlert("Tudo em Ordem", "Não foram encontrados IDs órfãos em suas listas.");
+      return;
+    }
+
+    const newQueridinhas = queridinhasIds.filter(id => validIds.has(String(id)));
+    const newCatalog = catalogIds.filter(id => validIds.has(String(id)));
+    
+    setQueridinhasIds(newQueridinhas);
+    setCatalogIds(newCatalog);
+    setSaved(false);
+    showAlert("Reparo Concluído", `Removidos ${invalidCountQ + invalidCountC} IDs inválidos. Note que as alterações só serão permanentes após clicar em 'Publicar Alterações'.`);
+  };
+
   const handleAutoFill = (productState, setter) => {
     if (!productState.name) return;
     const lowerName = productState.name.toLowerCase();
@@ -776,36 +801,81 @@ const Admin = () => {
         <div style={{ padding: '2.5rem 3rem', flex: 1 }}>
           
           {/* DASHBOARD DE MÉTRICAS (Apenas nos Catálogos) */}
+          {/* DASHBOARD DE MÉTRICAS (Apenas nos Catálogos) */}
           {isCatalogTab && (
-            <div style={{ display: 'flex', gap: '2rem', marginBottom: '3rem', background: 'var(--surface-hover)', padding: '1.5rem 2rem', borderRadius: 'var(--radius-lg)', border: '1px solid var(--border-color)' }}>
-              <div style={{ flex: 1 }}>
-                <h3 style={{ fontSize: '0.85rem', color: 'var(--text-muted)', textTransform: 'uppercase', marginBottom: '0.8rem', display: 'flex', alignItems: 'center', gap: '0.5rem', fontWeight: 800 }}>
-                  <Crown size={16} color="#FFB81C" /> O Rei (Capa da Loja)
-                </h3>
-                <span style={{ color: '#000', background: '#FFB81C', fontSize: '0.9rem', fontWeight: 800, padding: '0.3rem 0.8rem', borderRadius: '4px' }}>
-                  {bestSellerName}
-                </span>
-              </div>
-              <div style={{ width: '1px', background: 'var(--border-color)' }}></div>
-              <div style={{ flex: 2 }}>
-                <h3 style={{ fontSize: '0.85rem', color: 'var(--text-muted)', textTransform: 'uppercase', marginBottom: '0.8rem', display: 'flex', alignItems: 'center', gap: '0.5rem', fontWeight: 800 }}>
-                  <Heart size={16} color="var(--accent-color)" /> Queridinhas do Carrossel ({queridinhasIds.length}/6)
-                </h3>
-                <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
-                  {queridinhasIds.length === 0 ? <span style={{ color: 'var(--text-muted)', fontSize: '0.9rem' }}>Nenhuma selecionada</span> : 
-                   queridinhasIds.map(id => {
-                     const p = getUniversalProduct(id);
-                     return <span key={id} title={id} style={{ fontSize: '0.8rem', padding: '0.4rem 0.6rem', background: 'rgba(0,0,0,0.5)', border: '1px solid var(--border-color)', borderRadius: '4px', color: '#fff', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: '150px' }}>{p?.name || `ID: ${id}`}</span>
-                   })}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem', marginBottom: '3rem' }}>
+              <div style={{ display: 'flex', gap: '2rem', background: 'var(--surface-hover)', padding: '1.5rem 2rem', borderRadius: 'var(--radius-lg)', border: '1px solid var(--border-color)', position: 'relative' }}>
+                
+                <div style={{ flex: 1.5 }}>
+                  <h3 style={{ fontSize: '0.85rem', color: 'var(--text-muted)', textTransform: 'uppercase', marginBottom: '0.8rem', display: 'flex', alignItems: 'center', gap: '0.5rem', fontWeight: 800 }}>
+                    <Crown size={16} color="#FFB81C" /> O Rei (Capa da Loja)
+                  </h3>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                    <span style={{ color: '#000', background: '#FFB81C', fontSize: '0.9rem', fontWeight: 800, padding: '0.3rem 0.8rem', borderRadius: '4px' }}>
+                      {bestSellerName}
+                    </span>
+                    {bestSellerId && !products.find(p => String(p.id) === String(bestSellerId)) && (
+                      <button onClick={() => { setBestSellerId(null); setSaved(false); }} style={{ background: 'rgba(239, 68, 68, 0.2)', border: '1px solid #EF4444', color: '#EF4444', padding: '0.2rem 0.5rem', borderRadius: '4px', fontSize: '0.7rem', cursor: 'pointer' }}>Limpar Inválido</button>
+                    )}
+                  </div>
+                </div>
+
+                <div style={{ width: '1px', background: 'var(--border-color)' }}></div>
+
+                <div style={{ flex: 3 }}>
+                  <h3 style={{ fontSize: '0.85rem', color: 'var(--text-muted)', textTransform: 'uppercase', marginBottom: '0.8rem', display: 'flex', alignItems: 'center', gap: '0.5rem', fontWeight: 800 }}>
+                    <Heart size={16} color="var(--accent-color)" /> Queridinhas do Carrossel ({queridinhasIds.length}/6)
+                  </h3>
+                  <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
+                    {queridinhasIds.length === 0 ? <span style={{ color: 'var(--text-muted)', fontSize: '0.9rem' }}>Nenhuma selecionada</span> : 
+                      queridinhasIds.map(id => {
+                        const p = getUniversalProduct(id);
+                        const isInvalid = !p;
+                        return (
+                          <div key={id} style={{ 
+                            display: 'flex', alignItems: 'center', gap: '0.4rem', fontSize: '0.8rem', padding: '0.3rem 0.6rem', 
+                            background: isInvalid ? 'rgba(239, 68, 68, 0.1)' : 'rgba(0,0,0,0.5)', 
+                            border: `1px solid ${isInvalid ? '#EF4444' : 'var(--border-color)'}`, 
+                            borderRadius: '4px', color: isInvalid ? '#EF4444' : '#fff' 
+                          }}>
+                            <span style={{ maxWidth: '120px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{p?.name || `ID Inválido: ${id}`}</span>
+                            <button 
+                              onClick={() => { setQueridinhasIds(queridinhasIds.filter(qid => qid !== id)); setSaved(false); }}
+                              style={{ background: 'transparent', border: 'none', color: 'inherit', cursor: 'pointer', display: 'flex', padding: 0 }}
+                            >
+                              <X size={12} />
+                            </button>
+                          </div>
+                        );
+                      })}
+                  </div>
+                </div>
+
+                <div style={{ width: '1px', background: 'var(--border-color)' }}></div>
+
+                <div style={{ flex: 1.5 }}>
+                  <h3 style={{ fontSize: '0.85rem', color: 'var(--text-muted)', textTransform: 'uppercase', marginBottom: '0.8rem', display: 'flex', alignItems: 'center', gap: '0.5rem', fontWeight: 800 }}>
+                    <Package size={16} color="#A855F7" /> Catálogo ({catalogIds.filter(id => products.find(p => String(p.id) === String(id))).length} Válidos)
+                  </h3>
+                  <span style={{ color: '#fff', background: '#A855F7', fontSize: '0.9rem', fontWeight: 800, padding: '0.3rem 0.8rem', borderRadius: '4px', display: 'inline-block' }}>
+                    {catalogIds.length} IDs no Total
+                  </span>
                 </div>
               </div>
-              <div style={{ width: '1px', background: 'var(--border-color)' }}></div>
-              <div style={{ flex: 1 }}>
-                <h3 style={{ fontSize: '0.85rem', color: 'var(--text-muted)', textTransform: 'uppercase', marginBottom: '0.8rem', display: 'flex', alignItems: 'center', gap: '0.5rem', fontWeight: 800 }}>
-                  <Package size={16} color="#A855F7" /> Em Catálogo Atrás
-                </h3>
-                <span style={{ color: '#fff', background: '#A855F7', fontSize: '0.9rem', fontWeight: 800, padding: '0.3rem 0.8rem', borderRadius: '4px' }}>Todos: {catalogIds.length} Itens</span>
-              </div>
+
+              {/* BARRA DE FERRAMENTAS DE REPARO */}
+              {(queridinhasIds.some(id => !products.find(p => String(p.id) === String(id))) || 
+                catalogIds.some(id => !products.find(p => String(p.id) === String(id)))) && (
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: 'rgba(239, 68, 68, 0.05)', border: '1px solid rgba(239, 68, 68, 0.2)', padding: '1rem 1.5rem', borderRadius: 'var(--radius-md)' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.8rem', color: '#EF4444' }}>
+                    <AlertTriangle size={20} />
+                    <span style={{ fontWeight: 600, fontSize: '0.9rem' }}>Detectamos IDs de produtos que foram excluídos ou não existem mais.</span>
+                  </div>
+                  <button onClick={cleanOrphanedIds} className="btn-secondary" style={{ color: '#EF4444', borderColor: '#EF4444', padding: '0.5rem 1rem', fontSize: '0.85rem' }}>
+                    Limpar Todos IDs Inválidos
+                  </button>
+                </div>
+              )}
             </div>
           )}
 
