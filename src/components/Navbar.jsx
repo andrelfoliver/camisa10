@@ -74,33 +74,8 @@ const Navbar = () => {
           gap: '0.5rem'
         }}>
           
-          {/* Coluna Esquerda: Menu (Mobile) / Busca (Desktop) */}
-          <div style={{ display: 'flex', alignItems: 'center' }}>
-            {/* Desktop: Barra de Busca */}
-            <div className="desktop-only">
-              <form onSubmit={handleSearchSubmit} style={{ position: 'relative', width: '220px' }}>
-                <input 
-                  type="text"
-                  placeholder={language === 'pt' ? 'O que você procura?' : 'Search...'}
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  style={{
-                    width: '100%',
-                    background: 'rgba(255,255,255,0.05)',
-                    border: '1px solid rgba(255,255,255,0.1)',
-                    padding: '0.6rem 1rem 0.6rem 2.3rem',
-                    borderRadius: '8px',
-                    color: '#fff',
-                    fontSize: '0.85rem',
-                    outline: 'none'
-                  }}
-                  onFocus={(e) => e.target.style.borderColor = 'var(--accent-color)'}
-                  onBlur={(e) => e.target.style.borderColor = 'rgba(255,255,255,0.1)'}
-                />
-                <Search size={16} style={{ position: 'absolute', left: '0.8rem', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }} />
-              </form>
-            </div>
-
+          {/* Coluna Esquerda: Menu + WhatsApp */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.8rem' }}>
             {/* Mobile: Botão de Menu */}
             <button 
               className="mobile-only" 
@@ -109,45 +84,86 @@ const Navbar = () => {
             >
               {mobileMenuOpen ? <X size={26} /> : <Menu size={26} />}
             </button>
+
+            {/* WhatsApp Link (Visível em ambos, mobile e desktop) */}
+            <a 
+              href="https://wa.me/15875705304" 
+              target="_blank" 
+              rel="noopener noreferrer"
+              style={{ color: 'var(--text-main)', display: 'flex', alignItems: 'center', padding: '0.5rem 0' }}
+              title="WhatsApp"
+            >
+              <svg 
+                viewBox="0 0 24 24" 
+                width="24" 
+                height="24" 
+                fill="currentColor" 
+                style={{ transition: 'color 0.2s' }}
+                onMouseOver={(e) => e.currentTarget.style.color = '#25D366'}
+                onMouseOut={(e) => e.currentTarget.style.color = 'var(--text-main)'}
+              >
+                <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/>
+              </svg>
+            </a>
+
+            {/* Desktop: Barra de Busca (Ocupa espaço se visível) */}
+            <div className="desktop-only" style={{ marginLeft: '1rem' }}>
+              <form onSubmit={handleSearchSubmit} style={{ position: 'relative', width: '200px' }}>
+                <input 
+                  type="text"
+                  placeholder={language === 'pt' ? 'Buscar...' : 'Search...'}
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  style={{
+                    width: '100%',
+                    background: 'rgba(255,255,255,0.05)',
+                    border: '1px solid rgba(255,255,255,0.1)',
+                    padding: '0.5rem 1rem 0.5rem 2.2rem',
+                    borderRadius: '8px',
+                    color: '#fff',
+                    fontSize: '0.85rem',
+                    outline: 'none'
+                  }}
+                  onFocus={(e) => e.target.style.borderColor = 'var(--accent-color)'}
+                  onBlur={(e) => e.target.style.borderColor = 'rgba(255,255,255,0.1)'}
+                />
+                <Search size={15} style={{ position: 'absolute', left: '0.8rem', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }} />
+              </form>
+            </div>
           </div>
 
-          {/* Coluna Central: Logo (Sempre centralizada) */}
+          {/* Coluna Central: Logo (Ajustada para 2.2rem) */}
           <div style={{ display: 'flex', justifyContent: 'center' }}>
             <Link to="/" style={{ 
               display: 'flex', 
               alignItems: 'center', 
               fontWeight: 900, 
-              fontSize: '1.75rem', 
+              fontSize: '2.2rem', 
               fontFamily: 'var(--font-display)', 
               fontStyle: 'italic',
-              letterSpacing: '-1.5px'
-            }}>
+              letterSpacing: '-1.5px',
+              transition: 'transform 0.3s'
+            }}
+            onMouseOver={(e) => e.currentTarget.style.transform = 'scale(1.05)'}
+            onMouseOut={(e) => e.currentTarget.style.transform = 'scale(1)'}
+            >
               <span style={{ color: 'var(--accent-color)' }}>i</span><span style={{ color: '#fff' }}>Footy</span><span style={{ color: 'var(--accent-color)' }}>.</span>
             </Link>
           </div>
           
-          {/* Coluna Direita: Ações (Lupa, Login, Sacola) */}
-          <div style={{ display: 'flex', gap: '0.2rem', alignItems: 'center', justifyContent: 'flex-end' }}>
+          {/* Coluna Direita: Ações (Lupa, Login, Idioma, Sacola) */}
+          <div style={{ display: 'flex', gap: '0.4rem', alignItems: 'center', justifyContent: 'flex-end' }}>
             
-            {/* Language Switcher (Desktop) */}
-            <div className="desktop-only" style={{ display: 'flex', gap: '0.4rem', marginRight: '0.5rem', borderRight: '1px solid rgba(255,255,255,0.1)', paddingRight: '0.8rem' }}>
-              <button onClick={() => setLanguage('pt')} style={{ width: '18px', height: '18px', borderRadius: '50%', overflow: 'hidden', padding: 0, border: 'none', background: 'none', cursor: 'pointer', opacity: language === 'pt' ? 1 : 0.3 }}>
-                <img src="https://flagcdn.com/w40/br.png" alt="PT" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-              </button>
-              <button onClick={() => setLanguage('en')} style={{ width: '18px', height: '18px', borderRadius: '50%', overflow: 'hidden', padding: 0, border: 'none', background: 'none', cursor: 'pointer', opacity: language === 'en' ? 1 : 0.3 }}>
-                <img src="https://flagcdn.com/w40/ca.png" alt="EN" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-              </button>
-            </div>
-
-            {/* Lupa (Sempre visível no mobile, aciona o overlay/dropdown) */}
+            {/* 1. Lupa (Mobile Only - Desktop já tem no campo) */}
             <button 
+              className="mobile-only"
               onClick={() => setIsSearchOpen(!isSearchOpen)}
               style={{ color: 'var(--text-main)', padding: '0.5rem', background: 'transparent', border: 'none', cursor: 'pointer' }}
             >
                <Search size={22} />
             </button>
             
-            {/* Login / Perfil */}
+            {/* 2. Login / Perfil */}
             <button 
                onClick={() => {
                   if(!user) navigate('/auth');
@@ -155,6 +171,7 @@ const Navbar = () => {
                   else navigate('/perfil');
                }} 
                style={{ color: user ? 'var(--accent-color)' : 'var(--text-main)', padding: '0.5rem', background: 'transparent', border: 'none', cursor: 'pointer' }}
+               title={user ? 'Minha Conta' : 'Fazer Login'}
             >
                {user?.user_metadata?.avatar_url ? (
                  <img src={user.user_metadata.avatar_url} alt="Profile" style={{ width: '24px', height: '24px', borderRadius: '50%', border: `2px solid var(--accent-color)`, objectFit: 'cover' }} />
@@ -162,8 +179,47 @@ const Navbar = () => {
                  <UserCircle size={24} />
                )}
             </button>
+
+            {/* 3. Seletor de Idioma (Hover - Estilo ifutz) */}
+            <div 
+              style={{ position: 'relative', display: 'flex', alignItems: 'center', height: '40px', padding: '0 0.5rem' }}
+              onMouseEnter={(e) => {
+                const menu = e.currentTarget.querySelector('.lang-dropdown');
+                if(menu) menu.style.display = 'flex';
+              }}
+              onMouseLeave={(e) => {
+                const menu = e.currentTarget.querySelector('.lang-dropdown');
+                if(menu) menu.style.display = 'none';
+              }}
+            >
+              <div style={{ width: '22px', height: '22px', borderRadius: '50%', overflow: 'hidden', cursor: 'pointer', border: '1px solid rgba(255,255,255,0.1)' }}>
+                <img 
+                  src={language === 'pt' ? "https://flagcdn.com/w40/br.png" : "https://flagcdn.com/w40/ca.png"} 
+                  alt="Current Lang" 
+                  style={{ width: '100%', height: '100%', objectFit: 'cover' }} 
+                />
+              </div>
+              
+              <div 
+                className="lang-dropdown"
+                style={{ 
+                  display: 'none', position: 'absolute', top: '100%', right: 0, 
+                  background: 'var(--surface-color)', border: '1px solid var(--border-color)',
+                  borderRadius: '8px', padding: '0.5rem', flexDirection: 'column', gap: '0.5rem',
+                  zIndex: 200, boxShadow: '0 10px 20px rgba(0,0,0,0.4)', minWidth: '40px'
+                }}
+              >
+                <button onClick={() => setLanguage(language === 'pt' ? 'en' : 'pt')} style={{ width: '22px', height: '22px', borderRadius: '50%', overflow: 'hidden', padding: 0 }}>
+                  <img 
+                    src={language === 'pt' ? "https://flagcdn.com/w40/ca.png" : "https://flagcdn.com/w40/br.png"} 
+                    alt="Switch Lang" 
+                    style={{ width: '100%', height: '100%', objectFit: 'cover' }} 
+                  />
+                </button>
+              </div>
+            </div>
   
-            {/* Carrinho */}
+            {/* 4. Carrinho */}
             <button 
               onClick={() => setIsCartOpen(true)}
               style={{ position: 'relative', color: 'var(--text-main)', padding: '0.5rem', background: 'transparent', border: 'none', cursor: 'pointer' }}
