@@ -6,6 +6,8 @@ import { supabase } from '../services/supabase';
 import { ShieldCheck, Truck, Star, Package, Lock, CheckCircle2, AlertTriangle, ChevronDown, ChevronUp, ChevronRight } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useCart } from '../context/CartContext';
+import { useLanguage } from '../context/LanguageContext';
+
 const FAQItem = ({ question, answer }) => {
   const [isOpen, setIsOpen] = useState(false);
   return (
@@ -24,6 +26,8 @@ const FAQItem = ({ question, answer }) => {
 
 const ProductShowcaseCard = ({ product }) => {
   const navigate = useNavigate();
+  const { t, translateProductDisplay } = useLanguage();
+
 
   if (!product) return null;
 
@@ -42,7 +46,7 @@ const ProductShowcaseCard = ({ product }) => {
         }}
       >
         <div style={{ position: 'absolute', top: '-1rem', left: '-1rem', background: '#EF4444', color: '#fff', padding: '0.5rem 1rem', borderRadius: '4px', fontWeight: 800, textTransform: 'uppercase', zIndex: 10, boxShadow: '0 4px 10px rgba(239, 68, 68, 0.4)' }}>
-          🔥 Mais vendido
+          🔥 {t('section_best_seller')}
         </div>
         <div className="coin-stage">
           <div className="coin-inner">
@@ -55,17 +59,17 @@ const ProductShowcaseCard = ({ product }) => {
           </div>
         </div>
         <div style={{ textAlign: 'center' }}>
-          <h2 style={{ fontSize: '1.8rem', color: '#fff', lineHeight: 1.2, marginBottom: '0.8rem' }}>{product.name}</h2>
+          <h2 style={{ fontSize: '1.8rem', color: '#fff', lineHeight: 1.2, marginBottom: '0.8rem' }}>{translateProductDisplay(product.name)}</h2>
           <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '0.5rem', color: 'var(--accent-color)', fontWeight: 600, marginBottom: '1.5rem' }}>
             <Star size={18} fill="currentColor" /><Star size={18} fill="currentColor" /><Star size={18} fill="currentColor" /><Star size={18} fill="currentColor" /><Star size={18} fill="currentColor" />
-            <span style={{ color: 'var(--text-muted)', marginLeft: '0.5rem' }}>Mais de 100 vendidos</span>
+            <span style={{ color: 'var(--text-muted)', marginLeft: '0.5rem' }}>{t('product_price_transfer') === 'no e-Transfer' ? 'Over 100 sold' : 'Mais de 100 vendidos'}</span>
           </div>
           <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '1rem' }}>
             <span style={{ textDecoration: 'line-through', color: 'var(--text-muted)', fontSize: '1.2rem' }}>${(product.price * 1.5).toFixed(2)} CAD</span>
             <span style={{ fontSize: '2.5rem', fontWeight: 800, color: 'var(--accent-color)', lineHeight: 1 }}>${product.price.toFixed(2)} CAD</span>
           </div>
           <button className="btn-primary" style={{ marginTop: '2rem', width: '100%', justifyContent: 'center', padding: '1rem', fontSize: '1.2rem' }}>
-            COMPRAR AGORA
+            {t('product_buy_now')}
           </button>
         </div>
       </div>
@@ -76,6 +80,8 @@ const ProductShowcaseCard = ({ product }) => {
 
 const Home = () => {
   const { pricingConfig } = useCart();
+  const { t, language, translateProductDisplay } = useLanguage();
+
   // Estado inicial limpo - O site agora é 100% dinâmico via Supabase
   const [bestSeller, setBestSeller] = useState(null);
   const [queridinhas, setQueridinhas] = useState([]);
@@ -232,7 +238,7 @@ const Home = () => {
                 onClick={() => setActiveTeamFilter(null)}
                 style={{ background: 'transparent', color: 'var(--text-muted)', border: '1px solid var(--border-color)', padding: '0.6rem 1.2rem', borderRadius: '4px', fontWeight: 700, cursor: 'pointer' }}
               >
-                Ver Todos os Clubes
+                {t('section_categories')}
               </button>
             </div>
 
@@ -307,8 +313,7 @@ const Home = () => {
       {/* 5. COMBOS (OFERTA ESPECIAL) */}
       <section className="section-padding container">
         <div style={{ background: 'linear-gradient(135deg, rgba(255,184,28,0.1) 0%, rgba(0,0,0,0) 100%)', border: '1px solid var(--accent-color)', borderRadius: 'var(--radius-lg)', padding: '3rem', textAlign: 'center' }}>
-          <h2 style={{ fontSize: '2.5rem', marginBottom: '2rem', color: '#EF4444', fontWeight: 800 }}>🔥 OFERTA ESPECIAL</h2>
-          
+          <h2 style={{ fontSize: '2.5rem', marginBottom: '2rem', color: '#EF4444', fontWeight: 800 }}>{t('promo_banner_title')}</h2>          
           {(() => {
             const basePromoPrice = bestSeller?.price || 47.90;
             const discountPercent2 = (pricingConfig?.discounts || []).find(d => d.qty === 2)?.percent || 8;
@@ -328,34 +333,32 @@ const Home = () => {
               <div style={{ display: 'flex', justifyContent: 'center', gap: '2rem', flexWrap: 'wrap' }}>
                 {/* Combo 2 Camisas */}
                 <div className="glass-panel" style={{ flex: 1, minWidth: '250px', padding: '2rem', borderRadius: 'var(--radius-md)', display: 'flex', flexDirection: 'column' }}>
-                  <h3 style={{ fontSize: '1.5rem', marginBottom: '1rem' }}>2 Camisas</h3>
-                  <p style={{ color: 'var(--text-muted)', fontSize: '1rem', marginBottom: '0.2rem' }}>De <del>${normalPrice2.toFixed(2)}</del> por apenas</p>
+                  <h3 style={{ fontSize: '1.5rem', marginBottom: '1rem' }}>{t('promo_banner_combo2')}</h3>
+                  <p style={{ color: 'var(--text-muted)', fontSize: '1rem', marginBottom: '0.2rem' }}>{t('promo_banner_from')} <del>${normalPrice2.toFixed(2)}</del> {t('promo_banner_for')}</p>
                   <p style={{ fontSize: '3rem', fontWeight: 800, color: 'var(--text-main)', marginBottom: '1rem', lineHeight: 1 }}>${finalTotal2.toFixed(2)}</p>
-
                   <div style={{ background: 'rgba(255,255,255,0.05)', padding: '0.8rem', borderRadius: '8px', marginBottom: '1.5rem', fontSize: '0.95rem' }}>
-                    <span style={{ display: 'block', marginBottom: '0.2rem' }}>Sai por <strong>${finalPricePerUnit2.toFixed(2)}</strong> cada</span>
-                    <span style={{ color: '#10B981', fontWeight: 700 }}>💰 Economia de ${savings2.toFixed(2)}</span>
+                    <span style={{ display: 'block', marginBottom: '0.2rem' }}>{language === 'pt' ? 'Sai por' : 'Comes out to'} <strong>${finalPricePerUnit2.toFixed(2)}</strong> {t('promo_banner_each')}</span>
+                    <span style={{ color: '#10B981', fontWeight: 700 }}>💰 {t('promo_banner_savings')} ${savings2.toFixed(2)}</span>
                   </div>
 
                   <div style={{ marginTop: 'auto' }}>
-                    <a href="#catalogo" className="btn-secondary" style={{ width: '100%', justifyContent: 'center' }}>Aplicar desconto</a>
+                    <a href="#catalogo" className="btn-secondary" style={{ width: '100%', justifyContent: 'center' }}>{t('promo_banner_apply')}</a>
                   </div>
                 </div>
 
                 {/* Combo 3 Camisas */}
                 <div className="glass-panel" style={{ flex: 1, minWidth: '250px', padding: '2rem', borderRadius: 'var(--radius-md)', border: '2px solid var(--accent-color)', position: 'relative', display: 'flex', flexDirection: 'column' }}>
-                  <div className="badge" style={{ background: 'var(--accent-color)', color: '#000', left: '50%', transform: 'translate(-50%, -150%)', width: 'max-content' }}>Maior Desconto</div>
-                  <h3 style={{ fontSize: '1.5rem', marginBottom: '1rem' }}>3 Camisas</h3>
-                  <p style={{ color: 'var(--text-muted)', fontSize: '1rem', marginBottom: '0.2rem' }}>De <del>${normalPrice3.toFixed(2)}</del> por apenas</p>
+                  <div className="badge" style={{ background: 'var(--accent-color)', color: '#000', left: '50%', transform: 'translate(-50%, -150%)', width: 'max-content' }}>{t('promo_banner_best_offer')}</div>
+                  <h3 style={{ fontSize: '1.5rem', marginBottom: '1rem' }}>{t('promo_banner_combo3')}</h3>
+                  <p style={{ color: 'var(--text-muted)', fontSize: '1rem', marginBottom: '0.2rem' }}>{t('promo_banner_from')} <del>${normalPrice3.toFixed(2)}</del> {t('promo_banner_for')}</p>
                   <p style={{ fontSize: '3rem', fontWeight: 800, color: 'var(--accent-color)', marginBottom: '1rem', lineHeight: 1 }}>${finalTotal3.toFixed(2)}</p>
-
                   <div style={{ background: 'rgba(219, 254, 135, 0.1)', border: '1px solid rgba(219, 254, 135, 0.3)', padding: '0.8rem', borderRadius: '8px', marginBottom: '1.5rem', fontSize: '0.95rem' }}>
-                    <span style={{ display: 'block', color: 'var(--text-main)', marginBottom: '0.2rem' }}>Sai por só <strong>${finalPricePerUnit3.toFixed(2)}</strong> cada</span>
-                    <span style={{ color: '#10B981', fontWeight: 700 }}>🔥 Você economiza ${savings3.toFixed(2)}!</span>
+                    <span style={{ display: 'block', color: 'var(--text-main)', marginBottom: '0.2rem' }}>{language === 'pt' ? 'Sai por só' : 'Only'} <strong>${finalPricePerUnit3.toFixed(2)}</strong> {t('promo_banner_each')}</span>
+                    <span style={{ color: '#10B981', fontWeight: 700 }}>🔥 {language === 'pt' ? 'Você economiza' : 'You save'} ${savings3.toFixed(2)}!</span>
                   </div>
 
                   <div style={{ marginTop: 'auto' }}>
-                    <a href="#catalogo" className="btn-primary" style={{ width: '100%', justifyContent: 'center' }}>Aplicar desconto</a>
+                    <a href="#catalogo" className="btn-primary" style={{ width: '100%', justifyContent: 'center' }}>{t('promo_banner_apply')}</a>
                   </div>
                 </div>
               </div>
@@ -372,10 +375,10 @@ const Home = () => {
           <div key={catName} style={{ marginBottom: '4rem' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: '1.5rem' }}>
               <div>
-                <h2 style={{ fontSize: '2rem', color: '#fff' }}>{catName}</h2>
-                <p style={{ color: 'var(--text-muted)' }}>As melhores opções em {catName.toLowerCase()}</p>
+                <h2 style={{ fontSize: '2rem', color: '#fff' }}>{language === 'pt' ? catName : t(`nav_${catName.toLowerCase().replace('brasileirão', 'br').replace('internacionais', 'intl').replace('retrô', 'retro')}`)}</h2>
+                <p style={{ color: 'var(--text-muted)' }}>{language === 'pt' ? `As melhores opções em ${catName.toLowerCase()}` : `The best options in ${catName.toLowerCase()}`}</p>
               </div>
-              <a href={`/colecao/${catName.toLowerCase().replace('ç', 'c').replace('õ', 'o').replace('ã', 'a')}`} style={{ color: 'var(--accent-color)', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '0.5rem' }}>Ver todas <ChevronRight size={16} /></a>
+              <a href={`/colecao/${catName.toLowerCase().replace('ç', 'c').replace('õ', 'o').replace('ã', 'a')}`} style={{ color: 'var(--accent-color)', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '0.5rem' }}>{language === 'pt' ? 'Ver todas' : 'View all'} <ChevronRight size={16} /></a>
             </div>
 
             <div className="hide-scrollbar" style={{ display: 'flex', overflowX: 'auto', gap: '1.5rem', paddingBottom: '1.5rem' }}>
@@ -497,9 +500,9 @@ const Home = () => {
           <CheckCircle2 size={48} color="#10B981" />
           <h2 style={{ fontSize: '2.5rem' }}>Site 100% Blindado</h2>
         </div>
-        <h2 style={{ fontSize: '3.5rem', marginBottom: '2rem' }}>Garanta sua camisa antes que acabe!</h2>
+        <h2 style={{ fontSize: '3.5rem', marginBottom: '2rem' }}>{language === 'pt' ? 'Garanta sua camisa antes que acabe!' : 'Get your jersey before it sells out!'}</h2>
         <a href="#destaque" className="btn-primary btn-massive" style={{ padding: '1.5rem 4rem', fontSize: '1.5rem', borderRadius: '3rem' }}>
-          Comprar Agora
+          {t('product_buy_now')}
         </a>
       </section>
 

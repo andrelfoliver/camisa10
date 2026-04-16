@@ -2,6 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { supabase } from '../services/supabase';
 import { CheckCircle2, X } from 'lucide-react';
 
+import { useLanguage } from '../context/LanguageContext';
+
 const NAMES = [
   // Brasileiros (Maioria)
   'João', 'Tiago', 'Lucas', 'Ricardo', 'Gabriel', 'Bruno', 'Carlos', 'Pedro', 'Marcelo', 'Arthur', 'Matheus', 'Guilherme', 'Felipe', 'Rafael',
@@ -14,7 +16,9 @@ const NAMES = [
 const CITIES = ['Toronto', 'Vancouver', 'Montreal', 'Calgary', 'Ottawa', 'Edmonton', 'Mississauga', 'Winnipeg', 'Brampton', 'Hamilton'];
 const TIMES = ['há 2 minutos', 'agora mesmo', 'há 5 minutos', 'há 10 minutos', 'há 1 hora', 'há 15 minutos', 'há 3 minutos'];
 
+
 const SalesPopup = () => {
+  const { t, language, translateProductDisplay } = useLanguage();
   const [products, setProducts] = useState([]);
   const [currentSale, setCurrentSale] = useState(null);
   const [visible, setVisible] = useState(false);
@@ -74,6 +78,11 @@ const SalesPopup = () => {
     return () => clearTimeout(timeoutId);
   }, [products]);
 
+  const formatRelTime = (str) => {
+    if (language === 'pt') return str;
+    return str.replace('há ', '').replace(' minutos', 'm ago').replace(' minuto', 'm ago').replace(' hora', 'h ago').replace('agora mesmo', 'just now');
+  };
+
   if (!currentSale) return null;
 
   return (
@@ -131,14 +140,14 @@ const SalesPopup = () => {
 
       <div style={{ display: 'flex', flexDirection: 'column' }}>
         <p style={{ margin: 0, fontSize: '0.85rem', color: 'var(--text-muted)' }}>
-          <strong style={{ color: 'var(--text-main)' }}>{currentSale.name}</strong> em {currentSale.city} comprou
+          <strong style={{ color: 'var(--text-main)' }}>{currentSale.name}</strong> {language === 'pt' ? 'em' : 'in'} {currentSale.city} {t('sales_popup_bought')}
         </p>
         <p style={{ margin: '2px 0 4px', fontSize: '0.95rem', fontWeight: 700, color: 'var(--accent-color)', lineHeight: 1.2, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
-          {currentSale.productName}
+          {translateProductDisplay(currentSale.productName)}
         </p>
         <div style={{ display: 'flex', alignItems: 'center', gap: '4px', color: '#10B981', fontSize: '0.75rem', fontWeight: 600 }}>
           <CheckCircle2 size={12} />
-          <span>Comprado {currentSale.time}</span>
+          <span>{t('sales_popup_time')} {formatRelTime(currentSale.time)}</span>
         </div>
       </div>
     </div>

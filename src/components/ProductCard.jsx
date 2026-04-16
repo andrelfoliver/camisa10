@@ -3,9 +3,12 @@ import { useCart } from '../context/CartContext';
 import { Plus, Eye } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
+import { useLanguage } from '../context/LanguageContext';
+
 const ProductCard = ({ product }) => {
   const { addToCart } = useCart();
   const navigate = useNavigate();
+  const { translateProductDisplay, language } = useLanguage();
   const [selectedSize, setSelectedSize] = useState('M');
   const [imageError, setImageError] = useState(false);
   const sizes = ['S', 'M', 'L', 'XL'];
@@ -32,9 +35,9 @@ const ProductCard = ({ product }) => {
       flexDirection: 'column',
       gap: '1rem'
     }}>
-      {product.id === 1 && <div className="badge">🇧🇷 Sucesso</div>}
-      {product.id === 2 && <div className="badge" style={{background: '#EF4444', color: '#fff'}}>🔥 Mais Vendido</div>}
-      {product.id === 3 && <div className="badge" style={{background: '#FFB81C', color: '#000'}}>⭐ Novo</div>}
+      {product.id === 1 && <div className="badge">{language === 'pt' ? '🇧🇷 Sucesso' : '🇧🇷 Best Seller'}</div>}
+      {product.id === 2 && <div className="badge" style={{background: '#EF4444', color: '#fff'}}>{language === 'pt' ? '🔥 Mais Vendido' : '🔥 Popular'}</div>}
+      {product.id === 3 && <div className="badge" style={{background: '#FFB81C', color: '#000'}}>{language === 'pt' ? '⭐ Novo' : '⭐ New'}</div>}
       {product.version && (
         <div className="badge" style={{ 
           top: product.id <= 3 ? '40px' : '15px', 
@@ -73,14 +76,14 @@ const ProductCard = ({ product }) => {
       
       <div style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
         <span style={{ color: 'var(--accent-color)', fontSize: '0.75rem', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.5px' }}>
-          {product.category}
+          {language === 'pt' ? product.category : product.category?.replace('Seleção Brasileira', 'National Team')}
         </span>
         <h3 
           onClick={handleView}
           style={{ fontSize: '1rem', cursor: 'pointer', marginBottom: '0.25rem', fontFamily: 'var(--font-body)', fontWeight: 600, lineHeight: 1.2 }}
           className="hover-underline"
         >
-          {product.name}
+          {translateProductDisplay(product.name)}
         </h3>
         <span style={{ fontSize: '1.1rem', fontWeight: 700, fontFamily: 'var(--font-display)', marginBottom: '0.75rem' }}>
           ${product.price ? product.price.toFixed(2) : '47.90'} <span style={{fontSize: '0.8rem', color: 'var(--text-muted)'}}>CAD</span>
@@ -92,7 +95,7 @@ const ProductCard = ({ product }) => {
             style={{ width: '100%', justifyContent: 'center' }}
             onClick={handleView}
           >
-            Personalizar e Comprar
+            {language === 'pt' ? 'Personalizar e Comprar' : 'Customize and Buy'}
           </button>
         </div>
       </div>
