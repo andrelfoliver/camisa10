@@ -74,23 +74,23 @@ const Navbar = () => {
           gap: '0.5rem'
         }}>
           
-          {/* Coluna Esquerda: Menu + WhatsApp */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.8rem' }}>
-            {/* Mobile: Botão de Menu */}
+          {/* Coluna Esquerda (3 Itens): Menu + WhatsApp + Login */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+            {/* 1. Menu (Mobile Only) */}
             <button 
               className="mobile-only" 
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)} 
-              style={{ color: 'var(--text-main)', background: 'transparent', border: 'none', cursor: 'pointer', padding: '0.5rem 0' }}
+              style={{ color: 'var(--text-main)', background: 'transparent', border: 'none', cursor: 'pointer', padding: '0.5rem' }}
             >
               {mobileMenuOpen ? <X size={26} /> : <Menu size={26} />}
             </button>
 
-            {/* WhatsApp Link (Visível em ambos, mobile e desktop) */}
+            {/* 2. WhatsApp (Desktop + Mobile) */}
             <a 
               href="https://wa.me/15875705304" 
               target="_blank" 
               rel="noopener noreferrer"
-              style={{ color: 'var(--text-main)', display: 'flex', alignItems: 'center', padding: '0.5rem 0' }}
+              style={{ color: 'var(--text-main)', display: 'flex', alignItems: 'center', padding: '0.5rem' }}
               title="WhatsApp"
             >
               <svg 
@@ -106,30 +106,22 @@ const Navbar = () => {
               </svg>
             </a>
 
-            {/* Desktop: Barra de Busca (Ocupa espaço se visível) */}
-            <div className="desktop-only" style={{ marginLeft: '1rem' }}>
-              <form onSubmit={handleSearchSubmit} style={{ position: 'relative', width: '200px' }}>
-                <input 
-                  type="text"
-                  placeholder={language === 'pt' ? 'Buscar...' : 'Search...'}
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  style={{
-                    width: '100%',
-                    background: 'rgba(255,255,255,0.05)',
-                    border: '1px solid rgba(255,255,255,0.1)',
-                    padding: '0.5rem 1rem 0.5rem 2.2rem',
-                    borderRadius: '8px',
-                    color: '#fff',
-                    fontSize: '0.85rem',
-                    outline: 'none'
-                  }}
-                  onFocus={(e) => e.target.style.borderColor = 'var(--accent-color)'}
-                  onBlur={(e) => e.target.style.borderColor = 'rgba(255,255,255,0.1)'}
-                />
-                <Search size={15} style={{ position: 'absolute', left: '0.8rem', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }} />
-              </form>
-            </div>
+            {/* 3. Login / Perfil (Desktop + Mobile) */}
+            <button 
+               onClick={() => {
+                  if(!user) navigate('/auth');
+                  else if(isAdmin) navigate('/admin');
+                  else navigate('/perfil');
+               }} 
+               style={{ color: user ? 'var(--accent-color)' : 'var(--text-main)', padding: '0.5rem', background: 'transparent', border: 'none', cursor: 'pointer' }}
+               title={user ? 'Minha Conta' : 'Fazer Login'}
+            >
+               {user?.user_metadata?.avatar_url ? (
+                 <img src={user.user_metadata.avatar_url} alt="Profile" style={{ width: '24px', height: '24px', borderRadius: '50%', border: `2px solid var(--accent-color)`, objectFit: 'cover' }} />
+               ) : (
+                 <UserCircle size={24} />
+               )}
+            </button>
           </div>
 
           {/* Coluna Central: Logo (Ajustada para 2.2rem) */}
@@ -151,10 +143,33 @@ const Navbar = () => {
             </Link>
           </div>
           
-          {/* Coluna Direita: Ações (Lupa, Login, Idioma, Sacola) */}
+          {/* Coluna Direita (3 Itens): Busca + Idioma + Sacola */}
           <div style={{ display: 'flex', gap: '0.4rem', alignItems: 'center', justifyContent: 'flex-end' }}>
             
-            {/* 1. Lupa (Mobile Only - Desktop já tem no campo) */}
+            {/* 1. Busca (Desktop: Input | Mobile: Icon) */}
+            <div className="desktop-only" style={{ marginRight: '0.2rem' }}>
+              <form onSubmit={handleSearchSubmit} style={{ position: 'relative', width: '160px' }}>
+                <input 
+                  type="text"
+                  placeholder={language === 'pt' ? 'Buscar...' : 'Search...'}
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  style={{
+                    width: '100%',
+                    background: 'rgba(255,255,255,0.05)',
+                    border: '1px solid rgba(255,255,255,0.1)',
+                    padding: '0.4rem 0.8rem 0.4rem 2rem',
+                    borderRadius: '8px',
+                    color: '#fff',
+                    fontSize: '0.8rem',
+                    outline: 'none'
+                  }}
+                  onFocus={(e) => e.target.style.borderColor = 'var(--accent-color)'}
+                  onBlur={(e) => e.target.style.borderColor = 'rgba(255,255,255,0.1)'}
+                />
+                <Search size={13} style={{ position: 'absolute', left: '0.7rem', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }} />
+              </form>
+            </div>
             <button 
               className="mobile-only"
               onClick={() => setIsSearchOpen(!isSearchOpen)}
@@ -163,24 +178,7 @@ const Navbar = () => {
                <Search size={22} />
             </button>
             
-            {/* 2. Login / Perfil */}
-            <button 
-               onClick={() => {
-                  if(!user) navigate('/auth');
-                  else if(isAdmin) navigate('/admin');
-                  else navigate('/perfil');
-               }} 
-               style={{ color: user ? 'var(--accent-color)' : 'var(--text-main)', padding: '0.5rem', background: 'transparent', border: 'none', cursor: 'pointer' }}
-               title={user ? 'Minha Conta' : 'Fazer Login'}
-            >
-               {user?.user_metadata?.avatar_url ? (
-                 <img src={user.user_metadata.avatar_url} alt="Profile" style={{ width: '24px', height: '24px', borderRadius: '50%', border: `2px solid var(--accent-color)`, objectFit: 'cover' }} />
-               ) : (
-                 <UserCircle size={24} />
-               )}
-            </button>
-
-            {/* 3. Seletor de Idioma (Hover - Estilo ifutz) */}
+            {/* 2. Seletor de Idioma (Hover - Estilo ifutz) */}
             <div 
               style={{ position: 'relative', display: 'flex', alignItems: 'center', height: '40px', padding: '0 0.5rem' }}
               onMouseEnter={(e) => {
@@ -219,7 +217,7 @@ const Navbar = () => {
               </div>
             </div>
   
-            {/* 4. Carrinho */}
+            {/* 3. Carrinho */}
             <button 
               onClick={() => setIsCartOpen(true)}
               style={{ position: 'relative', color: 'var(--text-main)', padding: '0.5rem', background: 'transparent', border: 'none', cursor: 'pointer' }}
