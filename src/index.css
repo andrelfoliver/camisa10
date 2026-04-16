@@ -328,12 +328,22 @@ button {
     min-height: 100vh;
     align-items: flex-end;
   }
+  .hero-funnel::before {
+    background-position: center 10%;
+  }
   .hero-funnel::after {
     background: linear-gradient(to top, 
       rgba(0,0,0,1) 0%, 
-      rgba(0,0,0,0.8) 50%, 
+      rgba(0,0,0,0.95) 40%, 
+      rgba(0,0,0,0.7) 70%, 
       rgba(0,0,0,0) 100%
     );
+  }
+  .hero-container-modern {
+    min-height: auto !important;
+    justify-content: flex-end !important;
+    padding-bottom: 2rem !important;
+    margin-top: auto;
   }
 }
 
@@ -365,8 +375,9 @@ button {
     position: relative;
     top: 0;
     right: 0;
-    margin-bottom: 1rem;
+    margin-bottom: 0.5rem;
     text-align: center;
+    font-size: 0.8rem;
   }
 }
 
@@ -380,6 +391,11 @@ button {
   .hero-zone-west {
     max-width: 100%;
     text-align: center;
+  }
+  .hero-giant-title {
+    font-size: clamp(1.8rem, 8vw, 2.6rem) !important;
+    letter-spacing: -1px !important;
+    line-height: 1.1 !important;
   }
 }
 
