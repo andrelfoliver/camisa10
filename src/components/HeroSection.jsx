@@ -2,7 +2,10 @@ import React, { useState, useEffect } from 'react';
 import { ShieldCheck, Truck, Clock } from 'lucide-react';
 import { supabase } from '../services/supabase';
 
+import { useLanguage } from '../context/LanguageContext';
+
 const HeroSection = () => {
+  const { t, language } = useLanguage();
   const [heroBgUrl, setHeroBgUrl] = useState(() => {
     return localStorage.getItem('cached_hero_bg') || '';
   });
@@ -20,47 +23,54 @@ const HeroSection = () => {
 
   return (
     <section className="hero-funnel" style={{ '--hero-bg-url': `url('${heroBgUrl}')` }}>
-      <div className="hero-overlay-texture"></div>
       
       <div className="hero-container-modern animate-fade-in">
-        {/* Corner Left Zone */}
+        
+        {/* Social Proof no topo à direita */}
+        <div className="hero-social-proof-top">
+          {t('hero_satisfied_clients')}
+        </div>
+
+        {/* Content Box */}
         <div className="hero-zone-west">
           <h1 className="hero-giant-title">
-            VISTA SEU <span className="accent-glow-text">TIME</span><br />
-            MESMO LONGE DO <span className="accent-glow-text">BRASIL</span>
+            {t('hero_title_part1')}
+            <span style={{ color: 'var(--accent-color)' }}>{t('hero_title_accent')}</span>
           </h1>
 
-        </div>
+          <p className="hero-subtitle-modern">
+            {t('hero_subtitle')}
+          </p>
 
-        {/* Corner Right Zone */}
-        <div className="hero-zone-east">
-          {/* Prova social — abaixo da foto, fora da imagem */}
-          <p style={{ fontSize: '0.85rem', color: '#fff', textAlign: 'center', margin: '0 0 0.4rem 0', opacity: 0.9 }}>⭐ +200 clientes satisfeitos no Canadá</p>
-
-          <div className="hero-hud-badges">
-            <div className="hud-item">
-              <div className="hud-icon"><Truck size={18} /></div>
-              <div className="hud-text">
-                <span className="hud-value">Todo o Canadá</span>
+          {/* Trust Badges */}
+          <div className="hero-trust-badges">
+            <div className="badge-trust-item">
+              <Truck size={24} color="var(--accent-color)" />
+              <div className="badge-trust-text">
+                <span className="badge-trust-title">{t('hero_shipping_all')}</span>
+                <span className="badge-trust-desc">{t('hero_shipping_calgary')}</span>
               </div>
             </div>
-            <div className="hud-item">
-              <div className="hud-icon"><ShieldCheck size={18} /></div>
-              <div className="hud-text">
-                <span className="hud-value">Entrega garantida</span>
+            <div className="badge-trust-item">
+              <ShieldCheck size={24} color="var(--accent-color)" />
+              <div className="badge-trust-text">
+                <span className="badge-trust-title">{t('hero_shipping_guaranteed')}</span>
+                <span className="badge-trust-desc">{t('hero_shipping_moneyback')}</span>
               </div>
             </div>
           </div>
 
-          <div className="hero-actions-modern">
-            <a href="#destaque" className="btn-hero-massive">
-              GARANTIR MINHA CAMISA
+          {/* Actions */}
+          <div className="hero-actions-strategic">
+            <a href="#catalogo" className="btn-hero-strategic-primary">
+              {t('hero_btn_guarantee')}
             </a>
-            <a href="#catalogo" className="btn-hero-outline">
-              Ver todas as camisas
+            <a href="#catalogo" className="btn-hero-strategic-secondary">
+              {t('hero_btn_view_all')}
             </a>
           </div>
         </div>
+
       </div>
 
       {/* Background Decor */}

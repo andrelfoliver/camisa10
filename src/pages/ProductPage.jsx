@@ -2,6 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { supabase } from '../services/supabase';
 import { useCart } from '../context/CartContext';
+import { useLanguage } from '../context/LanguageContext';
+
 import { brasil2025Products } from '../data/brasil2025';
 import {
   ShieldCheck, Truck, Star, CheckCircle2, ChevronDown, ChevronUp
@@ -27,6 +29,8 @@ const ProductPage = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const { addToCart, pricingConfig } = useCart();
+  const { t, language, translateProductDisplay } = useLanguage();
+
 
   const [product, setProduct] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -93,8 +97,9 @@ const ProductPage = () => {
     loadData();
   }, [id]);
 
-  if (loading) return <div style={{ textAlign: 'center', padding: '5rem', fontSize: '1.5rem', color: 'var(--text-muted)' }}>Carregando produto...</div>;
-  if (!product) return <div style={{ textAlign: 'center', padding: '5rem' }}>Produto não encontrado.</div>;
+  if (loading) return <div style={{ textAlign: 'center', padding: '5rem', fontSize: '1.5rem', color: 'var(--text-muted)' }}>{language === 'pt' ? 'Carregando produto...' : 'Loading product...'}</div>;
+  if (!product) return <div style={{ textAlign: 'center', padding: '5rem' }}>{language === 'pt' ? 'Produto não encontrado.' : 'Product not found.'}</div>;
+
 
   const handleAdd = (buyNow = false) => {
     for (let i = 0; i < quantity; i++) {
@@ -141,21 +146,21 @@ const ProductPage = () => {
           <div style={{ display: 'flex', flexDirection: 'column', padding: '1rem 0', minWidth: 0 }}>
 
             <div style={{ background: '#1f2937', color: '#fff', padding: '0.8rem 1rem', borderRadius: '4px', textAlign: 'center', fontWeight: 600, fontSize: '0.9rem', marginBottom: '1.5rem', width: '100%', lineHeight: 1.4 }}>
-              🚀 Desconto progressivo: na compra de 2 ou mais camisas você economiza! 🚀
+              {language === 'pt' ? '🚀 Desconto progressivo: na compra de 2 ou mais camisas você economiza! 🚀' : '🚀 Volume discount: buy 2 or more jerseys and save! 🚀'}
             </div>
 
-            <h1 style={{ fontSize: '2.5rem', marginBottom: '0.5rem', lineHeight: 1.2, fontWeight: 800 }}>{product.name}</h1>
+            <h1 style={{ fontSize: '2.5rem', marginBottom: '0.5rem', lineHeight: 1.2, fontWeight: 800 }}>{translateProductDisplay(product.name)}</h1>
 
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: '#FCD34D', marginBottom: '1.5rem' }}>
               <Star fill="currentColor" /><Star fill="currentColor" /><Star fill="currentColor" /><Star fill="currentColor" /><Star fill="currentColor" />
-              <span className="text-muted" style={{ fontSize: '1rem', color: 'var(--text-muted)' }}> | 1 Avaliações | 0 Perguntas</span>
+              <span className="text-muted" style={{ fontSize: '1rem', color: 'var(--text-muted)' }}> | 1 {language === 'pt' ? 'Avaliações' : 'Reviews'} | 0 {language === 'pt' ? 'Perguntas' : 'Questions'}</span>
             </div>
 
             {/* PREÇO */}
             <div style={{ display: 'flex', flexDirection: 'column', marginBottom: '1.5rem' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                 <span style={{ fontSize: '2.5rem', fontWeight: 800, color: 'var(--accent-color)' }}>${currentTotal.toFixed(2)} CAD</span>
-                <span style={{ fontSize: '1.2rem', fontWeight: 700, color: 'var(--text-main)' }}>no e-Transfer</span>
+                <span style={{ fontSize: '1.2rem', fontWeight: 700, color: 'var(--text-main)' }}>{t('product_price_transfer')}</span>
               </div>
               <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginTop: '0.2rem' }}>
                 <span style={{ fontSize: '1.2rem', color: 'var(--text-muted)', textDecoration: 'line-through' }}>${(currentTotal + 50).toFixed(2)} CAD</span>
@@ -163,13 +168,13 @@ const ProductPage = () => {
             </div>
 
             {/* Promocao Fixa */}
-            <div style={{ color: '#EF4444', fontWeight: 800, marginBottom: '0.2rem' }}>DESCONTO PROGRESSIVO</div>
-            <div style={{ fontSize: '0.9rem', marginBottom: '1.5rem', color: 'var(--text-muted)' }}>Na compra de 2 ou mais itens, o desconto é aplicado na sua sacola!</div>
+            <div style={{ color: '#EF4444', fontWeight: 800, marginBottom: '0.2rem' }}>{language === 'pt' ? 'DESCONTO PROGRESSIVO' : 'VOLUME DISCOUNT'}</div>
+            <div style={{ fontSize: '0.9rem', marginBottom: '1.5rem', color: 'var(--text-muted)' }}>{language === 'pt' ? 'Na compra de 2 ou mais itens, o desconto é aplicado na sua sacola!' : 'When buying 2 or more items, the discount is applied to your cart!'}</div>
 
             {/* Tabela Visual Dinamica */}
             {pricingConfig?.discounts && pricingConfig.discounts.length > 0 && (
               <div style={{ background: 'var(--surface-color)', border: '1px solid var(--border-color)', borderRadius: '8px', padding: '1rem', marginBottom: '2rem' }}>
-                <p style={{ fontWeight: 800, color: 'var(--text-main)', marginBottom: '0.8rem', fontSize: '0.95rem' }}>🔥 Tabela de Atacado / Combos</p>
+                <p style={{ fontWeight: 800, color: 'var(--text-main)', marginBottom: '0.8rem', fontSize: '0.95rem' }}>{t('product_wholesale_table')}</p>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', paddingBottom: '0.3rem', borderBottom: '1px dashed var(--border-color)', color: 'var(--text-muted)' }}>
                     <span>1 peça</span>
@@ -180,8 +185,8 @@ const ProductPage = () => {
                     const qtyLabel = d.qty === 3 ? "3-4 peças" : d.qty === 5 ? "5-9 peças" : d.qty === 10 ? "10+ peças" : `${d.qty} peças`;
                     return (
                       <div key={index} style={{ display: 'flex', justifyContent: 'space-between', paddingBottom: '0.3rem', borderBottom: index < pricingConfig.discounts.length - 1 ? '1px dashed var(--border-color)' : 'none', color: '#10B981', fontWeight: 600 }}>
-                        <span>{qtyLabel}</span>
-                        <span>${pricePerUnit.toFixed(2)} cada</span>
+                        <span>{language === 'pt' ? qtyLabel : qtyLabel.replace('peças', 'jerseys').replace('peça', 'jersey')}</span>
+                        <span>${pricePerUnit.toFixed(2)} {t('product_wholesale_each')}</span>
                       </div>
                     );
                   })}
@@ -191,22 +196,22 @@ const ProductPage = () => {
 
             {/* Customization Toggle */}
             <div style={{ marginBottom: '1.5rem' }}>
-              <p style={{ fontWeight: 600, marginBottom: '0.5rem' }}>Adicionais: {isCustomized ? 'Somente Personalizado' : 'Não'}</p>
+              <p style={{ fontWeight: 600, marginBottom: '0.5rem' }}>{t('product_customization')}: {isCustomized ? t('product_customization_yes') : t('product_customization_none')}</p>
               <div style={{ display: 'flex', gap: '1rem' }}>
-                <button onClick={() => setIsCustomized(false)} style={{ border: `1px solid ${!isCustomized ? 'var(--accent-color)' : 'var(--border-color)'}`, background: !isCustomized ? 'var(--surface-hover)' : 'transparent', padding: '0.5rem 1.5rem', color: 'var(--text-main)', borderRadius: '4px', cursor: 'pointer', fontWeight: !isCustomized ? 600 : 400 }}>Não</button>
-                <button onClick={() => setIsCustomized(true)} style={{ border: `1px solid ${isCustomized ? 'var(--accent-color)' : 'var(--border-color)'}`, background: isCustomized ? 'var(--surface-hover)' : 'transparent', padding: '0.5rem 1.5rem', color: 'var(--text-main)', borderRadius: '4px', cursor: 'pointer', fontWeight: isCustomized ? 600 : 400 }}>Somente Personalizado</button>
+                <button onClick={() => setIsCustomized(false)} style={{ border: `1px solid ${!isCustomized ? 'var(--accent-color)' : 'var(--border-color)'}`, background: !isCustomized ? 'var(--surface-hover)' : 'transparent', padding: '0.5rem 1.5rem', color: 'var(--text-main)', borderRadius: '4px', cursor: 'pointer', fontWeight: !isCustomized ? 600 : 400 }}>{t('product_customization_none')}</button>
+                <button onClick={() => setIsCustomized(true)} style={{ border: `1px solid ${isCustomized ? 'var(--accent-color)' : 'var(--border-color)'}`, background: isCustomized ? 'var(--surface-hover)' : 'transparent', padding: '0.5rem 1.5rem', color: 'var(--text-main)', borderRadius: '4px', cursor: 'pointer', fontWeight: isCustomized ? 600 : 400 }}>{t('product_customization_yes')}</button>
               </div>
             </div>
 
             <div style={{ border: '1px solid var(--border-color)', padding: '1.5rem', textAlign: 'center', marginBottom: '2rem', borderRadius: '4px', background: 'var(--surface-color)' }}>
-              <p style={{ color: 'var(--text-muted)' }}>Para personalizar com nome e número, clique em 'Somente Personalizado'. Ao personalizar, você receberá a confirmação no WhatsApp!</p>
+              <p style={{ color: 'var(--text-muted)' }}>{language === 'pt' ? "Para personalizar com nome e número, clique em 'Somente Personalizado'. Ao personalizar, você receberá a confirmação no WhatsApp!" : "To customize with name and number, click 'Personalized Only'. After customizing, you will receive confirmation via WhatsApp!"}</p>
             </div>
 
             {/* Sizes */}
             <div style={{ marginBottom: '2.5rem' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
-                <p style={{ fontWeight: 600 }}>Tamanho: <span style={{ fontWeight: 800, color: 'var(--accent-color)' }}>{selectedSize}</span></p>
-                <span style={{ color: 'var(--text-muted)', fontSize: '0.9rem' }}>Tamanhos plussize (2XL ao 4XL) possuem pequeno acréscimo.</span>
+                <p style={{ fontWeight: 600 }}>{t('product_size')}: <span style={{ fontWeight: 800, color: 'var(--accent-color)' }}>{selectedSize}</span></p>
+                <span style={{ color: 'var(--text-muted)', fontSize: '0.9rem' }}>{language === 'pt' ? 'Tamanhos plussize (2XL ao 4XL) possuem pequeno acréscimo.' : 'Plus sizes (2XL to 4XL) have a small surcharge.'}</span>
               </div>
               <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
                 {sizes.map(s => (
@@ -233,16 +238,16 @@ const ProductPage = () => {
             {/* Conditional Inputs */}
             {isCustomized && (
               <div style={{ marginBottom: '2.5rem', background: 'var(--surface-hover)', padding: '1.5rem', borderRadius: '8px', border: '1px solid var(--border-color)' }}>
-                <p style={{ fontWeight: 600, marginBottom: '0.5rem' }}>Insira o Nome</p>
+                <p style={{ fontWeight: 600, marginBottom: '0.5rem' }}>{language === 'pt' ? 'Insira o Nome' : 'Enter Name'}</p>
                 <input
-                  type="text"
-                  placeholder="Ex: Roberto"
-                  value={customName}
-                  onChange={e => setCustomName(e.target.value)}
-                  style={{ width: '100%', padding: '1rem', border: '1px solid var(--border-color)', borderRadius: '4px', marginBottom: '1.5rem', background: 'var(--surface-color)', color: 'var(--text-main)', fontSize: '1.1rem' }}
+                   type="text"
+                   placeholder={language === 'pt' ? 'Ex: Roberto' : 'Ex: John'}
+                   value={customName}
+                   onChange={e => setCustomName(e.target.value)}
+                   style={{ width: '100%', padding: '1rem', border: '1px solid var(--border-color)', borderRadius: '4px', marginBottom: '1.5rem', background: 'var(--surface-color)', color: 'var(--text-main)', fontSize: '1.1rem' }}
                 />
 
-                <p style={{ fontWeight: 600, marginBottom: '0.5rem' }}>Insira o Número (até 2)</p>
+                <p style={{ fontWeight: 600, marginBottom: '0.5rem' }}>{language === 'pt' ? 'Insira o Número (até 2)' : 'Enter Number (up to 2)'}</p>
                 <input
                   type="text"
                   placeholder="Ex: 10"
@@ -262,13 +267,13 @@ const ProductPage = () => {
                 <button onClick={() => setQuantity(quantity + 1)} style={{ padding: '1rem 1.5rem', background: 'transparent', border: 'none', cursor: 'pointer', color: 'var(--text-main)', fontSize: '1.2rem' }}>+</button>
               </div>
               <button className="btn-primary" onClick={() => handleAdd(true)} style={{ flex: 1, fontWeight: 800, fontSize: '1.2rem', padding: '1rem', border: 'none', borderRadius: '4px', cursor: 'pointer', display: 'flex', justifyContent: 'center', alignItems: 'center', transition: 'all 0.2s', boxShadow: '0 4px 15px rgba(219, 254, 135, 0.3)' }}>
-                COMPRAR AGORA
+                {t('product_buy_now')}
               </button>
             </div>
 
             {/* Medidas Table */}
             <div style={{ background: 'var(--surface-color)', borderRadius: '8px', padding: '1.5rem', overflowX: 'auto', border: '1px solid var(--border-color)' }}>
-              <h3 style={{ marginBottom: '1.5rem', color: 'var(--text-main)', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>📏 Guia de Medidas Oficial</h3>
+              <h3 style={{ marginBottom: '1.5rem', color: 'var(--text-main)', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>📏 {language === 'pt' ? 'Guia de Medidas Oficial' : 'Official Size Guide'}</h3>
               <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'center', fontSize: '0.9rem' }}>
                 <thead>
                   <tr>
@@ -282,7 +287,7 @@ const ProductPage = () => {
                 </thead>
                 <tbody>
                   <tr>
-                    <td style={{ padding: '0.8rem', fontWeight: 600, borderBottom: '1px solid var(--border-color)' }}>COMPRIMENTO</td>
+                    <td style={{ padding: '0.8rem', fontWeight: 600, borderBottom: '1px solid var(--border-color)' }}>{language === 'pt' ? 'COMPRIMENTO' : 'LENGTH'}</td>
                     <td style={{ padding: '0.8rem', borderBottom: '1px solid var(--border-color)', color: 'var(--text-muted)' }}>69-71 cm</td>
                     <td style={{ padding: '0.8rem', borderBottom: '1px solid var(--border-color)', color: 'var(--text-muted)' }}>71-73 cm</td>
                     <td style={{ padding: '0.8rem', borderBottom: '1px solid var(--border-color)', color: 'var(--text-muted)' }}>73-78 cm</td>
@@ -290,7 +295,7 @@ const ProductPage = () => {
                     <td style={{ padding: '0.8rem', borderBottom: '1px solid var(--border-color)', color: 'var(--text-muted)' }}>78-81 cm</td>
                   </tr>
                   <tr>
-                    <td style={{ padding: '0.8rem', fontWeight: 600, borderBottom: '1px solid var(--border-color)' }}>LARGURA</td>
+                    <td style={{ padding: '0.8rem', fontWeight: 600, borderBottom: '1px solid var(--border-color)' }}>{language === 'pt' ? 'LARGURA' : 'WIDTH'}</td>
                     <td style={{ padding: '0.8rem', borderBottom: '1px solid var(--border-color)', color: 'var(--text-muted)' }}>53-55 cm</td>
                     <td style={{ padding: '0.8rem', borderBottom: '1px solid var(--border-color)', color: 'var(--text-muted)' }}>55-57 cm</td>
                     <td style={{ padding: '0.8rem', borderBottom: '1px solid var(--border-color)', color: 'var(--text-muted)' }}>57-58 cm</td>
@@ -298,7 +303,7 @@ const ProductPage = () => {
                     <td style={{ padding: '0.8rem', borderBottom: '1px solid var(--border-color)', color: 'var(--text-muted)' }}>60-62 cm</td>
                   </tr>
                   <tr>
-                    <td style={{ padding: '0.8rem', fontWeight: 600, borderBottom: '1px solid var(--border-color)' }}>ALTURA IND.</td>
+                    <td style={{ padding: '0.8rem', fontWeight: 600, borderBottom: '1px solid var(--border-color)' }}>{language === 'pt' ? 'ALTURA IND.' : 'SUGGESTED HEIGHT'}</td>
                     <td style={{ padding: '0.8rem', borderBottom: '1px solid var(--border-color)', color: 'var(--text-muted)' }}>162-170 cm</td>
                     <td style={{ padding: '0.8rem', borderBottom: '1px solid var(--border-color)', color: 'var(--text-muted)' }}>170-176 cm</td>
                     <td style={{ padding: '0.8rem', borderBottom: '1px solid var(--border-color)', color: 'var(--text-muted)' }}>176-182 cm</td>
@@ -306,7 +311,7 @@ const ProductPage = () => {
                     <td style={{ padding: '0.8rem', borderBottom: '1px solid var(--border-color)', color: 'var(--text-muted)' }}>190-195 cm</td>
                   </tr>
                   <tr>
-                    <td style={{ padding: '0.8rem', fontWeight: 600 }}>PESO IND.</td>
+                    <td style={{ padding: '0.8rem', fontWeight: 600 }}>{language === 'pt' ? 'PESO IND.' : 'SUGGESTED WEIGHT'}</td>
                     <td style={{ padding: '0.8rem', color: 'var(--text-muted)' }}>50-62 kg</td>
                     <td style={{ padding: '0.8rem', color: 'var(--text-muted)' }}>62-78 kg</td>
                     <td style={{ padding: '0.8rem', color: 'var(--text-muted)' }}>78-83 kg</td>
