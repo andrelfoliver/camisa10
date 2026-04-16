@@ -75,24 +75,25 @@ const Navbar = () => {
 
       {/* BARRA 2: MAIN HEADER (SEARCH | LOGO | ACTIONS) */}
       <nav className="glass-panel" style={{
-        position: 'sticky', top: 0, zIndex: 100, borderBottom: '1px solid var(--border-color)', padding: '0.75rem 0'
+        position: 'sticky', top: 0, zIndex: 100, borderBottom: '1px solid var(--border-color)', padding: '0.6rem 0'
       }}>
         <div className="container" style={{ 
           display: 'grid', 
           gridTemplateColumns: '1fr auto 1fr', 
           alignItems: 'center',
-          gap: '0.5rem'
+          gap: '0.2rem',
+          padding: '0 0.75rem' // Reduzido de 1.5rem para caber tudo no mobile
         }}>
           
           {/* Coluna Esquerda (3 Itens): Menu + WhatsApp + Login */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.2rem' }}>
             {/* 1. Menu (Mobile Only) */}
             <button 
               className="mobile-only" 
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)} 
-              style={{ color: 'var(--text-main)', background: 'transparent', border: 'none', cursor: 'pointer', padding: '0.5rem' }}
+              style={{ color: 'var(--text-main)', background: 'transparent', border: 'none', cursor: 'pointer', padding: '0.35rem' }}
             >
-              {mobileMenuOpen ? <X size={26} /> : <Menu size={26} />}
+              {mobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
             </button>
 
             {/* 2. WhatsApp (Desktop + Mobile) */}
@@ -100,13 +101,13 @@ const Navbar = () => {
               href={`https://wa.me/${waNumber.replace(/\D/g, '')}`} 
               target="_blank" 
               rel="noopener noreferrer"
-              style={{ color: 'var(--text-main)', display: 'flex', alignItems: 'center', padding: '0.5rem' }}
+              style={{ color: 'var(--text-main)', display: 'flex', alignItems: 'center', padding: '0.35rem' }}
               title="WhatsApp"
             >
               <svg 
                 viewBox="0 0 24 24" 
-                width="24" 
-                height="24" 
+                width="22" 
+                height="22" 
                 fill="currentColor" 
                 style={{ transition: 'color 0.2s' }}
                 onMouseOver={(e) => e.currentTarget.style.color = '#25D366'}
@@ -123,24 +124,24 @@ const Navbar = () => {
                   else if(isAdmin) navigate('/admin');
                   else navigate('/perfil');
                }} 
-               style={{ color: user ? 'var(--accent-color)' : 'var(--text-main)', padding: '0.5rem', background: 'transparent', border: 'none', cursor: 'pointer' }}
+               style={{ color: user ? 'var(--accent-color)' : 'var(--text-main)', padding: '0.35rem', background: 'transparent', border: 'none', cursor: 'pointer' }}
                title={user ? 'Minha Conta' : 'Fazer Login'}
             >
                {user?.user_metadata?.avatar_url ? (
-                 <img src={user.user_metadata.avatar_url} alt="Profile" style={{ width: '24px', height: '24px', borderRadius: '50%', border: `2px solid var(--accent-color)`, objectFit: 'cover' }} />
+                 <img src={user.user_metadata.avatar_url} alt="Profile" style={{ width: '22px', height: '22px', borderRadius: '50%', border: `1px solid var(--accent-color)`, objectFit: 'cover' }} />
                ) : (
-                 <UserCircle size={24} />
+                 <UserCircle size={22} />
                )}
             </button>
           </div>
 
-          {/* Coluna Central: Logo (Ajustada para 2.2rem) */}
+          {/* Coluna Central: Logo (Responsiva) */}
           <div style={{ display: 'flex', justifyContent: 'center' }}>
             <Link to="/" style={{ 
               display: 'flex', 
               alignItems: 'center', 
               fontWeight: 900, 
-              fontSize: '2.2rem', 
+              fontSize: window.innerWidth < 500 ? '1.7rem' : '2.2rem', 
               fontFamily: 'var(--font-display)', 
               fontStyle: 'italic',
               letterSpacing: '-1.5px',
@@ -154,7 +155,7 @@ const Navbar = () => {
           </div>
           
           {/* Coluna Direita (3 Itens): Busca + Idioma + Sacola */}
-          <div style={{ display: 'flex', gap: '0.4rem', alignItems: 'center', justifyContent: 'flex-end' }}>
+          <div style={{ display: 'flex', gap: '0.2rem', alignItems: 'center', justifyContent: 'flex-end' }}>
             
             {/* 1. Busca (Desktop: Input | Mobile: Icon) */}
             <div className="desktop-only" style={{ marginRight: '0.2rem' }}>
@@ -183,7 +184,7 @@ const Navbar = () => {
             <button 
               className="mobile-only"
               onClick={() => setIsSearchOpen(!isSearchOpen)}
-              style={{ color: 'var(--text-main)', padding: '0.5rem', background: 'transparent', border: 'none', cursor: 'pointer' }}
+              style={{ color: 'var(--text-main)', padding: '0.35rem', background: 'transparent', border: 'none', cursor: 'pointer' }}
             >
                <Search size={22} />
             </button>

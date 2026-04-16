@@ -796,9 +796,9 @@ button {
   scroll-snap-type: x mandatory;
   scroll-behavior: smooth;
   gap: 0;
-  width: 100vw;
-  margin-left: calc(-50vw + 50%);
-  margin-right: calc(-50vw + 50%);
+  width: calc(100% + 3rem); /* Compensa o padding de 1.5rem de cada lado do .container */
+  margin-left: -1.5rem;
+  margin-right: -1.5rem;
 }
 
 @media (min-width: 992px) {
@@ -851,7 +851,7 @@ button {
 
 .size-box-grid {
   display: grid;
-  grid-template-columns: repeat(5, 1fr);
+  grid-template-columns: repeat(auto-fill, minmax(55px, 1fr));
   gap: 0.5rem;
   margin-top: 1rem;
 }
