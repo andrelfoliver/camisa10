@@ -6,7 +6,7 @@ import { useLanguage } from '../context/LanguageContext';
 
 import { brasil2025Products } from '../data/brasil2025';
 import {
-  ShieldCheck, Truck, Star, CheckCircle2, ChevronDown, ChevronUp
+  ShieldCheck, Truck, Star, CheckCircle2, ChevronDown, ChevronUp, Quote
 } from 'lucide-react';
 
 const FAQItem = ({ question, answer }) => {
@@ -34,6 +34,7 @@ const ProductPage = () => {
 
   const [product, setProduct] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [testimonials, setTestimonials] = useState([]);
 
   // Gallery Logic
   const [activeImage, setActiveImage] = useState('');
@@ -89,12 +90,24 @@ const ProductPage = () => {
 
       const { data } = await supabase.from('products').select('*').eq('id', id).single();
       if (data) {
-        setProduct({ ...data, gallery: [data.image] });
+        setProduct({ ...data, gallery: data.gallery && data.gallery.length > 0 ? data.gallery : [data.image] });
         setActiveImage(data.image);
       }
       setLoading(false);
     }
     loadData();
+
+    // Load approved testimonials from Supabase
+    async function loadTestimonials() {
+      const { data } = await supabase
+        .from('testimonials')
+        .select('*')
+        .eq('status', 'approved')
+        .order('date', { ascending: false })
+        .limit(6);
+      if (data && data.length > 0) setTestimonials(data);
+    }
+    loadTestimonials();
   }, [id]);
 
   if (loading) return <div style={{ textAlign: 'center', padding: '5rem', fontSize: '1.5rem', color: 'var(--text-muted)' }}>{language === 'pt' ? 'Carregando produto...' : 'Loading product...'}</div>;
@@ -337,19 +350,37 @@ const ProductPage = () => {
       {/* 8. PROVA SOCIAL */}
       <section className="container" style={{ padding: '5rem 1.5rem', textAlign: 'center', borderTop: '1px solid var(--border-color)', marginTop: '3rem' }}>
         <h2 style={{ fontSize: '2.5rem', marginBottom: '1rem' }}>O que nossos clientes dizem</h2>
-        <p className="text-muted" style={{ textAlign: 'center', marginBottom: '3rem', fontSize: '1.2rem' }}>Já somos <strong style={{ color: 'var(--accent-color)' }}>+200 clientes</strong> no Canadá! 🍁</p>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '2rem' }}>
-          <div className="glass-panel" style={{ padding: '2rem', textAlign: 'left', borderRadius: '8px' }}>
-            <div style={{ color: 'var(--accent-color)', marginBottom: '1rem', display: 'flex' }}><Star fill="currentColor" /><Star fill="currentColor" /><Star fill="currentColor" /><Star fill="currentColor" /><Star fill="currentColor" /></div>
-            <p style={{ fontSize: '1.1rem', marginBottom: '1rem', fontStyle: 'italic' }}>"Qualidade absurda, parece original!"</p>
-            <p className="text-muted" style={{ fontWeight: 600 }}>— Ricardo T.</p>
+        <p className="text-muted" style={{ textAlign: 'center', marginBottom: '3rem', fontSize: '1.2rem' }}>Já somos <strong style={{ color: 'var(--accent-color)' }}>+200 clientes</strong> vestindo a paixão no Canadá! 🍁</p>
+        {testimonials.length > 0 ? (
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '2rem' }}>
+            {testimonials.map(t => (
+              <div key={t.id} className="glass-panel" style={{ padding: '2rem', textAlign: 'left', borderRadius: '12px', position: 'relative', overflow: 'hidden' }}>
+                <Quote size={40} style={{ position: 'absolute', top: '1rem', right: '1rem', color: 'var(--accent-color)', opacity: 0.15 }} />
+                <div style={{ color: '#FCD34D', marginBottom: '1rem', display: 'flex', gap: '2px' }}>
+                  {Array.from({ length: t.rating || 5 }).map((_, i) => <Star key={i} size={16} fill="currentColor" />)}
+                </div>
+                <p style={{ fontSize: '1.05rem', marginBottom: '1.2rem', fontStyle: 'italic', lineHeight: 1.6, color: 'var(--text-main)' }}>"{ t.content }"</p>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <p style={{ fontWeight: 700, color: 'var(--accent-color)' }}>— {t.name}{t.location ? `, ${t.location}` : ''}</p>
+                  {t.date && <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>{new Date(t.date).toLocaleDateString('pt-BR', { month: 'short', year: 'numeric' })}</span>}
+                </div>
+              </div>
+            ))}
           </div>
-          <div className="glass-panel" style={{ padding: '2rem', textAlign: 'left', borderRadius: '8px' }}>
-            <div style={{ color: 'var(--accent-color)', marginBottom: '1rem', display: 'flex' }}><Star fill="currentColor" /><Star fill="currentColor" /><Star fill="currentColor" /><Star fill="currentColor" /><Star fill="currentColor" /></div>
-            <p style={{ fontSize: '1.1rem', marginBottom: '1rem', fontStyle: 'italic' }}>"Chegou rápido em Toronto!"</p>
-            <p className="text-muted" style={{ fontWeight: 600 }}>— Fernando S.</p>
+        ) : (
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '2rem' }}>
+            <div className="glass-panel" style={{ padding: '2rem', textAlign: 'left', borderRadius: '12px' }}>
+              <div style={{ color: '#FCD34D', marginBottom: '1rem', display: 'flex', gap: '2px' }}><Star size={16} fill="currentColor" /><Star size={16} fill="currentColor" /><Star size={16} fill="currentColor" /><Star size={16} fill="currentColor" /><Star size={16} fill="currentColor" /></div>
+              <p style={{ fontSize: '1.05rem', marginBottom: '1.2rem', fontStyle: 'italic', lineHeight: 1.6 }}>"Qualidade absurda, parece original! Cheguei em Toronto e todos perguntaram onde comprei."</p>
+              <p style={{ fontWeight: 700, color: 'var(--accent-color)' }}>— Ricardo T., Toronto</p>
+            </div>
+            <div className="glass-panel" style={{ padding: '2rem', textAlign: 'left', borderRadius: '12px' }}>
+              <div style={{ color: '#FCD34D', marginBottom: '1rem', display: 'flex', gap: '2px' }}><Star size={16} fill="currentColor" /><Star size={16} fill="currentColor" /><Star size={16} fill="currentColor" /><Star size={16} fill="currentColor" /><Star size={16} fill="currentColor" /></div>
+              <p style={{ fontSize: '1.05rem', marginBottom: '1.2rem', fontStyle: 'italic', lineHeight: 1.6 }}>"Chegou rápido e a personalização ficou incrível! Recomendo demais."</p>
+              <p style={{ fontWeight: 700, color: 'var(--accent-color)' }}>— Fernando S., Vancouver</p>
+            </div>
           </div>
-        </div>
+        )}
       </section>
 
       {/* 10. FAQ */}

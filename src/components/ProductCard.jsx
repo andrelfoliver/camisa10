@@ -35,9 +35,16 @@ const ProductCard = ({ product }) => {
       flexDirection: 'column',
       gap: '1rem'
     }}>
-      {product.id === 1 && <div className="badge">{language === 'pt' ? '🇧🇷 Sucesso' : '🇧🇷 Best Seller'}</div>}
-      {product.id === 2 && <div className="badge" style={{background: '#EF4444', color: '#fff'}}>{language === 'pt' ? '🔥 Mais Vendido' : '🔥 Popular'}</div>}
-      {product.id === 3 && <div className="badge" style={{background: '#FFB81C', color: '#000'}}>{language === 'pt' ? '⭐ Novo' : '⭐ New'}</div>}
+      {product.is_bestseller && (
+        <div className="badge" style={{ background: '#EF4444', color: '#fff', boxShadow: '0 0 15px rgba(239, 68, 68, 0.4)', border: '1px solid rgba(255,255,255,0.2)' }}>
+          {language === 'pt' ? '🔥 Mais Vendido' : '🔥 Best Seller'}
+        </div>
+      )}
+      {product.is_new && !product.is_bestseller && (
+        <div className="badge" style={{ background: '#FFB81C', color: '#000' }}>
+          {language === 'pt' ? '⭐ Novo' : '⭐ New'}
+        </div>
+      )}
       {product.version && (
         <div className="badge" style={{ 
           top: product.id <= 3 ? '40px' : '15px', 
