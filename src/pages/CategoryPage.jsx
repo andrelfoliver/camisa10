@@ -158,7 +158,7 @@ const CategoryPage = () => {
                 <p style={{ color: 'var(--text-muted)' }}>Não encontramos camisas para essa categoria no momento.</p>
               </div>
            ) : (
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(240px, 1fr))', gap: '2rem' }}>
+              <div className="grid-products reveal delay-1" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(240px, 1fr))', gap: '2rem' }}>
                 {displayedProducts.map(product => (
                   <ProductCard key={product.id} product={product} />
                 ))}

@@ -412,9 +412,9 @@ const ProductPage = () => {
         <h2 style={{ fontSize: '2.5rem', marginBottom: '1rem' }}>O que nossos clientes dizem</h2>
         <p className="text-muted" style={{ textAlign: 'center', marginBottom: '3rem', fontSize: '1.2rem' }}>Já somos <strong style={{ color: 'var(--accent-color)' }}>+200 clientes</strong> vestindo a paixão no Canadá! 🍁</p>
         {testimonials.length > 0 ? (
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '2rem' }}>
+          <div className="reveal" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '3rem', marginBottom: '5rem' }}>
             {testimonials.map(t => (
-              <div key={t.id} className="glass-panel" style={{ padding: '2rem', textAlign: 'left', borderRadius: '12px', position: 'relative', overflow: 'hidden' }}>
+              <div key={t.id} className="reveal delay-1 glass-panel" style={{ padding: '2rem', textAlign: 'left', borderRadius: '12px', position: 'relative', overflow: 'hidden' }}>
                 <Quote size={40} style={{ position: 'absolute', top: '1rem', right: '1rem', color: 'var(--accent-color)', opacity: 0.15 }} />
                 <div style={{ color: '#FCD34D', marginBottom: '1rem', display: 'flex', gap: '2px' }}>
                   {Array.from({ length: t.rating || 5 }).map((_, i) => <Star key={i} size={16} fill="currentColor" />)}

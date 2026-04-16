@@ -14,6 +14,7 @@ import CategoryPage from './pages/CategoryPage';
 import Auth from './pages/Auth';
 import Profile from './pages/Profile';
 import SearchPage from './pages/SearchPage';
+import NotFound from './pages/NotFound';
 import WhatsAppIcon from './components/WhatsAppIcon';
 import SalesPopup from './components/SalesPopup';
 
@@ -52,6 +53,7 @@ const AppLayout = () => {
           <Route path="/perfil" element={<Profile />} />
           <Route path="/admin" element={<Admin />} />
           <Route path="/busca" element={<SearchPage />} />
+          <Route path="*" element={<NotFound />} />
         </Routes>
       </main>
       {!isAdminPage && <Footer />}
