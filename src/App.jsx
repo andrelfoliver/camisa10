@@ -1,7 +1,8 @@
-import React, { useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { BrowserRouter, Routes, Route, useLocation } from 'react-router-dom';
 import { CartProvider } from './context/CartContext';
 import { AuthProvider } from './context/AuthContext';
+import { supabase } from './services/supabase';
 import Navbar from './components/Navbar';
 import CartSidebar from './components/CartSidebar';
 import Footer from './components/Footer';
@@ -26,6 +27,15 @@ const ScrollToTop = () => {
 const AppLayout = () => {
   const { pathname } = useLocation();
   const isAdminPage = pathname.startsWith('/admin');
+  const [waNumber, setWaNumber] = useState('5584991847739');
+
+  useEffect(() => {
+    async function loadConfig() {
+      const { data } = await supabase.from('store_settings').select('value').eq('key', 'whatsapp_number').single();
+      if (data && data.value) setWaNumber(data.value);
+    }
+    loadConfig();
+  }, []);
 
   return (
     <div className="global-wrapper">
@@ -46,7 +56,7 @@ const AppLayout = () => {
       
       {/* Floating WhatsApp */}
       <a 
-        href="https://wa.me/5584991847739" 
+        href={`https://wa.me/${waNumber.replace(/\D/g, '')}`} 
         target="_blank" 
         rel="noopener noreferrer"
         className="whatsapp-float"

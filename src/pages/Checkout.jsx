@@ -26,6 +26,16 @@ const Checkout = () => {
 
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  const [waNumber, setWaNumber] = useState('5584991847739');
+
+  useEffect(() => {
+    async function loadConfig() {
+      const { data } = await supabase.from('store_settings').select('value').eq('key', 'whatsapp_number').single();
+      if (data && data.value) setWaNumber(data.value);
+    }
+    loadConfig();
+  }, []);
+
   useEffect(() => {
     if (user) {
       const fetchProfile = async () => {
@@ -114,7 +124,7 @@ const Checkout = () => {
       // 3. Abrir WhatsApp
       const message = generateWhatsAppMessage();
       const encodedMessage = encodeURIComponent(message);
-      window.open(`https://wa.me/5584991847739?text=${encodedMessage}`, '_blank');
+      window.open(`https://wa.me/${waNumber.replace(/\D/g, '')}?text=${encodedMessage}`, '_blank');
       
       // Opcional: Limpar carrinho aqui ou navegar para sucesso
     } catch (error) {

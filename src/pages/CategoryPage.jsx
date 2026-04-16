@@ -11,6 +11,8 @@ const CategoryPage = () => {
   const [teams, setTeams] = useState([]);
   const [loading, setLoading] = useState(true);
   const [mobileFilterOpen, setMobileFilterOpen] = useState(false);
+  const [sortOrder, setSortOrder] = useState('popular');
+  const [versionFilters, setVersionFilters] = useState([]);
   
   // Quick map to beautiful names
   const categoryNames = {
@@ -61,6 +63,25 @@ const CategoryPage = () => {
     window.scrollTo(0,0);
   }, [category_id]);
 
+  const toggleVersion = (ver) => {
+    setVersionFilters(prev =>
+      prev.includes(ver) ? prev.filter(v => v !== ver) : [...prev, ver]
+    );
+  };
+
+  // Apply version filter + sort
+  const displayedProducts = [...products]
+    .filter(p => {
+      if (versionFilters.length === 0) return true;
+      const ver = (p.version || '').toLowerCase();
+      return versionFilters.some(f => ver.includes(f.toLowerCase()));
+    })
+    .sort((a, b) => {
+      if (sortOrder === 'price_asc') return (a.price || 0) - (b.price || 0);
+      if (sortOrder === 'price_desc') return (b.price || 0) - (a.price || 0);
+      return 0; // popular = original order
+    });
+
   return (
     <div style={{ paddingTop: '80px', minHeight: '100vh', background: 'var(--bg-color)' }}>
       
@@ -86,15 +107,20 @@ const CategoryPage = () => {
             
             <div style={{ marginBottom: '2rem' }}>
               <h4 style={{ color: 'var(--text-muted)', marginBottom: '0.8rem', fontSize: '0.9rem', textTransform: 'uppercase' }}>Versão da Camisa</h4>
-              <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.5rem', cursor: 'pointer' }}>
-                <input type="checkbox" /> Torcedor
-              </label>
-              <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.5rem', cursor: 'pointer' }}>
-                <input type="checkbox" /> Jogador
-              </label>
-              <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.5rem', cursor: 'pointer' }}>
-                <input type="checkbox" /> Retrô
-              </label>
+              {['Torcedor', 'Jogador', 'Retrô'].map(ver => (
+                <label key={ver} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.5rem', cursor: 'pointer' }}>
+                  <input
+                    type="checkbox"
+                    checked={versionFilters.includes(ver)}
+                    onChange={() => toggleVersion(ver)}
+                    style={{ accentColor: 'var(--accent-color)', width: '16px', height: '16px' }}
+                  />
+                  <span style={{ color: versionFilters.includes(ver) ? 'var(--accent-color)' : 'var(--text-main)', fontWeight: versionFilters.includes(ver) ? 600 : 400 }}>{ver}</span>
+                </label>
+              ))}
+              {versionFilters.length > 0 && (
+                <button onClick={() => setVersionFilters([])} style={{ marginTop: '0.5rem', background: 'transparent', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', fontSize: '0.85rem', textDecoration: 'underline' }}>Limpar filtros</button>
+              )}
             </div>
           </div>
         </aside>
@@ -109,14 +135,17 @@ const CategoryPage = () => {
         {/* Main Content */}
         <main style={{ flex: 1 }}>
            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem', paddingBottom: '1rem', borderBottom: '1px solid var(--border-color)' }}>
-              <span style={{ color: 'var(--text-muted)' }}>Exibindo {products.length} produtos</span>
+              <span style={{ color: 'var(--text-muted)' }}>Exibindo {displayedProducts.length} de {products.length} produtos{versionFilters.length > 0 ? ` (filtrado por: ${versionFilters.join(', ')})` : ''}</span>
               <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                  <span style={{ color: 'var(--text-muted)', fontSize: '0.9rem' }}>Ordenar por:</span>
-                 <select style={{ background: 'var(--surface-color)', color: '#fff', border: '1px solid var(--border-color)', padding: '0.5rem', borderRadius: '4px' }}>
-                    <option>Mais Populares</option>
-                    <option>Menor Preço</option>
-                    <option>Maior Preço</option>
-                    <option>Lançamentos</option>
+                 <select
+                   value={sortOrder}
+                   onChange={e => setSortOrder(e.target.value)}
+                   style={{ background: 'var(--surface-color)', color: '#fff', border: '1px solid var(--border-color)', padding: '0.5rem', borderRadius: '4px', cursor: 'pointer' }}
+                 >
+                    <option value="popular">Mais Populares</option>
+                    <option value="price_asc">Menor Preço</option>
+                    <option value="price_desc">Maior Preço</option>
                  </select>
               </div>
            </div>
@@ -130,7 +159,7 @@ const CategoryPage = () => {
               </div>
            ) : (
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(240px, 1fr))', gap: '2rem' }}>
-                {products.map(product => (
+                {displayedProducts.map(product => (
                   <ProductCard key={product.id} product={product} />
                 ))}
               </div>

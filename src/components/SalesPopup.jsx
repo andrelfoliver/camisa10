@@ -20,65 +20,112 @@ const TIMES = ['há 2 minutos', 'agora mesmo', 'há 5 minutos', 'há 10 minutos'
 const SalesPopup = () => {
   const { t, language, translateProductDisplay } = useLanguage();
   const [products, setProducts] = useState([]);
+  const [realOrders, setRealOrders] = useState([]);
   const [currentSale, setCurrentSale] = useState(null);
   const [visible, setVisible] = useState(false);
 
   useEffect(() => {
-    async function fetchProducts() {
-      const { data } = await supabase
+    async function fetchData() {
+      // Fetch Products for fallback or diversity
+      const { data: productsData } = await supabase
         .from('products')
         .select('name, image, category')
-        .not('name', 'ilike', '%costas%') // Evitar mostrar variações de "costas"
+        .not('name', 'ilike', '%costas%')
         .limit(40)
         .order('id', { ascending: false });
       
-      if (data && data.length > 0) {
-        setProducts(data);
-      }
+      if (productsData) setProducts(productsData);
+
+      // Fetch Real Orders for authentic social proof
+      const { data: ordersData } = await supabase
+        .from('orders')
+        .select('customer_name, shipping_address, items, created_at')
+        .order('created_at', { ascending: false })
+        .limit(20);
+
+      if (ordersData) setRealOrders(ordersData);
     }
-    fetchProducts();
+    fetchData();
   }, []);
 
+  const getRelativeTime = (dateString) => {
+    const date = new Date(dateString);
+    const now = new Date();
+    const diffInMinutes = Math.floor((now - date) / 60000);
+
+    if (diffInMinutes < 1) return language === 'pt' ? 'agora mesmo' : 'just now';
+    if (diffInMinutes < 60) {
+      return language === 'pt' ? `há ${diffInMinutes} minutos` : `${diffInMinutes}m ago`;
+    }
+    const diffInHours = Math.floor(diffInMinutes / 60);
+    if (diffInHours < 24) {
+      return language === 'pt' ? `há ${diffInHours} ${diffInHours === 1 ? 'hora' : 'horas'}` : `${diffInHours}h ago`;
+    }
+    const diffInDays = Math.floor(diffInHours / 24);
+    return language === 'pt' ? `há ${diffInDays} ${diffInDays === 1 ? 'dia' : 'dias'}` : `${diffInDays}d ago`;
+  };
+
   useEffect(() => {
-    if (products.length === 0) return;
+    // We need either products or real orders to work
+    if (products.length === 0 && realOrders.length === 0) return;
 
     let timeoutId;
 
     const runSaleRoutine = () => {
-      // Pick random sale data
-      const randomProduct = products[Math.floor(Math.random() * products.length)];
-      const randomName = NAMES[Math.floor(Math.random() * NAMES.length)];
-      const randomCity = CITIES[Math.floor(Math.random() * CITIES.length)];
-      const randomTime = TIMES[Math.floor(Math.random() * TIMES.length)];
+      let saleData = {};
 
-      setCurrentSale({
-        name: randomName,
-        city: randomCity,
-        productName: randomProduct.name,
-        image: randomProduct.image,
-        time: randomTime
-      });
+      // Decide if we use a real order (70% chance if available) or a random product
+      const useRealOrder = realOrders.length > 0 && (Math.random() < 0.7 || products.length === 0);
 
-      // Show popup
+      if (useRealOrder) {
+        const order = realOrders[Math.floor(Math.random() * realOrders.length)];
+        // Get a random item from this order
+        const item = order.items && order.items.length > 0 
+          ? order.items[Math.floor(Math.random() * order.items.length)] 
+          : null;
+        
+        // Find product image if possible
+        const productInfo = products.find(p => p.name === item?.name);
+
+        saleData = {
+          name: order.customer_name ? order.customer_name.split(' ')[0] : NAMES[Math.floor(Math.random() * NAMES.length)],
+          city: (order.shipping_address && order.shipping_address.city) || CITIES[Math.floor(Math.random() * CITIES.length)],
+          productName: item ? item.name : products[0].name,
+          image: productInfo ? productInfo.image : (products.find(p => p.image)?.image || null),
+          time: getRelativeTime(order.created_at),
+          isReal: true
+        };
+      } else {
+        const randomProduct = products[Math.floor(Math.random() * products.length)];
+        saleData = {
+          name: NAMES[Math.floor(Math.random() * NAMES.length)],
+          city: CITIES[Math.floor(Math.random() * CITIES.length)],
+          productName: randomProduct.name,
+          image: randomProduct.image,
+          time: TIMES[Math.floor(Math.random() * TIMES.length)],
+          isReal: false
+        };
+      }
+
+      setCurrentSale(saleData);
       setVisible(true);
 
-      // Hide after 5 seconds
       setTimeout(() => {
         setVisible(false);
-        
-        // Schedule next popup between 30 and 90 seconds
         const nextDelay = Math.floor(Math.random() * (90000 - 30000 + 1) + 30000);
         timeoutId = setTimeout(runSaleRoutine, nextDelay);
       }, 5000);
     };
 
-    // Initial delay of 10 seconds before first popup
     timeoutId = setTimeout(runSaleRoutine, 10000);
-
     return () => clearTimeout(timeoutId);
-  }, [products]);
+  }, [products, realOrders]);
 
   const formatRelTime = (str) => {
+    // If it's already a real relative time string from getRelativeTime, return it
+    if (str.includes('ago') || str.includes('now') || str.includes('há') || str === 'agora mesmo') return str;
+    
+    // Fallback for old hardcoded TIMES array entries
     if (language === 'pt') return str;
     return str.replace('há ', '').replace(' minutos', 'm ago').replace(' minuto', 'm ago').replace(' hora', 'h ago').replace('agora mesmo', 'just now');
   };

@@ -42,70 +42,84 @@ const Admin = () => {
     setSaved(false);
     setIsUploading(true);
     
-    // Pegar o produto sendo editado (garantir que existe)
-    if (!editingProduct) return;
+    if (!editingProduct) { setIsUploading(false); return; }
     
-    const { id, created_at, ...rest } = editingProduct;
-    
-    let imageUrl = rest.image;
-    // Se tiver novo arquivo para o produto em edição, fazer upload
-    if (editImageFile) {
-      try {
-        const ext = editImageFile.name.split('.').pop().toLowerCase();
-        const filename = `${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
-        const { error: uploadError } = await supabase.storage
-          .from('product-images')
-          .upload(filename, editImageFile, { cacheControl: '3600', upsert: false });
-        if (uploadError) throw new Error(uploadError.message);
-        const { data: urlData } = supabase.storage.from('product-images').getPublicUrl(filename);
-        imageUrl = urlData.publicUrl;
-      } catch (err) {
-        showAlert("Erro no Upload da Imagem", err.message);
-        setIsUploading(false);
+    try {
+      const { id, created_at, ...rest } = editingProduct;
+      
+      let imageUrl = rest.image;
+      let galleryUrls = rest.gallery || [];
+
+      // Se tiver novo arquivo para o produto em edição, fazer upload
+      if (editImageFile) {
+        imageUrl = await uploadImageToSupabase(editImageFile);
+      }
+      
+      // Upload de novos arquivos para a galeria (mantendo limite de 5 no total)
+      if (editGalleryFiles.length > 0) {
+        for (const file of editGalleryFiles) {
+          if (galleryUrls.length >= 5) break;
+          const url = await uploadImageToSupabase(file);
+          galleryUrls.push(url);
+        }
+      }
+      
+      // Garantir que preco seja numero e incluir agora todas as colunas suportadas
+      const sanitizedData = {
+        name: rest.name,
+        price: Number(rest.price),
+        image: imageUrl,
+        gallery: galleryUrls,
+        category: rest.category,
+        team: rest.team,
+        league: rest.league,
+        version: rest.version,
+        inventory: Number(rest.inventory || 0),
+        description: rest.description,
+        is_bestseller: !!rest.is_bestseller,
+        is_new: !!rest.is_new
+      };
+
+      const { error } = await supabase.from('products').update(sanitizedData).eq('id', id);
+      if (error) {
+        showAlert("Erro ao editar!", error.message);
         return;
       }
+      setProducts(products.map(p => p.id === id ? { ...editingProduct, ...sanitizedData } : p));
+      setEditingProduct(null);
+      setEditImageFile(null);
+      setEditImagePreview(null);
+      setEditGalleryFiles([]);
+      setEditGalleryPreviews([]);
+      setSaved(true);
+      setTimeout(() => setSaved(false), 3000);
+    } catch (err) {
+      showAlert("Erro inesperado ao salvar", err.message);
+    } finally {
+      setIsUploading(false);
     }
-    
-    // Garantir que preco seja numero e incluir agora todas as colunas suportadas
-    const sanitizedData = {
-      name: rest.name,
-      price: Number(rest.price),
-      image: imageUrl,
-      category: rest.category,
-      team: rest.team,
-      league: rest.league,
-      version: rest.version,
-      inventory: Number(rest.inventory || 0),
-      description: rest.description
-    };
-
-    const { error } = await supabase.from('products').update(sanitizedData).eq('id', id);
-    setIsUploading(false);
-    if(error){
-       showAlert("Erro ao editar!", error.message);
-       return;
-    }
-    setProducts(products.map(p => p.id === id ? { ...editingProduct, ...sanitizedData } : p));
-    setEditingProduct(null);
-    setEditImageFile(null);
-    setEditImagePreview(null);
-    setSaved(true);
-    setTimeout(() => setSaved(false), 3000);
   };
 
   
   // Campo Categoria adicionado!
-  const [newProduct, setNewProduct] = useState({ name: '', price: '', image: '', category: '', league: '', team: '', version: '' });
+  const [newProduct, setNewProduct] = useState({ name: '', price: '', image: '', category: '', league: '', team: '', version: '', is_bestseller: false, is_new: false });
   const [imageFile, setImageFile] = useState(null);
   const [imagePreview, setImagePreview] = useState(null);
+  const [galleryFiles, setGalleryFiles] = useState([]);
+  const [galleryPreviews, setGalleryPreviews] = useState([]);
   const [isUploading, setIsUploading] = useState(false);
   const [editImageFile, setEditImageFile] = useState(null);
   const [editImagePreview, setEditImagePreview] = useState(null);
+  const [editGalleryFiles, setEditGalleryFiles] = useState([]);
+  const [editGalleryPreviews, setEditGalleryPreviews] = useState([]);
   
   const [customers, setCustomers] = useState([]);
   const [orders, setOrders] = useState([]);
   const [testimonials, setTestimonials] = useState([]);
   const [heroUrl, setHeroUrl] = useState('');
+  const [heroImageFile, setHeroImageFile] = useState(null);
+  const [heroImagePreview, setHeroImagePreview] = useState(null);
+  const [whatsAppNumber, setWhatsAppNumber] = useState('5584991847739');
   const [showAddTestimonial, setShowAddTestimonial] = useState(false);
   const [newTestimonial, setNewTestimonial] = useState({ name: '', content: '', rating: 5, location: '', date: new Date().toISOString().split('T')[0], status: 'approved' });
 
@@ -206,10 +220,14 @@ const Admin = () => {
       }
 
       // Novas configurações na nuvem
-      const { data: cloudSettings } = await supabase.from('store_settings').select('*').in('key', ['queridinhas_ids', 'best_seller_id', 'catalog_ids']);
+      const { data: cloudSettings } = await supabase.from('store_settings').select('*').in('key', ['queridinhas_ids', 'best_seller_id', 'catalog_ids', 'whatsapp_number']);
       if(cloudSettings) {
         cloudSettings.forEach(s => {
           try {
+            if(s.key === 'whatsapp_number') {
+              setWhatsAppNumber(s.value);
+              return;
+            }
             const val = JSON.parse(s.value);
             if(s.key === 'queridinhas_ids') setQueridinhasIds(val.map(String));
             if(s.key === 'best_seller_id') setBestSellerId(String(val));
@@ -270,7 +288,48 @@ const Admin = () => {
   };
 
   const handleSaveHeroUrl = async (e) => {
-    // ... ja existente ...
+    e.preventDefault();
+    setSaved(false);
+    setIsUploading(true);
+    
+    try {
+      let finalUrl = heroUrl;
+      
+      if (heroImageFile) {
+        finalUrl = await uploadImageToSupabase(heroImageFile);
+      }
+      
+      if (!finalUrl) {
+        showAlert("Erro", "Forneça uma URL ou faça upload de uma imagem.");
+        return;
+      }
+
+      const { error } = await supabase.from('store_settings').upsert({ key: 'hero_bg', value: finalUrl }, { onConflict: 'key' });
+      if (error) throw error;
+      
+      setHeroUrl(finalUrl);
+      setHeroImageFile(null);
+      setHeroImagePreview(null);
+      setSaved(true);
+      setTimeout(() => setSaved(false), 3000);
+    } catch (err) {
+      showAlert("Erro ao salvar Hero", err.message);
+    } finally {
+      setIsUploading(false);
+    }
+  };
+
+  const handleSaveWhatsApp = async (e) => {
+    e.preventDefault();
+    setSaved(false);
+    const cleanNumber = whatsAppNumber.replace(/\D/g, '');
+    const { error } = await supabase.from('store_settings').upsert({ key: 'whatsapp_number', value: cleanNumber }, { onConflict: 'key' });
+    if (error) {
+      showAlert("Erro", "Não foi possível salvar o número.");
+    } else {
+      setSaved(true);
+      setTimeout(() => setSaved(false), 3000);
+    }
   };
 
   const handleAddTestimonial = async (e) => {
@@ -334,13 +393,14 @@ const Admin = () => {
   };
 
   const uploadImageToSupabase = async (file) => {
-    const ext = file.name.split('.').pop().toLowerCase();
+    const ext = (file.name.split('.').pop() || 'jpg').toLowerCase();
     const filename = `${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
-    const { error: uploadError } = await supabase.storage
+    const { data: uploadData, error: uploadError } = await supabase.storage
       .from('product-images')
-      .upload(filename, file, { cacheControl: '3600', upsert: false });
+      .upload(filename, file, { cacheControl: '3600', upsert: true });
     if (uploadError) throw new Error(`Upload falhou: ${uploadError.message}`);
     const { data: urlData } = supabase.storage.from('product-images').getPublicUrl(filename);
+    if (!urlData?.publicUrl) throw new Error('Não foi possível obter a URL pública da imagem.');
     return urlData.publicUrl;
   };
 
@@ -349,46 +409,62 @@ const Admin = () => {
     setSaved(false);
     setIsUploading(true);
     
-    let imageUrl = newProduct.image;
-    
-    // Se tiver arquivo selecionado, fazer upload para o Supabase Storage
-    if (imageFile) {
-      try {
+    try {
+      let imageUrl = newProduct.image;
+      let galleryUrls = [];
+      
+      // Upload da imagem principal
+      if (imageFile) {
         imageUrl = await uploadImageToSupabase(imageFile);
-      } catch (err) {
-        showAlert("Erro no Upload", err.message);
-        setIsUploading(false);
+      }
+      
+      // Upload da galeria (máximo 5)
+      if (galleryFiles.length > 0) {
+        for (const file of galleryFiles.slice(0, 5)) {
+          const url = await uploadImageToSupabase(file);
+          galleryUrls.push(url);
+        }
+      }
+      
+      if (!imageUrl) {
+        showAlert("Imagem obrigatória", "Selecione um arquivo de imagem ou cole uma URL.");
         return;
       }
-    }
-    
-    const sanitizedData = {
-      name: newProduct.name,
-      price: Number(newProduct.price),
-      image: imageUrl,
-      category: newProduct.category,
-      team: newProduct.team,
-      league: newProduct.league,
-      version: newProduct.version,
-      inventory: Number(newProduct.inventory || 0),
-      description: newProduct.description
-    };
-    
-    const { data, error } = await supabase.from('products').insert([sanitizedData]).select();
-    setIsUploading(false);
-    if (error) {
-      showAlert("Erro ao adicionar!", `${error.message} | Detalhes: ${error.details || 'Nenhum detalhe adicional'}`);
-      return;
-    }
-    
-    if (data) {
-      setProducts([data[0], ...products]);
-      setShowAddForm(false);
-      setNewProduct({ name: '', price: '', image: '', category: '', league: '', team: '', version: '' });
-      setImageFile(null);
-      setImagePreview(null);
-      setSaved(true);
-      setTimeout(() => setSaved(false), 3000);
+      
+      const sanitizedData = {
+        name: newProduct.name,
+        price: Number(newProduct.price),
+        image: imageUrl,
+        gallery: galleryUrls.length > 0 ? galleryUrls : [imageUrl],
+        category: newProduct.category,
+        team: newProduct.team,
+        league: newProduct.league,
+        version: newProduct.version,
+        inventory: Number(newProduct.inventory || 0),
+        description: newProduct.description,
+        is_bestseller: !!newProduct.is_bestseller,
+        is_new: !!newProduct.is_new
+      };
+      
+      const { data, error } = await supabase.from('products').insert([sanitizedData]).select();
+      if (error) {
+        showAlert("Erro ao adicionar!", `${error.message}`);
+        return;
+      }
+      
+      if (data) {
+        setProducts([data[0], ...products]);
+        setShowAddForm(false);
+        setNewProduct({ name: '', price: '', image: '', category: '', league: '', team: '', version: '', is_bestseller: false, is_new: false });
+        setImageFile(null);
+        setImagePreview(null);
+        setSaved(true);
+        setTimeout(() => setSaved(false), 3000);
+      }
+    } catch (err) {
+      showAlert("Erro inesperado", err.message);
+    } finally {
+      setIsUploading(false);
     }
   };
 
@@ -736,25 +812,108 @@ const Admin = () => {
           {/* RENDERS CONDICIONAIS DAS ABAS ESPECIAIS */}
           {supplierTab === 'CONFIG' ? (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem', maxWidth: '800px' }}>
+              
+              {/* CONFIGURAÇÃO WHATSAPP */}
+              <div className="glass-panel" style={{ padding: '2.5rem', borderRadius: 'var(--radius-lg)' }}>
+                <h2 style={{ display: 'flex', alignItems: 'center', gap: '0.8rem', marginBottom: '1.5rem', fontSize: '1.5rem' }}>
+                   <WhatsAppIcon size={24} color="#25D366" /> Contato de Vendas (WhatsApp)
+                </h2>
+                <form onSubmit={handleSaveWhatsApp} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                  <div>
+                    <label style={{ display: 'block', marginBottom: '0.5rem', color: 'var(--text-muted)', fontWeight: 600 }}>Número Oficial da Loja</label>
+                    <div style={{ display: 'flex', gap: '1rem' }}>
+                      <input 
+                        required 
+                        type="text" 
+                        value={whatsAppNumber} 
+                        onChange={e => setWhatsAppNumber(e.target.value)} 
+                        placeholder="Ex: 5584991847739" 
+                        style={{ flex: 1, padding: '1rem', background: 'rgba(255,255,255,0.05)', color: '#fff', border: '1px solid var(--border-color)', borderRadius: 'var(--radius-md)' }} 
+                      />
+                      <button type="submit" className="btn-primary" style={{ background: '#25D366', color: '#fff', padding: '0 2rem' }}>Salvar Número</button>
+                    </div>
+                    <p style={{ marginTop: '0.8rem', fontSize: '0.85rem', color: 'var(--text-muted)' }}>Este número será usado no botão flutuante, no Checkout e para envio de notificações aos clientes.</p>
+                  </div>
+                </form>
+              </div>
+
+              {/* CONFIGURAÇÃO HERO BANNER */}
               <div className="glass-panel" style={{ padding: '2.5rem', borderRadius: 'var(--radius-lg)' }}>
                 <h2 style={{ display: 'flex', alignItems: 'center', gap: '0.8rem', marginBottom: '1.5rem', fontSize: '1.5rem' }}>
                    <Image color="#3B82F6" /> Banner da Home (Hero)
                 </h2>
-                <form onSubmit={handleSaveHeroUrl} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                
+                <form onSubmit={handleSaveHeroUrl} style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+                  
+                  {/* Upgrade: Upload de Arquivo para o Hero */}
                   <div>
-                    <label style={{ display: 'block', marginBottom: '0.5rem', color: 'var(--text-muted)', fontWeight: 600 }}>URL da Imagem de Fundo</label>
+                    <label style={{ display: 'block', marginBottom: '0.5rem', color: 'var(--text-muted)', fontSize: '0.9rem' }}>
+                      📸 Upload de Background
+                    </label>
+                    <label
+                      htmlFor="hero-upload"
+                      style={{
+                        display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
+                        border: `2px dashed ${heroImagePreview ? 'var(--accent-color)' : 'var(--border-color)'}`,
+                        borderRadius: 'var(--radius-md)', padding: '1.5rem', cursor: 'pointer',
+                        background: heroImagePreview ? 'rgba(164,210,51,0.05)' : 'rgba(255,255,255,0.02)',
+                        transition: 'all 0.2s', position: 'relative', overflow: 'hidden'
+                      }}
+                    >
+                      <input
+                        id="hero-upload"
+                        type="file"
+                        accept="image/*"
+                        style={{ display: 'none' }}
+                        onChange={(e) => {
+                          const file = e.target.files[0];
+                          if (file) {
+                            setHeroImageFile(file);
+                            setHeroImagePreview(URL.createObjectURL(file));
+                          }
+                        }}
+                      />
+                      {heroImagePreview ? (
+                        <div style={{ width: '100%', textAlign: 'center' }}>
+                          <img src={heroImagePreview} alt="Preview" style={{ maxHeight: '150px', maxWidth: '100%', objectFit: 'contain', borderRadius: '8px' }} />
+                          <p style={{ marginTop: '0.5rem', fontSize: '0.75rem', color: 'var(--accent-color)', fontWeight: 700 }}>✅ Imagem selecionada</p>
+                        </div>
+                      ) : (
+                        <div style={{ textAlign: 'center', color: 'var(--text-muted)' }}>
+                          <div style={{ fontSize: '2rem', marginBottom: '0.5rem' }}>🖼️</div>
+                          <p style={{ fontSize: '0.85rem', color: '#fff' }}>Arraste o novo banner aqui</p>
+                        </div>
+                      )}
+                    </label>
+                  </div>
+
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                    <div style={{ flex: 1, height: '1px', background: 'var(--border-color)' }} />
+                    <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>ou use uma URL externa</span>
+                    <div style={{ flex: 1, height: '1px', background: 'var(--border-color)' }} />
+                  </div>
+
+                  <div>
+                    <label style={{ display: 'block', marginBottom: '0.5rem', color: 'var(--text-muted)', fontWeight: 600 }}>URL da Imagem</label>
                     <div style={{ display: 'flex', gap: '1rem' }}>
-                      <input required type="url" value={heroUrl} onChange={e => setHeroUrl(e.target.value)} placeholder="Ex: https://i.imgur.com/vini.jpg" style={{ flex: 1, padding: '1rem', background: 'rgba(255,255,255,0.05)', color: '#fff', border: '1px solid var(--border-color)', borderRadius: 'var(--radius-md)' }} />
-                      <button type="submit" className="btn-primary" style={{ background: '#3B82F6', color: '#fff', padding: '0 2rem' }}>Atualizar</button>
+                      <input 
+                        type="url" 
+                        value={heroUrl} 
+                        onChange={e => { setHeroUrl(e.target.value); if(e.target.value) { setHeroImageFile(null); setHeroImagePreview(null); } }} 
+                        placeholder="Ex: https://..." 
+                        style={{ flex: 1, padding: '1rem', background: 'rgba(255,255,255,0.05)', color: '#fff', border: '1px solid var(--border-color)', borderRadius: 'var(--radius-md)' }} 
+                      />
+                      <button type="submit" disabled={isUploading} className="btn-primary" style={{ background: '#3B82F6', color: '#fff', padding: '0 2rem' }}>
+                        {isUploading ? 'Salvando...' : 'Atualizar Banner'}
+                      </button>
                     </div>
-                    <p style={{ marginTop: '0.8rem', fontSize: '0.85rem', color: 'var(--text-muted)' }}>Faça o upload da imagem no Supabase Storage ou Imgur e cole aqui para atualizar instantaneamente o portal da loja.</p>
                   </div>
                 </form>
                 
-                {heroUrl && (
+                {(heroUrl || heroImagePreview) && (
                   <div style={{ marginTop: '2.5rem' }}>
-                    <h3 style={{ marginBottom: '1rem', color: 'var(--text-muted)', fontSize: '0.9rem', textTransform: 'uppercase' }}>Preview:</h3>
-                    <div style={{ width: '100%', height: '300px', borderRadius: 'var(--radius-md)', background: `url(${heroUrl}) center/cover no-repeat`, border: '1px solid var(--border-color)' }}></div>
+                    <h3 style={{ marginBottom: '1rem', color: 'var(--text-muted)', fontSize: '0.9rem', textTransform: 'uppercase' }}>Preview em Tempo Real:</h3>
+                    <div style={{ width: '100%', height: '300px', borderRadius: 'var(--radius-md)', background: `url(${heroImagePreview || heroUrl}) center/cover no-repeat`, border: '1px solid var(--border-color)' }}></div>
                   </div>
                 )}
               </div>
@@ -1335,6 +1494,27 @@ const Admin = () => {
                     </div>
               </div>
 
+              <div style={{ display: 'flex', gap: '1.5rem', background: 'rgba(255,255,255,0.02)', padding: '1rem', borderRadius: 'var(--radius-sm)', border: '1px solid var(--border-color)' }}>
+                <label style={{ display: 'flex', alignItems: 'center', gap: '0.8rem', cursor: 'pointer', color: '#fff', fontSize: '0.95rem', fontWeight: 600 }}>
+                  <input 
+                    type="checkbox" 
+                    checked={newProduct.is_bestseller} 
+                    onChange={e => setNewProduct({...newProduct, is_bestseller: e.target.checked})}
+                    style={{ width: '1.2rem', height: '1.2rem', accentColor: '#EF4444' }}
+                  />
+                  Mais Vendido 🔥
+                </label>
+                <label style={{ display: 'flex', alignItems: 'center', gap: '0.8rem', cursor: 'pointer', color: '#fff', fontSize: '0.95rem', fontWeight: 600 }}>
+                  <input 
+                    type="checkbox" 
+                    checked={newProduct.is_new} 
+                    onChange={e => setNewProduct({...newProduct, is_new: e.target.checked})}
+                    style={{ width: '1.2rem', height: '1.2rem', accentColor: '#FFB81C' }}
+                  />
+                  Novo ⭐
+                </label>
+              </div>
+
               {/* === UPLOAD DE IMAGEM === */}
               <div>
                 <label style={{ display: 'block', marginBottom: '0.5rem', color: 'var(--text-muted)', fontSize: '0.9rem' }}>
@@ -1418,6 +1598,54 @@ const Admin = () => {
                 {!imageFile && !newProduct.image && (
                   <p style={{ marginTop: '0.4rem', fontSize: '0.72rem', color: '#EF4444' }}>⚠️ Selecione um arquivo ou cole uma URL</p>
                 )}
+              </div>
+
+              {/* === GALERIA DE IMAGENS (OPCIONAL) === */}
+              <div>
+                <label style={{ display: 'block', marginBottom: '0.8rem', color: 'var(--text-muted)', fontSize: '0.9rem', fontWeight: 700 }}>
+                  🖼️ Galeria de Imagens (Máx 5 fotos extras)
+                </label>
+                
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: '0.5rem', marginBottom: '1rem' }}>
+                  {galleryPreviews.map((prev, idx) => (
+                    <div key={idx} style={{ position: 'relative', width: '100%', aspectRatio: '1/1', background: 'var(--surface-color)', borderRadius: '4px', overflow: 'hidden', border: '1px solid var(--border-color)' }}>
+                      <img src={prev} style={{ width: '100%', height: '100%', objectFit: 'cover' }} alt="Gallery preview" />
+                      <button 
+                        type="button"
+                        onClick={() => {
+                          const newFiles = [...galleryFiles];
+                          const newPrevs = [...galleryPreviews];
+                          newFiles.splice(idx, 1);
+                          newPrevs.splice(idx, 1);
+                          setGalleryFiles(newFiles);
+                          setGalleryPreviews(newPrevs);
+                        }}
+                        style={{ position: 'absolute', top: '2px', right: '2px', background: 'rgba(239,68,68,0.8)', border: 'none', color: '#fff', padding: '2px', borderRadius: '4px', cursor: 'pointer' }}
+                      >
+                        <X size={12} />
+                      </button>
+                    </div>
+                  ))}
+                  {galleryFiles.length < 5 && (
+                    <label style={{ width: '100%', aspectRatio: '1/1', border: '2px dashed var(--border-color)', borderRadius: '4px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', background: 'rgba(255,255,255,0.02)' }}>
+                      <input 
+                        type="file" 
+                        multiple 
+                        accept="image/*" 
+                        style={{ display: 'none' }} 
+                        onChange={(e) => {
+                          const files = Array.from(e.target.files);
+                          const spaceLeft = 5 - galleryFiles.length;
+                          const newFiles = files.slice(0, spaceLeft);
+                          const newPreviews = newFiles.map(f => URL.createObjectURL(f));
+                          setGalleryFiles([...galleryFiles, ...newFiles]);
+                          setGalleryPreviews([...galleryPreviews, ...newPreviews]);
+                        }}
+                      />
+                      <Plus size={20} color="var(--text-muted)" />
+                    </label>
+                  )}
+                </div>
               </div>
 
               <button
@@ -1586,6 +1814,27 @@ const Admin = () => {
                 </div>
               </div>
 
+              <div style={{ display: 'flex', gap: '1.5rem', background: 'rgba(255,255,255,0.02)', padding: '1rem', borderRadius: 'var(--radius-sm)', border: '1px solid var(--border-color)', marginBottom: '1.2rem' }}>
+                <label style={{ display: 'flex', alignItems: 'center', gap: '0.8rem', cursor: 'pointer', color: '#fff', fontSize: '0.95rem', fontWeight: 600 }}>
+                  <input 
+                    type="checkbox" 
+                    checked={editingProduct.is_bestseller} 
+                    onChange={e => setEditingProduct({...editingProduct, is_bestseller: e.target.checked})}
+                    style={{ width: '1.2rem', height: '1.2rem', accentColor: '#EF4444' }}
+                  />
+                  Mais Vendido 🔥
+                </label>
+                <label style={{ display: 'flex', alignItems: 'center', gap: '0.8rem', cursor: 'pointer', color: '#fff', fontSize: '0.95rem', fontWeight: 600 }}>
+                  <input 
+                    type="checkbox" 
+                    checked={editingProduct.is_new} 
+                    onChange={e => setEditingProduct({...editingProduct, is_new: e.target.checked})}
+                    style={{ width: '1.2rem', height: '1.2rem', accentColor: '#FFB81C' }}
+                  />
+                  Novo ⭐
+                </label>
+              </div>
+
               {/* === UPLOAD DE IMAGEM (EDIÇÃO) === */}
               <div>
                 <label style={{ display: 'block', marginBottom: '0.5rem', color: 'var(--text-muted)', fontSize: '0.9rem' }}>
@@ -1678,6 +1927,75 @@ const Admin = () => {
                   disabled={!!editImageFile}
                   style={{ width: '100%', padding: '0.8rem 1rem', background: 'var(--bg-color)', color: editImageFile ? 'var(--text-muted)' : '#fff', border: '1px solid var(--border-color)', borderRadius: 'var(--radius-sm)', opacity: editImageFile ? 0.5 : 1 }}
                 />
+
+                {/* === GALERIA NA EDIÇÃO === */}
+                <div style={{ marginTop: '1.2rem' }}>
+                  <label style={{ display: 'block', marginBottom: '0.8rem', color: 'var(--text-muted)', fontSize: '0.85rem', fontWeight: 700 }}>
+                    🖼️ Galeria Atual / Nova (Máx 5 total)
+                  </label>
+                  
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: '0.5rem' }}>
+                    {/* Imagens Reais do Banco */}
+                    {(editingProduct.gallery || []).map((img, idx) => (
+                      <div key={`real-${idx}`} style={{ position: 'relative', width: '100%', aspectRatio: '1/1', background: 'var(--surface-color)', borderRadius: '4px', overflow: 'hidden', border: '1px solid var(--accent-color)' }}>
+                        <img src={img} style={{ width: '100%', height: '100%', objectFit: 'cover' }} alt="Gallery" />
+                        <button 
+                          type="button"
+                          onClick={() => {
+                            const newGal = [...editingProduct.gallery];
+                            newGal.splice(idx, 1);
+                            setEditingProduct({...editingProduct, gallery: newGal});
+                          }}
+                          style={{ position: 'absolute', top: '2px', right: '2px', background: 'rgba(239,68,68,0.8)', border: 'none', color: '#fff', padding: '2px', borderRadius: '4px', cursor: 'pointer' }}
+                        >
+                          <X size={12} />
+                        </button>
+                      </div>
+                    ))}
+                    
+                    {/* Novos Previews (Upload Pendente) */}
+                    {editGalleryPreviews.map((prev, idx) => (
+                      <div key={`new-${idx}`} style={{ position: 'relative', width: '100%', aspectRatio: '1/1', background: 'var(--surface-color)', borderRadius: '4px', border: '1px dashed var(--accent-color)', overflow: 'hidden' }}>
+                        <img src={prev} style={{ width: '100%', height: '100%', objectFit: 'cover' }} alt="New preview" />
+                        <button 
+                          type="button"
+                          onClick={() => {
+                            const newFiles = [...editGalleryFiles];
+                            const newPrevs = [...editGalleryPreviews];
+                            newFiles.splice(idx, 1);
+                            newPrevs.splice(idx, 1);
+                            setEditGalleryFiles(newFiles);
+                            setEditGalleryPreviews(newPrevs);
+                          }}
+                          style={{ position: 'absolute', top: '2px', right: '2px', background: 'rgba(239,68,68,0.8)', border: 'none', color: '#fff', padding: '2px', borderRadius: '4px', cursor: 'pointer' }}
+                        >
+                          <X size={12} />
+                        </button>
+                      </div>
+                    ))}
+
+                    {( (editingProduct.gallery || []).length + editGalleryFiles.length ) < 5 && (
+                      <label style={{ width: '100%', aspectRatio: '1/1', border: '2px dashed var(--border-color)', borderRadius: '4px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', background: 'rgba(255,255,255,0.02)' }}>
+                        <input 
+                          type="file" 
+                          multiple 
+                          accept="image/*" 
+                          style={{ display: 'none' }} 
+                          onChange={(e) => {
+                            const files = Array.from(e.target.files);
+                            const currentTotal = (editingProduct.gallery || []).length + editGalleryFiles.length;
+                            const spaceLeft = 5 - currentTotal;
+                            const newFiles = files.slice(0, spaceLeft);
+                            const newPreviews = newFiles.map(f => URL.createObjectURL(f));
+                            setEditGalleryFiles([...editGalleryFiles, ...newFiles]);
+                            setEditGalleryPreviews([...editGalleryPreviews, ...newPreviews]);
+                          }}
+                        />
+                        <Plus size={20} color="var(--text-muted)" />
+                      </label>
+                    )}
+                  </div>
+                </div>
               </div>
 
               <div style={{ display: 'flex', gap: '1rem', marginTop: '1.5rem' }}>

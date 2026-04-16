@@ -24,58 +24,6 @@ const FAQItem = ({ question, answer }) => {
   );
 };
 
-const ProductShowcaseCard = ({ product }) => {
-  const navigate = useNavigate();
-  const { t, translateProductDisplay } = useLanguage();
-
-
-  if (!product) return null;
-
-  return (
-    <div style={{ margin: '0 auto', width: '100%', maxWidth: '420px' }}>
-      <div
-        onClick={() => navigate(`/produto/${product.id}`)}
-        style={{
-          background: 'var(--surface-color)',
-          border: '1px solid var(--border-color)',
-          padding: '2rem',
-          borderRadius: 'var(--radius-lg)',
-          cursor: 'pointer',
-          position: 'relative',
-          boxShadow: '0 20px 40px rgba(0,0,0,0.5)'
-        }}
-      >
-        <div style={{ position: 'absolute', top: '-1rem', left: '-1rem', background: '#EF4444', color: '#fff', padding: '0.5rem 1rem', borderRadius: '4px', fontWeight: 800, textTransform: 'uppercase', zIndex: 10, boxShadow: '0 4px 10px rgba(239, 68, 68, 0.4)' }}>
-          🔥 {t('section_best_seller')}
-        </div>
-        <div className="coin-stage">
-          <div className="coin-inner">
-            <div className="coin-front">
-              <img src={product.gallery && product.gallery[0] ? product.gallery[0] : product.image} alt={product.name} style={{ width: '100%', height: '300px', objectFit: 'contain', filter: 'drop-shadow(0 20px 20px rgba(0,0,0,0.5))' }} />
-            </div>
-            <div className="coin-back">
-              <img src={product.gallery && product.gallery[1] ? product.gallery[1] : product.image} alt={`${product.name} costas`} style={{ width: '100%', height: '300px', objectFit: 'contain', filter: 'drop-shadow(0 20px 20px rgba(0,0,0,0.5))' }} />
-            </div>
-          </div>
-        </div>
-        <div style={{ textAlign: 'center' }}>
-          <h2 style={{ fontSize: '1.8rem', color: '#fff', lineHeight: 1.2, marginBottom: '0.8rem' }}>{translateProductDisplay(product.name)}</h2>
-          <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '0.5rem', color: 'var(--accent-color)', fontWeight: 600, marginBottom: '1.5rem' }}>
-            <Star size={18} fill="currentColor" /><Star size={18} fill="currentColor" /><Star size={18} fill="currentColor" /><Star size={18} fill="currentColor" /><Star size={18} fill="currentColor" />
-            <span style={{ color: 'var(--text-muted)', marginLeft: '0.5rem' }}>{t('product_price_transfer') === 'no e-Transfer' ? 'Over 100 sold' : 'Mais de 100 vendidos'}</span>
-          </div>
-          <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '1rem' }}>
-            <span style={{ textDecoration: 'line-through', color: 'var(--text-muted)', fontSize: '1.2rem' }}>${(product.price * 1.5).toFixed(2)} CAD</span>
-            <span style={{ fontSize: '2.5rem', fontWeight: 800, color: 'var(--accent-color)', lineHeight: 1 }}>${product.price.toFixed(2)} CAD</span>
-          </div>
-          <button className="btn-primary" style={{ marginTop: '2rem', width: '100%', justifyContent: 'center', padding: '1rem', fontSize: '1.2rem' }}>
-            {t('product_buy_now')}
-          </button>
-        </div>
-      </div>
-    </div>
-  );
-};
 
 
 const Home = () => {
@@ -83,7 +31,6 @@ const Home = () => {
   const { t, language, translateProductDisplay } = useLanguage();
 
   // Estado inicial limpo - O site agora é 100% dinâmico via Supabase
-  const [bestSeller, setBestSeller] = useState(null);
   const [queridinhas, setQueridinhas] = useState([]);
   const [testimonials, setTestimonials] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -102,7 +49,7 @@ const Home = () => {
   useEffect(() => {
     async function fetchHomeData() {
       // Buscar configurações globais na nuvem (Supabase)
-      const { data: settingsData, error: settingsError } = await supabase.from('store_settings').select('*').in('key', ['queridinhas_ids', 'best_seller_id', 'catalog_ids']);
+      const { data: settingsData, error: settingsError } = await supabase.from('store_settings').select('*').in('key', ['queridinhas_ids', 'catalog_ids']);
 
       if (settingsError) {
         console.error("❌ Erro ao buscar configurações no Supabase:", settingsError);
@@ -110,16 +57,11 @@ const Home = () => {
         console.log("✅ Configurações carregadas do Supabase:", settingsData);
       }
 
-      let qIds = [];
-      let bId = null;
-      let cIds = [];
-
       if (settingsData && settingsData.length > 0) {
         settingsData.forEach(s => {
           try {
             const val = JSON.parse(s.value);
             if (s.key === 'queridinhas_ids') qIds = val;
-            if (s.key === 'best_seller_id') bId = val;
             if (s.key === 'catalog_ids') cIds = val;
           } catch (e) {
             console.error(`❌ Erro ao processar chave ${s.key}:`, e);
@@ -129,40 +71,26 @@ const Home = () => {
         console.warn("⚠️ Nenhuma configuração encontrada no Supabase para as chaves solicitadas.");
       }
 
-      // Fallback para localStorage (opcional, para transição suave)
+      // Fallback para localStorage (opcional)
       if (qIds.length === 0) {
         const localQ = localStorage.getItem('queridinhas_ids');
         if (localQ) qIds = JSON.parse(localQ);
       }
-      if (!bId) {
-        const localB = localStorage.getItem('best_seller_id');
-        if (localB) bId = JSON.parse(localB);
-      }
 
-      if (bId || qIds.length > 0) {
+      if (qIds && qIds.length > 0) {
         let supabaseData = [];
-        const rawIds = [...new Set([...(Array.isArray(qIds) ? qIds : []), bId ? [bId] : []].flat())];
-        const fetchIds = rawIds
-          .map(id => {
-            const parsed = parseInt(id);
-            return isNaN(parsed) ? null : parsed;
-          })
-          .filter(Boolean);
+        const fetchIds = qIds
+          .map(id => parseInt(id))
+          .filter(id => !isNaN(id));
 
         if (fetchIds.length > 0) {
           const { data, error } = await supabase.from('products').select('*').in('id', fetchIds);
           if (data) supabaseData = data;
-          if (error) console.error("Erro ao buscar queridinhas/destaque:", error);
+          if (error) console.error("Erro ao buscar queridinhas:", error);
         }
 
-        if (bId) {
-          setBestSeller(supabaseData.find(d => String(d.id) === String(bId)));
-        }
-
-        if (qIds && qIds.length > 0) {
-          const sortedQ = qIds.map(id => supabaseData.find(d => String(d.id) === String(id))).filter(Boolean);
-          setQueridinhas(sortedQ);
-        }
+        const sortedQ = qIds.map(id => supabaseData.find(d => String(d.id) === String(id))).filter(Boolean);
+        setQueridinhas(sortedQ);
       }
 
       const { data: dbData } = await supabase.from('products').select('*').order('id', { ascending: false });
@@ -199,6 +127,15 @@ const Home = () => {
         if (cat === 'lançamentos' || cat.includes('lançament')) { mapCat['Lançamentos'].push(p); added = true; }
 
         if (!added) mapCat['Lançamentos'].push(p); // Fallback
+      });
+
+      // Ordenar cada categoria para colocar is_bestseller no topo
+      Object.keys(mapCat).forEach(key => {
+        mapCat[key].sort((a, b) => {
+          if (a.is_bestseller && !b.is_bestseller) return -1;
+          if (!a.is_bestseller && b.is_bestseller) return 1;
+          return 0;
+        });
       });
 
       setStoreSections(mapCat);
@@ -278,21 +215,6 @@ const Home = () => {
         </div>
       </section>
 
-      {/* 3. PRODUTO MAIS VENDIDO (EFEITO 3D HOVER) */}
-      <section id="destaque" className="section-padding">
-        <div className="container" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-          <h2 style={{ fontSize: '3rem', textAlign: 'center', marginBottom: '3rem' }}>A Escolha dos Campeões 🏆</h2>
-          {!loading && <ProductShowcaseCard product={bestSeller} />}
-
-          <div style={{ marginTop: '3rem', display: 'flex', alignItems: 'center', gap: '0.8rem', background: 'rgba(239, 68, 68, 0.1)', border: '1px solid #EF4444', padding: '1.5rem', borderRadius: 'var(--radius-md)', maxWidth: '600px', width: '100%' }}>
-            <AlertTriangle color="#EF4444" size={30} />
-            <div style={{ display: 'flex', flexDirection: 'column' }}>
-              <span style={{ color: '#EF4444', fontWeight: 800, fontSize: '1.2rem' }}>🔥 Alta demanda no Canadá</span>
-              <span style={{ color: '#EF4444' }}>⚠️ Últimas unidades do nosso estoque com preço promocional!</span>
-            </div>
-          </div>
-        </div>
-      </section>
 
       {/* 4. AS QUERIDINHAS (CARROSSEL) */}
       <section className="section-padding" style={{ background: 'var(--surface-color)' }}>
@@ -315,7 +237,7 @@ const Home = () => {
         <div style={{ background: 'linear-gradient(135deg, rgba(255,184,28,0.1) 0%, rgba(0,0,0,0) 100%)', border: '1px solid var(--accent-color)', borderRadius: 'var(--radius-lg)', padding: '3rem', textAlign: 'center' }}>
           <h2 style={{ fontSize: '2.5rem', marginBottom: '2rem', color: '#EF4444', fontWeight: 800 }}>{t('promo_banner_title')}</h2>
           {(() => {
-            const basePromoPrice = bestSeller?.price || 47.90;
+            const basePromoPrice = 47.90;
             const discountPercent2 = (pricingConfig?.discounts || []).find(d => d.qty === 2)?.percent || 8;
             const discountPercent3 = (pricingConfig?.discounts || []).find(d => d.qty === 3)?.percent || 12;
 
@@ -364,7 +286,7 @@ const Home = () => {
               </div>
             );
           })()}
-          <p style={{ marginTop: '2rem', color: 'var(--text-muted)' }}>* Baseado na camisa <strong style={{ color: 'var(--accent-color)' }}>{bestSeller ? bestSeller.name : 'Padrão'}</strong>. O desconto se aplica a <strong>qualquer</strong> peça. Adicione à sacola e a mágica acontece!</p>
+          <p style={{ marginTop: '2rem', color: 'var(--text-muted)' }}>* Preços baseados na camisa padrão. O desconto se aplica a <strong>qualquer</strong> peça. Adicione à sacola e a mágica acontece!</p>
         </div>
       </section>
 
@@ -501,8 +423,8 @@ const Home = () => {
           <h2 style={{ fontSize: '2.5rem' }}>Site 100% Blindado</h2>
         </div>
         <h2 style={{ fontSize: '3.5rem', marginBottom: '2rem' }}>{language === 'pt' ? 'Garanta sua camisa antes que acabe!' : 'Get your jersey before it sells out!'}</h2>
-        <a href="#destaque" className="btn-primary btn-massive" style={{ padding: '1.5rem 4rem', fontSize: '1.5rem', borderRadius: '3rem' }}>
-          {t('product_buy_now')}
+        <a href="#catalogo" className="btn-primary btn-massive" style={{ padding: '1.5rem 4rem', fontSize: '1.5rem', borderRadius: '3rem' }}>
+          {language === 'pt' ? 'Ver Catálogo' : 'View Catalog'}
         </a>
       </section>
 
