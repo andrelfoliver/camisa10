@@ -345,6 +345,24 @@ button {
     padding-bottom: 2rem !important;
     margin-top: auto;
   }
+  .hero-trust-badges {
+    flex-direction: row !important;
+    flex-wrap: nowrap !important;
+    gap: 0.5rem !important;
+    width: 100%;
+  }
+  .badge-trust-item {
+    flex: 1;
+    padding: 0.5rem 0.75rem !important;
+    gap: 0.5rem !important;
+    justify-content: center;
+  }
+  .badge-trust-title {
+    font-size: 0.75rem !important;
+  }
+  .badge-trust-desc {
+    display: none; /* Descrição omitida no mobile para caber lado a lado */
+  }
 }
 
 .hero-container-modern {
