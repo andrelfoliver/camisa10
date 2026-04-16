@@ -134,8 +134,9 @@ const ProductPage = () => {
         <div className="checkout-grid">
 
           {/* Lado Esquerdo - Galeria */}
-          <div className="gallery-layout">
-            <div className="gallery-thumbs">
+          <div className="gallery-layout" style={{ position: 'relative' }}>
+            {/* Desktop Thumbs */}
+            <div className="gallery-thumbs desktop-only">
               {product.gallery?.map((img, i) => (
                 <img
                   key={i}
@@ -150,146 +151,205 @@ const ProductPage = () => {
                 />
               ))}
             </div>
-            <div style={{ flex: 1, background: 'var(--surface-color)', border: '1px solid var(--border-color)', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', padding: '1rem' }}>
-              <img 
-                src={activeImage} 
-                alt={product.name} 
-                style={{ width: '100%', maxHeight: '600px', objectFit: 'contain' }} 
-                onError={(e) => {
-                  e.target.onerror = null; 
-                  e.target.src = '/camisas/placeholder.png';
+
+            {/* Desktop Main Image / Mobile Carousel */}
+            <div style={{ flex: 1, minWidth: 0 }}>
+              {/* MOBILE CAROUSEL */}
+              <div 
+                className="mobile-only mobile-product-carousel"
+                onScroll={(e) => {
+                  const scrollLeft = e.target.scrollLeft;
+                  const width = e.target.offsetWidth;
+                  const index = Math.round(scrollLeft / width);
+                  if(index !== product.gallery?.indexOf(activeImage)) {
+                    setActiveImage(product.gallery[index]);
+                  }
                 }}
-              />
+              >
+                {product.gallery?.map((img, i) => (
+                  <img key={i} src={img} alt="" />
+                ))}
+              </div>
+              
+              {/* CAROUSEL DOTS (Mobile) */}
+              <div className="mobile-only carousel-dots">
+                {product.gallery?.map((_, i) => (
+                  <div key={i} className={`dot ${product.gallery[i] === activeImage ? 'active' : ''}`} />
+                ))}
+              </div>
+
+              {/* DESKTOP MAIN */}
+              <div className="desktop-only" style={{ background: 'var(--surface-color)', border: '1px solid var(--border-color)', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', padding: '1rem' }}>
+                <img 
+                  src={activeImage} 
+                  alt={product.name} 
+                  style={{ width: '100%', maxHeight: '600px', objectFit: 'contain' }} 
+                />
+              </div>
             </div>
           </div>
 
           {/* Lado Direito - Form de Checkout */}
           <div style={{ display: 'flex', flexDirection: 'column', padding: '1rem 0', minWidth: 0 }}>
-
-            <div style={{ background: '#1f2937', color: '#fff', padding: '0.8rem 1rem', borderRadius: '4px', textAlign: 'center', fontWeight: 600, fontSize: '0.9rem', marginBottom: '1.5rem', width: '100%', lineHeight: 1.4 }}>
-              {language === 'pt' ? '🚀 Desconto progressivo: na compra de 2 ou mais camisas você economiza! 🚀' : '🚀 Volume discount: buy 2 or more jerseys and save! 🚀'}
-            </div>
-
-            <h1 style={{ fontSize: '2.5rem', marginBottom: '0.5rem', lineHeight: 1.2, fontWeight: 800 }}>{translateProductDisplay(product.name)}</h1>
-
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: '#FCD34D', marginBottom: '1.5rem' }}>
-              <Star fill="currentColor" /><Star fill="currentColor" /><Star fill="currentColor" /><Star fill="currentColor" /><Star fill="currentColor" />
-              <span className="text-muted" style={{ fontSize: '1rem', color: 'var(--text-muted)' }}> | 1 {language === 'pt' ? 'Avaliações' : 'Reviews'} | 0 {language === 'pt' ? 'Perguntas' : 'Questions'}</span>
-            </div>
-
-            {/* PREÇO */}
-            <div style={{ display: 'flex', flexDirection: 'column', marginBottom: '1.5rem' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                <span style={{ fontSize: '2.5rem', fontWeight: 800, color: 'var(--accent-color)' }}>${currentTotal.toFixed(2)} CAD</span>
-                <span style={{ fontSize: '1.2rem', fontWeight: 700, color: 'var(--text-main)' }}>{t('product_price_transfer')}</span>
-              </div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginTop: '0.2rem' }}>
-                <span style={{ fontSize: '1.2rem', color: 'var(--text-muted)', textDecoration: 'line-through' }}>${(currentTotal + 50).toFixed(2)} CAD</span>
+            
+            {/* Breadcrumbs & Title Segment (Mobile Optimized) */}
+            <div className="mobile-only">
+              <div className="mobile-breadcrumbs">Início &gt; {product.category || 'Produtos'} &gt; {translateProductDisplay(product.name)}</div>
+              <h1 className="mobile-product-title">{translateProductDisplay(product.name)}</h1>
+              <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginBottom: '1rem' }}>SKU: {product.id}</div>
+              
+              <div style={{ marginBottom: '1.5rem' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                  <span style={{ fontSize: '1.8rem', fontWeight: 900, color: 'var(--text-main)' }}>R${currentTotal.toFixed(2)}</span>
+                </div>
+                <div style={{ fontSize: '0.85rem', color: '#10B981', fontWeight: 700 }}>{language === 'pt' ? 'Frete grátis a partir de R$ 350,00' : 'Free shipping from $250.00'}</div>
               </div>
             </div>
 
-            {/* Promocao Fixa */}
-            <div style={{ color: '#EF4444', fontWeight: 800, marginBottom: '0.2rem' }}>{language === 'pt' ? 'DESCONTO PROGRESSIVO' : 'VOLUME DISCOUNT'}</div>
-            <div style={{ fontSize: '0.9rem', marginBottom: '1.5rem', color: 'var(--text-muted)' }}>{language === 'pt' ? 'Na compra de 2 ou mais itens, o desconto é aplicado na sua sacola!' : 'When buying 2 or more items, the discount is applied to your cart!'}</div>
+            {/* Desktop Only Header Info */}
+            <div className="desktop-only" style={{ flexDirection: 'column' }}>
+              <div style={{ background: '#1f2937', color: '#fff', padding: '0.8rem 1rem', borderRadius: '4px', textAlign: 'center', fontWeight: 600, fontSize: '0.9rem', marginBottom: '1.5rem', width: '100%', lineHeight: 1.4 }}>
+                {language === 'pt' ? '🚀 Desconto progressivo: na compra de 2 ou mais camisas você economiza! 🚀' : '🚀 Volume discount: buy 2 or more jerseys and save! 🚀'}
+              </div>
+              <h1 style={{ fontSize: '2.5rem', marginBottom: '0.5rem', lineHeight: 1.2, fontWeight: 800 }}>{translateProductDisplay(product.name)}</h1>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: '#FCD34D', marginBottom: '1.5rem' }}>
+                <Star fill="currentColor" /><Star fill="currentColor" /><Star fill="currentColor" /><Star fill="currentColor" /><Star fill="currentColor" />
+                <span className="text-muted" style={{ fontSize: '1rem', color: 'var(--text-muted)' }}> | 1 {language === 'pt' ? 'Avaliações' : 'Reviews'} | 0 {language === 'pt' ? 'Perguntas' : 'Questions'}</span>
+              </div>
+              <div style={{ display: 'flex', flexDirection: 'column', marginBottom: '1.5rem' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                  <span style={{ fontSize: '2.5rem', fontWeight: 800, color: 'var(--accent-color)' }}>${currentTotal.toFixed(2)} CAD</span>
+                  <span style={{ fontSize: '1.2rem', fontWeight: 700, color: 'var(--text-main)' }}>{t('product_price_transfer')}</span>
+                </div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginTop: '0.2rem' }}>
+                  <span style={{ fontSize: '1.2rem', color: 'var(--text-muted)', textDecoration: 'line-through' }}>${(currentTotal + 50).toFixed(2)} CAD</span>
+                </div>
+              </div>
+            </div>
 
-            {/* Tabela Visual Dinamica */}
-            {pricingConfig?.discounts && pricingConfig.discounts.length > 0 && (
-              <div style={{ background: 'var(--surface-color)', border: '1px solid var(--border-color)', borderRadius: '8px', padding: '1rem', marginBottom: '2rem' }}>
-                <p style={{ fontWeight: 800, color: 'var(--text-main)', marginBottom: '0.8rem', fontSize: '0.95rem' }}>{t('product_wholesale_table')}</p>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', paddingBottom: '0.3rem', borderBottom: '1px dashed var(--border-color)', color: 'var(--text-muted)' }}>
-                    <span>1 peça</span>
-                    <span style={{ fontWeight: 600 }}>${basePrice.toFixed(2)} unit.</span>
-                  </div>
-                  {[...pricingConfig.discounts].sort((a, b) => a.qty - b.qty).map((d, index) => {
-                    const pricePerUnit = basePrice * (1 - (d.percent || 0) / 100);
-                    const qtyLabel = d.qty === 3 ? "3-4 peças" : d.qty === 5 ? "5-9 peças" : d.qty === 10 ? "10+ peças" : `${d.qty} peças`;
-                    return (
-                      <div key={index} style={{ display: 'flex', justifyContent: 'space-between', paddingBottom: '0.3rem', borderBottom: index < pricingConfig.discounts.length - 1 ? '1px dashed var(--border-color)' : 'none', color: '#10B981', fontWeight: 600 }}>
-                        <span>{language === 'pt' ? qtyLabel : qtyLabel.replace('peças', 'jerseys').replace('peça', 'jersey')}</span>
-                        <span>${pricePerUnit.toFixed(2)} {t('product_wholesale_each')}</span>
-                      </div>
-                    );
-                  })}
+            {/* Sizes Selection (ifutz Box Style) */}
+            <div style={{ marginBottom: '2.5rem' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem', alignItems: 'center' }}>
+                <p style={{ fontWeight: 700, fontSize: '0.9rem', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                  {t('product_size')}: <span style={{ color: 'var(--accent-color)' }}>{selectedSize}</span>
+                </p>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', color: 'var(--text-main)', fontSize: '0.8rem', cursor: 'pointer', borderBottom: '1px solid #666' }}>
+                   📏 {language === 'pt' ? 'GUIA DE MEDIDAS' : 'SIZE GUIDE'}
+                </div>
+              </div>
+              
+              <div className="size-box-grid">
+                {sizes.map(s => {
+                  const isPlus = ['2XL', '3XL', '4XL'].includes(s);
+                  return (
+                    <button
+                      key={s}
+                      onClick={() => setSelectedSize(s)}
+                      className={`size-box ${selectedSize === s ? 'selected' : ''}`}
+                    >
+                      {s}
+                    </button>
+                  );
+                })}
+              </div>
+              {['2XL', '3XL', '4XL'].includes(selectedSize) && (
+                 <p style={{ fontSize: '0.75rem', color: 'var(--accent-color)', marginTop: '0.5rem', fontWeight: 600 }}>
+                   {language === 'pt' ? '* Tamanho Plus Size selecionado' : '* Plus Size selected'}
+                 </p>
+              )}
+            </div>
+
+            {/* Customization Toggle */}
+            <div style={{ marginBottom: '1.5rem' }}>
+              <p style={{ fontWeight: 700, marginBottom: '0.8rem', fontSize: '0.9rem', textTransform: 'uppercase' }}>{t('product_customization')}</p>
+              <div style={{ display: 'flex', gap: '0.5rem' }}>
+                <button 
+                  onClick={() => setIsCustomized(false)} 
+                  style={{ 
+                    flex: 1, border: `1px solid ${!isCustomized ? 'var(--accent-color)' : 'var(--border-color)'}`, 
+                    background: !isCustomized ? 'rgba(204, 255, 0, 0.05)' : 'transparent', 
+                    padding: '0.75rem', color: !isCustomized ? 'var(--accent-color)' : 'var(--text-main)', 
+                    borderRadius: '4px', cursor: 'pointer', fontWeight: 700, fontSize: '0.85rem'
+                  }}
+                >
+                  {t('product_customization_none')}
+                </button>
+                <button 
+                  onClick={() => setIsCustomized(true)} 
+                  style={{ 
+                    flex: 1, border: `1px solid ${isCustomized ? 'var(--accent-color)' : 'var(--border-color)'}`, 
+                    background: isCustomized ? 'rgba(204, 255, 0, 0.05)' : 'transparent', 
+                    padding: '0.75rem', color: isCustomized ? 'var(--accent-color)' : 'var(--text-main)', 
+                    borderRadius: '4px', cursor: 'pointer', fontWeight: 700, fontSize: '0.85rem'
+                  }}
+                >
+                  {t('product_customization_yes')}
+                </button>
+              </div>
+            </div>
+
+            {/* Conditional Inputs (Personalizacao) */}
+            {isCustomized && (
+              <div style={{ marginBottom: '2.5rem', background: 'var(--surface-color)', padding: '1.2rem', borderRadius: '8px', border: '1px solid var(--border-color)' }}>
+                <div style={{ marginBottom: '1rem' }}>
+                  <label style={{ fontSize: '0.8rem', fontWeight: 800, color: 'var(--text-muted)', display: 'block', marginBottom: '0.4rem', textTransform: 'uppercase' }}>NOME</label>
+                  <input
+                    type="text"
+                    placeholder="Ex: NEYMAR JR"
+                    value={customName}
+                    onChange={e => setCustomName(e.target.value.toUpperCase())}
+                    style={{ width: '100%', padding: '0.8rem', border: '1px solid var(--border-color)', borderRadius: '4px', background: 'rgba(255,255,255,0.02)', color: '#fff', fontSize: '1rem', outline: 'none' }}
+                  />
+                </div>
+                <div>
+                  <label style={{ fontSize: '0.8rem', fontWeight: 800, color: 'var(--text-muted)', display: 'block', marginBottom: '0.4rem', textTransform: 'uppercase' }}>NÚMERO</label>
+                  <input
+                    type="text"
+                    placeholder="10"
+                    maxLength="2"
+                    value={customNumber}
+                    onChange={e => setCustomNumber(e.target.value)}
+                    style={{ width: '100%', padding: '0.8rem', border: '1px solid var(--border-color)', borderRadius: '4px', background: 'rgba(255,255,255,0.02)', color: '#fff', fontSize: '1rem', outline: 'none' }}
+                  />
                 </div>
               </div>
             )}
 
-            {/* Customization Toggle */}
-            <div style={{ marginBottom: '1.5rem' }}>
-              <p style={{ fontWeight: 600, marginBottom: '0.5rem' }}>{t('product_customization')}: {isCustomized ? t('product_customization_yes') : t('product_customization_none')}</p>
-              <div style={{ display: 'flex', gap: '1rem' }}>
-                <button onClick={() => setIsCustomized(false)} style={{ border: `1px solid ${!isCustomized ? 'var(--accent-color)' : 'var(--border-color)'}`, background: !isCustomized ? 'var(--surface-hover)' : 'transparent', padding: '0.5rem 1.5rem', color: 'var(--text-main)', borderRadius: '4px', cursor: 'pointer', fontWeight: !isCustomized ? 600 : 400 }}>{t('product_customization_none')}</button>
-                <button onClick={() => setIsCustomized(true)} style={{ border: `1px solid ${isCustomized ? 'var(--accent-color)' : 'var(--border-color)'}`, background: isCustomized ? 'var(--surface-hover)' : 'transparent', padding: '0.5rem 1.5rem', color: 'var(--text-main)', borderRadius: '4px', cursor: 'pointer', fontWeight: isCustomized ? 600 : 400 }}>{t('product_customization_yes')}</button>
-              </div>
-            </div>
-
-            <div style={{ border: '1px solid var(--border-color)', padding: '1.5rem', textAlign: 'center', marginBottom: '2rem', borderRadius: '4px', background: 'var(--surface-color)' }}>
-              <p style={{ color: 'var(--text-muted)' }}>{language === 'pt' ? "Para personalizar com nome e número, clique em 'Somente Personalizado'. Ao personalizar, você receberá a confirmação no WhatsApp!" : "To customize with name and number, click 'Personalized Only'. After customizing, you will receive confirmation via WhatsApp!"}</p>
-            </div>
-
-            {/* Sizes */}
-            <div style={{ marginBottom: '2.5rem' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
-                <p style={{ fontWeight: 600 }}>{t('product_size')}: <span style={{ fontWeight: 800, color: 'var(--accent-color)' }}>{selectedSize}</span></p>
-                <span style={{ color: 'var(--text-muted)', fontSize: '0.9rem' }}>{language === 'pt' ? 'Tamanhos plussize (2XL ao 4XL) possuem pequeno acréscimo.' : 'Plus sizes (2XL to 4XL) have a small surcharge.'}</span>
-              </div>
-              <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
-                {sizes.map(s => (
-                  <button
-                    key={s}
-                    onClick={() => setSelectedSize(s)}
-                    style={{
-                      border: `2px solid ${selectedSize === s ? 'var(--accent-color)' : 'var(--border-color)'}`,
-                      padding: '0.5rem 1rem',
-                      background: selectedSize === s ? 'var(--surface-hover)' : 'transparent',
-                      color: 'var(--text-main)',
-                      minWidth: '50px',
-                      borderRadius: '4px',
-                      cursor: 'pointer',
-                      fontWeight: selectedSize === s ? 700 : 400
-                    }}
-                  >
-                    {s}
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            {/* Conditional Inputs */}
-            {isCustomized && (
-              <div style={{ marginBottom: '2.5rem', background: 'var(--surface-hover)', padding: '1.5rem', borderRadius: '8px', border: '1px solid var(--border-color)' }}>
-                <p style={{ fontWeight: 600, marginBottom: '0.5rem' }}>{language === 'pt' ? 'Insira o Nome' : 'Enter Name'}</p>
-                <input
-                   type="text"
-                   placeholder={language === 'pt' ? 'Ex: Roberto' : 'Ex: John'}
-                   value={customName}
-                   onChange={e => setCustomName(e.target.value)}
-                   style={{ width: '100%', padding: '1rem', border: '1px solid var(--border-color)', borderRadius: '4px', marginBottom: '1.5rem', background: 'var(--surface-color)', color: 'var(--text-main)', fontSize: '1.1rem' }}
-                />
-
-                <p style={{ fontWeight: 600, marginBottom: '0.5rem' }}>{language === 'pt' ? 'Insira o Número (até 2)' : 'Enter Number (up to 2)'}</p>
-                <input
-                  type="text"
-                  placeholder="Ex: 10"
-                  maxLength="2"
-                  value={customNumber}
-                  onChange={e => setCustomNumber(e.target.value)}
-                  style={{ width: '100%', padding: '1rem', border: '1px solid var(--border-color)', borderRadius: '4px', background: 'var(--surface-color)', color: 'var(--text-main)', fontSize: '1.1rem' }}
-                />
-              </div>
-            )}
-
             {/* Qty and Buy */}
-            <div style={{ display: 'flex', gap: '1rem', marginBottom: '2rem', flexWrap: 'wrap' }}>
-              <div style={{ display: 'flex', alignItems: 'center', border: '1px solid var(--border-color)', borderRadius: '4px', background: 'var(--surface-hover)' }}>
-                <button onClick={() => setQuantity(Math.max(1, quantity - 1))} style={{ padding: '1rem 1.5rem', background: 'transparent', border: 'none', cursor: 'pointer', color: 'var(--text-main)', fontSize: '1.2rem' }}>-</button>
-                <span style={{ padding: '0 1rem', fontWeight: 600, color: 'var(--text-main)', fontSize: '1.1rem' }}>{quantity}</span>
-                <button onClick={() => setQuantity(quantity + 1)} style={{ padding: '1rem 1.5rem', background: 'transparent', border: 'none', cursor: 'pointer', color: 'var(--text-main)', fontSize: '1.2rem' }}>+</button>
+            <div style={{ display: 'flex', gap: '0.8rem', marginBottom: '2.5rem' }}>
+              <div style={{ display: 'flex', alignItems: 'center', border: '1px solid var(--border-color)', borderRadius: '4px', overflow: 'hidden' }}>
+                <button onClick={() => setQuantity(Math.max(1, quantity - 1))} style={{ width: '40px', height: '56px', background: 'transparent', color: '#fff', fontSize: '1.2rem' }}>-</button>
+                <span style={{ width: '30px', textAlign: 'center', fontWeight: 700 }}>{quantity}</span>
+                <button onClick={() => setQuantity(quantity + 1)} style={{ width: '40px', height: '56px', background: 'transparent', color: '#fff', fontSize: '1.2rem' }}>+</button>
               </div>
-              <button className="btn-primary" onClick={() => handleAdd(true)} style={{ flex: 1, fontWeight: 800, fontSize: '1.2rem', padding: '1rem', border: 'none', borderRadius: '4px', cursor: 'pointer', display: 'flex', justifyContent: 'center', alignItems: 'center', transition: 'all 0.2s', boxShadow: '0 4px 15px rgba(219, 254, 135, 0.3)' }}>
+              <button className="btn-primary" onClick={() => handleAdd(true)} style={{ flex: 1, fontWeight: 900, fontSize: '1rem', height: '56px', borderRadius: '4px', textTransform: 'uppercase', letterSpacing: '1px' }}>
                 {t('product_buy_now')}
               </button>
+            </div>
+
+            {/* Price Table (Desktop Only - simplified) */}
+            <div className="desktop-only">
+              {pricingConfig?.discounts && pricingConfig.discounts.length > 0 && (
+                <div style={{ background: 'var(--surface-color)', border: '1px solid var(--border-color)', borderRadius: '8px', padding: '1rem', marginBottom: '2rem' }}>
+                  <p style={{ fontWeight: 800, color: 'var(--text-main)', marginBottom: '0.8rem', fontSize: '0.95rem' }}>{t('product_wholesale_table')}</p>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', paddingBottom: '0.3rem', borderBottom: '1px dashed var(--border-color)', color: 'var(--text-muted)' }}>
+                      <span>1 peça</span>
+                      <span style={{ fontWeight: 600 }}>${basePrice.toFixed(2)} unit.</span>
+                    </div>
+                    {[...pricingConfig.discounts].sort((a, b) => a.qty - b.qty).map((d, index) => {
+                      const pricePerUnit = basePrice * (1 - (d.percent || 0) / 100);
+                      const qtyLabel = d.qty === 3 ? "3-4 peças" : d.qty === 5 ? "5-9 peças" : d.qty === 10 ? "10+ peças" : `${d.qty} peças`;
+                      return (
+                        <div key={index} style={{ display: 'flex', justifyContent: 'space-between', paddingBottom: '0.3rem', borderBottom: index < pricingConfig.discounts.length - 1 ? '1px dashed var(--border-color)' : 'none', color: '#10B981', fontWeight: 600 }}>
+                          <span>{language === 'pt' ? qtyLabel : qtyLabel.replace('peças', 'jerseys').replace('peça', 'jersey')}</span>
+                          <span>${pricePerUnit.toFixed(2)} {t('product_wholesale_each')}</span>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
             </div>
 
             {/* Medidas Table */}
