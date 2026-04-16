@@ -67,71 +67,87 @@ const Navbar = () => {
       <nav className="glass-panel" style={{
         position: 'sticky', top: 0, zIndex: 100, borderBottom: '1px solid var(--border-color)', padding: '0.75rem 0'
       }}>
-        <div className="container" style={{ display: 'grid', gridTemplateColumns: '1fr auto 1fr', alignItems: 'center' }}>
+        <div className="container" style={{ 
+          display: 'grid', 
+          gridTemplateColumns: '1fr auto 1fr', 
+          alignItems: 'center',
+          gap: '0.5rem'
+        }}>
           
-          {/* Coluna Esquerda: Busca (Desktop) */}
-          <div className="desktop-only" style={{ display: 'flex', alignItems: 'center' }}>
-            <form onSubmit={handleSearchSubmit} style={{ position: 'relative', width: '250px' }}>
-              <input 
-                type="text"
-                placeholder={language === 'pt' ? 'O que você procura?' : 'Search...'}
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                style={{
-                  width: '100%',
-                  background: 'rgba(255,255,255,0.05)',
-                  border: '1px solid rgba(255,255,255,0.1)',
-                  padding: '0.6rem 1rem 0.6rem 2.5rem',
-                  borderRadius: '8px',
-                  color: '#fff',
-                  fontSize: '0.9rem',
-                  outline: 'none',
-                  transition: 'all 0.3s'
-                }}
-                onFocus={(e) => e.target.style.borderColor = 'var(--accent-color)'}
-                onBlur={(e) => e.target.style.borderColor = 'rgba(255,255,255,0.1)'}
-              />
-              <Search size={18} style={{ position: 'absolute', left: '0.8rem', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }} />
-            </form>
+          {/* Coluna Esquerda: Menu (Mobile) / Busca (Desktop) */}
+          <div style={{ display: 'flex', alignItems: 'center' }}>
+            {/* Desktop: Barra de Busca */}
+            <div className="desktop-only">
+              <form onSubmit={handleSearchSubmit} style={{ position: 'relative', width: '220px' }}>
+                <input 
+                  type="text"
+                  placeholder={language === 'pt' ? 'O que você procura?' : 'Search...'}
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  style={{
+                    width: '100%',
+                    background: 'rgba(255,255,255,0.05)',
+                    border: '1px solid rgba(255,255,255,0.1)',
+                    padding: '0.6rem 1rem 0.6rem 2.3rem',
+                    borderRadius: '8px',
+                    color: '#fff',
+                    fontSize: '0.85rem',
+                    outline: 'none'
+                  }}
+                  onFocus={(e) => e.target.style.borderColor = 'var(--accent-color)'}
+                  onBlur={(e) => e.target.style.borderColor = 'rgba(255,255,255,0.1)'}
+                />
+                <Search size={16} style={{ position: 'absolute', left: '0.8rem', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }} />
+              </form>
+            </div>
+
+            {/* Mobile: Botão de Menu */}
+            <button 
+              className="mobile-only" 
+              onClick={() => setMobileMenuOpen(!mobileMenuOpen)} 
+              style={{ color: 'var(--text-main)', background: 'transparent', border: 'none', cursor: 'pointer', padding: '0.5rem 0' }}
+            >
+              {mobileMenuOpen ? <X size={26} /> : <Menu size={26} />}
+            </button>
           </div>
 
-          {/* Coluna Central: Logo */}
+          {/* Coluna Central: Logo (Sempre centralizada) */}
           <div style={{ display: 'flex', justifyContent: 'center' }}>
             <Link to="/" style={{ 
               display: 'flex', 
               alignItems: 'center', 
-              gap: '0', 
               fontWeight: 900, 
-              fontSize: '2.4rem', 
+              fontSize: '1.75rem', 
               fontFamily: 'var(--font-display)', 
               fontStyle: 'italic',
-              letterSpacing: '-2px'
+              letterSpacing: '-1.5px'
             }}>
               <span style={{ color: 'var(--accent-color)' }}>i</span><span style={{ color: '#fff' }}>Footy</span><span style={{ color: 'var(--accent-color)' }}>.</span>
             </Link>
           </div>
           
-          {/* Coluna Direita: Ações */}
-          <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center', justifyContent: 'flex-end' }}>
+          {/* Coluna Direita: Ações (Lupa, Login, Sacola) */}
+          <div style={{ display: 'flex', gap: '0.2rem', alignItems: 'center', justifyContent: 'flex-end' }}>
             
-            {/* Language Switcher */}
-            <div className="desktop-only" style={{ display: 'flex', gap: '0.4rem', marginRight: '0.8rem', borderRight: '1px solid rgba(255,255,255,0.1)', paddingRight: '0.8rem' }}>
-              <button onClick={() => setLanguage('pt')} style={{ width: '20px', height: '20px', borderRadius: '50%', overflow: 'hidden', padding: 0, border: language === 'pt' ? '2px solid var(--accent-color)' : '1px solid rgba(255,255,255,0.1)', background: 'none', cursor: 'pointer', opacity: language === 'pt' ? 1 : 0.4 }}>
+            {/* Language Switcher (Desktop) */}
+            <div className="desktop-only" style={{ display: 'flex', gap: '0.4rem', marginRight: '0.5rem', borderRight: '1px solid rgba(255,255,255,0.1)', paddingRight: '0.8rem' }}>
+              <button onClick={() => setLanguage('pt')} style={{ width: '18px', height: '18px', borderRadius: '50%', overflow: 'hidden', padding: 0, border: 'none', background: 'none', cursor: 'pointer', opacity: language === 'pt' ? 1 : 0.3 }}>
                 <img src="https://flagcdn.com/w40/br.png" alt="PT" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
               </button>
-              <button onClick={() => setLanguage('en')} style={{ width: '20px', height: '20px', borderRadius: '50%', overflow: 'hidden', padding: 0, border: language === 'en' ? '2px solid var(--accent-color)' : '1px solid rgba(255,255,255,0.1)', background: 'none', cursor: 'pointer', opacity: language === 'en' ? 1 : 0.4 }}>
+              <button onClick={() => setLanguage('en')} style={{ width: '18px', height: '18px', borderRadius: '50%', overflow: 'hidden', padding: 0, border: 'none', background: 'none', cursor: 'pointer', opacity: language === 'en' ? 1 : 0.3 }}>
                 <img src="https://flagcdn.com/w40/ca.png" alt="EN" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
               </button>
             </div>
 
+            {/* Lupa (Sempre visível no mobile, aciona o overlay/dropdown) */}
             <button 
-              onClick={() => setIsSearchOpen(true)}
-              style={{ color: 'var(--text-main)', padding: '0.5rem', background: 'transparent', border: 'none', cursor: 'pointer' }} 
-              className="mobile-only"
+              onClick={() => setIsSearchOpen(!isSearchOpen)}
+              style={{ color: 'var(--text-main)', padding: '0.5rem', background: 'transparent', border: 'none', cursor: 'pointer' }}
             >
                <Search size={22} />
             </button>
             
+            {/* Login / Perfil */}
             <button 
                onClick={() => {
                   if(!user) navigate('/auth');
@@ -141,12 +157,13 @@ const Navbar = () => {
                style={{ color: user ? 'var(--accent-color)' : 'var(--text-main)', padding: '0.5rem', background: 'transparent', border: 'none', cursor: 'pointer' }}
             >
                {user?.user_metadata?.avatar_url ? (
-                 <img src={user.user_metadata.avatar_url} alt="Profile" style={{ width: '28px', height: '28px', borderRadius: '50%', border: `2px solid ${isAdmin ? '#FFB81C' : 'var(--accent-color)'}`, objectFit: 'cover' }} />
+                 <img src={user.user_metadata.avatar_url} alt="Profile" style={{ width: '24px', height: '24px', borderRadius: '50%', border: `2px solid var(--accent-color)`, objectFit: 'cover' }} />
                ) : (
                  <UserCircle size={24} />
                )}
             </button>
   
+            {/* Carrinho */}
             <button 
               onClick={() => setIsCartOpen(true)}
               style={{ position: 'relative', color: 'var(--text-main)', padding: '0.5rem', background: 'transparent', border: 'none', cursor: 'pointer' }}
@@ -154,19 +171,15 @@ const Navbar = () => {
               <ShoppingBag size={24} />
               {itemCount > 0 && (
                 <span style={{
-                  position: 'absolute', top: -2, right: -5,
+                  position: 'absolute', top: 2, right: 0,
                   background: 'var(--accent-color)', color: '#000',
-                  fontSize: '0.75rem', fontWeight: 'bold',
-                  width: '18px', height: '18px', borderRadius: '50%',
+                  fontSize: '0.7rem', fontWeight: 'bold',
+                  width: '16px', height: '16px', borderRadius: '50%',
                   display: 'flex', alignItems: 'center', justifyContent: 'center'
                 }}>
                   {itemCount}
                 </span>
               )}
-            </button>
-            
-            <button className="mobile-only" onClick={() => setMobileMenuOpen(!mobileMenuOpen)} style={{ color: 'var(--text-main)', background: 'transparent', border: 'none', cursor: 'pointer' }}>
-              {mobileMenuOpen ? <X size={28} /> : <Menu size={28} />}
             </button>
           </div>
         </div>
