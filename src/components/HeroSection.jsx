@@ -26,7 +26,7 @@ const HeroSection = () => {
         {/* Corner Left Zone */}
         <div className="hero-zone-west">
           <h1 className="hero-giant-title">
-            VISTA SEU <span className="outline-text">TIME</span><br />
+            VISTA SEU <span className="accent-glow-text">TIME</span><br />
             MESMO LONGE DO <span className="accent-glow-text">BRASIL</span>
           </h1>
 

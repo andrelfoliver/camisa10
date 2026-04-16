@@ -61,8 +61,8 @@ const ProductShowcaseCard = ({ product }) => {
             <span style={{ color: 'var(--text-muted)', marginLeft: '0.5rem' }}>Mais de 100 vendidos</span>
           </div>
           <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '1rem' }}>
-            <span style={{ textDecoration: 'line-through', color: 'var(--text-muted)', fontSize: '1.2rem' }}>120.00 CAD</span>
-            <span style={{ fontSize: '2.5rem', fontWeight: 800, color: 'var(--accent-color)', lineHeight: 1 }}>69.90 CAD</span>
+            <span style={{ textDecoration: 'line-through', color: 'var(--text-muted)', fontSize: '1.2rem' }}>${(product.price * 1.5).toFixed(2)} CAD</span>
+            <span style={{ fontSize: '2.5rem', fontWeight: 800, color: 'var(--accent-color)', lineHeight: 1 }}>${product.price.toFixed(2)} CAD</span>
           </div>
           <button className="btn-primary" style={{ marginTop: '2rem', width: '100%', justifyContent: 'center', padding: '1rem', fontSize: '1.2rem' }}>
             COMPRAR AGORA
@@ -310,21 +310,19 @@ const Home = () => {
           <h2 style={{ fontSize: '2.5rem', marginBottom: '2rem', color: '#EF4444', fontWeight: 800 }}>🔥 OFERTA ESPECIAL</h2>
           
           {(() => {
-            const basePromoPrice = bestSeller?.price || 109.90;
-            const discountAmount2 = (pricingConfig?.discounts || []).find(d => d.qty === 2)?.amount || 15;
-            const discountAmount3 = (pricingConfig?.discounts || []).find(d => d.qty === 3)?.amount || 20;
+            const basePromoPrice = bestSeller?.price || 47.90;
+            const discountPercent2 = (pricingConfig?.discounts || []).find(d => d.qty === 2)?.percent || 8;
+            const discountPercent3 = (pricingConfig?.discounts || []).find(d => d.qty === 3)?.percent || 12;
 
             const normalPrice2 = basePromoPrice * 2;
-            const discountPerUnit2 = discountAmount2;
-            const finalPricePerUnit2 = basePromoPrice - discountPerUnit2;
+            const finalPricePerUnit2 = basePromoPrice * (1 - (discountPercent2 / 100));
             const finalTotal2 = finalPricePerUnit2 * 2;
-            const savings2 = discountPerUnit2 * 2;
+            const savings2 = (basePromoPrice - finalPricePerUnit2) * 2;
 
             const normalPrice3 = basePromoPrice * 3;
-            const discountPerUnit3 = discountAmount3;
-            const finalPricePerUnit3 = basePromoPrice - discountPerUnit3;
+            const finalPricePerUnit3 = basePromoPrice * (1 - (discountPercent3 / 100));
             const finalTotal3 = finalPricePerUnit3 * 3;
-            const savings3 = discountPerUnit3 * 3;
+            const savings3 = (basePromoPrice - finalPricePerUnit3) * 3;
 
             return (
               <div style={{ display: 'flex', justifyContent: 'center', gap: '2rem', flexWrap: 'wrap' }}>

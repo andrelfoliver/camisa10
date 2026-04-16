@@ -12,16 +12,15 @@ export const CartProvider = ({ children }) => {
   const [isCartOpen, setIsCartOpen] = useState(false);
   
   const [pricing, setPricing] = useState({
-    nameNumber: 12,
-    patch: 5,
-    size2XL3XL: 7,
-    size4XL: 10,
+    nameNumber: 11.90,
+    patch: 3.90,
+    size2XL3XL: 7.90,
+    size4XL: 11.90,
     discounts: [
-      { qty: 2, amount: 15 },
-      { qty: 3, amount: 20 },
-      { qty: 4, amount: 25 },
-      { qty: 5, amount: 30 },
-      { qty: 10, amount: 35 }
+      { qty: 2, percent: 8 },
+      { qty: 3, percent: 12 },
+      { qty: 5, percent: 15 },
+      { qty: 10, percent: 20 }
     ]
   });
 
@@ -80,15 +79,17 @@ export const CartProvider = ({ children }) => {
   const computeTotals = () => {
     const totalItems = cartItems.reduce((acc, item) => acc + item.quantity, 0);
     const subtotal = cartItems.reduce((acc, item) => acc + (item.price * item.quantity), 0);
+    const baseSubtotal = cartItems.reduce((acc, item) => acc + (item.basePrice * item.quantity), 0);
     
     let discount = 0;
     
-    // Sort array descending to find highest valid threshold
+    // Buscar o maior patamar de desconto atingido
     const sortedDiscounts = (pricing.discounts || []).sort((a,b) => b.qty - a.qty);
     const matchedDiscount = sortedDiscounts.find(d => totalItems >= d.qty);
     
-    if (matchedDiscount) {
-       discount = matchedDiscount.amount * totalItems;
+    if (matchedDiscount && matchedDiscount.percent) {
+       // Desconto aplica-se APENAS sobre o valor base acumulado
+       discount = baseSubtotal * (matchedDiscount.percent / 100);
     }
 
     return {

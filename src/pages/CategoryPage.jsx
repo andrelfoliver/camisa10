@@ -16,9 +16,8 @@ const CategoryPage = () => {
   const categoryNames = {
     'brasileirao': 'Brasileirão',
     'selecoes': 'Seleções',
-    'premier-league': 'Premier League',
-    'la-liga': 'La Liga',
-    'europeus': 'Clubes Europeus',
+    'internacionais': 'Internacionais',
+    'retro': 'Retrô',
     'lancamentos': 'Lançamentos'
   };
 
@@ -34,22 +33,26 @@ const CategoryPage = () => {
       const allProducts = getAllProducts(supabaseData || []);
       if(teamsData) setTeams(teamsData);
       
-      // Filtrar baseado no category_id
-      let filtered = allProducts;
-      if (category_id === 'selecoes') {
-        filtered = allProducts.filter(p => String(p.category).includes('Seleç') || String(p.league).includes('Seleç'));
-      } else if (category_id === 'europeus') {
-        filtered = allProducts.filter(p => String(p.category).includes('Europe') || ['Premier League', 'La Liga', 'Serie A', 'Ligue 1', 'Bundesliga'].includes(p.league));
-      } else if (category_id === 'brasileirao') {
-        const teamNames = (teamsData || []).map(t => t.name.toLowerCase());
-        filtered = allProducts.filter(p => 
-          String(p.league).includes('Brasil') || 
-          String(p.category).includes('Brasil') ||
-          teamNames.includes(String(p.team).toLowerCase())
-        );
-      } else if (categoryNames[category_id]) {
-         filtered = allProducts.filter(p => String(p.league).toLowerCase() === categoryNames[category_id].toLowerCase());
-      }
+      // Filtrar baseado no category_id usando a mesma lógica refinada da Home
+      let filtered = allProducts.filter(p => {
+        const cat = (p.category || '').toLowerCase();
+        const pName = (p.name || '').toLowerCase();
+        const pLeague = (p.league || '').toLowerCase();
+
+        const isBrasileirao = cat === 'brasileirão' || cat === 'brasileirao' || cat.includes('brasileiro') || pLeague === 'brasileirão';
+        const isSelecao = cat === 'seleções' || cat === 'selecoes' || pName.includes('seleção') || pName.includes('selecao') || pLeague === 'seleções';
+        const isRetro = cat === 'retrô' || cat.includes('retro') || (p.version || '').toLowerCase().includes('retrô') || pName.includes('retrô');
+        const isInternacional = cat === 'internacionais' || cat.includes('europa') || cat.includes('europe') || (pLeague !== '' && pLeague !== 'brasileirão' && pLeague !== 'seleções');
+
+        if (category_id === 'brasileirao') return isBrasileirao;
+        if (category_id === 'selecoes') return isSelecao;
+        if (category_id === 'retro') return isRetro;
+        if (category_id === 'internacionais') return isInternacional && !isSelecao && !isBrasileirao;
+        if (category_id === 'lancamentos') return cat === 'lançamentos' || cat.includes('lançament');
+        
+        // Fallback para slugs dinâmicos de ligas específicas
+        return pLeague === category_id.toLowerCase() || cat === category_id.toLowerCase();
+      });
 
       setProducts(filtered);
       setLoading(false);

@@ -83,7 +83,7 @@ const ProductCard = ({ product }) => {
           {product.name}
         </h3>
         <span style={{ fontSize: '1.1rem', fontWeight: 700, fontFamily: 'var(--font-display)', marginBottom: '0.75rem' }}>
-          ${product.price ? product.price.toFixed(2) : '69.90'} <span style={{fontSize: '0.8rem', color: 'var(--text-muted)'}}>CAD</span>
+          ${product.price ? product.price.toFixed(2) : '47.90'} <span style={{fontSize: '0.8rem', color: 'var(--text-muted)'}}>CAD</span>
         </span>
         
         <div style={{ marginTop: 'auto' }}>

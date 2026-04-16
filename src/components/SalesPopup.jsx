@@ -2,7 +2,15 @@ import React, { useState, useEffect } from 'react';
 import { supabase } from '../services/supabase';
 import { CheckCircle2, X } from 'lucide-react';
 
-const NAMES = ['João', 'Tiago', 'Lucas', 'Ricardo', 'Gabriel', 'Bruno', 'Carlos', 'Pedro', 'Marcelo', 'Arthur', 'Matheus', 'Guilherme', 'Felipe', 'Rafael'];
+const NAMES = [
+  // Brasileiros (Maioria)
+  'João', 'Tiago', 'Lucas', 'Ricardo', 'Gabriel', 'Bruno', 'Carlos', 'Pedro', 'Marcelo', 'Arthur', 'Matheus', 'Guilherme', 'Felipe', 'Rafael',
+  'André', 'Rodrigo', 'Leandro', 'Diego', 'Gustavo', 'Paulo', 'Marcos', 'Juliana', 'Aline', 'Fernanda', 'Fabrício', 'Roberto', 'Cássio',
+  // Canadenses
+  'Liam', 'Emma', 'Olivia', 'Noah', 'William', 'Benjamin', 'Sophia',
+  // Indianos
+  'Arjun', 'Priya', 'Rahul', 'Ananya', 'Vihaan', 'Aarav'
+];
 const CITIES = ['Toronto', 'Vancouver', 'Montreal', 'Calgary', 'Ottawa', 'Edmonton', 'Mississauga', 'Winnipeg', 'Brampton', 'Hamilton'];
 const TIMES = ['há 2 minutos', 'agora mesmo', 'há 5 minutos', 'há 10 minutos', 'há 1 hora', 'há 15 minutos', 'há 3 minutos'];
 
@@ -16,7 +24,8 @@ const SalesPopup = () => {
       const { data } = await supabase
         .from('products')
         .select('name, image, category')
-        .limit(30)
+        .not('name', 'ilike', '%costas%') // Evitar mostrar variações de "costas"
+        .limit(40)
         .order('id', { ascending: false });
       
       if (data && data.length > 0) {
@@ -53,14 +62,14 @@ const SalesPopup = () => {
       setTimeout(() => {
         setVisible(false);
         
-        // Schedule next popup between 8 and 20 seconds
-        const nextDelay = Math.floor(Math.random() * (20000 - 8000 + 1) + 8000);
+        // Schedule next popup between 30 and 90 seconds
+        const nextDelay = Math.floor(Math.random() * (90000 - 30000 + 1) + 30000);
         timeoutId = setTimeout(runSaleRoutine, nextDelay);
       }, 5000);
     };
 
-    // Initial delay of 3 seconds before first popup
-    timeoutId = setTimeout(runSaleRoutine, 3000);
+    // Initial delay of 10 seconds before first popup
+    timeoutId = setTimeout(runSaleRoutine, 10000);
 
     return () => clearTimeout(timeoutId);
   }, [products]);
