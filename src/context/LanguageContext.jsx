@@ -49,7 +49,11 @@ export const translations = {
     cart_total: 'Total',
     cart_checkout: 'Finalizar Pedido',
     sales_popup_bought: 'comprou',
-    sales_popup_time: 'Comprado'
+    sales_popup_time: 'Comprado',
+    stats_clients: 'Clientes satisfeitos no Canadá',
+    stats_shipping: 'Taxa de envio no prazo',
+    stats_whatsapp: 'Resposta média no WhatsApp',
+    stats_payment: 'Pagamento seguro garantido'
   },
   en: {
     nav_home: 'Home',
@@ -97,7 +101,11 @@ export const translations = {
     cart_total: 'Total',
     cart_checkout: 'Checkout',
     sales_popup_bought: 'bought',
-    sales_popup_time: 'Purchased'
+    sales_popup_time: 'Purchased',
+    stats_clients: 'Satisfied customers in Canada',
+    stats_shipping: 'On-time shipping rate',
+    stats_whatsapp: 'Avg response time on WhatsApp',
+    stats_payment: 'Secure payment guaranteed'
   }
 };
 
