@@ -35,27 +35,42 @@ const ProductCard = ({ product }) => {
       flexDirection: 'column',
       gap: '1rem'
     }}>
-      {product.is_bestseller && (
-        <div className="badge" style={{ background: '#EF4444', color: '#fff', boxShadow: '0 0 15px rgba(239, 68, 68, 0.4)', border: '1px solid rgba(255,255,255,0.2)' }}>
-          {language === 'pt' ? '🔥 Mais Vendido' : '🔥 Best Seller'}
-        </div>
-      )}
-      {product.is_new && !product.is_bestseller && (
-        <div className="badge" style={{ background: '#FFB81C', color: '#000' }}>
-          {language === 'pt' ? '⭐ Novo' : '⭐ New'}
-        </div>
-      )}
-      {product.version && (
-        <div className="badge" style={{ 
-          top: product.id <= 3 ? '40px' : '15px', 
-          background: 'rgba(255,255,255,0.1)', 
-          color: 'var(--text-muted)',
-          fontSize: '0.65rem',
-          border: '1px solid rgba(255,255,255,0.1)'
-        }}>
-          {product.version}
-        </div>
-      )}
+      {/* Badges Container - Evita a sobreposição fixando uma coluna no topo esquerdo */}
+      <div style={{ 
+        position: 'absolute', 
+        top: '1rem', 
+        left: '1rem', 
+        display: 'flex', 
+        flexDirection: 'column', 
+        alignItems: 'flex-start',
+        gap: '0.4rem', 
+        zIndex: 20,
+        pointerEvents: 'none' 
+      }}>
+        {product.is_bestseller && (
+          <div className="badge" style={{ position: 'relative', top: 0, left: 0, background: '#EF4444', color: '#fff', boxShadow: '0 0 15px rgba(239, 68, 68, 0.4)', border: '1px solid rgba(255,255,255,0.2)' }}>
+            {language === 'pt' ? '🔥 Mais Vendido' : '🔥 Best Seller'}
+          </div>
+        )}
+        {product.is_new && !product.is_bestseller && (
+          <div className="badge" style={{ position: 'relative', top: 0, left: 0, background: '#FFB81C', color: '#000' }}>
+            {language === 'pt' ? '⭐ Novo' : '⭐ New'}
+          </div>
+        )}
+        {product.version && (
+          <div className="badge" style={{ 
+            position: 'relative',
+            top: 0,
+            left: 0,
+            background: 'rgba(255,255,255,0.1)', 
+            color: 'var(--text-muted)',
+            fontSize: '0.65rem',
+            border: '1px solid rgba(255,255,255,0.1)'
+          }}>
+            {product.version}
+          </div>
+        )}
+      </div>
 
       <div 
         onClick={handleView}
