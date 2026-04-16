@@ -49,144 +49,170 @@ const Navbar = () => {
 
   return (
     <>
-      <div style={{ background: '#111111', color: '#f5c518', padding: '0.6rem', textAlign: 'center', fontSize: '0.9rem', fontWeight: 700 }}>
+      {/* BARRA 1: TOP BAR (SITE GREEN) */}
+      <div style={{ 
+        background: 'var(--accent-color)', 
+        color: '#000', 
+        padding: '0.5rem', 
+        textAlign: 'center', 
+        fontSize: '0.85rem', 
+        fontWeight: 800,
+        textTransform: 'uppercase',
+        letterSpacing: '1px'
+      }}>
         {language === 'pt' ? '🚀 Entrega prioritária para Calgary' : '🚀 Priority Delivery to Calgary'}
       </div>
-      <nav className="glass-panel" style={{
-        position: 'sticky', top: 0, zIndex: 100, borderBottom: '1px solid var(--border-color)', padding: '1rem 0'
-      }}>
-      <div className="container" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        
-        {/* Logo */}
-        <Link to="/" style={{ 
-          display: 'flex', 
-          alignItems: 'center', 
-          gap: '0', 
-          fontWeight: 900, 
-          fontSize: '1.8rem', 
-          fontFamily: 'var(--font-display)', 
-          fontStyle: 'italic',
-          letterSpacing: '-1.5px'
-        }}>
-          <span style={{ color: 'var(--accent-color)' }}>i</span><span style={{ color: '#fff' }}>Footy</span><span style={{ color: 'var(--accent-color)' }}>.</span>
-        </Link>
-        
-        {/* Desktop Links */}
-        <div style={{ display: 'flex', gap: '1.5rem', alignItems: 'center' }} className="desktop-nav">
-          <Link to="/" style={{ fontWeight: 500, transition: 'color 0.2s', color: 'var(--text-main)' }}>{t('nav_home')}</Link>
-          <Link to="/colecao/selecoes" style={{ fontWeight: 500, transition: 'color 0.2s', color: 'var(--text-main)' }}>{language === 'pt' ? 'Seleções' : 'National Teams'}</Link>
-          <Link to="/colecao/brasileirao" style={{ fontWeight: 500, transition: 'color 0.2s', color: 'var(--text-main)' }}>{t('nav_br')}</Link>
-          <Link to="/colecao/internacionais" style={{ fontWeight: 500, transition: 'color 0.2s', color: 'var(--text-main)' }}>{t('nav_intl')}</Link>
-          <Link to="/colecao/lancamentos" style={{ fontWeight: 500, transition: 'color 0.2s', color: 'var(--accent-color)' }}>{language === 'pt' ? 'Lançamentos' : 'New Drops'} 🔥</Link>
-          <Link to="/colecao/retro" style={{ fontWeight: 500, transition: 'color 0.2s', color: 'var(--text-main)' }}>{t('nav_retro')}</Link>
-        </div>
 
-        {/* Actions */}
-        <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+      {/* BARRA 2: MAIN HEADER (SEARCH | LOGO | ACTIONS) */}
+      <nav className="glass-panel" style={{
+        position: 'sticky', top: 0, zIndex: 100, borderBottom: '1px solid var(--border-color)', padding: '0.75rem 0'
+      }}>
+        <div className="container" style={{ display: 'grid', gridTemplateColumns: '1fr auto 1fr', alignItems: 'center' }}>
           
-          {/* Language Switcher */}
-          <div style={{ display: 'flex', gap: '0.4rem', marginRight: '0.8rem', borderRight: '1px solid rgba(255,255,255,0.1)', paddingRight: '0.8rem' }}>
-            <button 
-              onClick={() => setLanguage('pt')} 
-              title="Português"
-              style={{ 
-                width: '22px', height: '22px', borderRadius: '50%', overflow: 'hidden', padding: 0,
-                border: language === 'pt' ? '2px solid var(--accent-color)' : '1px solid rgba(255,255,255,0.1)',
-                background: 'none', cursor: 'pointer', transition: 'all 0.2s', opacity: language === 'pt' ? 1 : 0.4
-              }}
-            >
-              <img src="https://flagcdn.com/w40/br.png" alt="PT" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-            </button>
-            <button 
-              onClick={() => setLanguage('en')} 
-              title="English"
-              style={{ 
-                width: '22px', height: '22px', borderRadius: '50%', overflow: 'hidden', padding: 0,
-                border: language === 'en' ? '2px solid var(--accent-color)' : '1px solid rgba(255,255,255,0.1)',
-                background: 'none', cursor: 'pointer', transition: 'all 0.2s', opacity: language === 'en' ? 1 : 0.4
-              }}
-            >
-              <img src="https://flagcdn.com/w40/ca.png" alt="EN" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-            </button>
+          {/* Coluna Esquerda: Busca (Desktop) */}
+          <div className="desktop-only" style={{ display: 'flex', alignItems: 'center' }}>
+            <form onSubmit={handleSearchSubmit} style={{ position: 'relative', width: '250px' }}>
+              <input 
+                type="text"
+                placeholder={language === 'pt' ? 'O que você procura?' : 'Search...'}
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                style={{
+                  width: '100%',
+                  background: 'rgba(255,255,255,0.05)',
+                  border: '1px solid rgba(255,255,255,0.1)',
+                  padding: '0.6rem 1rem 0.6rem 2.5rem',
+                  borderRadius: '8px',
+                  color: '#fff',
+                  fontSize: '0.9rem',
+                  outline: 'none',
+                  transition: 'all 0.3s'
+                }}
+                onFocus={(e) => e.target.style.borderColor = 'var(--accent-color)'}
+                onBlur={(e) => e.target.style.borderColor = 'rgba(255,255,255,0.1)'}
+              />
+              <Search size={18} style={{ position: 'absolute', left: '0.8rem', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }} />
+            </form>
           </div>
 
-          <button 
-            onClick={() => setIsSearchOpen(true)}
-            style={{ color: 'var(--text-main)', padding: '0.5rem', background: 'transparent', border: 'none', cursor: 'pointer' }} 
-            className="desktop-nav"
-          >
-             <Search size={22} />
-          </button>
+          {/* Coluna Central: Logo */}
+          <div style={{ display: 'flex', justifyContent: 'center' }}>
+            <Link to="/" style={{ 
+              display: 'flex', 
+              alignItems: 'center', 
+              gap: '0', 
+              fontWeight: 900, 
+              fontSize: '2.4rem', 
+              fontFamily: 'var(--font-display)', 
+              fontStyle: 'italic',
+              letterSpacing: '-2px'
+            }}>
+              <span style={{ color: 'var(--accent-color)' }}>i</span><span style={{ color: '#fff' }}>Footy</span><span style={{ color: 'var(--accent-color)' }}>.</span>
+            </Link>
+          </div>
           
-          <button 
-             onClick={() => {
-                if(!user) navigate('/auth');
-                else if(isAdmin) navigate('/admin');
-                else navigate('/perfil');
-             }} 
-             style={{ color: user ? 'var(--accent-color)' : 'var(--text-main)', padding: '0.5rem', marginLeft: '0.2rem', background: 'transparent', border: 'none', cursor: 'pointer' }}
-          >
-             {user?.user_metadata?.avatar_url ? (
-               <img src={user.user_metadata.avatar_url} alt="Profile" style={{ width: '28px', height: '28px', borderRadius: '50%', border: `2px solid ${isAdmin ? '#FFB81C' : 'var(--accent-color)'}`, objectFit: 'cover' }} />
-             ) : (
-               <UserCircle size={24} />
-             )}
-          </button>
+          {/* Coluna Direita: Ações */}
+          <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center', justifyContent: 'flex-end' }}>
+            
+            {/* Language Switcher */}
+            <div className="desktop-only" style={{ display: 'flex', gap: '0.4rem', marginRight: '0.8rem', borderRight: '1px solid rgba(255,255,255,0.1)', paddingRight: '0.8rem' }}>
+              <button onClick={() => setLanguage('pt')} style={{ width: '20px', height: '20px', borderRadius: '50%', overflow: 'hidden', padding: 0, border: language === 'pt' ? '2px solid var(--accent-color)' : '1px solid rgba(255,255,255,0.1)', background: 'none', cursor: 'pointer', opacity: language === 'pt' ? 1 : 0.4 }}>
+                <img src="https://flagcdn.com/w40/br.png" alt="PT" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+              </button>
+              <button onClick={() => setLanguage('en')} style={{ width: '20px', height: '20px', borderRadius: '50%', overflow: 'hidden', padding: 0, border: language === 'en' ? '2px solid var(--accent-color)' : '1px solid rgba(255,255,255,0.1)', background: 'none', cursor: 'pointer', opacity: language === 'en' ? 1 : 0.4 }}>
+                <img src="https://flagcdn.com/w40/ca.png" alt="EN" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+              </button>
+            </div>
 
-          <button 
-            onClick={() => setIsCartOpen(true)}
-            style={{ position: 'relative', color: 'var(--text-main)', padding: '0.5rem', background: 'transparent', border: 'none', cursor: 'pointer' }}
-          >
-            <ShoppingBag size={24} />
-            {itemCount > 0 && (
-              <span style={{
-                position: 'absolute', top: -2, right: -5,
-                background: 'var(--accent-color)', color: '#000',
-                fontSize: '0.75rem', fontWeight: 'bold',
-                width: '18px', height: '18px', borderRadius: '50%',
-                display: 'flex', alignItems: 'center', justifyContent: 'center'
-              }}>
-                {itemCount}
-              </span>
-            )}
-          </button>
-          
-          <button className="mobile-only" onClick={() => setMobileMenuOpen(!mobileMenuOpen)} style={{ color: 'var(--text-main)', background: 'transparent', border: 'none', cursor: 'pointer' }}>
-            {mobileMenuOpen ? <X size={28} /> : <Menu size={28} />}
-          </button>
+            <button 
+              onClick={() => setIsSearchOpen(true)}
+              style={{ color: 'var(--text-main)', padding: '0.5rem', background: 'transparent', border: 'none', cursor: 'pointer' }} 
+              className="mobile-only"
+            >
+               <Search size={22} />
+            </button>
+            
+            <button 
+               onClick={() => {
+                  if(!user) navigate('/auth');
+                  else if(isAdmin) navigate('/admin');
+                  else navigate('/perfil');
+               }} 
+               style={{ color: user ? 'var(--accent-color)' : 'var(--text-main)', padding: '0.5rem', background: 'transparent', border: 'none', cursor: 'pointer' }}
+            >
+               {user?.user_metadata?.avatar_url ? (
+                 <img src={user.user_metadata.avatar_url} alt="Profile" style={{ width: '28px', height: '28px', borderRadius: '50%', border: `2px solid ${isAdmin ? '#FFB81C' : 'var(--accent-color)'}`, objectFit: 'cover' }} />
+               ) : (
+                 <UserCircle size={24} />
+               )}
+            </button>
+  
+            <button 
+              onClick={() => setIsCartOpen(true)}
+              style={{ position: 'relative', color: 'var(--text-main)', padding: '0.5rem', background: 'transparent', border: 'none', cursor: 'pointer' }}
+            >
+              <ShoppingBag size={24} />
+              {itemCount > 0 && (
+                <span style={{
+                  position: 'absolute', top: -2, right: -5,
+                  background: 'var(--accent-color)', color: '#000',
+                  fontSize: '0.75rem', fontWeight: 'bold',
+                  width: '18px', height: '18px', borderRadius: '50%',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center'
+                }}>
+                  {itemCount}
+                </span>
+              )}
+            </button>
+            
+            <button className="mobile-only" onClick={() => setMobileMenuOpen(!mobileMenuOpen)} style={{ color: 'var(--text-main)', background: 'transparent', border: 'none', cursor: 'pointer' }}>
+              {mobileMenuOpen ? <X size={28} /> : <Menu size={28} />}
+            </button>
+          </div>
         </div>
-      </div>
-      
-      {/* Mobile Menu inline styles just for demo */}
-      <style>{`
-        .desktop-nav { display: none !important; }
-        @media (min-width: 768px) {
-          .desktop-nav { display: flex !important; }
-          .mobile-only { display: none !important; }
-        }
-      `}</style>
-      
-      {mobileMenuOpen && (
-        <div style={{
-          position: 'absolute', top: '100%', left: 0, width: '100%',
-          background: 'var(--surface-color)', padding: '1.5rem',
-          display: 'flex', flexDirection: 'column', gap: '1.2rem',
-          borderBottom: '1px solid var(--border-color)', zIndex: 99
-        }}>
-          <button 
-             onClick={() => { setIsSearchOpen(true); setMobileMenuOpen(false); }}
-             style={{ textAlign: 'left', background: 'none', border: 'none', color: '#fff', fontSize: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}
-          >
-             <Search size={20} /> {language === 'pt' ? 'Buscar Produto' : 'Search Product'}
-          </button>
-          <Link to="/" onClick={() => setMobileMenuOpen(false)}>{t('nav_home')}</Link>
-          <Link to="/colecao/selecoes" onClick={() => setMobileMenuOpen(false)}>{language === 'pt' ? 'Seleções' : 'National Teams'}</Link>
-          <Link to="/colecao/brasileirao" onClick={() => setMobileMenuOpen(false)}>{t('nav_br')}</Link>
-          <Link to="/colecao/internacionais" onClick={() => setMobileMenuOpen(false)}>{t('nav_intl')}</Link>
-          <Link to="/colecao/lancamentos" onClick={() => setMobileMenuOpen(false)} style={{ color: 'var(--accent-color)' }}>{language === 'pt' ? 'Lançamentos' : 'New Drops'} 🔥</Link>
-          <Link to="/colecao/retro" onClick={() => setMobileMenuOpen(false)}>{t('nav_retro')}</Link>
+
+        {/* BARRA 3: CATEGORY BAR (LINKS) */}
+        <div className="desktop-only" style={{ borderTop: '1px solid rgba(255,255,255,0.05)', marginTop: '1rem', paddingTop: '1rem' }}>
+          <div className="container" style={{ display: 'flex', gap: '2rem', justifyContent: 'center' }}>
+            <Link to="/" style={{ fontWeight: 600, fontSize: '0.85rem', textTransform: 'uppercase', letterSpacing: '1px', transition: 'color 0.2s', color: 'var(--text-main)' }}>{t('nav_home')}</Link>
+            <Link to="/colecao/selecoes" style={{ fontWeight: 600, fontSize: '0.85rem', textTransform: 'uppercase', letterSpacing: '1px', transition: 'color 0.2s', color: 'var(--text-main)' }}>{language === 'pt' ? 'Seleções' : 'National Teams'}</Link>
+            <Link to="/colecao/brasileirao" style={{ fontWeight: 600, fontSize: '0.85rem', textTransform: 'uppercase', letterSpacing: '1px', transition: 'color 0.2s', color: 'var(--text-main)' }}>{t('nav_br')}</Link>
+            <Link to="/colecao/internacionais" style={{ fontWeight: 600, fontSize: '0.85rem', textTransform: 'uppercase', letterSpacing: '1px', transition: 'color 0.2s', color: 'var(--text-main)' }}>{t('nav_intl')}</Link>
+            <Link to="/colecao/lancamentos" style={{ fontWeight: 600, fontSize: '0.85rem', textTransform: 'uppercase', letterSpacing: '1px', transition: 'color 0.2s', color: 'var(--accent-color)' }}>{language === 'pt' ? 'Lançamentos' : 'New Drops'} 🔥</Link>
+            <Link to="/colecao/retro" style={{ fontWeight: 600, fontSize: '0.85rem', textTransform: 'uppercase', letterSpacing: '1px', transition: 'color 0.2s', color: 'var(--text-main)' }}>{t('nav_retro')}</Link>
+          </div>
         </div>
-      )}
+
+        <style>{`
+          .desktop-only { display: none !important; }
+          .mobile-only { display: block !important; }
+          @media (min-width: 992px) {
+            .desktop-only { display: flex !important; }
+            .mobile-only { display: none !important; }
+          }
+        `}</style>
+        
+        {mobileMenuOpen && (
+          <div style={{
+            position: 'absolute', top: '100%', left: 0, width: '100%',
+            background: 'var(--surface-color)', padding: '1.5rem',
+            display: 'flex', flexDirection: 'column', gap: '1.2rem',
+            borderBottom: '1px solid var(--border-color)', zIndex: 99
+          }}>
+            <button 
+               onClick={() => { setIsSearchOpen(true); setMobileMenuOpen(false); }}
+               style={{ textAlign: 'left', background: 'none', border: 'none', color: '#fff', fontSize: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}
+            >
+               <Search size={20} /> {language === 'pt' ? 'Buscar Produto' : 'Search Product'}
+            </button>
+            <Link to="/" onClick={() => setMobileMenuOpen(false)}>{t('nav_home')}</Link>
+            <Link to="/colecao/selecoes" onClick={() => setMobileMenuOpen(false)}>{language === 'pt' ? 'Seleções' : 'National Teams'}</Link>
+            <Link to="/colecao/brasileirao" onClick={() => setMobileMenuOpen(false)}>{t('nav_br')}</Link>
+            <Link to="/colecao/internacionais" onClick={() => setMobileMenuOpen(false)}>{t('nav_intl')}</Link>
+            <Link to="/colecao/lancamentos" onClick={() => setMobileMenuOpen(false)} style={{ color: 'var(--accent-color)' }}>{language === 'pt' ? 'Lançamentos' : 'New Drops'} 🔥</Link>
+            <Link to="/colecao/retro" onClick={() => setMobileMenuOpen(false)}>{t('nav_retro')}</Link>
+          </div>
+        )}
 
       {/* SEARCH DROPDOWN (More elegant slide-down) */}
       {isSearchOpen && (
