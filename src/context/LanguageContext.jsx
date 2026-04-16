@@ -11,7 +11,7 @@ export const translations = {
     nav_admin: 'Admin',
     hero_title_part1: 'VISTA AS CORES DO SEU TIME MESMO ',
     hero_title_accent: 'LONGE DE CASA',
-    hero_subtitle: 'Camisas brasileiras, europeias e internacionais | Entrega em todo o Canadá',
+    hero_subtitle: 'Camisas brasileiras, europeias e internacionais',
     hero_satisfied_clients: '⭐ +200 clientes satisfeitos no Canadá',
     hero_shipping_all: 'Todo o Canadá',
     hero_shipping_calgary: 'Entrega prioritária para Calgary',
