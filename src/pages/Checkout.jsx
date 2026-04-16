@@ -101,7 +101,9 @@ const Checkout = () => {
           name: item.name,
           size: item.size,
           quantity: item.quantity,
-          price: item.price
+          price: item.price,
+          image: item.image,
+          extras: item.extras || {}
         })),
         total_price: cartTotal,
         status: 'pending'
