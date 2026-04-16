@@ -5,9 +5,8 @@ const Footer = () => {
     <footer style={{ borderTop: '1px solid var(--border-color)', paddingTop: '4rem', paddingBottom: '2rem', marginTop: '4rem', background: '#050507' }}>
       <div className="container" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '3rem', marginBottom: '3rem' }}>
         <div>
-          <h2 style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '1rem', fontFamily: 'var(--font-display)', fontSize: '1.5rem' }}>
-            <img src="/favicon.png" alt="Camisa10" style={{ width: '32px', height: '32px', objectFit: 'contain' }} />
-            <span><span style={{ color: '#fff' }}>Camisa</span><span style={{ color: 'var(--accent-color)' }}>10</span></span>
+          <h2 style={{ display: 'flex', alignItems: 'center', gap: '0', marginBottom: '1rem', fontFamily: 'var(--font-display)', fontSize: '1.8rem', fontStyle: 'italic', fontWeight: 900 }}>
+            <span style={{ color: 'var(--accent-color)' }}>i</span><span style={{ color: '#fff' }}>Footy</span><span style={{ color: 'var(--accent-color)' }}>.</span>
           </h2>
           <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem' }}>
             A sua conexão com o futebol, onde quer que você esteja. Especialistas em camisas de futebol para brasileiros no Canadá.
@@ -32,7 +31,7 @@ const Footer = () => {
         </div>
       </div>
       <div className="container" style={{ borderTop: '1px solid var(--border-color)', paddingTop: '2rem', textAlign: 'center', color: 'var(--text-muted)', fontSize: '0.85rem' }}>
-        &copy; {new Date().getFullYear()} Camisa10. Todos os direitos reservados.
+        &copy; {new Date().getFullYear()} iFooty. Todos os direitos reservados.
         <div style={{ marginTop: '0.5rem', opacity: 0.5, fontSize: '0.7rem' }}>Desenvolvido por BIVisualizer</div>
       </div>
     </footer>

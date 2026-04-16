@@ -183,7 +183,7 @@ const Profile = () => {
           {activeTab === 'feedback' && (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '2.5rem' }}>
               <div>
-                <h2 style={{ marginBottom: '0.5rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>O que você achou da Camisa10? 🗣️</h2>
+                <h2 style={{ marginBottom: '0.5rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>O que você achou da iFooty? 🗣️</h2>
                 <p style={{ color: 'var(--text-muted)', marginBottom: '2rem' }}>Sua opinião nos ajuda a crescer e ajuda outros brasileiros no Canadá!</p>
                 
                 <form onSubmit={handleSubmitFeedback} style={{ background: 'rgba(255,255,255,0.02)', padding: '2rem', borderRadius: 'var(--radius-md)', border: '1px solid var(--border-color)' }}>
