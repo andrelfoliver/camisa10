@@ -202,7 +202,7 @@ const ProductPage = () => {
                 <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                   <span style={{ fontSize: '1.8rem', fontWeight: 900, color: 'var(--text-main)' }}>${currentTotal.toFixed(2)} CAD</span>
                 </div>
-                <div style={{ fontSize: '0.85rem', color: '#10B981', fontWeight: 700 }}>{language === 'pt' ? 'Frete grátis a partir de $250 CAD' : 'Free shipping from $250 CAD'}</div>
+                <div style={{ fontSize: '0.85rem', color: '#10B981', fontWeight: 700 }}>{language === 'pt' ? 'Frete grátis para todo o Canadá' : 'Free shipping to all Canada'}</div>
               </div>
             </div>
 

@@ -72,47 +72,32 @@ const SalesPopup = () => {
     let timeoutId;
 
     const runSaleRoutine = () => {
-      let saleData = {};
+      if (realOrders.length === 0) return;
 
-      // Decide if we use a real order (70% chance if available) or a random product
-      const useRealOrder = realOrders.length > 0 && (Math.random() < 0.7 || products.length === 0);
+      const order = realOrders[Math.floor(Math.random() * realOrders.length)];
+      // Get a random item from this order
+      const item = order.items && order.items.length > 0 
+        ? order.items[Math.floor(Math.random() * order.items.length)] 
+        : null;
+      
+      // Find product image if possible
+      const productInfo = products.find(p => p.name === item?.name);
 
-      if (useRealOrder) {
-        const order = realOrders[Math.floor(Math.random() * realOrders.length)];
-        // Get a random item from this order
-        const item = order.items && order.items.length > 0 
-          ? order.items[Math.floor(Math.random() * order.items.length)] 
-          : null;
-        
-        // Find product image if possible
-        const productInfo = products.find(p => p.name === item?.name);
-
-        saleData = {
-          name: order.customer_name ? order.customer_name.split(' ')[0] : NAMES[Math.floor(Math.random() * NAMES.length)],
-          city: (order.shipping_address && order.shipping_address.city) || CITIES[Math.floor(Math.random() * CITIES.length)],
-          productName: item ? item.name : products[0].name,
-          image: productInfo ? productInfo.image : (products.find(p => p.image)?.image || null),
-          time: getRelativeTime(order.created_at),
-          isReal: true
-        };
-      } else {
-        const randomProduct = products[Math.floor(Math.random() * products.length)];
-        saleData = {
-          name: NAMES[Math.floor(Math.random() * NAMES.length)],
-          city: CITIES[Math.floor(Math.random() * CITIES.length)],
-          productName: randomProduct.name,
-          image: randomProduct.image,
-          time: TIMES[Math.floor(Math.random() * TIMES.length)],
-          isReal: false
-        };
-      }
+      const saleData = {
+        name: order.customer_name ? order.customer_name.split(' ')[0] : 'Alguém',
+        city: (order.shipping_address && order.shipping_address.city) || 'Canadá',
+        productName: item ? item.name : (products[0]?.name || 'Camisa iFooty'),
+        image: productInfo ? productInfo.image : (products.find(p => p.image)?.image || null),
+        time: getRelativeTime(order.created_at),
+        isReal: true
+      };
 
       setCurrentSale(saleData);
       setVisible(true);
 
       setTimeout(() => {
         setVisible(false);
-        const nextDelay = Math.floor(Math.random() * (90000 - 30000 + 1) + 30000);
+        const nextDelay = Math.floor(Math.random() * (120000 - 60000 + 1) + 60000); // 1-2 minutos entre vendas reais
         timeoutId = setTimeout(runSaleRoutine, nextDelay);
       }, 5000);
     };

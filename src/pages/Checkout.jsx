@@ -110,6 +110,31 @@ const Checkout = () => {
       const { error: orderError } = await supabase.from('orders').insert([orderData]);
       if (orderError) throw orderError;
 
+      // 1.5. Notificar por E-mail (Backstage)
+      try {
+        fetch('/api/send-order-email', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ 
+            order: {
+              ...orderData,
+              customer_name: formData.name,
+              customer_email: user.email,
+              customer_phone: formData.phone,
+              shipping_address: {
+                street: formData.street,
+                apartment: formData.apartment,
+                city: formData.city,
+                province: formData.province,
+                postalCode: formData.postalCode
+              }
+            }
+          })
+        });
+      } catch (err) {
+        console.error("Erro ao disparar notificação de e-mail:", err);
+      }
+
       // 2. Atualizar o Perfil se solicitado
       if (formData.saveAddress) {
         await supabase.from('profiles').update({
