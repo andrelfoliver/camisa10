@@ -319,10 +319,9 @@ button {
   position: absolute;
   inset: 0;
   background: linear-gradient(to right, 
-    rgba(0,0,0,1) 0%, 
-    rgba(0,0,0,0.95) 25%, 
-    rgba(0,0,0,0.6) 50%, 
-    rgba(0,0,0,0) 100%
+    rgba(0,0,0,0.8) 0%, 
+    rgba(0,0,0,0.4) 30%, 
+    rgba(0,0,0,0) 70%
   );
   z-index: 1;
 }
@@ -337,10 +336,9 @@ button {
   }
   .hero-funnel::after {
     background: linear-gradient(to top, 
-      rgba(0,0,0,1) 0%, 
-      rgba(0,0,0,0.95) 40%, 
-      rgba(0,0,0,0.7) 70%, 
-      rgba(0,0,0,0) 100%
+      rgba(0,0,0,0.8) 0%, 
+      rgba(0,0,0,0.4) 40%, 
+      rgba(0,0,0,0) 80%
     );
   }
   .hero-container-modern {
