@@ -5,13 +5,13 @@ import { CheckCircle2, X } from 'lucide-react';
 import { useLanguage } from '../context/LanguageContext';
 
 const NAMES = [
-  // Brasileiros (Maioria)
+  // Brasileiros
   'João', 'Tiago', 'Lucas', 'Ricardo', 'Gabriel', 'Bruno', 'Carlos', 'Pedro', 'Marcelo', 'Arthur', 'Matheus', 'Guilherme', 'Felipe', 'Rafael',
   'André', 'Rodrigo', 'Leandro', 'Diego', 'Gustavo', 'Paulo', 'Marcos', 'Juliana', 'Aline', 'Fernanda', 'Fabrício', 'Roberto', 'Cássio',
-  // Canadenses
-  'Liam', 'Emma', 'Olivia', 'Noah', 'William', 'Benjamin', 'Sophia',
-  // Indianos
-  'Arjun', 'Priya', 'Rahul', 'Ananya', 'Vihaan', 'Aarav'
+  'Vinícius', 'Leonardo', 'Eduardo', 'Mariana', 'Beatriz', 'Camila', 'Letícia', 'Davi', 'Samuel', 'Daniel', 'Igor', 'Vitor',
+  // Canadenses / Americanos
+  'Liam', 'Emma', 'Olivia', 'Noah', 'William', 'Benjamin', 'Sophia', 'James', 'Logan', 'Ethan', 'Isabella', 'Mia', 'Lucas', 'Mason',
+  'Harper', 'Evelyn', 'Jack', 'Aiden', 'Chloe', 'Zoe', 'Grace', 'Lily', 'Jackson', 'Avery', 'Scarlett', 'Madison'
 ];
 const CITIES = ['Toronto', 'Vancouver', 'Montreal', 'Calgary', 'Ottawa', 'Edmonton', 'Mississauga', 'Winnipeg', 'Brampton', 'Hamilton'];
 const TIMES = ['há 2 minutos', 'agora mesmo', 'há 5 minutos', 'há 10 minutos', 'há 1 hora', 'há 15 minutos', 'há 3 minutos'];
