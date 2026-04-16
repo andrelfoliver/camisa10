@@ -13,7 +13,7 @@ const ProductCard = ({ product }) => {
   const [imageError, setImageError] = useState(false);
   const sizes = ['S', 'M', 'L', 'XL'];
 
-  if (imageError) return null; // Graceful degradation
+  // if (imageError) return null; // Removido: agora mostramos o placeholder em vez de esconder o produto
 
   const handleAdd = (e) => {
     e.stopPropagation();
@@ -64,11 +64,16 @@ const ProductCard = ({ product }) => {
         className="product-card-img-container hover-zoom"
       >
         <img 
-          src={product.image} 
+          src={imageError ? '/camisas/placeholder.png' : product.image} 
           alt={product.name} 
           style={{ maxHeight: '100%', maxWidth: '100%', objectFit: 'contain', filter: 'drop-shadow(0 5px 10px rgba(0,0,0,0.4))' }} 
           onError={() => setImageError(true)}
         />
+        {imageError && (
+          <div style={{ position: 'absolute', top: '10px', left: '10px', right: '10px', background: 'rgba(239, 68, 68, 0.9)', color: '#fff', fontSize: '0.65rem', padding: '0.4rem', borderRadius: '4px', textAlign: 'center', fontWeight: 800, zIndex: 10 }}>
+            {language === 'pt' ? '🖼️ LINK DA IMAGEM QUEBRADO' : '🖼️ BROKEN IMAGE LINK'}
+          </div>
+        )}
         <div style={{ position: 'absolute', bottom: '8px', right: '8px', background: 'rgba(0,0,0,0.5)', padding: '0.4rem', borderRadius: '50%', color: '#fff' }}>
           <Eye size={14} />
         </div>
