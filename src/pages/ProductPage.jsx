@@ -103,7 +103,7 @@ const ProductPage = () => {
     if (buyNow) navigate('/checkout');
   };
 
-  const basePrice = product.price || 69.90;
+  const basePrice = product.price || 47.90;
   let currentTotal = basePrice;
   if (['2XL', '3XL'].includes(selectedSize)) currentTotal += pricingConfig?.size2XL3XL || 7.00;
   if (selectedSize === '4XL') currentTotal += pricingConfig?.size4XL || 10.00;
@@ -173,14 +173,18 @@ const ProductPage = () => {
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', paddingBottom: '0.3rem', borderBottom: '1px dashed var(--border-color)', color: 'var(--text-muted)' }}>
                     <span>1 peça</span>
-                    <span style={{ fontWeight: 600 }}>Preço normal</span>
+                    <span style={{ fontWeight: 600 }}>${basePrice.toFixed(2)} unit.</span>
                   </div>
-                  {[...pricingConfig.discounts].sort((a, b) => a.qty - b.qty).map((d, index) => (
-                    <div key={index} style={{ display: 'flex', justifyContent: 'space-between', paddingBottom: '0.3rem', borderBottom: index < pricingConfig.discounts.length - 1 ? '1px dashed var(--border-color)' : 'none', color: '#10B981', fontWeight: 600 }}>
-                      <span>{d.qty} peças</span>
-                      <span>- $ {d.amount.toFixed(2)} por unidade</span>
-                    </div>
-                  ))}
+                  {[...pricingConfig.discounts].sort((a, b) => a.qty - b.qty).map((d, index) => {
+                    const pricePerUnit = basePrice * (1 - (d.percent || 0) / 100);
+                    const qtyLabel = d.qty === 3 ? "3-4 peças" : d.qty === 5 ? "5-9 peças" : d.qty === 10 ? "10+ peças" : `${d.qty} peças`;
+                    return (
+                      <div key={index} style={{ display: 'flex', justifyContent: 'space-between', paddingBottom: '0.3rem', borderBottom: index < pricingConfig.discounts.length - 1 ? '1px dashed var(--border-color)' : 'none', color: '#10B981', fontWeight: 600 }}>
+                        <span>{qtyLabel}</span>
+                        <span>${pricePerUnit.toFixed(2)} cada</span>
+                      </div>
+                    );
+                  })}
                 </div>
               </div>
             )}
