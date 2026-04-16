@@ -200,9 +200,9 @@ const ProductPage = () => {
               
               <div style={{ marginBottom: '1.5rem' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                  <span style={{ fontSize: '1.8rem', fontWeight: 900, color: 'var(--text-main)' }}>R${currentTotal.toFixed(2)}</span>
+                  <span style={{ fontSize: '1.8rem', fontWeight: 900, color: 'var(--text-main)' }}>${currentTotal.toFixed(2)} CAD</span>
                 </div>
-                <div style={{ fontSize: '0.85rem', color: '#10B981', fontWeight: 700 }}>{language === 'pt' ? 'Frete grátis a partir de R$ 350,00' : 'Free shipping from $250.00'}</div>
+                <div style={{ fontSize: '0.85rem', color: '#10B981', fontWeight: 700 }}>{language === 'pt' ? 'Frete grátis a partir de $250 CAD' : 'Free shipping from $250 CAD'}</div>
               </div>
             </div>
 
