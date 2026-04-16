@@ -16,6 +16,16 @@ const Navbar = () => {
   const [searchQuery, setSearchQuery] = React.useState('');
   const [suggestions, setSuggestions] = React.useState([]);
 
+  const [waNumber, setWaNumber] = React.useState('5584991847739');
+
+  React.useEffect(() => {
+    async function getWa() {
+      const { data } = await supabase.from('store_settings').select('value').eq('key', 'whatsapp_number').single();
+      if (data && data.value) setWaNumber(data.value);
+    }
+    getWa();
+  }, []);
+
   const itemCount = cartItems.reduce((acc, item) => acc + item.quantity, 0);
 
   // Busca sugestões em tempo real
@@ -87,7 +97,7 @@ const Navbar = () => {
 
             {/* 2. WhatsApp (Desktop + Mobile) */}
             <a 
-              href="https://wa.me/15875705304" 
+              href={`https://wa.me/${waNumber.replace(/\D/g, '')}`} 
               target="_blank" 
               rel="noopener noreferrer"
               style={{ color: 'var(--text-main)', display: 'flex', alignItems: 'center', padding: '0.5rem' }}
