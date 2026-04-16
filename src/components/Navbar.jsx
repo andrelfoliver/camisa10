@@ -15,6 +15,15 @@ const Navbar = () => {
   const [isSearchOpen, setIsSearchOpen] = React.useState(false);
   const [searchQuery, setSearchQuery] = React.useState('');
   const [suggestions, setSuggestions] = React.useState([]);
+  const [scrolled, setScrolled] = React.useState(false);
+
+  React.useEffect(() => {
+    const handleScroll = () => {
+      setScrolled(window.scrollY > 50);
+    };
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
 
   const [waNumber, setWaNumber] = React.useState('5584991847739');
 
@@ -75,14 +84,22 @@ const Navbar = () => {
 
       {/* BARRA 2: MAIN HEADER (SEARCH | LOGO | ACTIONS) */}
       <nav className="glass-panel" style={{
-        position: 'sticky', top: 0, zIndex: 100, borderBottom: '1px solid var(--border-color)', padding: '0.6rem 0'
+        position: 'sticky', 
+        top: 0, 
+        zIndex: 100, 
+        borderBottom: '1px solid var(--border-color)', 
+        padding: scrolled ? '0.2rem 0' : '0.6rem 0',
+        transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+        backdropFilter: 'blur(20px)',
+        background: scrolled ? 'rgba(0,0,0,0.85)' : 'rgba(13,13,20,0.8)'
       }}>
         <div className="container" style={{ 
           display: 'grid', 
           gridTemplateColumns: '1fr auto 1fr', 
           alignItems: 'center',
           gap: '0.2rem',
-          padding: '0 0.75rem' // Reduzido de 1.5rem para caber tudo no mobile
+          padding: '0 0.75rem',
+          transition: 'min-height 0.3s'
         }}>
           
           {/* Coluna Esquerda (3 Itens): Menu + WhatsApp + Login */}
@@ -141,11 +158,13 @@ const Navbar = () => {
               display: 'flex', 
               alignItems: 'center', 
               fontWeight: 900, 
-              fontSize: window.innerWidth < 500 ? '1.7rem' : '2.2rem', 
+              fontSize: window.innerWidth < 500 
+                ? (scrolled ? '1.3rem' : '1.7rem') 
+                : (scrolled ? '1.6rem' : '2.2rem'), 
               fontFamily: 'var(--font-display)', 
               fontStyle: 'italic',
               letterSpacing: '-1.5px',
-              transition: 'transform 0.3s'
+              transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)'
             }}
             onMouseOver={(e) => e.currentTarget.style.transform = 'scale(1.05)'}
             onMouseOut={(e) => e.currentTarget.style.transform = 'scale(1)'}
@@ -250,16 +269,23 @@ const Navbar = () => {
         </div>
 
         {/* BARRA 3: CATEGORY BAR (LINKS) */}
-        <div className="desktop-only" style={{ borderTop: '1px solid rgba(255,255,255,0.05)', marginTop: '1rem', paddingTop: '1rem' }}>
-          <div className="container" style={{ display: 'flex', gap: '2rem', justifyContent: 'center' }}>
-            <Link to="/" style={{ fontWeight: 600, fontSize: '0.85rem', textTransform: 'uppercase', letterSpacing: '1px', transition: 'color 0.2s', color: 'var(--text-main)' }}>{t('nav_home')}</Link>
-            <Link to="/colecao/selecoes" style={{ fontWeight: 600, fontSize: '0.85rem', textTransform: 'uppercase', letterSpacing: '1px', transition: 'color 0.2s', color: 'var(--text-main)' }}>{language === 'pt' ? 'Seleções' : 'National Teams'}</Link>
-            <Link to="/colecao/brasileirao" style={{ fontWeight: 600, fontSize: '0.85rem', textTransform: 'uppercase', letterSpacing: '1px', transition: 'color 0.2s', color: 'var(--text-main)' }}>{t('nav_br')}</Link>
-            <Link to="/colecao/internacionais" style={{ fontWeight: 600, fontSize: '0.85rem', textTransform: 'uppercase', letterSpacing: '1px', transition: 'color 0.2s', color: 'var(--text-main)' }}>{t('nav_intl')}</Link>
-            <Link to="/colecao/lancamentos" style={{ fontWeight: 600, fontSize: '0.85rem', textTransform: 'uppercase', letterSpacing: '1px', transition: 'color 0.2s', color: 'var(--accent-color)' }}>{language === 'pt' ? 'Lançamentos' : 'New Drops'} 🔥</Link>
-            <Link to="/colecao/retro" style={{ fontWeight: 600, fontSize: '0.85rem', textTransform: 'uppercase', letterSpacing: '1px', transition: 'color 0.2s', color: 'var(--text-main)' }}>{t('nav_retro')}</Link>
+        {!scrolled && (
+          <div className="desktop-only" style={{ 
+            borderTop: '1px solid rgba(255,255,255,0.05)', 
+            marginTop: '1rem', 
+            paddingTop: '1rem',
+            animation: 'fadeIn 0.3s ease-out'
+          }}>
+            <div className="container" style={{ display: 'flex', gap: '2rem', justifyContent: 'center' }}>
+              <Link to="/" style={{ fontWeight: 600, fontSize: '0.85rem', textTransform: 'uppercase', letterSpacing: '1px', transition: 'color 0.2s', color: 'var(--text-main)' }}>{t('nav_home')}</Link>
+              <Link to="/colecao/selecoes" style={{ fontWeight: 600, fontSize: '0.85rem', textTransform: 'uppercase', letterSpacing: '1px', transition: 'color 0.2s', color: 'var(--text-main)' }}>{language === 'pt' ? 'Seleções' : 'National Teams'}</Link>
+              <Link to="/colecao/brasileirao" style={{ fontWeight: 600, fontSize: '0.85rem', textTransform: 'uppercase', letterSpacing: '1px', transition: 'color 0.2s', color: 'var(--text-main)' }}>{t('nav_br')}</Link>
+              <Link to="/colecao/internacionais" style={{ fontWeight: 600, fontSize: '0.85rem', textTransform: 'uppercase', letterSpacing: '1px', transition: 'color 0.2s', color: 'var(--text-main)' }}>{t('nav_intl')}</Link>
+              <Link to="/colecao/lancamentos" style={{ fontWeight: 600, fontSize: '0.85rem', textTransform: 'uppercase', letterSpacing: '1px', transition: 'color 0.2s', color: 'var(--accent-color)' }}>{language === 'pt' ? 'Lançamentos' : 'New Drops'} 🔥</Link>
+              <Link to="/colecao/retro" style={{ fontWeight: 600, fontSize: '0.85rem', textTransform: 'uppercase', letterSpacing: '1px', transition: 'color 0.2s', color: 'var(--text-main)' }}>{t('nav_retro')}</Link>
+            </div>
           </div>
-        </div>
+        )}
 
         <style>{`
           .desktop-only { display: none !important; }
