@@ -3,7 +3,8 @@ import HeroSection from '../components/HeroSection';
 import TeamsBar from '../components/TeamsBar';
 import ProductCard from '../components/ProductCard';
 import { supabase } from '../services/supabase';
-import { ShieldCheck, Truck, Star, Package, Lock, CheckCircle2, AlertTriangle, ChevronDown, ChevronUp, ChevronRight } from 'lucide-react';
+import { ShieldCheck, Truck, Star, Package, Lock, CheckCircle2, AlertTriangle, ChevronDown, ChevronUp, ChevronRight, Users, Zap } from 'lucide-react';
+import StatCounter from '../components/StatCounter';
 import { useNavigate } from 'react-router-dom';
 import { useCart } from '../context/CartContext';
 import { useLanguage } from '../context/LanguageContext';
@@ -204,22 +205,79 @@ const Home = () => {
       )}
 
       {/* 2. PROVA E CONFIANÇA (ICONOS MOVIDOS PARA O TOPO) */}
-      <section className="section-padding" style={{ background: 'var(--surface-color)', borderBottom: '1px solid var(--border-color)' }}>
-        <div className="container" style={{ textAlign: 'center' }}>
-          <p style={{ textAlign: 'center', color: 'var(--text-muted)', marginBottom: '2rem', fontSize: '1.2rem' }}>Já somos <strong style={{ color: 'var(--accent-color)' }}>+200 clientes</strong> vestindo a paixão no Canadá! 🍁</p>
-          <div style={{ display: 'flex', justifyContent: 'space-around', flexWrap: 'wrap', gap: '2rem' }}>
-            <div style={{ flex: 1, minWidth: '200px' }}>
-              <Truck size={40} color="var(--accent-color)" style={{ margin: '0 auto 1rem' }} />
-              <h4 style={{ fontSize: '1.2rem' }}>Entrega garantida no Canadá</h4>
+      <section className="section-padding" style={{ 
+        background: 'var(--surface-color)', 
+        borderBottom: '1px solid var(--border-color)',
+        paddingTop: '6rem', /* Aumentado para evitar conflito visual com o marquee acima */
+        paddingBottom: '6rem'
+      }}>
+        <div className="container">
+          <div style={{ textAlign: 'center', marginBottom: '3rem' }}>
+            <h2 style={{ fontSize: '1.5rem', opacity: 0.6, textTransform: 'uppercase', letterSpacing: '2px', fontWeight: 600 }}>
+              {language === 'pt' ? 'Nossos números' : 'Our numbers'}
+            </h2>
+          </div>
+          
+          <div style={{ 
+            display: 'grid', 
+            gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', 
+            gap: '1.5rem',
+            maxWidth: '1000px',
+            margin: '0 auto' 
+          }}>
+            
+            {/* Clientes */}
+            <div className="glass-panel" style={{ padding: '1rem', borderRadius: 'var(--radius-md)', textAlign: 'center', border: '1px solid var(--border-color)' }}>
+              <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '0.75rem' }}>
+                <div style={{ padding: '0.5rem', background: 'rgba(219, 254, 135, 0.1)', borderRadius: '50%' }}>
+                  <Users size={20} color="var(--accent-color)" />
+                </div>
+              </div>
+              <h3 style={{ fontSize: '1.6rem', fontWeight: 800, color: 'var(--accent-color)', marginBottom: '0.25rem' }}>
+                <StatCounter target={200} suffix="+" delay={0} />
+              </h3>
+              <p style={{ color: 'var(--text-main)', opacity: 0.8, fontWeight: 500, fontSize: '0.8rem', textTransform: 'uppercase' }}>{t('stats_clients')}</p>
             </div>
-            <div style={{ flex: 1, minWidth: '200px' }}>
-              <ShieldCheck size={40} color="var(--accent-color)" style={{ margin: '0 auto 1rem' }} />
-              <h4 style={{ fontSize: '1.2rem' }}>Pagamento 100% seguro</h4>
+
+            {/* Envio */}
+            <div className="glass-panel" style={{ padding: '1rem', borderRadius: 'var(--radius-md)', textAlign: 'center', border: '1px solid var(--border-color)' }}>
+              <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '0.75rem' }}>
+                <div style={{ padding: '0.5rem', background: 'rgba(219, 254, 135, 0.1)', borderRadius: '50%' }}>
+                  <Truck size={20} color="var(--accent-color)" />
+                </div>
+              </div>
+              <h3 style={{ fontSize: '1.6rem', fontWeight: 800, color: 'var(--accent-color)', marginBottom: '0.25rem' }}>
+                <StatCounter target={100} suffix="%" delay={400} />
+              </h3>
+              <p style={{ color: 'var(--text-main)', opacity: 0.8, fontWeight: 500, fontSize: '0.8rem', textTransform: 'uppercase' }}>{t('stats_shipping')}</p>
             </div>
-            <div style={{ flex: 1, minWidth: '200px' }}>
-              <Star size={40} color="var(--accent-color)" style={{ margin: '0 auto 1rem' }} />
-              <h4 style={{ fontSize: '1.2rem' }}>Suporte via WhatsApp</h4>
+
+            {/* WhatsApp */}
+            <div className="glass-panel" style={{ padding: '1rem', borderRadius: 'var(--radius-md)', textAlign: 'center', border: '1px solid var(--border-color)' }}>
+              <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '0.75rem' }}>
+                <div style={{ padding: '0.5rem', background: 'rgba(219, 254, 135, 0.1)', borderRadius: '50%' }}>
+                  <Zap size={20} color="var(--accent-color)" />
+                </div>
+              </div>
+              <h3 style={{ fontSize: '1.6rem', fontWeight: 800, color: 'var(--accent-color)', marginBottom: '0.25rem' }}>
+                <StatCounter target={15} suffix="min" delay={800} />
+              </h3>
+              <p style={{ color: 'var(--text-main)', opacity: 0.8, fontWeight: 500, fontSize: '0.8rem', textTransform: 'uppercase' }}>{t('stats_whatsapp')}</p>
             </div>
+
+            {/* Seguro */}
+            <div className="glass-panel" style={{ padding: '1rem', borderRadius: 'var(--radius-md)', textAlign: 'center', border: '1px solid var(--border-color)' }}>
+              <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '0.75rem' }}>
+                <div style={{ padding: '0.5rem', background: 'rgba(219, 254, 135, 0.1)', borderRadius: '50%' }}>
+                  <Lock size={20} color="var(--accent-color)" />
+                </div>
+              </div>
+              <h3 style={{ fontSize: '1.6rem', fontWeight: 800, color: 'var(--accent-color)', marginBottom: '0.25rem' }}>
+                <StatCounter target={100} suffix="%" delay={1200} />
+              </h3>
+              <p style={{ color: 'var(--text-main)', opacity: 0.8, fontWeight: 500, fontSize: '0.8rem', textTransform: 'uppercase' }}>{t('stats_payment')}</p>
+            </div>
+
           </div>
         </div>
       </section>
