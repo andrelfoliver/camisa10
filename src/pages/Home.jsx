@@ -205,7 +205,7 @@ const Home = () => {
       )}
 
       {/* 2. PROVA E CONFIANÇA (ICONOS MOVIDOS PARA O TOPO) */}
-      <section className="section-padding" style={{ 
+      <section className="section-padding reveal delay-1" style={{ 
         background: 'var(--surface-color)', 
         borderBottom: '1px solid var(--border-color)',
         paddingTop: '6rem', /* Aumentado para evitar conflito visual com o marquee acima */
@@ -284,7 +284,7 @@ const Home = () => {
 
 
       {/* 4. AS QUERIDINHAS (CARROSSEL) */}
-      <section className="section-padding" style={{ background: 'var(--surface-color)' }}>
+      <section className="section-padding reveal" style={{ background: 'var(--surface-color)' }}>
         <div className="container" style={{ paddingLeft: 0, paddingRight: 0 }}>
           <h2 style={{ fontSize: '2.5rem', textAlign: 'center', marginBottom: '1rem', color: '#fff' }}>As Queridinhas 🇧🇷</h2>
           <p style={{ textAlign: 'center', color: 'var(--text-muted)', marginBottom: '3rem', fontSize: '1.2rem' }}>Deslize para ver os mantos sagrados mais pedidos.</p>
@@ -300,7 +300,7 @@ const Home = () => {
       </section>
 
       {/* 5. COMBOS (OFERTA ESPECIAL) */}
-      <section className="section-padding container">
+      <section className="section-padding container reveal">
         <div style={{ background: 'linear-gradient(135deg, rgba(255,184,28,0.1) 0%, rgba(0,0,0,0) 100%)', border: '1px solid var(--accent-color)', borderRadius: 'var(--radius-lg)', padding: '3rem', textAlign: 'center' }}>
           <h2 style={{ fontSize: '2.5rem', marginBottom: '2rem', color: '#EF4444', fontWeight: 800 }}>{t('promo_banner_title')}</h2>
           {(() => {
@@ -358,7 +358,7 @@ const Home = () => {
       </section>
 
       {/* 6. CARROSSEIS CATEGORIAS OFICIAIS */}
-      <section id="catalogo" className="section-padding container">
+      <section id="catalogo" className="section-padding container reveal">
 
         {Object.entries(storeSections).map(([catName, products]) => (
           <div key={catName} style={{ marginBottom: '4rem' }}>
@@ -388,7 +388,7 @@ const Home = () => {
       </section>
 
       {/* 7. PERSONALIZAÇÃO (UPSELL) */}
-      <section className="section-padding" style={{ background: 'var(--surface-color)' }}>
+      <section className="section-padding reveal" style={{ background: 'var(--surface-color)' }}>
         <div className="container">
           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center' }}>
             <h2 style={{ fontSize: '2.5rem', marginBottom: '1.5rem' }}>Deixe sua camisa única ✍️</h2>
