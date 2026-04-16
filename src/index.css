@@ -791,7 +791,7 @@ button {
 /* ========================================= */
 
 .mobile-product-carousel {
-  display: flex;
+  display: flex !important;
   overflow-x: auto;
   scroll-snap-type: x mandatory;
   scroll-behavior: smooth;
@@ -799,6 +799,12 @@ button {
   width: 100vw;
   margin-left: calc(-50vw + 50%);
   margin-right: calc(-50vw + 50%);
+}
+
+@media (min-width: 992px) {
+  .mobile-product-carousel {
+    display: none !important;
+  }
 }
 
 .mobile-product-carousel::-webkit-scrollbar {
@@ -814,13 +820,20 @@ button {
   object-fit: contain;
   scroll-snap-align: center;
   background: #000;
+  flex-shrink: 0; /* Prevents vertical stacking */
 }
 
 .carousel-dots {
-  display: flex;
+  display: flex !important;
   justify-content: center;
   gap: 0.5rem;
   margin: 1rem 0;
+}
+
+@media (min-width: 992px) {
+  .carousel-dots {
+    display: none !important;
+  }
 }
 
 .dot {

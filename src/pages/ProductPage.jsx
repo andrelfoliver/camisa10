@@ -156,7 +156,7 @@ const ProductPage = () => {
             <div style={{ flex: 1, minWidth: 0 }}>
               {/* MOBILE CAROUSEL */}
               <div 
-                className="mobile-only mobile-product-carousel"
+                className="mobile-product-carousel"
                 onScroll={(e) => {
                   const scrollLeft = e.target.scrollLeft;
                   const width = e.target.offsetWidth;
@@ -172,7 +172,7 @@ const ProductPage = () => {
               </div>
               
               {/* CAROUSEL DOTS (Mobile) */}
-              <div className="mobile-only carousel-dots">
+              <div className="carousel-dots">
                 {product.gallery?.map((_, i) => (
                   <div key={i} className={`dot ${product.gallery[i] === activeImage ? 'active' : ''}`} />
                 ))}
