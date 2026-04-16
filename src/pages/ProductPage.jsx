@@ -138,7 +138,15 @@ const ProductPage = () => {
               ))}
             </div>
             <div style={{ flex: 1, background: 'var(--surface-color)', border: '1px solid var(--border-color)', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', padding: '1rem' }}>
-              <img src={activeImage} alt={product.name} style={{ width: '100%', maxHeight: '600px', objectFit: 'contain' }} />
+              <img 
+                src={activeImage} 
+                alt={product.name} 
+                style={{ width: '100%', maxHeight: '600px', objectFit: 'contain' }} 
+                onError={(e) => {
+                  e.target.onerror = null; 
+                  e.target.src = '/camisas/placeholder.png';
+                }}
+              />
             </div>
           </div>
 

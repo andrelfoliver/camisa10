@@ -40,17 +40,37 @@ const Admin = () => {
   const handleUpdateProduct = async (e) => {
     e.preventDefault();
     setSaved(false);
+    setIsUploading(true);
     
     // Pegar o produto sendo editado (garantir que existe)
     if (!editingProduct) return;
     
     const { id, created_at, ...rest } = editingProduct;
     
+    let imageUrl = rest.image;
+    // Se tiver novo arquivo para o produto em edição, fazer upload
+    if (editImageFile) {
+      try {
+        const ext = editImageFile.name.split('.').pop().toLowerCase();
+        const filename = `${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
+        const { error: uploadError } = await supabase.storage
+          .from('product-images')
+          .upload(filename, editImageFile, { cacheControl: '3600', upsert: false });
+        if (uploadError) throw new Error(uploadError.message);
+        const { data: urlData } = supabase.storage.from('product-images').getPublicUrl(filename);
+        imageUrl = urlData.publicUrl;
+      } catch (err) {
+        showAlert("Erro no Upload da Imagem", err.message);
+        setIsUploading(false);
+        return;
+      }
+    }
+    
     // Garantir que preco seja numero e incluir agora todas as colunas suportadas
     const sanitizedData = {
       name: rest.name,
       price: Number(rest.price),
-      image: rest.image,
+      image: imageUrl,
       category: rest.category,
       team: rest.team,
       league: rest.league,
@@ -60,12 +80,15 @@ const Admin = () => {
     };
 
     const { error } = await supabase.from('products').update(sanitizedData).eq('id', id);
+    setIsUploading(false);
     if(error){
        showAlert("Erro ao editar!", error.message);
        return;
     }
     setProducts(products.map(p => p.id === id ? { ...editingProduct, ...sanitizedData } : p));
     setEditingProduct(null);
+    setEditImageFile(null);
+    setEditImagePreview(null);
     setSaved(true);
     setTimeout(() => setSaved(false), 3000);
   };
@@ -73,6 +96,11 @@ const Admin = () => {
   
   // Campo Categoria adicionado!
   const [newProduct, setNewProduct] = useState({ name: '', price: '', image: '', category: '', league: '', team: '', version: '' });
+  const [imageFile, setImageFile] = useState(null);
+  const [imagePreview, setImagePreview] = useState(null);
+  const [isUploading, setIsUploading] = useState(false);
+  const [editImageFile, setEditImageFile] = useState(null);
+  const [editImagePreview, setEditImagePreview] = useState(null);
   
   const [customers, setCustomers] = useState([]);
   const [orders, setOrders] = useState([]);
@@ -305,14 +333,39 @@ const Admin = () => {
     window.open(`https://wa.me/${formattedPhone}?text=${encodeURIComponent(message)}`, '_blank');
   };
 
+  const uploadImageToSupabase = async (file) => {
+    const ext = file.name.split('.').pop().toLowerCase();
+    const filename = `${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
+    const { error: uploadError } = await supabase.storage
+      .from('product-images')
+      .upload(filename, file, { cacheControl: '3600', upsert: false });
+    if (uploadError) throw new Error(`Upload falhou: ${uploadError.message}`);
+    const { data: urlData } = supabase.storage.from('product-images').getPublicUrl(filename);
+    return urlData.publicUrl;
+  };
+
   const handleAddProduct = async (e) => {
     e.preventDefault();
     setSaved(false);
+    setIsUploading(true);
+    
+    let imageUrl = newProduct.image;
+    
+    // Se tiver arquivo selecionado, fazer upload para o Supabase Storage
+    if (imageFile) {
+      try {
+        imageUrl = await uploadImageToSupabase(imageFile);
+      } catch (err) {
+        showAlert("Erro no Upload", err.message);
+        setIsUploading(false);
+        return;
+      }
+    }
     
     const sanitizedData = {
       name: newProduct.name,
       price: Number(newProduct.price),
-      image: newProduct.image,
+      image: imageUrl,
       category: newProduct.category,
       team: newProduct.team,
       league: newProduct.league,
@@ -322,6 +375,7 @@ const Admin = () => {
     };
     
     const { data, error } = await supabase.from('products').insert([sanitizedData]).select();
+    setIsUploading(false);
     if (error) {
       showAlert("Erro ao adicionar!", `${error.message} | Detalhes: ${error.details || 'Nenhum detalhe adicional'}`);
       return;
@@ -331,6 +385,8 @@ const Admin = () => {
       setProducts([data[0], ...products]);
       setShowAddForm(false);
       setNewProduct({ name: '', price: '', image: '', category: '', league: '', team: '', version: '' });
+      setImageFile(null);
+      setImagePreview(null);
       setSaved(true);
       setTimeout(() => setSaved(false), 3000);
     }
@@ -1279,13 +1335,102 @@ const Admin = () => {
                     </div>
               </div>
 
+              {/* === UPLOAD DE IMAGEM === */}
               <div>
-                <label style={{ display: 'block', marginBottom: '0.5rem', color: 'var(--text-muted)', fontSize: '0.9rem' }}>URL da Imagem *</label>
-                <input required type="url" value={newProduct.image} onChange={e => setNewProduct({...newProduct, image: e.target.value})} placeholder="Ex: https://i.imgur.com/foto.jpg" style={{ width: '100%', padding: '0.8rem 1rem', background: 'var(--bg-color)', color: '#fff', border: '1px solid var(--border-color)', borderRadius: 'var(--radius-sm)' }} />
+                <label style={{ display: 'block', marginBottom: '0.5rem', color: 'var(--text-muted)', fontSize: '0.9rem' }}>
+                  📸 Imagem do Produto
+                </label>
+
+                {/* Área de Drop / Click */}
+                <label
+                  htmlFor="image-upload-new"
+                  style={{
+                    display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
+                    border: `2px dashed ${imagePreview ? 'var(--accent-color)' : 'var(--border-color)'}`,
+                    borderRadius: 'var(--radius-md)', padding: '1.5rem', cursor: 'pointer',
+                    background: imagePreview ? 'rgba(164,210,51,0.05)' : 'rgba(255,255,255,0.02)',
+                    transition: 'all 0.2s', marginBottom: '0.75rem', position: 'relative', overflow: 'hidden'
+                  }}
+                  onDragOver={(e) => { e.preventDefault(); e.currentTarget.style.borderColor = 'var(--accent-color)'; }}
+                  onDragLeave={(e) => { e.currentTarget.style.borderColor = imagePreview ? 'var(--accent-color)' : 'var(--border-color)'; }}
+                  onDrop={(e) => {
+                    e.preventDefault();
+                    const file = e.dataTransfer.files[0];
+                    if (file && file.type.startsWith('image/')) {
+                      setImageFile(file);
+                      setImagePreview(URL.createObjectURL(file));
+                      setNewProduct({...newProduct, image: ''});
+                    }
+                  }}
+                >
+                  <input
+                    id="image-upload-new"
+                    type="file"
+                    accept="image/*"
+                    style={{ display: 'none' }}
+                    onChange={(e) => {
+                      const file = e.target.files[0];
+                      if (file) {
+                        setImageFile(file);
+                        setImagePreview(URL.createObjectURL(file));
+                        setNewProduct({...newProduct, image: ''});
+                      }
+                    }}
+                  />
+                  {imagePreview ? (
+                    <div style={{ width: '100%', textAlign: 'center' }}>
+                      <img src={imagePreview} alt="Preview" style={{ maxHeight: '180px', maxWidth: '100%', objectFit: 'contain', borderRadius: '8px' }} />
+                      <p style={{ marginTop: '0.5rem', fontSize: '0.75rem', color: 'var(--accent-color)', fontWeight: 700 }}>✅ Imagem pronta para upload</p>
+                      <p style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>{imageFile?.name}</p>
+                    </div>
+                  ) : (
+                    <div style={{ textAlign: 'center', color: 'var(--text-muted)' }}>
+                      <div style={{ fontSize: '2.5rem', marginBottom: '0.5rem' }}>📁</div>
+                      <p style={{ fontWeight: 600, fontSize: '0.9rem', color: '#fff' }}>Clique ou arraste uma imagem aqui</p>
+                      <p style={{ fontSize: '0.75rem', marginTop: '0.3rem' }}>PNG, JPG, WEBP — upload direto para o Supabase</p>
+                    </div>
+                  )}
+                </label>
+
+                {imagePreview && (
+                  <button
+                    type="button"
+                    onClick={() => { setImageFile(null); setImagePreview(null); }}
+                    style={{ width: '100%', padding: '0.5rem', background: 'rgba(239,68,68,0.1)', color: '#EF4444', border: '1px solid rgba(239,68,68,0.3)', borderRadius: '6px', cursor: 'pointer', fontSize: '0.8rem', fontWeight: 700, marginBottom: '0.75rem' }}
+                  >
+                    🗑️ Remover imagem selecionada
+                  </button>
+                )}
+
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.5rem' }}>
+                  <div style={{ flex: 1, height: '1px', background: 'var(--border-color)' }} />
+                  <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', whiteSpace: 'nowrap' }}>ou cole uma URL externa</span>
+                  <div style={{ flex: 1, height: '1px', background: 'var(--border-color)' }} />
+                </div>
+                <input
+                  type="url"
+                  value={newProduct.image}
+                  onChange={e => { setNewProduct({...newProduct, image: e.target.value}); if(e.target.value) { setImageFile(null); setImagePreview(null); } }}
+                  placeholder="Ex: https://i.imgur.com/foto.jpg"
+                  disabled={!!imageFile}
+                  style={{ width: '100%', padding: '0.8rem 1rem', background: 'var(--bg-color)', color: imageFile ? 'var(--text-muted)' : '#fff', border: '1px solid var(--border-color)', borderRadius: 'var(--radius-sm)', opacity: imageFile ? 0.5 : 1 }}
+                />
+                {!imageFile && !newProduct.image && (
+                  <p style={{ marginTop: '0.4rem', fontSize: '0.72rem', color: '#EF4444' }}>⚠️ Selecione um arquivo ou cole uma URL</p>
+                )}
               </div>
 
-              <button type="submit" style={{ marginTop: '1.5rem', padding: '1.2rem', background: '#10B981', color: '#fff', fontWeight: 800, borderRadius: 'var(--radius-md)', border: 'none', cursor: 'pointer', fontSize: '1rem', transition: 'all 0.2s', boxShadow: '0 4px 15px rgba(16, 185, 129, 0.3)' }}>
-                INSERIR NO BANCO
+              <button
+                type="submit"
+                disabled={isUploading || (!imageFile && !newProduct.image)}
+                style={{ marginTop: '1.5rem', padding: '1.2rem', background: isUploading ? '#555' : '#10B981', color: '#fff', fontWeight: 800, borderRadius: 'var(--radius-md)', border: 'none', cursor: isUploading ? 'not-allowed' : 'pointer', fontSize: '1rem', transition: 'all 0.2s', boxShadow: '0 4px 15px rgba(16, 185, 129, 0.3)', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem' }}
+              >
+                {isUploading ? (
+                  <>
+                    <div style={{ width: '18px', height: '18px', border: '3px solid rgba(255,255,255,0.3)', borderTopColor: '#fff', borderRadius: '50%', animation: 'spin 0.8s linear infinite' }} />
+                    Fazendo upload...
+                  </>
+                ) : 'INSERIR NO BANCO'}
               </button>
             </form>
           </div>
@@ -1441,17 +1586,115 @@ const Admin = () => {
                 </div>
               </div>
 
+              {/* === UPLOAD DE IMAGEM (EDIÇÃO) === */}
               <div>
-                <label style={{ display: 'block', marginBottom: '0.5rem', color: 'var(--text-muted)', fontSize: '0.9rem' }}>URL da Imagem *</label>
-                <input required type="text" value={editingProduct.image} onChange={e => setEditingProduct({...editingProduct, image: e.target.value})} style={{ width: '100%', padding: '0.8rem 1rem', background: 'var(--bg-color)', color: '#fff', border: '1px solid var(--border-color)', borderRadius: 'var(--radius-sm)' }} />
+                <label style={{ display: 'block', marginBottom: '0.5rem', color: 'var(--text-muted)', fontSize: '0.9rem' }}>
+                  📸 Imagem do Produto
+                </label>
+
+                {/* Preview da imagem atual */}
+                {editingProduct.image && !editImagePreview && (
+                  <div style={{ marginBottom: '0.75rem', padding: '0.75rem', background: 'rgba(255,255,255,0.02)', borderRadius: '8px', border: '1px solid var(--border-color)', display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                    <img
+                      src={editingProduct.image}
+                      alt="Atual"
+                      style={{ width: '60px', height: '60px', objectFit: 'contain', borderRadius: '4px', background: 'rgba(0,0,0,0.2)' }}
+                      onError={(e) => { e.target.src = '/camisas/placeholder.png'; }}
+                    />
+                    <div>
+                      <p style={{ fontSize: '0.8rem', color: '#fff', fontWeight: 600 }}>Imagem atual</p>
+                      <p style={{ fontSize: '0.7rem', color: 'var(--text-muted)', wordBreak: 'break-all', maxWidth: '300px' }}>{(editingProduct.image || '').slice(0, 60)}{(editingProduct.image || '').length > 60 ? '...' : ''}</p>
+                    </div>
+                  </div>
+                )}
+
+                {/* Área de Drop / Click */}
+                <label
+                  htmlFor="image-upload-edit"
+                  style={{
+                    display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
+                    border: `2px dashed ${editImagePreview ? 'var(--accent-color)' : 'var(--border-color)'}`,
+                    borderRadius: 'var(--radius-md)', padding: '1.2rem', cursor: 'pointer',
+                    background: editImagePreview ? 'rgba(164,210,51,0.05)' : 'rgba(255,255,255,0.02)',
+                    transition: 'all 0.2s', marginBottom: '0.75rem'
+                  }}
+                  onDragOver={(e) => { e.preventDefault(); e.currentTarget.style.borderColor = 'var(--accent-color)'; }}
+                  onDragLeave={(e) => { e.currentTarget.style.borderColor = editImagePreview ? 'var(--accent-color)' : 'var(--border-color)'; }}
+                  onDrop={(e) => {
+                    e.preventDefault();
+                    const file = e.dataTransfer.files[0];
+                    if (file && file.type.startsWith('image/')) {
+                      setEditImageFile(file);
+                      setEditImagePreview(URL.createObjectURL(file));
+                    }
+                  }}
+                >
+                  <input
+                    id="image-upload-edit"
+                    type="file"
+                    accept="image/*"
+                    style={{ display: 'none' }}
+                    onChange={(e) => {
+                      const file = e.target.files[0];
+                      if (file) {
+                        setEditImageFile(file);
+                        setEditImagePreview(URL.createObjectURL(file));
+                      }
+                    }}
+                  />
+                  {editImagePreview ? (
+                    <div style={{ width: '100%', textAlign: 'center' }}>
+                      <img src={editImagePreview} alt="Preview" style={{ maxHeight: '140px', maxWidth: '100%', objectFit: 'contain', borderRadius: '8px' }} />
+                      <p style={{ marginTop: '0.5rem', fontSize: '0.75rem', color: 'var(--accent-color)', fontWeight: 700 }}>✅ Nova imagem pronta para upload</p>
+                    </div>
+                  ) : (
+                    <div style={{ textAlign: 'center', color: 'var(--text-muted)' }}>
+                      <div style={{ fontSize: '2rem', marginBottom: '0.3rem' }}>🔄</div>
+                      <p style={{ fontWeight: 600, fontSize: '0.85rem', color: '#fff' }}>Clique para substituir a imagem</p>
+                      <p style={{ fontSize: '0.72rem', marginTop: '0.2rem' }}>Upload direto para o Supabase Storage</p>
+                    </div>
+                  )}
+                </label>
+
+                {editImagePreview && (
+                  <button
+                    type="button"
+                    onClick={() => { setEditImageFile(null); setEditImagePreview(null); }}
+                    style={{ width: '100%', padding: '0.5rem', background: 'rgba(239,68,68,0.1)', color: '#EF4444', border: '1px solid rgba(239,68,68,0.3)', borderRadius: '6px', cursor: 'pointer', fontSize: '0.8rem', fontWeight: 700, marginBottom: '0.75rem' }}
+                  >
+                    🗑️ Cancelar nova imagem
+                  </button>
+                )}
+
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.5rem' }}>
+                  <div style={{ flex: 1, height: '1px', background: 'var(--border-color)' }} />
+                  <span style={{ fontSize: '0.72rem', color: 'var(--text-muted)', whiteSpace: 'nowrap' }}>ou edite a URL diretamente</span>
+                  <div style={{ flex: 1, height: '1px', background: 'var(--border-color)' }} />
+                </div>
+                <input
+                  type="text"
+                  value={editImageFile ? '(arquivo selecionado para upload)' : editingProduct.image}
+                  onChange={e => !editImageFile && setEditingProduct({...editingProduct, image: e.target.value})}
+                  disabled={!!editImageFile}
+                  style={{ width: '100%', padding: '0.8rem 1rem', background: 'var(--bg-color)', color: editImageFile ? 'var(--text-muted)' : '#fff', border: '1px solid var(--border-color)', borderRadius: 'var(--radius-sm)', opacity: editImageFile ? 0.5 : 1 }}
+                />
               </div>
 
               <div style={{ display: 'flex', gap: '1rem', marginTop: '1.5rem' }}>
-                  <button type="button" onClick={() => setEditingProduct(null)} style={{ flex: 1, padding: '1.2rem', background: 'var(--bg-color)', color: '#fff', fontWeight: 600, borderRadius: 'var(--radius-md)', border: '1px solid var(--border-color)', cursor: 'pointer' }}>
+                  <button type="button" onClick={() => { setEditingProduct(null); setEditImageFile(null); setEditImagePreview(null); }} style={{ flex: 1, padding: '1.2rem', background: 'var(--bg-color)', color: '#fff', fontWeight: 600, borderRadius: 'var(--radius-md)', border: '1px solid var(--border-color)', cursor: 'pointer' }}>
                     Cancelar
                   </button>
-                  <button type="submit" style={{ flex: 1, padding: '1.2rem', background: '#3B82F6', color: '#fff', fontWeight: 800, borderRadius: 'var(--radius-md)', border: 'none', cursor: 'pointer', transition: 'all 0.2s', boxShadow: '0 4px 15px rgba(59, 130, 246, 0.3)' }}>
-                    SALVAR ALTERAÇÕES
+                  <button
+                    type="submit"
+                    disabled={isUploading}
+                    style={{ flex: 1, padding: '1.2rem', background: isUploading ? '#555' : '#3B82F6', color: '#fff', fontWeight: 800, borderRadius: 'var(--radius-md)', border: 'none', cursor: isUploading ? 'not-allowed' : 'pointer', transition: 'all 0.2s', boxShadow: '0 4px 15px rgba(59, 130, 246, 0.3)', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem' }}
+                  >
+                    {isUploading ? (
+                      <>
+                        <div style={{ width: '16px', height: '16px', border: '2px solid rgba(255,255,255,0.3)', borderTopColor: '#fff', borderRadius: '50%', animation: 'spin 0.8s linear infinite' }} />
+                        Salvando...
+                      </>
+                    ) : 'SALVAR ALTERAÇÕES'}
                   </button>
               </div>
             </form>
