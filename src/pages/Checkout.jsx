@@ -56,7 +56,7 @@ const Checkout = () => {
   }, [user]);
 
   const generateWhatsAppMessage = () => {
-    let message = `*NOVO PEDIDO - CAMISA10*\n\n`;
+    let message = `*NOVO PEDIDO - iFOOTY*\n\n`;
     message += `*CLIENTE:* ${formData.name}\n`;
     message += `*ENDEREÇO DE ENTREGA:*\n`;
     message += `${formData.street}${formData.apartment ? ', Apt ' + formData.apartment : ''}\n`;

@@ -21,7 +21,7 @@ const Auth = () => {
         
         <h1 style={{ fontSize: '2rem', marginBottom: '1rem', fontFamily: 'var(--font-display)' }}>Área do Torcedor</h1>
         <p style={{ color: 'var(--text-muted)', marginBottom: '3rem' }}>
-          Identifique-se para acessar seus pedidos e concluir suas compras na Camisa10.
+          Identifique-se para acessar seus pedidos e concluir suas compras na iFooty.
         </p>
 
         <button 

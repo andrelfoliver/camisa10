@@ -1,5 +1,5 @@
 -- ============================================
--- POLÍTICAS DO SUPABASE STORAGE - CAMISA10
+-- POLÍTICAS DO SUPABASE STORAGE - iFOOTY
 -- Execute este SQL no editor do Supabase
 -- ============================================
 

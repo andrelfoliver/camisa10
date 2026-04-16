@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Identificador de Camisas — Camisa10</title>
+<title>Identificador de Camisas — iFooty</title>
 <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
@@ -123,7 +123,7 @@ header{background:var(--black);padding:16px 24px;display:flex;align-items:center
 <body>
 
 <header>
-  <div class="logo">CAMISA<span>10</span> — Auto Identificador (Gemini)</div>
+  <div class="logo">iFOOTY — Auto Identificador (Gemini)</div>
   <div class="status-bar" id="statusBar">Aguardando imagens...</div>
 </header>
 
@@ -225,15 +225,15 @@ header{background:var(--black);padding:16px 24px;display:flex;align-items:center
 <script>
 // Load saved config
 window.onload = () => {
-  const k = localStorage.getItem('camisa10_gemini_key');
-  const m = localStorage.getItem('camisa10_gemini_model');
+  const k = localStorage.getItem('ifooty_gemini_key');
+  const m = localStorage.getItem('ifooty_gemini_model');
   if (k) document.getElementById('geminiKey').value = k;
   if (m) document.getElementById('geminiModel').value = m;
 };
 
 function saveConfig() {
-  localStorage.setItem('camisa10_gemini_key', document.getElementById('geminiKey').value);
-  localStorage.setItem('camisa10_gemini_model', document.getElementById('geminiModel').value);
+  localStorage.setItem('ifooty_gemini_key', document.getElementById('geminiKey').value);
+  localStorage.setItem('ifooty_gemini_model', document.getElementById('geminiModel').value);
 }
 
 async function loadModels() {

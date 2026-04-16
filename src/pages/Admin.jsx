@@ -383,10 +383,10 @@ const Admin = () => {
 
   const sendWhatsAppStatus = (order, type) => {
     const templates = {
-      pending: `Olá *${order.customer_name}*, tudo bem? Passando para avisar que recebemos seu pedido **#${order.id.slice(0,8)}** na Camisa10! 👕 Em breve te passamos as instruções para o Interac e-Transfer.`,
+      pending: `Olá *${order.customer_name}*, tudo bem? Passando para avisar que recebemos seu pedido **#${order.id.slice(0,8)}** na iFooty! 👕 Em breve te passamos as instruções para o Interac e-Transfer.`,
       processing: `Olá *${order.customer_name}*, seu pedido **#${order.id.slice(0,8)}** já entrou em preparação! 👕 Estamos conferindo cada detalhe para que chegue perfeito para você.`,
       shipped: `Grande notícia, *${order.customer_name}*! 🚀 Seu pedido **#${order.id.slice(0,8)}** acaba de ser despachado. Logo você estará com seu novo manto em mãos!`,
-      completed: `Olá *${order.customer_name}*, o sistema indica que seu pedido **#${order.id.slice(0,8)}** foi entregue! 📦 Esperamos que goste da qualidade. Se puder, tira uma foto e marca a gente no Instagram @camisa10.ca! 🔥`,
+      completed: `Olá *${order.customer_name}*, o sistema indica que seu pedido **#${order.id.slice(0,8)}** foi entregue! 📦 Esperamos que goste da qualidade. Se puder, tira uma foto e marca a gente no Instagram @ifooty.ca! 🔥`,
       cancelled: `Olá *${order.customer_name}*, infelizmente seu pedido **#${order.id.slice(0,8)}** precisou ser cancelado. :( Caso tenha alguma dúvida, estamos à disposição aqui no WhatsApp.`
     };
 
@@ -764,7 +764,7 @@ const Admin = () => {
  
                `${supplierTab.replace('CAT_', '')}`}
             </h1>
-            <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem', marginTop: '0.2rem' }}>Painel Central de Gerenciamento Camisa10.</p>
+            <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem', marginTop: '0.2rem' }}>Painel Central de Gerenciamento iFooty.</p>
           </div>
           <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
             {supplierTab === 'TESTIMONIALS' && (
