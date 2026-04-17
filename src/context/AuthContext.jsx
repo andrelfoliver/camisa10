@@ -51,6 +51,24 @@ export function AuthProvider({ children }) {
     const { rawNonce, hashedNonce } = await generateNonce();
 
     return new Promise((resolve, reject) => {
+      let settled = false;
+
+      // Garante que resolve/reject sejam chamados apenas uma vez
+      const settle = (fn, arg) => {
+        if (!settled) {
+          settled = true;
+          clearTimeout(timeoutId);
+          fn(arg);
+        }
+      };
+
+      // Fallback: se nada acontecer em 12s, libera o loading
+      const timeoutId = setTimeout(() => {
+        settle(reject, new Error(
+          'Não foi possível abrir o login do Google. Verifique as configurações do navegador ou tente em uma aba anônima.'
+        ));
+      }, 12000);
+
       gis.initialize({
         client_id: GOOGLE_CLIENT_ID,
         nonce: hashedNonce,
@@ -58,22 +76,34 @@ export function AuthProvider({ children }) {
         cancel_on_tap_outside: true,
         callback: async (response) => {
           if (!response.credential) {
-            reject(new Error('Nenhuma credencial recebida do Google.'));
+            settle(reject, new Error('Nenhuma credencial recebida do Google.'));
             return;
           }
-          const { error } = await supabase.auth.signInWithIdToken({
-            provider: 'google',
-            token: response.credential,
-            nonce: rawNonce,
-          });
-          if (error) reject(error);
-          else resolve();
+          try {
+            const { error } = await supabase.auth.signInWithIdToken({
+              provider: 'google',
+              token: response.credential,
+              nonce: rawNonce,
+            });
+            if (error) settle(reject, error);
+            else settle(resolve);
+          } catch (err) {
+            settle(reject, err);
+          }
         },
       });
 
       gis.prompt((notification) => {
-        if (notification.isNotDisplayed()) {
-          reject(new Error('Para fazer login, abra uma aba normal do navegador com sua conta Google conectada.'));
+        // Trata TODOS os casos onde o popup não aparece
+        const failed =
+          notification.isNotDisplayed() ||
+          notification.isSkippedMoment() ||
+          (notification.isDismissedMoment && notification.isDismissedMoment());
+
+        if (failed) {
+          settle(reject, new Error(
+            'Não foi possível abrir o login do Google. Verifique se cookies de terceiros estão habilitados, ou tente em uma aba anônima.'
+          ));
         }
       });
     });
