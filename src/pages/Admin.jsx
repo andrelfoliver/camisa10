@@ -138,6 +138,8 @@ const Admin = () => {
   };
   const [pricing, setPricing] = useState(defaultPricing);
   const [orderFilter, setOrderFilter] = useState(null);
+  const [statusFilter, setStatusFilter] = useState('all');
+  const [dateRange, setDateRange] = useState({ start: '', end: '' });
   const [showWelcomePopup, setShowWelcomePopup] = useState(false);
   const [welcomeTriggered, setWelcomeTriggered] = useState(false);
   const [expandedOrderId, setExpandedOrderId] = useState(null);
@@ -1263,50 +1265,93 @@ const Admin = () => {
                 )}
               </div>
             </div>
-          ) : supplierTab === 'PEDIDOS' ? (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem', maxWidth: '1200px' }}>
-              
-              {/* STATS SUMMARY BAR */}
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '1rem' }}>
-                <div className="glass-panel" style={{ padding: '0.8rem 1.2rem', borderRadius: '12px', borderLeft: '4px solid #FFB81C' }}>
-                  <p style={{ fontSize: '0.65rem', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: 800 }}>Novos Pedidos</p>
-                  <h3 style={{ fontSize: '1.4rem', color: '#fff', margin: 0 }}>{orders.filter(o => o.status === 'pending').length}</h3>
-                </div>
-                <div className="glass-panel" style={{ padding: '0.8rem 1.2rem', borderRadius: '12px', borderLeft: '4px solid #3B82F6' }}>
-                  <p style={{ fontSize: '0.65rem', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: 800 }}>Em Preparação</p>
-                  <h3 style={{ fontSize: '1.4rem', color: '#fff', margin: 0 }}>{orders.filter(o => o.status === 'processing').length}</h3>
-                </div>
-                <div className="glass-panel" style={{ padding: '0.8rem 1.2rem', borderRadius: '12px', borderLeft: '4px solid #10B981' }}>
-                  <p style={{ fontSize: '0.65rem', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: 800 }}>Concluídos</p>
-                  <h3 style={{ fontSize: '1.4rem', color: '#fff', margin: 0 }}>{orders.filter(o => ['shipped', 'completed'].includes(o.status)).length}</h3>
-                </div>
-                <div className="glass-panel" style={{ padding: '0.8rem 1.2rem', borderRadius: '12px', borderLeft: '4px solid var(--accent-color)' }}>
-                  <p style={{ fontSize: '0.65rem', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: 800 }}>Receita Total</p>
-                  <h3 style={{ fontSize: '1.4rem', color: 'var(--accent-color)', margin: 0 }}>${orders.reduce((acc, o) => acc + Number(o.total_price || 0), 0).toFixed(2)}</h3>
-                </div>
-                <div className="glass-panel" style={{ padding: '0.8rem 1.2rem', borderRadius: '12px', borderLeft: '4px solid #64748b' }}>
-                  <p style={{ fontSize: '0.65rem', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: 800 }}>Custo Total</p>
-                  <h3 style={{ fontSize: '1.4rem', color: '#fff', margin: 0 }}>
-                    ${orders.reduce((acc, order) => acc + calculateOrderCost(order), 0).toFixed(2)}
-                  </h3>
-                </div>
-                <div className="glass-panel" style={{ padding: '0.8rem 1.2rem', borderRadius: '12px', borderLeft: '4px solid #22c55e' }}>
-                  <p style={{ fontSize: '0.65rem', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: 800 }}>Lucro Estimado</p>
-                  <h3 style={{ fontSize: '1.4rem', color: '#22c55e', margin: 0 }}>
-                    ${(orders.reduce((acc, o) => acc + Number(o.total_price || 0), 0) - 
-                       orders.reduce((acc, order) => acc + calculateOrderCost(order), 0)).toFixed(2)}
-                  </h3>
-                </div>
-              </div>
+          ) : supplierTab === 'PEDIDOS' ? (() => {
+            const filteredOrders = orders.filter(o => {
+              const orderDate = new Date(o.created_at).toISOString().split('T')[0];
+              const matchesDate = (!dateRange.start || orderDate >= dateRange.start) &&
+                                  (!dateRange.end || orderDate <= dateRange.end);
+              const matchesStatus = statusFilter === 'all' || 
+                                    (statusFilter === 'completed' ? ['shipped', 'completed'].includes(o.status) : o.status === statusFilter);
+              const matchesCustomer = !orderFilter || o.user_id === orderFilter;
+              return matchesDate && matchesStatus && matchesCustomer;
+            });
 
-              {orderFilter && (
-                <div style={{ background: 'rgba(164, 210, 51, 0.1)', padding: '0.8rem 1.2rem', borderRadius: '8px', border: '1px solid var(--accent-color)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                   <p style={{ margin: 0, fontWeight: 700, color: 'var(--accent-color)', fontSize: '0.9rem' }}>
-                     Filtro Ativo: Clientes {customers.find(c => c.id === orderFilter)?.full_name || '...'}
-                   </p>
-                   <button onClick={() => setOrderFilter(null)} style={{ background: 'var(--accent-color)', color: '#000', padding: '0.3rem 0.8rem', borderRadius: '4px', fontWeight: 700, fontSize: '0.8rem' }}>Limpar Filtro</button>
+            const totalRevenue = filteredOrders.reduce((acc, o) => acc + Number(o.total_price || 0), 0);
+            const totalCost = filteredOrders.reduce((acc, order) => acc + calculateOrderCost(order), 0);
+            const totalProfit = totalRevenue - totalCost;
+
+            return (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem', maxWidth: '1200px' }}>
+                
+                {/* DATE FILTER CONTROLS */}
+                <div style={{ display: 'flex', gap: '1rem', alignItems: 'flex-end', background: 'rgba(255,255,255,0.03)', padding: '1rem', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.05)' }}>
+                  <div style={{ flex: 1 }}>
+                    <label style={{ display: 'block', fontSize: '0.7rem', color: 'var(--text-muted)', marginBottom: '0.4rem', fontWeight: 800, textTransform: 'uppercase' }}>De:</label>
+                    <input type="date" value={dateRange.start} onChange={(e) => setDateRange({...dateRange, start: e.target.value})} style={{ width: '100%', padding: '0.5rem', background: '#000', border: '1px solid var(--border-color)', borderRadius: '6px', color: '#fff' }} />
+                  </div>
+                  <div style={{ flex: 1 }}>
+                    <label style={{ display: 'block', fontSize: '0.7rem', color: 'var(--text-muted)', marginBottom: '0.4rem', fontWeight: 800, textTransform: 'uppercase' }}>Até:</label>
+                    <input type="date" value={dateRange.end} onChange={(e) => setDateRange({...dateRange, end: e.target.value})} style={{ width: '100%', padding: '0.5rem', background: '#000', border: '1px solid var(--border-color)', borderRadius: '6px', color: '#fff' }} />
+                  </div>
+                  <button onClick={() => { setDateRange({start: '', end: ''}); setStatusFilter('all'); setOrderFilter(null); }} style={{ padding: '0.5rem 1rem', background: 'rgba(255,255,255,0.1)', color: '#fff', border: '1px solid rgba(255,255,255,0.2)', borderRadius: '6px', cursor: 'pointer', fontWeight: 700, fontSize: '0.8rem' }}>Limpar Filtros</button>
                 </div>
-              )}
+
+                {/* STATS SUMMARY BAR */}
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(130px, 1fr))', gap: '1rem' }}>
+                  <div 
+                    onClick={() => setStatusFilter('all')} 
+                    className="glass-panel" 
+                    style={{ padding: '0.8rem', borderRadius: '12px', borderLeft: '4px solid #fff', cursor: 'pointer', outline: statusFilter === 'all' ? '2px solid rgba(255,255,255,0.3)' : 'none', opacity: statusFilter === 'all' ? 1 : 0.6 }}
+                  >
+                    <p style={{ fontSize: '0.6rem', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: 800 }}>Total Pedidos</p>
+                    <h3 style={{ fontSize: '1.2rem', color: '#fff', margin: 0 }}>{filteredOrders.length}</h3>
+                  </div>
+                  <div 
+                    onClick={() => setStatusFilter('pending')} 
+                    className="glass-panel" 
+                    style={{ padding: '0.8rem', borderRadius: '12px', borderLeft: '4px solid #FFB81C', cursor: 'pointer', outline: statusFilter === 'pending' ? '2px solid #FFB81C' : 'none', opacity: statusFilter === 'pending' ? 1 : statusFilter === 'all' ? 1 : 0.6 }}
+                  >
+                    <p style={{ fontSize: '0.6rem', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: 800 }}>Novos</p>
+                    <h3 style={{ fontSize: '1.2rem', color: '#fff', margin: 0 }}>{filteredOrders.filter(o => o.status === 'pending').length}</h3>
+                  </div>
+                  <div 
+                    onClick={() => setStatusFilter('processing')} 
+                    className="glass-panel" 
+                    style={{ padding: '0.8rem', borderRadius: '12px', borderLeft: '4px solid #3B82F6', cursor: 'pointer', outline: statusFilter === 'processing' ? '2px solid #3B82F6' : 'none', opacity: statusFilter === 'processing' ? 1 : statusFilter === 'all' ? 1 : 0.6 }}
+                  >
+                    <p style={{ fontSize: '0.6rem', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: 800 }}>Preparação</p>
+                    <h3 style={{ fontSize: '1.2rem', color: '#fff', margin: 0 }}>{filteredOrders.filter(o => o.status === 'processing').length}</h3>
+                  </div>
+                  <div 
+                    onClick={() => setStatusFilter('completed')} 
+                    className="glass-panel" 
+                    style={{ padding: '0.8rem', borderRadius: '12px', borderLeft: '4px solid #10B981', cursor: 'pointer', outline: statusFilter === 'completed' ? '2px solid #10B981' : 'none', opacity: statusFilter === 'completed' ? 1 : statusFilter === 'all' ? 1 : 0.6 }}
+                  >
+                    <p style={{ fontSize: '0.6rem', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: 800 }}>Concluídos</p>
+                    <h3 style={{ fontSize: '1.2rem', color: '#fff', margin: 0 }}>{filteredOrders.filter(o => ['shipped', 'completed'].includes(o.status)).length}</h3>
+                  </div>
+                  <div className="glass-panel" style={{ padding: '0.8rem', borderRadius: '12px', borderLeft: '4px solid var(--accent-color)' }}>
+                    <p style={{ fontSize: '0.6rem', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: 800 }}>Receita</p>
+                    <h3 style={{ fontSize: '1.2rem', color: 'var(--accent-color)', margin: 0 }}>${totalRevenue.toFixed(2)}</h3>
+                  </div>
+                  <div className="glass-panel" style={{ padding: '0.8rem', borderRadius: '12px', borderLeft: '4px solid #64748b' }}>
+                    <p style={{ fontSize: '0.6rem', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: 800 }}>Custo</p>
+                    <h3 style={{ fontSize: '1.2rem', color: '#fff', margin: 0 }}>${totalCost.toFixed(2)}</h3>
+                  </div>
+                  <div className="glass-panel" style={{ padding: '0.8rem', borderRadius: '12px', borderLeft: '4px solid #22c55e' }}>
+                    <p style={{ fontSize: '0.6rem', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: 800 }}>Lucro</p>
+                    <h3 style={{ fontSize: '1.2rem', color: '#22c55e', margin: 0 }}>${totalProfit.toFixed(2)}</h3>
+                  </div>
+                </div>
+
+                {orderFilter && (
+                  <div style={{ background: 'rgba(164, 210, 51, 0.1)', padding: '0.8rem 1.2rem', borderRadius: '8px', border: '1px solid var(--accent-color)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                     <p style={{ margin: 0, fontWeight: 700, color: 'var(--accent-color)', fontSize: '0.9rem' }}>
+                       Filtro Ativo: Clientes {customers.find(c => c.id === orderFilter)?.full_name || '...'}
+                     </p>
+                     <button onClick={() => setOrderFilter(null)} style={{ background: 'var(--accent-color)', color: '#000', padding: '0.3rem 0.8rem', borderRadius: '4px', fontWeight: 700, fontSize: '0.8rem' }}>Limpar Filtro</button>
+                  </div>
+                )}
 
               {/* TABLE LIST VIEW */}
               <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
@@ -1320,7 +1365,7 @@ const Admin = () => {
                   <span></span>
                 </div>
 
-                {orders.filter(o => !orderFilter || o.user_id === orderFilter).map(order => {
+                {filteredOrders.map(order => {
                   const isExpanded = expandedOrderId === order.id;
                   const statusColors = {
                     pending: '#FFB81C',
@@ -1464,14 +1509,16 @@ const Admin = () => {
                 })}
               </div>
 
-              {orders.length === 0 && (
-                <div style={{ textAlign: 'center', padding: '5rem', opacity: 0.5 }}>
-                   <Package size={48} style={{ marginBottom: '1rem' }} />
-                   <p>Nenhum pedido encontrado.</p>
-                </div>
-              )}
-            </div>
-          ) : supplierTab === 'CLIENTES' ? (
+                {filteredOrders.length === 0 && (
+                  <div style={{ textAlign: 'center', padding: '5rem', opacity: 0.5 }}>
+                     <Package size={48} style={{ marginBottom: '1rem' }} />
+                     <p>Nenhum pedido encontrado no período ou status selecionado.</p>
+                  </div>
+                )}
+              </div>
+            );
+          })()
+            ) : supplierTab === 'CLIENTES' ? (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', maxWidth: '1000px' }}>
               {customers.length === 0 ? (
                  <div style={{ textAlign: 'center', padding: '4rem 2rem', background: 'var(--surface-color)', borderRadius: 'var(--radius-lg)', border: '1px dashed var(--border-color)' }}>
