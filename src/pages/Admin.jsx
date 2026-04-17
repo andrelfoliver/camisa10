@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from '../services/supabase';
 import { useAuth } from '../context/AuthContext';
-import { Save, Check, Crown, Heart, Database, HardDrive, Star, LogOut, Package, Plus, Trash2, X, Users, Image, DollarSign, MapPin, RefreshCw, Shield, AlertTriangle } from 'lucide-react';
+import { Save, Check, Crown, Heart, Database, HardDrive, Star, LogOut, Package, Plus, Trash2, X, Users, Image, DollarSign, MapPin, RefreshCw, Shield, AlertTriangle, MessageSquare } from 'lucide-react';
 import { migrateProductsToSupabase } from '../services/migration';
 import { migrateTeamsToSupabase } from '../services/migration_teams';
 import WhatsAppIcon from '../components/WhatsAppIcon';
