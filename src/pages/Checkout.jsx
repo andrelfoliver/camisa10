@@ -144,22 +144,26 @@ const Checkout = () => {
         console.error("Erro ao disparar notificação de e-mail:", err);
       }
 
-      // 2. Atualizar o Perfil se solicitado
+      // 2. Atualizar o Perfil se solicitado (isolado para não travar o sucesso do pedido)
       if (formData.saveAddress) {
-        await supabase.from('profiles').update({
-          street: formData.street,
-          apartment: formData.apartment,
-          city: formData.city,
-          province: formData.province,
-          postal_code: formData.postalCode
-        }).eq('id', user.id);
+        try {
+          await supabase.from('profiles').update({
+            street: formData.street,
+            apartment: formData.apartment,
+            city: formData.city,
+            province: formData.province,
+            postal_code: formData.postalCode
+          }).eq('id', user.id);
+        } catch (profileErr) {
+          console.warn("⚠️ Não foi possível salvar o endereço no perfil, mas o pedido segue:", profileErr);
+        }
       }
 
-      // 3. Redirecionar para Sucesso e WhatsApp
+      // 3. Redirecionar para Sucesso e WhatsApp (Ação final)
       handleFinalizeRedirect();
       
     } catch (error) {
-      console.error("Erro ao processar pedido:", error);
+      console.error("📛 Erro crítico ao processar pedido:", error);
       showPopup("Houve um erro ao salvar seu pedido. Tente novamente.");
     } finally {
       setIsSubmitting(false);
