@@ -419,13 +419,17 @@ const Home = () => {
       </section>
 
       {/* 7. CONEXÃO EMOCIONAL */}
-      <section style={{ padding: '5rem 0', textAlign: 'center', borderBottom: '1px solid var(--border-color)' }}>
+      <section id="about" style={{ padding: '6rem 0', textAlign: 'center', background: 'var(--surface-color)', borderBottom: '1px solid var(--border-color)' }}>
         <div className="container" style={{ maxWidth: '800px' }}>
-          <h2 style={{ fontSize: '2.5rem', fontStyle: 'italic', fontWeight: 900, color: 'var(--accent-color)' }}>
+          <h2 style={{ fontSize: '1.2rem', textTransform: 'uppercase', letterSpacing: '3px', color: 'var(--accent-color)', marginBottom: '1.5rem', fontWeight: 700 }}>{t('about_title')}</h2>
+          <h2 style={{ fontSize: '2.5rem', fontStyle: 'italic', fontWeight: 900, color: '#fff', marginBottom: '2rem' }}>
             {t('emotional_title')}
           </h2>
-          <p style={{ fontSize: '1.2rem', color: 'var(--text-muted)', marginTop: '1.5rem', lineHeight: 1.6 }}>
-            {t('emotional_text')}
+          <p style={{ fontSize: '1.1rem', color: 'var(--text-muted)', lineHeight: 1.8, marginBottom: '1.5rem' }}>
+            {t('about_text1')}
+          </p>
+          <p style={{ fontSize: '1.1rem', color: 'var(--text-muted)', lineHeight: 1.8 }}>
+            {t('about_text2')}
           </p>
         </div>
       </section>
@@ -482,7 +486,7 @@ const Home = () => {
       </section>
 
       {/* 9. FAQ */}
-      <section className="section-padding container" style={{ maxWidth: '800px', background: 'var(--surface-color)', borderRadius: 'var(--radius-lg)' }}>
+      <section id="faq" className="section-padding container" style={{ maxWidth: '800px', background: 'var(--surface-color)', borderRadius: 'var(--radius-lg)' }}>
         <h2 style={{ fontSize: '2.5rem', textAlign: 'center', marginBottom: '3rem' }}>{t('faq_title')}</h2>
         <div style={{ display: 'flex', flexDirection: 'column' }}>
           <FAQItem question={t('faq_q1')} answer={t('faq_a1')} />
