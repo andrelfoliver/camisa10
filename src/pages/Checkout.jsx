@@ -164,7 +164,8 @@ const Checkout = () => {
       
     } catch (error) {
       console.error("📛 Erro crítico ao processar pedido:", error);
-      showPopup("Houve um erro ao salvar seu pedido. Tente novamente.");
+      // Exibir o erro real para facilitar o diagnóstico caso persista
+      showPopup(`Houve um erro técnico: ${error.message || 'Erro desconhecido'}. Por favor, verifique se o pedido chegou no seu e-mail ou fale conosco.`);
     } finally {
       setIsSubmitting(false);
     }
@@ -172,16 +173,29 @@ const Checkout = () => {
 
   // Redirecionamento e limpeza após salvar
   const handleFinalizeRedirect = () => {
-    const message = generateWhatsAppMessage();
-    // 1. Tentar abrir o WhatsApp
-    const encodedMessage = encodeURIComponent(message);
-    window.open(`https://wa.me/${waNumber.replace(/\D/g, '')}?text=${encodedMessage}`, '_blank');
-    
-    // 2. Limpar carrinho
-    clearCart();
-    
-    // 3. Ir para página de sucesso com os dados para fallback
-    navigate('/sucesso', { state: { orderMessage: message, waNumber } });
+    try {
+      const message = generateWhatsAppMessage();
+      
+      // 1. Tentar abrir o WhatsApp (encapsulado para não travar o fluxo se o browser bloquear)
+      const encodedMessage = encodeURIComponent(message);
+      const whatsappUrl = `https://wa.me/${String(waNumber).replace(/\D/g, '')}?text=${encodedMessage}`;
+      
+      try {
+        window.open(whatsappUrl, '_blank');
+      } catch (e) {
+        console.warn("⚠️ Popup do WhatsApp bloqueado pelo navegador.");
+      }
+      
+      // 2. Limpar carrinho
+      clearCart();
+      
+      // 3. Ir para página de sucesso (Isso é o que garante o fim do processo)
+      navigate('/sucesso', { state: { orderMessage: message, waNumber } });
+    } catch (finalErr) {
+      console.error("Erro no redirecionamento final:", finalErr);
+      // Mesmo se o redirect falhar, tentamos ir para o sucesso pois o pedido já foi salvo
+      navigate('/sucesso');
+    }
   };
 
   if (!user) {
