@@ -156,6 +156,14 @@ const Home = () => {
       setStoreSections(mapCat);
       setAllProductsData(allUnified);
 
+      // 3. Buscar depoimentos aprovados
+      const { data: testimonialsData } = await supabase
+        .from('testimonials')
+        .select('*')
+        .eq('status', 'approved')
+        .order('date', { ascending: false });
+      if (testimonialsData) setTestimonials(testimonialsData);
+
       setLoading(false);
     }
     fetchHomeData();
