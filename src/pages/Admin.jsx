@@ -1518,7 +1518,7 @@ const Admin = () => {
               </div>
             );
           })()
-            ) : supplierTab === 'CLIENTES' ? (
+            : supplierTab === 'CLIENTES' ? (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', maxWidth: '1000px' }}>
               {customers.length === 0 ? (
                  <div style={{ textAlign: 'center', padding: '4rem 2rem', background: 'var(--surface-color)', borderRadius: 'var(--radius-lg)', border: '1px dashed var(--border-color)' }}>
