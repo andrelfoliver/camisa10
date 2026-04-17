@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from '../services/supabase';
 import { useAuth } from '../context/AuthContext';
-import { Save, Check, Crown, Heart, Database, HardDrive, Star, LogOut, Package, Plus, Trash2, X, Users, Image, DollarSign, MapPin, RefreshCw, Shield, AlertTriangle, MessageSquare } from 'lucide-react';
+import { Save, Check, Crown, Heart, Database, HardDrive, Star, LogOut, Package, Plus, Trash2, X, Users, Image, DollarSign, MapPin, RefreshCw, Shield, AlertTriangle, MessageSquare, ChevronDown, ChevronUp, MoreHorizontal, ExternalLink } from 'lucide-react';
 import { migrateProductsToSupabase } from '../services/migration';
 import { migrateTeamsToSupabase } from '../services/migration_teams';
 import WhatsAppIcon from '../components/WhatsAppIcon';
@@ -140,6 +140,8 @@ const Admin = () => {
   const [orderFilter, setOrderFilter] = useState(null);
   const [showWelcomePopup, setShowWelcomePopup] = useState(false);
   const [welcomeTriggered, setWelcomeTriggered] = useState(false);
+  const [expandedOrderId, setExpandedOrderId] = useState(null);
+  const [expandedCustomerId, setExpandedCustomerId] = useState(null);
 
 
   const [isMigrating, setIsMigrating] = useState(false);
@@ -408,7 +410,13 @@ const Admin = () => {
     // Se for numero do canada (10 digitos), adicionar prefixo 1
     const formattedPhone = (phone.length === 10) ? `1${phone}` : phone;
     
+    // Abrir WhatsApp primeiro
     window.open(`https://wa.me/${formattedPhone}?text=${encodeURIComponent(message)}`, '_blank');
+
+    // SE for uma mudança de status disparada pelo botão, atualizar banco automaticamente
+    if (order.status !== type && templates[type]) {
+       handleUpdateOrderStatus(order.id, type);
+    }
   };
 
   const uploadImageToSupabase = async (file) => {
@@ -1206,130 +1214,191 @@ const Admin = () => {
               
               {/* STATS SUMMARY BAR */}
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1.5rem' }}>
-                <div className="glass-panel" style={{ padding: '1.5rem', borderRadius: '12px', borderLeft: '4px solid #FFB81C' }}>
-                  <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: 800 }}>Novos Pedidos</p>
-                  <h3 style={{ fontSize: '2rem', color: '#fff' }}>{orders.filter(o => o.status === 'pending').length}</h3>
+                <div className="glass-panel" style={{ padding: '1rem 1.5rem', borderRadius: '12px', borderLeft: '4px solid #FFB81C' }}>
+                  <p style={{ fontSize: '0.7rem', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: 800 }}>Novos Pedidos</p>
+                  <h3 style={{ fontSize: '1.5rem', color: '#fff', margin: 0 }}>{orders.filter(o => o.status === 'pending').length}</h3>
                 </div>
-                <div className="glass-panel" style={{ padding: '1.5rem', borderRadius: '12px', borderLeft: '4px solid #3B82F6' }}>
-                  <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: 800 }}>Em Preparação</p>
-                  <h3 style={{ fontSize: '2rem', color: '#fff' }}>{orders.filter(o => o.status === 'processing').length}</h3>
+                <div className="glass-panel" style={{ padding: '1rem 1.5rem', borderRadius: '12px', borderLeft: '4px solid #3B82F6' }}>
+                  <p style={{ fontSize: '0.7rem', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: 800 }}>Em Preparação</p>
+                  <h3 style={{ fontSize: '1.5rem', color: '#fff', margin: 0 }}>{orders.filter(o => o.status === 'processing').length}</h3>
                 </div>
-                <div className="glass-panel" style={{ padding: '1.5rem', borderRadius: '12px', borderLeft: '4px solid #10B981' }}>
-                  <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: 800 }}>Finalizados/Enviados</p>
-                  <h3 style={{ fontSize: '2rem', color: '#fff' }}>{orders.filter(o => ['shipped', 'completed'].includes(o.status)).length}</h3>
+                <div className="glass-panel" style={{ padding: '1rem 1.5rem', borderRadius: '12px', borderLeft: '4px solid #10B981' }}>
+                  <p style={{ fontSize: '0.7rem', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: 800 }}>Concluídos</p>
+                  <h3 style={{ fontSize: '1.5rem', color: '#fff', margin: 0 }}>{orders.filter(o => ['shipped', 'completed'].includes(o.status)).length}</h3>
                 </div>
-                <div className="glass-panel" style={{ padding: '1.5rem', borderRadius: '12px', borderLeft: '4px solid var(--accent-color)' }}>
-                  <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: 800 }}>Volume Total</p>
-                  <h3 style={{ fontSize: '2rem', color: 'var(--accent-color)' }}>${orders.reduce((acc, o) => acc + Number(o.total_price || 0), 0).toFixed(2)}</h3>
+                <div className="glass-panel" style={{ padding: '1rem 1.5rem', borderRadius: '12px', borderLeft: '4px solid var(--accent-color)' }}>
+                  <p style={{ fontSize: '0.7rem', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: 800 }}>Receita Total</p>
+                  <h3 style={{ fontSize: '1.5rem', color: 'var(--accent-color)', margin: 0 }}>${orders.reduce((acc, o) => acc + Number(o.total_price || 0), 0).toFixed(2)}</h3>
                 </div>
               </div>
 
               {orderFilter && (
-                <div style={{ background: 'rgba(164, 210, 51, 0.1)', padding: '1rem 1.5rem', borderRadius: '8px', border: '1px solid var(--accent-color)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                   <p style={{ margin: 0, fontWeight: 700, color: 'var(--accent-color)' }}>
+                <div style={{ background: 'rgba(164, 210, 51, 0.1)', padding: '0.8rem 1.2rem', borderRadius: '8px', border: '1px solid var(--accent-color)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                   <p style={{ margin: 0, fontWeight: 700, color: 'var(--accent-color)', fontSize: '0.9rem' }}>
                      Filtro Ativo: Clientes {customers.find(c => c.id === orderFilter)?.full_name || '...'}
                    </p>
-                   <button onClick={() => setOrderFilter(null)} style={{ background: 'var(--accent-color)', color: '#000', padding: '0.4rem 1rem', borderRadius: '4px', fontWeight: 700 }}>Limpar Filtro</button>
+                   <button onClick={() => setOrderFilter(null)} style={{ background: 'var(--accent-color)', color: '#000', padding: '0.3rem 0.8rem', borderRadius: '4px', fontWeight: 700, fontSize: '0.8rem' }}>Limpar Filtro</button>
                 </div>
               )}
 
-              {/* GROUPED ORDERS VIEW */}
-              {[
-                { label: '🟡 Novos Pedidos (WhatsApp Pendente)', status: ['pending'], color: '#FFB81C' },
-                { label: '🔵 Em Preparação', status: ['processing'], color: '#3B82F6' },
-                { label: '🟢 Finalizados & Enviados', status: ['shipped', 'completed'], color: '#10B981' },
-                { label: '🔴 Cancelados', status: ['cancelled'], color: '#EF4444' }
-              ].map(group => {
-                const filteredGroup = orders.filter(o => group.status.includes(o.status) && (!orderFilter || o.user_id === orderFilter));
-                if (filteredGroup.length === 0 && group.status[0] !== 'pending') return null;
+              {/* TABLE LIST VIEW */}
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                {/* TABLE HEADER */}
+                <div style={{ display: 'grid', gridTemplateColumns: '80px 1.5fr 1fr 100px 150px 40px', padding: '0.8rem 1.5rem', color: 'var(--text-muted)', fontSize: '0.7rem', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '1px' }}>
+                  <span>REF</span>
+                  <span>CLIENTE</span>
+                  <span>DATA</span>
+                  <span>TOTAL</span>
+                  <span>STATUS</span>
+                  <span></span>
+                </div>
 
-                return (
-                  <div key={group.label}>
-                    <h3 style={{ fontSize: '1.2rem', color: group.color, marginBottom: '1rem', borderBottom: `1px solid ${group.color}33`, paddingBottom: '0.5rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                      {group.label} <span style={{ fontSize: '0.8rem', background: `${group.color}22`, padding: '2px 8px', borderRadius: '10px' }}>{filteredGroup.length}</span>
-                    </h3>
-                    
-                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(380px, 1fr))', gap: '1.5rem', marginBottom: '3rem' }}>
-                      {filteredGroup.map(order => (
-                        <div key={order.id} className="glass-panel" style={{ padding: '1.5rem', borderRadius: 'var(--radius-lg)', border: '1px solid var(--border-color)', position: 'relative' }}>
-                          <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '1.2rem' }}>
-                            <div>
-                              <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)', fontWeight: 800 }}>#{order?.id?.slice(0,8) || '......'}</span>
-                              <h4 style={{ color: '#fff', fontSize: '1.1rem', margin: '0.2rem 0' }}>{order?.customer_name || 'Cliente'}</h4>
-                              <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', fontSize: '0.8rem', color: 'var(--text-muted)' }}>
-                                <MessageSquare size={12} /> {order?.customer_phone || 'Sem Zap'}
-                              </div>
+                {orders.filter(o => !orderFilter || o.user_id === orderFilter).map(order => {
+                  const isExpanded = expandedOrderId === order.id;
+                  const statusColors = {
+                    pending: '#FFB81C',
+                    processing: '#3B82F6',
+                    shipped: '#10B981',
+                    completed: '#A855F7',
+                    cancelled: '#EF4444'
+                  };
+                  const statusLabels = {
+                    pending: 'Pendente',
+                    processing: 'Preparando',
+                    shipped: 'Enviado',
+                    completed: 'Finalizado',
+                    cancelled: 'Cancelado'
+                  };
+
+                  return (
+                    <div key={order.id} style={{ display: 'flex', flexDirection: 'column' }}>
+                      {/* SUMMARY ROW */}
+                      <div 
+                        onClick={() => setExpandedOrderId(isExpanded ? null : order.id)}
+                        style={{ 
+                          display: 'grid', 
+                          gridTemplateColumns: '80px 1.5fr 1fr 100px 150px 40px', 
+                          padding: '1.2rem 1.5rem', 
+                          background: isExpanded ? 'rgba(255,255,255,0.05)' : 'var(--surface-color)', 
+                          borderRadius: '8px', 
+                          alignItems: 'center', 
+                          cursor: 'pointer',
+                          border: isExpanded ? '1px solid var(--accent-color)' : '1px solid var(--border-color)',
+                          transition: 'all 0.2s ease',
+                          marginBottom: isExpanded ? '0' : '0.2rem'
+                        }}
+                      >
+                        <span style={{ fontSize: '0.75rem', fontWeight: 800, color: 'var(--text-muted)' }}>#{order.id.slice(0,5)}</span>
+                        <div style={{ display: 'flex', flexDirection: 'column' }}>
+                          <span style={{ fontWeight: 700, color: '#fff' }}>{order.customer_name}</span>
+                          <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{order.customer_email}</span>
+                        </div>
+                        <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>{new Date(order.created_at).toLocaleDateString()}</span>
+                        <span style={{ fontWeight: 800, color: 'var(--accent-color)' }}>${Number(order.total_price).toFixed(2)}</span>
+                        <div>
+                          <span style={{ 
+                            fontSize: '0.65rem', 
+                            padding: '3px 8px', 
+                            borderRadius: '4px', 
+                            background: `${statusColors[order.status] || '#eee'}22`, 
+                            color: statusColors[order.status] || '#eee',
+                            border: `1px solid ${statusColors[order.status] || '#eee'}44`,
+                            fontWeight: 900,
+                            textTransform: 'uppercase'
+                          }}>
+                            {statusLabels[order.status]}
+                          </span>
+                        </div>
+                        <div style={{ color: 'var(--text-muted)' }}>
+                          {isExpanded ? <ChevronUp size={18} /> : <ChevronDown size={18} />}
+                        </div>
+                      </div>
+
+                      {/* EXPANDED CONTENT */}
+                      {isExpanded && (
+                        <div style={{ 
+                          background: 'rgba(0,0,0,0.2)', 
+                          padding: '2rem 1.5rem', 
+                          borderRadius: '0 0 8px 8px', 
+                          border: '1px solid var(--accent-color)',
+                          borderTop: 'none',
+                          display: 'grid',
+                          gridTemplateColumns: '1.5fr 1fr',
+                          gap: '2rem',
+                          animation: 'slideDown 0.3s ease-out'
+                        }}>
+                          {/* LEFT: ITEMS & ADDRESS */}
+                          <div>
+                            <p style={{ fontSize: '0.7rem', color: 'var(--text-muted)', fontWeight: 800, textTransform: 'uppercase', marginBottom: '1rem' }}>Itens do Pedido</p>
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', marginBottom: '1.5rem' }}>
+                              {order.items?.map((item, i) => (
+                                <div key={i} style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
+                                   <div style={{ width: '40px', height: '40px', background: 'rgba(255,255,255,0.05)', borderRadius: '4px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                      <Package size={20} color="var(--text-muted)" />
+                                   </div>
+                                   <div style={{ flex: 1 }}>
+                                      <p style={{ color: '#fff', fontSize: '0.9rem', fontWeight: 600 }}>{item.quantity}x {item.name}</p>
+                                      <p style={{ color: 'var(--text-muted)', fontSize: '0.8rem' }}>Tamanho: {item.size}</p>
+                                      {item.extras?.customization && (
+                                        <p style={{ color: 'var(--accent-color)', fontSize: '0.75rem', fontWeight: 800 }}>Custom: {item.extras.customization.name} / {item.extras.customization.number}</p>
+                                      )}
+                                   </div>
+                                </div>
+                              ))}
                             </div>
-                            <div style={{ textAlign: 'right' }}>
-                              <p style={{ color: 'var(--accent-color)', fontWeight: 800, fontSize: '1.2rem' }}>${Number(order?.total_price || 0).toFixed(2)}</p>
-                              <p style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>{order?.created_at ? new Date(order.created_at).toLocaleDateString() : ''}</p>
+
+                            <p style={{ fontSize: '0.7rem', color: 'var(--text-muted)', fontWeight: 800, textTransform: 'uppercase', marginBottom: '0.5rem' }}>Endereço de Entrega</p>
+                            <div style={{ fontSize: '0.85rem', color: '#fff' }}>
+                               <p>{order.shipping_address?.street}{order.shipping_address?.apartment ? `, Apt ${order.shipping_address.apartment}` : ''}</p>
+                               <p>{order.shipping_address?.city}, {order.shipping_address?.province} {order.shipping_address?.postalCode}</p>
+                               <p style={{ color: 'var(--text-muted)', marginTop: '0.2rem' }}><MapPin size={12} /> {order.customer_phone}</p>
                             </div>
                           </div>
 
-                          <div style={{ background: 'rgba(255,255,255,0.03)', padding: '1rem', borderRadius: '8px', marginBottom: '1.2rem', border: '1px solid rgba(255,255,255,0.05)' }}>
-                            {order?.items?.map((item, i) => (
-                              <div key={i} style={{ marginBottom: i < order.items.length - 1 ? '1rem' : 0 }}>
-                                <p style={{ fontSize: '0.9rem', color: '#fff', fontWeight: 600 }}>{item?.quantity || 1}x {item?.name || 'Produto'} ({item?.size || '?'})</p>
-                                {item?.extras?.customization && (
-                                  <div style={{ background: 'rgba(164, 210, 51, 0.1)', padding: '0.4rem 0.8rem', borderRadius: '4px', marginTop: '0.4rem', borderLeft: '3px solid var(--accent-color)' }}>
-                                    <p style={{ fontSize: '0.75rem', color: 'var(--accent-color)', fontWeight: 800, textTransform: 'uppercase' }}>Customização:</p>
-                                    <p style={{ fontSize: '0.85rem', color: '#fff' }}>{item.extras.customization.name} - {item.extras.customization.number}</p>
-                                  </div>
-                                )}
-                              </div>
-                            ))}
-                          </div>
+                          {/* RIGHT: ACTIONS */}
+                          <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', borderLeft: '1px solid rgba(255,255,255,0.1)', paddingLeft: '2rem' }}>
+                            <p style={{ fontSize: '0.7rem', color: 'var(--text-muted)', fontWeight: 800, textTransform: 'uppercase' }}>Gestão de Status</p>
+                            <select 
+                              value={order.status} 
+                              onChange={(e) => handleUpdateOrderStatus(order.id, e.target.value)}
+                              style={{ width: '100%', padding: '0.6rem', background: 'var(--bg-color)', color: '#fff', border: '1px solid var(--border-color)', borderRadius: '6px' }}
+                            >
+                              <option value="pending">🟡 Pendente</option>
+                              <option value="processing">🔵 Preparando</option>
+                              <option value="shipped">🟢 Enviado</option>
+                              <option value="completed">✅ Finalizado</option>
+                              <option value="cancelled">🔴 Cancelado</option>
+                            </select>
 
-                          <div style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginBottom: '1.5rem', background: 'rgba(0,0,0,0.2)', padding: '0.8rem', borderRadius: '6px' }}>
-                             <p style={{ marginBottom: '0.3rem', display: 'flex', alignItems: 'flex-start', gap: '0.4rem' }}>
-                               <MapPin size={14} style={{ marginTop: '2px', flexShrink: 0 }} /> 
-                               <span>{order?.shipping_address?.street || 'Sem endereço'}{order?.shipping_address?.apartment ? ', Apt ' + order.shipping_address.apartment : ''}</span>
-                             </p>
-                             <p style={{ marginLeft: '1.3rem' }}>{order?.shipping_address?.city || ''}{order?.shipping_address?.province ? ', ' + order.shipping_address.province : ''} {order?.shipping_address?.postalCode || ''}</p>
-                          </div>
-
-                          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.8rem' }}>
-                             <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-                                <select 
-                                  value={order?.status || 'pending'} 
-                                  onChange={(e) => handleUpdateOrderStatus(order.id, e.target.value)}
-                                  style={{ flex: 1, padding: '0.6rem', background: 'var(--bg-color)', color: '#fff', border: '1px solid var(--border-color)', borderRadius: '6px', fontSize: '0.85rem', fontWeight: 600 }}
-                                >
-                                  <option value="pending">🟡 Pendente</option>
-                                  <option value="processing">🔵 Preparando</option>
-                                  <option value="shipped">🟢 Enviado</option>
-                                  <option value="completed">✅ Finalizado</option>
-                                  <option value="cancelled">🔴 Cancelado</option>
-                                </select>
-                             </div>
-
-                             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.5rem' }}>
-                                <button onClick={() => sendWhatsAppStatus(order, order.status)} style={{ gridColumn: '1 / -1', padding: '0.7rem', borderRadius: '6px', background: '#25D366', color: '#000', fontWeight: 800, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem', border: 'none' }}>
-                                  <WhatsAppIcon size={18} /> ATUALIZAR CLIENTE (STATUS ATUAL)
-                                </button>
-                                <button onClick={() => sendWhatsAppStatus(order, 'shipped')} style={{ padding: '0.6rem', borderRadius: '6px', background: 'rgba(16, 185, 129, 0.1)', color: '#10B981', border: '1px solid #10B981', fontSize: '0.75rem', fontWeight: 700 }}>
-                                  MSG: ENVIADO
-                                </button>
-                                <button onClick={() => sendWhatsAppStatus(order, 'processing')} style={{ padding: '0.6rem', borderRadius: '6px', background: 'rgba(59, 130, 246, 0.1)', color: '#3B82F6', border: '1px solid #3B82F6', fontSize: '0.75rem', fontWeight: 700 }}>
-                                  MSG: PREPARAR
-                                </button>
-                             </div>
+                            <p style={{ fontSize: '0.7rem', color: 'var(--text-muted)', fontWeight: 800, textTransform: 'uppercase', marginTop: '1rem' }}>Ações Rápidas (Auto-Sync)</p>
+                            <button 
+                              onClick={() => sendWhatsAppStatus(order, 'processing')}
+                              style={{ padding: '0.6rem', borderRadius: '4px', background: 'rgba(59, 130, 246, 0.1)', color: '#3B82F6', border: '1px solid #3B82F6', fontWeight: 700, cursor: 'pointer', fontSize: '0.8rem' }}
+                            >
+                              MARCAR COMO PREPARANDO
+                            </button>
+                            <button 
+                              onClick={() => sendWhatsAppStatus(order, 'shipped')}
+                              style={{ padding: '0.6rem', borderRadius: '4px', background: 'rgba(16, 185, 129, 0.1)', color: '#10B981', border: '1px solid #10B981', fontWeight: 700, cursor: 'pointer', fontSize: '0.8rem' }}
+                            >
+                              MARCAR COMO ENVIADO
+                            </button>
+                            <button 
+                              onClick={() => sendWhatsAppStatus(order, 'completed')}
+                              style={{ padding: '0.6rem', borderRadius: '4px', background: 'rgba(168, 85, 247, 0.1)', color: '#A855F7', border: '1px solid #A855F7', fontWeight: 700, cursor: 'pointer', fontSize: '0.8rem' }}
+                            >
+                              MARCAR COMO ENTREGUE
+                            </button>
                           </div>
                         </div>
-                      ))}
+                      )}
                     </div>
-                  </div>
-                );
-              })}
+                  );
+                })}
+              </div>
 
               {orders.length === 0 && (
-                <div style={{ textAlign: 'center', padding: '5rem', background: 'rgba(255,255,255,0.02)', borderRadius: '12px', border: '1px dashed var(--border-color)' }}>
-                  <Package size={48} color="var(--text-muted)" style={{ marginBottom: '1rem' }} />
-                   <p style={{ color: 'var(--text-muted)', fontSize: '1.2rem' }}>O estoque de pedidos está vazio. Quando alguém comprar, aparecerá aqui!</p>
-                </div>
-              )}
-            </div>
-          ) : supplierTab === 'CLIENTES' ? (
+                <div style={{ textA          ) : supplierTab === 'CLIENTES' ? (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', maxWidth: '1000px' }}>
               {customers.length === 0 ? (
                  <div style={{ textAlign: 'center', padding: '4rem 2rem', background: 'var(--surface-color)', borderRadius: 'var(--radius-lg)', border: '1px dashed var(--border-color)' }}>
@@ -1338,38 +1407,82 @@ const Admin = () => {
                     <p style={{ color: 'var(--text-muted)' }}>Os clientes cadastrados via Google demoram alguns minutos para serem sincronizados.</p>
                  </div>
               ) : (
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(450px, 1fr))', gap: '1.5rem' }}>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                  {/* HEADER */}
+                  <div style={{ display: 'grid', gridTemplateColumns: '60px 1.5fr 1.5fr 100px 40px', padding: '0.8rem 1.5rem', color: 'var(--text-muted)', fontSize: '0.7rem', fontWeight: 800, textTransform: 'uppercase' }}>
+                    <span></span>
+                    <span>Nome Completo</span>
+                    <span>E-mail</span>
+                    <span>Pedidos</span>
+                    <span></span>
+                  </div>
+
                   {customers.map(customer => {
+                    const isExpanded = expandedCustomerId === customer.id;
                     const customerOrders = orders.filter(o => o.user_id === customer.id);
+                    
                     return (
-                      <div 
-                        key={customer.id} 
-                        onClick={() => { setOrderFilter(customer.id); setSupplierTab('PEDIDOS'); }}
-                        style={{ background: 'var(--surface-color)', padding: '1.5rem', borderRadius: 'var(--radius-lg)', border: '1px solid var(--border-color)', display: 'flex', flexDirection: 'column', gap: '1.2rem', transition: 'all 0.2s', cursor: 'pointer' }} 
-                        className="customer-card"
-                        onMouseEnter={(e) => { e.currentTarget.style.borderColor = 'var(--accent-color)'; e.currentTarget.style.transform = 'translateY(-2px)'; }}
-                        onMouseLeave={(e) => { e.currentTarget.style.borderColor = 'var(--border-color)'; e.currentTarget.style.transform = 'translateY(0)'; }}
-                      >
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '1.2rem' }}>
-                          <img src={customer.avatar_url || 'https://via.placeholder.com/60'} alt="Avatar" style={{ width: '60px', height: '60px', borderRadius: '50%', border: '2px solid rgba(255,255,255,0.1)' }} />
-                          <div style={{ flex: 1 }}>
-                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                               <h3 style={{ fontSize: '1.1rem', color: '#fff', margin: 0 }}>{customer.full_name || 'Usuário'}</h3>
-                               <span style={{ fontSize: '0.65rem', background: 'var(--accent-color)', color: '#000', padding: '2px 6px', borderRadius: '4px', fontWeight: 900 }}>{customerOrders.length} PEDIDOS</span>
-                            </div>
-                            <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem' }}>{customer.email}</p>
+                      <div key={customer.id} style={{ display: 'flex', flexDirection: 'column' }}>
+                        {/* SUMMARY ROW */}
+                        <div 
+                          onClick={() => setExpandedCustomerId(isExpanded ? null : customer.id)}
+                          style={{ 
+                            display: 'grid', 
+                            gridTemplateColumns: '60px 1.5fr 1.5fr 100px 40px', 
+                            padding: '1rem 1.5rem', 
+                            background: isExpanded ? 'rgba(255,255,255,0.05)' : 'var(--surface-color)', 
+                            borderRadius: '8px', 
+                            alignItems: 'center', 
+                            cursor: 'pointer',
+                            border: isExpanded ? '1px solid var(--accent-color)' : '1px solid var(--border-color)',
+                            transition: 'all 0.2s ease',
+                            marginBottom: isExpanded ? '0' : '0.2rem'
+                          }} 
+                        >
+                          <img src={customer.avatar_url || 'https://via.placeholder.com/40'} alt="" style={{ width: '32px', height: '32px', borderRadius: '50%', border: '1px solid rgba(255,255,255,0.1)' }} />
+                          <span style={{ fontWeight: 700, color: '#fff' }}>{customer.full_name || 'Usuário'}</span>
+                          <span style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>{customer.email}</span>
+                          <div>
+                            <span style={{ fontSize: '0.7rem', background: 'var(--accent-color)', color: '#000', padding: '2px 8px', borderRadius: '4px', fontWeight: 900 }}>{customerOrders.length}</span>
+                          </div>
+                          <div style={{ color: 'var(--text-muted)' }}>
+                            {isExpanded ? <ChevronUp size={18} /> : <ChevronDown size={18} />}
                           </div>
                         </div>
 
-                        {(customer?.street || customer?.city) ? (
-                          <div style={{ background: 'rgba(0,0,0,0.2)', padding: '1rem', borderRadius: '4px', fontSize: '0.8rem' }}>
-                            <p style={{ color: 'var(--text-muted)', fontWeight: 800, fontSize: '0.65rem', textTransform: 'uppercase', marginBottom: '0.5rem' }}>Endereço de Entrega:</p>
-                            <p style={{ color: '#fff' }}>{customer.street}{customer.apartment ? ', Apt ' + customer.apartment : ''}</p>
-                            <p style={{ color: '#fff' }}>{customer.city}{customer.province ? ', ' + customer.province : ''} {customer.postal_code || ''}</p>
-                          </div>
-                        ) : (
-                          <div style={{ background: 'rgba(255,255,255,0.02)', padding: '1rem', borderRadius: '4px', textAlign: 'center' }}>
-                             <p style={{ color: 'var(--text-muted)', fontSize: '0.8rem' }}>Sem endereço cadastrado</p>
+                        {/* EXPANDED CONTENT */}
+                        {isExpanded && (
+                          <div style={{ 
+                            background: 'rgba(0,0,0,0.2)', 
+                            padding: '1.5rem', 
+                            borderRadius: '0 0 8px 8px', 
+                            border: '1px solid var(--accent-color)',
+                            borderTop: 'none',
+                            display: 'flex',
+                            justifyContent: 'space-between',
+                            alignItems: 'center',
+                            animation: 'slideDown 0.3s ease-out'
+                          }}>
+                            <div>
+                               <p style={{ fontSize: '0.7rem', color: 'var(--text-muted)', fontWeight: 800, textTransform: 'uppercase', marginBottom: '0.5rem' }}>Endereço Registrado</p>
+                               {customer.street ? (
+                                 <div style={{ fontSize: '0.85rem', color: '#fff' }}>
+                                    <p>{customer.street}{customer.apartment ? `, Apt ${customer.apartment}` : ''}</p>
+                                    <p>{customer.city}, {customer.province} {customer.postal_code}</p>
+                                 </div>
+                               ) : (
+                                 <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', fontStyle: 'italic' }}>Nenhum endereço cadastrado para este perfil.</p>
+                               )}
+                            </div>
+                            
+                            <button 
+                              onClick={(e) => { e.stopPropagation(); setOrderFilter(customer.id); setSupplierTab('PEDIDOS'); }}
+                              style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', background: 'rgba(255,255,255,0.05)', color: '#fff', border: '1px solid var(--border-color)', padding: '0.6rem 1.2rem', borderRadius: '6px', fontWeight: 700, cursor: 'pointer', transition: 'all 0.2s' }}
+                              onMouseEnter={(e) => e.currentTarget.style.background = 'rgba(255,255,255,0.1)'}
+                              onMouseLeave={(e) => e.currentTarget.style.background = 'rgba(255,255,255,0.05)'}
+                            >
+                              <ExternalLink size={16} /> Ver Histórico de Pedidos
+                            </button>
                           </div>
                         )}
                       </div>
