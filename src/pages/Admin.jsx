@@ -1398,7 +1398,13 @@ const Admin = () => {
               </div>
 
               {orders.length === 0 && (
-                <div style={{ textA          ) : supplierTab === 'CLIENTES' ? (
+                <div style={{ textAlign: 'center', padding: '5rem', opacity: 0.5 }}>
+                   <Package size={48} style={{ marginBottom: '1rem' }} />
+                   <p>Nenhum pedido encontrado.</p>
+                </div>
+              )}
+            </div>
+          ) : supplierTab === 'CLIENTES' ? (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', maxWidth: '1000px' }}>
               {customers.length === 0 ? (
                  <div style={{ textAlign: 'center', padding: '4rem 2rem', background: 'var(--surface-color)', borderRadius: 'var(--radius-lg)', border: '1px dashed var(--border-color)' }}>
