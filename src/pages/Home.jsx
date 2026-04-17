@@ -457,9 +457,9 @@ const Home = () => {
 
                 <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
                   {t.avatar_url ? (
-                    <img src={t.avatar_url} alt={t.name} style={{ width: '40px', height: '40px', borderRadius: '50%', border: '2px solid var(--accent-color)' }} />
+                    <img src={t.avatar_url} alt={t.name} style={{ width: '50px', height: '50px', borderRadius: '50%', border: '2px solid var(--accent-color)', objectFit: 'cover' }} />
                   ) : (
-                    <div style={{ width: '40px', height: '40px', borderRadius: '50%', background: 'linear-gradient(45deg, var(--accent-color), #fff)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 900, color: '#000', fontSize: '0.9rem' }}>
+                    <div style={{ width: '50px', height: '50px', borderRadius: '50%', background: 'linear-gradient(135deg, var(--accent-color) 0%, #fff 100%)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 900, color: '#000', fontSize: '1.2rem', boxShadow: '0 4px 15px rgba(164, 210, 51, 0.3)' }}>
                       {t.name.charAt(0)}
                     </div>
                   )}

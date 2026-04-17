@@ -122,7 +122,7 @@ const Admin = () => {
   const [heroImagePreview, setHeroImagePreview] = useState(null);
   const [whatsAppNumber, setWhatsAppNumber] = useState('5584991847739');
   const [showAddTestimonial, setShowAddTestimonial] = useState(false);
-  const [newTestimonial, setNewTestimonial] = useState({ name: '', content: '', rating: 5, location: '', date: new Date().toISOString().split('T')[0], status: 'approved' });
+  const [newTestimonial, setNewTestimonial] = useState({ name: '', content: '', rating: 5, location: '', date: new Date().toISOString().split('T')[0], status: 'approved', avatar_url: '' });
 
   const defaultPricing = {
     nameNumber: 12,
@@ -366,7 +366,7 @@ const Admin = () => {
     }
     if(data) {
       setTestimonials([data[0], ...testimonials]);
-      setNewTestimonial({ name: '', content: '', rating: 5, location: '', date: new Date().toISOString().split('T')[0], status: 'approved' });
+      setNewTestimonial({ name: '', content: '', rating: 5, location: '', date: new Date().toISOString().split('T')[0], status: 'approved', avatar_url: '' });
       setShowAddTestimonial(false);
       setSaved(true);
       setTimeout(() => setSaved(false), 3000);
@@ -1258,9 +1258,18 @@ const Admin = () => {
                 {testimonials.map(t => (
                   <div key={t.id} className="glass-panel" style={{ padding: '1.5rem', borderRadius: 'var(--radius-md)', border: `1px solid ${t.status === 'approved' ? 'var(--accent-color)' : 'rgba(255,255,255,0.1)'}`, opacity: t.status === 'approved' ? 1 : 0.7 }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '1rem' }}>
-                      <div>
-                        <h4 style={{ color: '#fff', fontSize: '1.1rem' }}>{t.name}</h4>
-                        <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>{t.location} • {new Date(t.date).toLocaleDateString()}</p>
+                      <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
+                        {t.avatar_url ? (
+                          <img src={t.avatar_url} alt={t.name} style={{ width: '45px', height: '45px', borderRadius: '50%', objectFit: 'cover', border: '2px solid var(--accent-color)' }} />
+                        ) : (
+                          <div style={{ width: '45px', height: '45px', borderRadius: '50%', background: 'linear-gradient(45deg, var(--accent-color), #fff)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 900, color: '#000', fontSize: '1rem' }}>
+                            {t.name?.charAt(0) || '?'}
+                          </div>
+                        )}
+                        <div>
+                          <h4 style={{ color: '#fff', fontSize: '1.1rem' }}>{t.name}</h4>
+                          <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>{t.location} • {new Date(t.date).toLocaleDateString()}</p>
+                        </div>
                       </div>
                       <div style={{ display: 'flex', color: '#FFD700' }}>
                         {Array.from({ length: t.rating }).map((_, i) => <Star key={i} size={14} fill="#FFD700" />)}
@@ -1419,7 +1428,7 @@ const Admin = () => {
                           alignItems: 'center', 
                           cursor: 'pointer',
                           border: isExpanded ? '1px solid var(--accent-color)' : '1px solid var(--border-color)',
-                          transition: 'all 0.2s ease',
+                          transition: 'background 0.2s, border-color 0.2s, transform 0.2s',
                           marginBottom: isExpanded ? '0' : '0.2rem'
                         }}
                       >
@@ -1584,7 +1593,7 @@ const Admin = () => {
                             alignItems: 'center', 
                             cursor: 'pointer',
                             border: isExpanded ? '1px solid var(--accent-color)' : '1px solid var(--border-color)',
-                            transition: 'all 0.2s ease',
+                            transition: 'background 0.2s, border-color 0.2s, transform 0.2s',
                             marginBottom: isExpanded ? '0' : '0.2rem'
                           }} 
                         >
@@ -2077,6 +2086,10 @@ const Admin = () => {
                   <label style={{ display: 'block', marginBottom: '0.5rem', color: 'var(--text-muted)', fontSize: '0.9rem' }}>Localização</label>
                   <input type="text" value={newTestimonial.location} onChange={e => setNewTestimonial({...newTestimonial, location: e.target.value})} placeholder="Toronto, ON" style={{ width: '100%', padding: '0.8rem', background: 'var(--bg-color)', color: '#fff', border: '1px solid var(--border-color)', borderRadius: '4px' }} />
                 </div>
+              </div>
+              <div>
+                <label style={{ display: 'block', marginBottom: '0.5rem', color: 'var(--text-muted)', fontSize: '0.9rem' }}>URL da Foto do Cliente (Opcional)</label>
+                <input type="url" value={newTestimonial.avatar_url} onChange={e => setNewTestimonial({...newTestimonial, avatar_url: e.target.value})} placeholder="https://..." style={{ width: '100%', padding: '0.8rem', background: 'var(--bg-color)', color: '#fff', border: '1px solid var(--border-color)', borderRadius: '4px' }} />
               </div>
               <div>
                 <label style={{ display: 'block', marginBottom: '0.5rem', color: 'var(--text-muted)', fontSize: '0.9rem' }}>Data do Feedback (Pode retroceder p/ 2022)</label>
