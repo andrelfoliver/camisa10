@@ -134,7 +134,12 @@ const Home = () => {
         if (isSelecao) { mapCat['Seleções'].push(p); added = true; }
         if (isInternacional && !isSelecao && !isBrasileirao) { mapCat['Internacionais'].push(p); added = true; }
         if (isRetro) { mapCat['Retrô'].push(p); added = true; }
-        if (cat === 'lançamentos' || cat.includes('lançament')) { mapCat['Lançamentos'].push(p); added = true; }
+        
+        // Se for NOVO, aparece em Lançamentos obrigatoriamente
+        if (p.is_new || cat === 'lançamentos' || cat.includes('lançament')) { 
+          mapCat['Lançamentos'].push(p); 
+          added = true; 
+        }
 
         if (!added) mapCat['Lançamentos'].push(p); // Fallback
       });
