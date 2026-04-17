@@ -9,6 +9,11 @@ const Auth = () => {
   const [error, setError] = useState(null);
 
   if (user) {
+    const redirectTo = sessionStorage.getItem('ifooty_redirect_after_login');
+    if (redirectTo) {
+      sessionStorage.removeItem('ifooty_redirect_after_login');
+      return <Navigate to={redirectTo} />;
+    }
     return isAdmin ? <Navigate to="/admin" /> : <Navigate to="/perfil" />;
   }
 

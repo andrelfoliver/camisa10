@@ -209,7 +209,10 @@ const Checkout = () => {
       <div className="container" style={{ padding: '6rem 1.5rem', textAlign: 'center' }}>
         <h2 style={{ marginBottom: '1rem' }}>Calma lá, artilheiro!</h2>
         <p style={{ color: 'var(--text-muted)' }}>Você precisa se identificar no nosso sistema para separar suas camisas.</p>
-        <button className="btn-primary" onClick={() => navigate('/auth')} style={{ marginTop: '2rem', display: 'inline-flex', alignItems: 'center', gap: '0.5rem' }}>
+        <button className="btn-primary" onClick={() => {
+          sessionStorage.setItem('ifooty_redirect_after_login', '/checkout');
+          navigate('/auth');
+        }} style={{ marginTop: '2rem', display: 'inline-flex', alignItems: 'center', gap: '0.5rem' }}>
           <LogIn size={20} /> Fazer Login / Cadastro
         </button>
       </div>
