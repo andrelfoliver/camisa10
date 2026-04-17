@@ -3,7 +3,7 @@ import { supabase } from '../services/supabase';
 
 const AuthContext = createContext();
 
-const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID;
+const GOOGLE_CLIENT_ID = (import.meta.env.VITE_GOOGLE_CLIENT_ID || '').trim();
 
 // Gera um nonce SHA-256 — exigido pelo Supabase para signInWithIdToken
 async function generateNonce() {
