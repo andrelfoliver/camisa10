@@ -14,8 +14,24 @@ export default async function handler(req, res) {
     return res.status(400).json({ error: 'Order data missing' });
   }
 
+  // Helper para garantir que as URLs das imagens sejam absolutas (e-mail não aceita caminhos relativos)
+  const normalizeImgUrl = (url) => {
+    if (!url) return 'https://ifooty.ca/placeholder.jpg';
+    if (url.startsWith('http')) return url;
+    
+    // Se for um caminho relativo do Supabase (comum em novos uploads)
+    if (url.startsWith('/storage')) {
+      const supabaseBase = 'https://nshatpbtpoyrphlvpghq.supabase.co'; // Extraído das configurações de produção
+      return `${supabaseBase}${url}`;
+    }
+    
+    // Fallback para o domínio do site
+    return `https://ifooty.ca${url.startsWith('/') ? '' : '/'}${url}`;
+  };
+
   try {
     const itemsHtml = order.items.map(item => {
+      const imageUrl = normalizeImgUrl(item.image);
       const customization = item.extras?.nameNumber 
         ? `<div style="margin-top: 5px; padding: 8px; background: #FFF9C4; border-left: 4px solid #FBC02D; font-size: 0.9rem; color: #444;">
              <strong>CUSTOMIZAÇÃO:</strong> ${item.extras.customName || 'N/A'} - ${item.extras.customNumber || 'N/A'}
@@ -29,7 +45,7 @@ export default async function handler(req, res) {
       return `
         <div style="margin-bottom: 20px; padding: 15px; border: 1px solid #edf2f7; border-radius: 8px; display: flex; align-items: center; gap: 15px;">
           <div style="flex-shrink: 0;">
-            <img src="${item.image}" alt="${item.name}" style="width: 80px; height: 100px; object-fit: cover; border-radius: 4px; border: 1px solid #eee;" />
+            <img src="${imageUrl}" alt="${item.name}" style="width: 80px; height: 100px; object-fit: cover; border-radius: 4px; border: 1px solid #eee;" />
           </div>
           <div style="flex-grow: 1;">
             <h4 style="margin: 0 0 5px 0; color: #1a202c; font-size: 1.1rem;">${item.name}</h4>
