@@ -68,7 +68,9 @@ export default async function handler(req, res) {
       html: `
         <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; max-width: 650px; margin: 0 auto; background: #ffffff;">
           <div style="padding: 30px; background: #000000; text-align: center; border-radius: 8px 8px 0 0;">
-            <h1 style="color: #CCFF00; margin: 0; font-style: italic; font-weight: 900; letter-spacing: -1px;">iFooty.</h1>
+            <h1 style="margin: 0; font-style: italic; font-weight: 900; letter-spacing: -1px; font-family: sans-serif; font-size: 2.5rem;">
+              <span style="color: #CCFF00;">i</span><span style="color: #FFFFFF;">Footy</span><span style="color: #CCFF00;">.</span>
+            </h1>
             <p style="color: #ffffff; margin: 5px 0 0 0; opacity: 0.8; font-size: 0.9rem; text-transform: uppercase; letter-spacing: 2px;">Notificação de Venda Oficial</p>
           </div>
           <div style="padding: 30px; border: 1px solid #edf2f7; border-top: none; border-radius: 0 0 8px 8px;">
@@ -103,7 +105,9 @@ export default async function handler(req, res) {
       html: `
         <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; max-width: 650px; margin: 0 auto; background: #ffffff; border: 1px solid #edf2f7; border-radius: 8px; overflow: hidden;">
           <div style="padding: 40px 30px; background: #000000; text-align: center;">
-            <h1 style="color: #CCFF00; margin: 0; font-style: italic; font-weight: 900; fontSize: 2.5rem;">iFooty.</h1>
+            <h1 style="margin: 0; font-style: italic; font-weight: 900; letter-spacing: -1px; font-family: sans-serif; font-size: 3rem;">
+              <span style="color: #CCFF00;">i</span><span style="color: #FFFFFF;">Footy</span><span style="color: #CCFF00;">.</span>
+            </h1>
             <p style="color: #ffffff; margin-top: 10px; font-size: 1.1rem; opacity: 0.9;">Recebemos seu pedido, ${order.customer_name.split(' ')[0]}!</p>
           </div>
           
