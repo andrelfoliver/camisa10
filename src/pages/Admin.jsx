@@ -138,6 +138,8 @@ const Admin = () => {
   };
   const [pricing, setPricing] = useState(defaultPricing);
   const [orderFilter, setOrderFilter] = useState(null);
+  const [showWelcomePopup, setShowWelcomePopup] = useState(false);
+  const [welcomeTriggered, setWelcomeTriggered] = useState(false);
 
 
   const [isMigrating, setIsMigrating] = useState(false);
@@ -251,7 +253,18 @@ const Admin = () => {
 
     async function loadOrders() {
       const { data } = await supabase.from('orders').select('*').order('created_at', { ascending: false });
-      if(data) setOrders(data);
+      if(data) {
+        setOrders(data);
+        
+        // Trigger Welcome Popup for Manager
+        if (!welcomeTriggered && user?.email === 'bivisualizerr@gmail.com') {
+          const pendingCount = data.filter(o => o.status === 'pending').length;
+          if (pendingCount > 0) {
+            setShowWelcomePopup(true);
+            setWelcomeTriggered(true);
+          }
+        }
+      }
     }
     
     async function fetchTeams() {
@@ -1189,84 +1202,132 @@ const Admin = () => {
               </div>
             </div>
           ) : supplierTab === 'PEDIDOS' ? (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem', maxWidth: '1200px' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem', maxWidth: '1200px' }}>
+              
+              {/* STATS SUMMARY BAR */}
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1.5rem' }}>
+                <div className="glass-panel" style={{ padding: '1.5rem', borderRadius: '12px', borderLeft: '4px solid #FFB81C' }}>
+                  <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: 800 }}>Novos Pedidos</p>
+                  <h3 style={{ fontSize: '2rem', color: '#fff' }}>{orders.filter(o => o.status === 'pending').length}</h3>
+                </div>
+                <div className="glass-panel" style={{ padding: '1.5rem', borderRadius: '12px', borderLeft: '4px solid #3B82F6' }}>
+                  <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: 800 }}>Em Preparação</p>
+                  <h3 style={{ fontSize: '2rem', color: '#fff' }}>{orders.filter(o => o.status === 'processing').length}</h3>
+                </div>
+                <div className="glass-panel" style={{ padding: '1.5rem', borderRadius: '12px', borderLeft: '4px solid #10B981' }}>
+                  <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: 800 }}>Finalizados/Enviados</p>
+                  <h3 style={{ fontSize: '2rem', color: '#fff' }}>{orders.filter(o => ['shipped', 'completed'].includes(o.status)).length}</h3>
+                </div>
+                <div className="glass-panel" style={{ padding: '1.5rem', borderRadius: '12px', borderLeft: '4px solid var(--accent-color)' }}>
+                  <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: 800 }}>Volume Total</p>
+                  <h3 style={{ fontSize: '2rem', color: 'var(--accent-color)' }}>${orders.reduce((acc, o) => acc + Number(o.total_price || 0), 0).toFixed(2)}</h3>
+                </div>
+              </div>
+
               {orderFilter && (
-                <div style={{ background: 'var(--surface-color)', padding: '1rem 1.5rem', borderRadius: '8px', border: '1px solid var(--accent-color)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+                <div style={{ background: 'rgba(164, 210, 51, 0.1)', padding: '1rem 1.5rem', borderRadius: '8px', border: '1px solid var(--accent-color)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                    <p style={{ margin: 0, fontWeight: 700, color: 'var(--accent-color)' }}>
-                     Mostrando pedidos de: {customers.find(c => c.id === orderFilter)?.full_name || 'Usuário Selecionado'}
+                     Filtro Ativo: Clientes {customers.find(c => c.id === orderFilter)?.full_name || '...'}
                    </p>
-                   <button onClick={() => setOrderFilter(null)} style={{ background: 'transparent', color: '#fff', border: '1px solid #fff', padding: '0.4rem 1rem', borderRadius: '4px', cursor: 'pointer', fontSize: '0.8rem' }}>Exibir Todos</button>
+                   <button onClick={() => setOrderFilter(null)} style={{ background: 'var(--accent-color)', color: '#000', padding: '0.4rem 1rem', borderRadius: '4px', fontWeight: 700 }}>Limpar Filtro</button>
                 </div>
               )}
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(380px, 1fr))', gap: '1.5rem' }}>
-                {orders.filter(order => !orderFilter || order.user_id === orderFilter).map(order => (
-                  <div key={order.id} className="glass-panel" style={{ padding: '1.5rem', borderRadius: 'var(--radius-lg)', border: '1px solid var(--border-color)' }}>
-                    {/* ... item render ... */}
-                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '1rem' }}>
-                      <div>
-                        <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)', fontWeight: 800 }}>#{order?.id?.slice(0,8) || '......'}</span>
-                        <h4 style={{ color: '#fff', fontSize: '1.1rem' }}>{order?.customer_name || 'Cliente'}</h4>
-                        <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>{order?.customer_email || ''}</p>
-                      </div>
-                      <div style={{ textAlign: 'right' }}>
-                        <p style={{ color: 'var(--accent-color)', fontWeight: 800, fontSize: '1.2rem' }}>${Number(order?.total_price || 0).toFixed(2)}</p>
-                        <p style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>{order?.created_at ? new Date(order.created_at).toLocaleString() : ''}</p>
-                      </div>
-                    </div>
 
-                    <div style={{ background: 'rgba(0,0,0,0.2)', padding: '1rem', borderRadius: '4px', marginBottom: '1rem' }}>
-                      {order?.items?.map((item, i) => (
-                        <p key={i} style={{ fontSize: '0.85rem', color: '#fff' }}>{item?.quantity || 1}x {item?.name || 'Produto'} ({item?.size || '?'})</p>
+              {/* GROUPED ORDERS VIEW */}
+              {[
+                { label: '🟡 Novos Pedidos (WhatsApp Pendente)', status: ['pending'], color: '#FFB81C' },
+                { label: '🔵 Em Preparação', status: ['processing'], color: '#3B82F6' },
+                { label: '🟢 Finalizados & Enviados', status: ['shipped', 'completed'], color: '#10B981' },
+                { label: '🔴 Cancelados', status: ['cancelled'], color: '#EF4444' }
+              ].map(group => {
+                const filteredGroup = orders.filter(o => group.status.includes(o.status) && (!orderFilter || o.user_id === orderFilter));
+                if (filteredGroup.length === 0 && group.status[0] !== 'pending') return null;
+
+                return (
+                  <div key={group.label}>
+                    <h3 style={{ fontSize: '1.2rem', color: group.color, marginBottom: '1rem', borderBottom: `1px solid ${group.color}33`, paddingBottom: '0.5rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                      {group.label} <span style={{ fontSize: '0.8rem', background: `${group.color}22`, padding: '2px 8px', borderRadius: '10px' }}>{filteredGroup.length}</span>
+                    </h3>
+                    
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(380px, 1fr))', gap: '1.5rem', marginBottom: '3rem' }}>
+                      {filteredGroup.map(order => (
+                        <div key={order.id} className="glass-panel" style={{ padding: '1.5rem', borderRadius: 'var(--radius-lg)', border: '1px solid var(--border-color)', position: 'relative' }}>
+                          <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '1.2rem' }}>
+                            <div>
+                              <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)', fontWeight: 800 }}>#{order?.id?.slice(0,8) || '......'}</span>
+                              <h4 style={{ color: '#fff', fontSize: '1.1rem', margin: '0.2rem 0' }}>{order?.customer_name || 'Cliente'}</h4>
+                              <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', fontSize: '0.8rem', color: 'var(--text-muted)' }}>
+                                <MessageSquare size={12} /> {order?.customer_phone || 'Sem Zap'}
+                              </div>
+                            </div>
+                            <div style={{ textAlign: 'right' }}>
+                              <p style={{ color: 'var(--accent-color)', fontWeight: 800, fontSize: '1.2rem' }}>${Number(order?.total_price || 0).toFixed(2)}</p>
+                              <p style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>{order?.created_at ? new Date(order.created_at).toLocaleDateString() : ''}</p>
+                            </div>
+                          </div>
+
+                          <div style={{ background: 'rgba(255,255,255,0.03)', padding: '1rem', borderRadius: '8px', marginBottom: '1.2rem', border: '1px solid rgba(255,255,255,0.05)' }}>
+                            {order?.items?.map((item, i) => (
+                              <div key={i} style={{ marginBottom: i < order.items.length - 1 ? '1rem' : 0 }}>
+                                <p style={{ fontSize: '0.9rem', color: '#fff', fontWeight: 600 }}>{item?.quantity || 1}x {item?.name || 'Produto'} ({item?.size || '?'})</p>
+                                {item?.extras?.customization && (
+                                  <div style={{ background: 'rgba(164, 210, 51, 0.1)', padding: '0.4rem 0.8rem', borderRadius: '4px', marginTop: '0.4rem', borderLeft: '3px solid var(--accent-color)' }}>
+                                    <p style={{ fontSize: '0.75rem', color: 'var(--accent-color)', fontWeight: 800, textTransform: 'uppercase' }}>Customização:</p>
+                                    <p style={{ fontSize: '0.85rem', color: '#fff' }}>{item.extras.customization.name} - {item.extras.customization.number}</p>
+                                  </div>
+                                )}
+                              </div>
+                            ))}
+                          </div>
+
+                          <div style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginBottom: '1.5rem', background: 'rgba(0,0,0,0.2)', padding: '0.8rem', borderRadius: '6px' }}>
+                             <p style={{ marginBottom: '0.3rem', display: 'flex', alignItems: 'flex-start', gap: '0.4rem' }}>
+                               <MapPin size={14} style={{ marginTop: '2px', flexShrink: 0 }} /> 
+                               <span>{order?.shipping_address?.street || 'Sem endereço'}{order?.shipping_address?.apartment ? ', Apt ' + order.shipping_address.apartment : ''}</span>
+                             </p>
+                             <p style={{ marginLeft: '1.3rem' }}>{order?.shipping_address?.city || ''}{order?.shipping_address?.province ? ', ' + order.shipping_address.province : ''} {order?.shipping_address?.postalCode || ''}</p>
+                          </div>
+
+                          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.8rem' }}>
+                             <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                                <select 
+                                  value={order?.status || 'pending'} 
+                                  onChange={(e) => handleUpdateOrderStatus(order.id, e.target.value)}
+                                  style={{ flex: 1, padding: '0.6rem', background: 'var(--bg-color)', color: '#fff', border: '1px solid var(--border-color)', borderRadius: '6px', fontSize: '0.85rem', fontWeight: 600 }}
+                                >
+                                  <option value="pending">🟡 Pendente</option>
+                                  <option value="processing">🔵 Preparando</option>
+                                  <option value="shipped">🟢 Enviado</option>
+                                  <option value="completed">✅ Finalizado</option>
+                                  <option value="cancelled">🔴 Cancelado</option>
+                                </select>
+                             </div>
+
+                             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.5rem' }}>
+                                <button onClick={() => sendWhatsAppStatus(order, order.status)} style={{ gridColumn: '1 / -1', padding: '0.7rem', borderRadius: '6px', background: '#25D366', color: '#000', fontWeight: 800, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem', border: 'none' }}>
+                                  <WhatsAppIcon size={18} /> ATUALIZAR CLIENTE (STATUS ATUAL)
+                                </button>
+                                <button onClick={() => sendWhatsAppStatus(order, 'shipped')} style={{ padding: '0.6rem', borderRadius: '6px', background: 'rgba(16, 185, 129, 0.1)', color: '#10B981', border: '1px solid #10B981', fontSize: '0.75rem', fontWeight: 700 }}>
+                                  MSG: ENVIADO
+                                </button>
+                                <button onClick={() => sendWhatsAppStatus(order, 'processing')} style={{ padding: '0.6rem', borderRadius: '6px', background: 'rgba(59, 130, 246, 0.1)', color: '#3B82F6', border: '1px solid #3B82F6', fontSize: '0.75rem', fontWeight: 700 }}>
+                                  MSG: PREPARAR
+                                </button>
+                             </div>
+                          </div>
+                        </div>
                       ))}
                     </div>
-
-                    <div style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginBottom: '1.5rem' }}>
-                       <p style={{ marginBottom: '0.3rem' }}><MapPin size={12} /> {order?.shipping_address?.street || 'Sem endereço'}{order?.shipping_address?.apartment ? ', Apt ' + order.shipping_address.apartment + ', ' : ''}</p>
-                       <p>{order?.shipping_address?.city || ''}{order?.shipping_address?.province ? ', ' + order.shipping_address.province : ''} {order?.shipping_address?.postalCode || ''}</p>
-                    </div>
-
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.8rem' }}>
-                       <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-                          <select 
-                            value={order?.status || 'pending'} 
-                            onChange={(e) => handleUpdateOrderStatus(order.id, e.target.value)}
-                            style={{ flex: 1, padding: '0.5rem', background: 'var(--bg-color)', color: '#fff', border: '1px solid var(--border-color)', borderRadius: '4px', fontSize: '0.8rem' }}
-                          >
-                            <option value="pending">🟡 Pendente (WhatsApp)</option>
-                            <option value="processing">🔵 Preparando</option>
-                            <option value="shipped">🟢 Enviado</option>
-                            <option value="completed">✅ Finalizado</option>
-                            <option value="cancelled">🔴 Cancelado</option>
-                          </select>
-                       </div>
-
-                       <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
-                          <button onClick={() => sendWhatsAppStatus(order, 'pending')} title="Notificar Pendente" style={{ flex: 1, padding: '0.5rem', borderRadius: '4px', background: 'rgba(255,184,28,0.1)', color: '#FFB81C', border: '1px solid rgba(255,184,28,0.2)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                            <WhatsAppIcon size={14} /> <span style={{fontSize: '0.65rem', marginLeft: '4px', fontWeight: 700}}>PENDENTE</span>
-                          </button>
-                          <button onClick={() => sendWhatsAppStatus(order, 'processing')} title="Notificar Preparando" style={{ flex: 1, padding: '0.5rem', borderRadius: '4px', background: 'rgba(59, 130, 246, 0.1)', color: '#3B82F6', border: '1px solid rgba(59, 130, 246, 0.2)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                            <WhatsAppIcon size={14} /> <span style={{fontSize: '0.65rem', marginLeft: '4px', fontWeight: 700}}>PREPARAR</span>
-                          </button>
-                          <button onClick={() => sendWhatsAppStatus(order, 'shipped')} title="Notificar Enviado" style={{ flex: 1, padding: '0.5rem', borderRadius: '4px', background: 'rgba(16, 185, 129, 0.1)', color: '#10B981', border: '1px solid rgba(16, 185, 129, 0.2)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                            <WhatsAppIcon size={14} /> <span style={{fontSize: '0.65rem', marginLeft: '4px', fontWeight: 700}}>ENVIADO</span>
-                          </button>
-                          <button onClick={() => sendWhatsAppStatus(order, 'completed')} title="Notificar Finalizado" style={{ flex: 1, padding: '0.5rem', borderRadius: '4px', background: 'rgba(168, 85, 247, 0.1)', color: '#A855F7', border: '1px solid rgba(168, 85, 247, 0.2)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                            <WhatsAppIcon size={14} /> <span style={{fontSize: '0.65rem', marginLeft: '4px', fontWeight: 700}}>ENTREGUE</span>
-                          </button>
-                          <button onClick={() => sendWhatsAppStatus(order, 'cancelled')} title="Notificar Cancelado" style={{ flex: 1, padding: '0.5rem', borderRadius: '4px', background: 'rgba(239, 68, 68, 0.1)', color: '#EF4444', border: '1px solid rgba(239, 68, 68, 0.2)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                            <WhatsAppIcon size={14} /> <span style={{fontSize: '0.65rem', marginLeft: '4px', fontWeight: 700}}>CANCELAR</span>
-                          </button>
-                       </div>
-                    </div>
                   </div>
-                ))}
-                
-                {orders.filter(order => !orderFilter || order.user_id === orderFilter).length === 0 && (
-                  <div style={{ gridColumn: '1 / -1', textAlign: 'center', padding: '5rem', background: 'rgba(255,255,255,0.02)', borderRadius: '12px', border: '1px dashed var(--border-color)' }}>
-                    <p style={{ color: 'var(--text-muted)', fontSize: '1.1rem' }}>Nenhum pedido encontrado para este filtro.</p>
-                  </div>
-                )}
-              </div>
+                );
+              })}
+
+              {orders.length === 0 && (
+                <div style={{ textAlign: 'center', padding: '5rem', background: 'rgba(255,255,255,0.02)', borderRadius: '12px', border: '1px dashed var(--border-color)' }}>
+                  <Package size={48} color="var(--text-muted)" style={{ marginBottom: '1rem' }} />
+                   <p style={{ color: 'var(--text-muted)', fontSize: '1.2rem' }}>O estoque de pedidos está vazio. Quando alguém comprar, aparecerá aqui!</p>
+                </div>
+              )}
             </div>
           ) : supplierTab === 'CLIENTES' ? (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', maxWidth: '1000px' }}>
@@ -2112,6 +2173,39 @@ const Admin = () => {
       )}
 
       {/* MODAL SISTEMA (ALERT/CONFIRM) */}
+      {/* MANAGER WELCOME POPUP */}
+      {showWelcomePopup && (
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.85)', backdropFilter: 'blur(15px)', zIndex: 9999, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '1.5rem' }}>
+          <div style={{ background: 'var(--surface-color)', padding: '3rem', borderRadius: '24px', maxWidth: '500px', width: '100%', border: '1px solid var(--accent-color)', textAlign: 'center', boxShadow: '0 0 50px rgba(164, 210, 51, 0.2)', animation: 'modalIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards' }}>
+            <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '2rem' }}>
+              <div style={{ background: 'rgba(164, 210, 51, 0.1)', padding: '1.5rem', borderRadius: '50%', border: '1px solid rgba(164, 210, 51, 0.3)' }}>
+                <Package size={64} color="var(--accent-color)" />
+              </div>
+            </div>
+            <h2 style={{ fontSize: '2rem', marginBottom: '1rem', color: '#fff' }}>Olá, Gestor! 👋</h2>
+            <p style={{ color: 'var(--text-muted)', fontSize: '1.1rem', lineHeight: 1.6, marginBottom: '2rem' }}>
+               Identificamos <strong style={{ color: 'var(--accent-color)' }}>{orders.filter(o => o.status === 'pending').length} novos pedidos</strong> aguardando atenção. Vamos despachar esses mantos?
+            </p>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+              <button 
+                className="btn-primary" 
+                style={{ padding: '1.2rem', fontSize: '1.1rem', width: '100%' }}
+                onClick={() => { setSupplierTab('PEDIDOS'); setShowWelcomePopup(false); }}
+              >
+                Ver Pedidos Agora
+              </button>
+              <button 
+                onClick={() => setShowWelcomePopup(false)}
+                style={{ color: 'var(--text-muted)', fontSize: '0.9rem', padding: '0.5rem', background: 'transparent', border: 'none', cursor: 'pointer' }}
+              >
+                Depois eu vejo
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* MODAL PADRÃO DE ALERTAS */}
       {modal.show && (
         <div style={{ position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh', background: 'rgba(0,0,0,0.8)', backdropFilter: 'blur(8px)', zIndex: 10000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '1.5rem', animation: 'fadeIn 0.3s ease-out' }}>
           <div style={{ background: 'var(--surface-color)', border: '1px solid var(--border-color)', borderRadius: 'var(--radius-lg)', padding: '2.5rem', width: '100%', maxWidth: '450px', boxShadow: '0 25px 50px rgba(0,0,0,0.5)', position: 'relative' }}>
