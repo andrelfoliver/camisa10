@@ -2434,6 +2434,28 @@ const Admin = () => {
         </div>
       )}
 
+      {orderToDelete && (
+        <div style={{ position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh', background: 'rgba(0,0,0,0.85)', zIndex: 1001, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '1rem', backdropFilter: 'blur(5px)' }}>
+          <div style={{ background: 'var(--surface-color)', padding: '2.5rem', borderRadius: 'var(--radius-lg)', border: '1px solid #EF4444', width: '100%', maxWidth: '400px', display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center', boxShadow: '0 20px 50px rgba(239, 68, 68, 0.3)' }}>
+            <div style={{ width: '70px', height: '70px', borderRadius: '50%', background: 'rgba(239, 68, 68, 0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '1.5rem', color: '#EF4444' }}>
+              <AlertTriangle size={35} />
+            </div>
+            <h2 style={{ fontSize: '1.5rem', marginBottom: '0.5rem', color: '#fff' }}>Excluir Pedido?</h2>
+            <p style={{ color: 'var(--text-muted)', marginBottom: '1rem', fontSize: '0.95rem' }}>Tem certeza que deseja apagar este pedido? Esta ação removerá os dados do banco permanentemente e afetará as estatísticas do painel.</p>
+            <strong style={{ color: '#EF4444', marginBottom: '2.5rem', display: 'block', padding: '0.8rem', background: 'rgba(239, 68, 68, 0.05)', borderRadius: 'var(--radius-sm)', width: '100%' }}>Pedido #{orderToDelete.id.slice(0,8)} - {orderToDelete.customer_name}</strong>
+            
+            <div style={{ display: 'flex', gap: '1rem', width: '100%' }}>
+              <button onClick={() => setOrderToDelete(null)} style={{ flex: 1, padding: '1rem', background: 'var(--bg-color)', color: '#fff', border: '1px solid var(--border-color)', borderRadius: 'var(--radius-md)', cursor: 'pointer', fontWeight: 600 }}>
+                Cancelar
+              </button>
+              <button onClick={confirmDeleteOrder} style={{ flex: 1, padding: '1rem', background: '#EF4444', color: '#fff', border: 'none', borderRadius: 'var(--radius-md)', cursor: 'pointer', fontWeight: 800 }}>
+                CONFIRMAR EXCLUSÃO
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* MODAL SISTEMA (ALERT/CONFIRM) */}
       {/* MANAGER WELCOME POPUP */}
       {showWelcomePopup && (
