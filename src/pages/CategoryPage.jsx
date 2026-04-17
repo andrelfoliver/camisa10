@@ -50,7 +50,7 @@ const CategoryPage = () => {
         if (category_id === 'selecoes') return isSelecao;
         if (category_id === 'retro') return isRetro;
         if (category_id === 'internacionais') return isInternacional && !isSelecao && !isBrasileirao;
-        if (category_id === 'lancamentos') return cat === 'lançamentos' || cat.includes('lançament');
+        if (category_id === 'lancamentos') return p.is_new || cat === 'lançamentos' || cat.includes('lançament');
         
         // Fallback para slugs dinâmicos de ligas específicas
         return pLeague === category_id.toLowerCase() || cat === category_id.toLowerCase();
