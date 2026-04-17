@@ -66,15 +66,12 @@ export function AuthProvider({ children }) {
       });
 
       gis.prompt((notification) => {
-        // One Tap bloqueado (aba anônima, cookies, etc) — usa OAuth como fallback
-        if (notification.isNotDisplayed() || notification.isSkippedMoment()) {
-          supabase.auth.signInWithOAuth({
-            provider: 'google',
-            options: { redirectTo: window.location.origin + '/perfil' },
-          })
-            .then(() => resolve())
-            .catch(reject);
+        if (notification.isNotDisplayed()) {
+          // One Tap completamente bloqueado (incógnito, FedCM desativado, etc.)
+          reject(new Error('Para fazer login, abra uma aba normal do navegador com sua conta Google conectada.'));
         }
+        // isSkippedMoment = One Tap apareceu mas foi ignorado/o usuário vai interagir
+        // isDismissedMoment = usuário fechou, não faz nada
       });
     });
   }, []);
