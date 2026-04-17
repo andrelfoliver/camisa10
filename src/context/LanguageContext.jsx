@@ -91,8 +91,8 @@ export const translations = {
     nav_lancamentos: 'Lançamentos',
     footer_catalog: 'Catálogo',
     about_title: 'Nossa História ⚽',
-    about_text1: 'Em 2022, a iFooty nasceu de um desejo simples, mas poderoso: aproximar os brasileiros no Canadá de suas raízes. Sabemos que uma camisa de futebol não é apenas uma peça de roupa, é uma segunda pele que carrega memórias, paixão e pertencimento.',
-    about_text2: 'Localizados no coração do Canadá, nos especializamos em entregar mantos oficiais de alta qualidade, garantindo que cada grito de "gol" seja acompanhado pelo orgulho de vestir as cores do seu time do coração.',
+    about_text1: 'Nascida em Coquitlam/BC, em 2022, a iFooty surgiu de um desejo simples, mas poderoso: aproximar os brasileiros no Canadá de suas raízes. Sabemos que uma camisa de futebol não é apenas uma peça de roupa, é uma segunda pele que carrega memórias e pertencimento.',
+    about_text2: 'Após conquistar nossa comunidade na Columbia Britânica, agora chegamos com tudo em Calgary, especializados em entregar mantos oficiais de alta qualidade para que cada grito de "gol" tenha o orgulho do seu time do coração.',
     checkout_summary_footer_note: 'Você enviará um resumo do pedido para nosso atendimento. O pagamento só será feito após confirmarmos os detalhes do pedido com você. Pagamento via e-Transfer Interac!'
   },
   en: {
@@ -183,8 +183,8 @@ export const translations = {
     nav_lancamentos: 'New Arrivals',
     footer_catalog: 'Catalog',
     about_title: 'Our Story ⚽',
-    about_text1: 'In 2022, iFooty was born from a simple but powerful desire: to help Brazilians in Canada feel closer to home. We know that a football jersey is not just a piece of clothing, it is a second skin that carries memories, passion, and belonging.',
-    about_text2: 'Located in the heart of Canada, we specialize in delivering high-quality official fan jerseys, ensuring that every shout of "goal" is accompanied by the pride of wearing the colors of your heart team.',
+    about_text1: 'Born in Coquitlam, BC in 2022, iFooty emerged from a simple but powerful desire: to bring Brazilians in Canada closer to their roots. We know that a football jersey is not just a piece of clothing, it is a second skin that carries memories and belonging.',
+    about_text2: 'After winning over our community in British Columbia, we have now arrived in Calgary, specialized in delivering high-quality official fan jerseys so that every shout of "goal" carries the pride of your heart team.',
     checkout_summary_footer_note: 'You will send an order summary to our support. Payment will only be made after we confirm the order details with you. Payment via Interac e-Transfer!'
   }
 };
