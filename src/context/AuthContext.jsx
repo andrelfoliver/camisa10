@@ -3,10 +3,11 @@ import { supabase } from '../services/supabase';
 
 const AuthContext = createContext();
 
-const GOOGLE_CLIENT_ID = (import.meta.env.VITE_GOOGLE_CLIENT_ID || '').trim();
+// Email Mestre do Administrador
+const ADMIN_EMAIL = 'ifootycanada@gmail.com';
 
-// Gera um nonce SHA-256 — exigido pelo Supabase para signInWithIdToken
-async function generateNonce() {
+// Exposta para Auth.jsx usar no callback do GIS
+export async function generateNonce() {
   const rawNonce = crypto.randomUUID();
   const hashBuffer = await crypto.subtle.digest(
     'SHA-256',
@@ -22,9 +23,6 @@ export function AuthProvider({ children }) {
   const [session, setSession] = useState(null);
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
-
-  // Email Mestre do Administrador
-  const ADMIN_EMAIL = 'ifootycanada@gmail.com';
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -42,71 +40,14 @@ export function AuthProvider({ children }) {
     return () => subscription.unsubscribe();
   }, []);
 
-  const signInWithGoogle = async () => {
-    const gis = window.google?.accounts?.id;
-    if (!gis) {
-      throw new Error('SDK do Google ainda não carregou. Aguarde e tente novamente.');
-    }
-
-    const { rawNonce, hashedNonce } = await generateNonce();
-
-    return new Promise((resolve, reject) => {
-      let settled = false;
-
-      // Garante que resolve/reject sejam chamados apenas uma vez
-      const settle = (fn, arg) => {
-        if (!settled) {
-          settled = true;
-          clearTimeout(timeoutId);
-          fn(arg);
-        }
-      };
-
-      // Fallback: se nada acontecer em 12s, libera o loading
-      const timeoutId = setTimeout(() => {
-        settle(reject, new Error(
-          'Não foi possível abrir o login do Google. Verifique as configurações do navegador ou tente em uma aba anônima.'
-        ));
-      }, 12000);
-
-      gis.initialize({
-        client_id: GOOGLE_CLIENT_ID,
-        nonce: hashedNonce,
-        auto_select: false,
-        cancel_on_tap_outside: true,
-        callback: async (response) => {
-          if (!response.credential) {
-            settle(reject, new Error('Nenhuma credencial recebida do Google.'));
-            return;
-          }
-          try {
-            const { error } = await supabase.auth.signInWithIdToken({
-              provider: 'google',
-              token: response.credential,
-              nonce: rawNonce,
-            });
-            if (error) settle(reject, error);
-            else settle(resolve);
-          } catch (err) {
-            settle(reject, err);
-          }
-        },
-      });
-
-      gis.prompt((notification) => {
-        // Trata TODOS os casos onde o popup não aparece
-        const failed =
-          notification.isNotDisplayed() ||
-          notification.isSkippedMoment() ||
-          (notification.isDismissedMoment && notification.isDismissedMoment());
-
-        if (failed) {
-          settle(reject, new Error(
-            'Não foi possível abrir o login do Google. Verifique se cookies de terceiros estão habilitados, ou tente em uma aba anônima.'
-          ));
-        }
-      });
+  // Recebe o credential JWT do Google e faz a troca com o Supabase
+  const signInWithIdToken = async ({ credential, nonce }) => {
+    const { error } = await supabase.auth.signInWithIdToken({
+      provider: 'google',
+      token: credential,
+      nonce,
     });
+    if (error) throw error;
   };
 
   const signOut = async () => {
@@ -118,7 +59,7 @@ export function AuthProvider({ children }) {
   const isAdmin = user?.email === ADMIN_EMAIL;
 
   return (
-    <AuthContext.Provider value={{ session, user, loading, isAdmin, signInWithGoogle, signOut }}>
+    <AuthContext.Provider value={{ session, user, loading, isAdmin, signInWithIdToken, signOut }}>
       {!loading && children}
     </AuthContext.Provider>
   );
