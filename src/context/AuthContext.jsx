@@ -1,9 +1,22 @@
-import React, { createContext, useContext, useEffect, useState, useCallback } from 'react';
+import React, { createContext, useContext, useEffect, useState } from 'react';
 import { supabase } from '../services/supabase';
 
 const AuthContext = createContext();
 
 const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID;
+
+// Gera um nonce SHA-256 — exigido pelo Supabase para signInWithIdToken
+async function generateNonce() {
+  const rawNonce = crypto.randomUUID();
+  const hashBuffer = await crypto.subtle.digest(
+    'SHA-256',
+    new TextEncoder().encode(rawNonce)
+  );
+  const hashedNonce = Array.from(new Uint8Array(hashBuffer))
+    .map((b) => b.toString(16).padStart(2, '0'))
+    .join('');
+  return { rawNonce, hashedNonce };
+}
 
 export function AuthProvider({ children }) {
   const [session, setSession] = useState(null);
@@ -29,55 +42,44 @@ export function AuthProvider({ children }) {
     return () => subscription.unsubscribe();
   }, []);
 
-  const signInWithGoogle = useCallback(async () => {
-    return new Promise(async (resolve, reject) => {
-      const gis = window.google?.accounts?.id;
+  const signInWithGoogle = async () => {
+    const gis = window.google?.accounts?.id;
+    if (!gis) {
+      throw new Error('SDK do Google ainda não carregou. Aguarde e tente novamente.');
+    }
 
-      if (!gis) {
-        reject(new Error('SDK do Google ainda não carregou. Aguarde e tente novamente.'));
-        return;
-      }
+    const { rawNonce, hashedNonce } = await generateNonce();
 
-      // Gera nonce aleatório e faz hash SHA-256 (exigido pelo Supabase)
-      const rawNonce = crypto.randomUUID();
-      const hashBuffer = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(rawNonce));
-      const hashedNonce = Array.from(new Uint8Array(hashBuffer))
-        .map(b => b.toString(16).padStart(2, '0'))
-        .join('');
-
+    return new Promise((resolve, reject) => {
       gis.initialize({
         client_id: GOOGLE_CLIENT_ID,
         nonce: hashedNonce,
-        callback: async ({ credential }) => {
-          try {
-            const { error } = await supabase.auth.signInWithIdToken({
-              provider: 'google',
-              token: credential,
-              nonce: rawNonce,
-            });
-            if (error) throw error;
-            resolve();
-          } catch (err) {
-            reject(err);
-          }
-        },
         auto_select: false,
         cancel_on_tap_outside: true,
+        callback: async (response) => {
+          if (!response.credential) {
+            reject(new Error('Nenhuma credencial recebida do Google.'));
+            return;
+          }
+          const { error } = await supabase.auth.signInWithIdToken({
+            provider: 'google',
+            token: response.credential,
+            nonce: rawNonce,
+          });
+          if (error) reject(error);
+          else resolve();
+        },
       });
 
       gis.prompt((notification) => {
         if (notification.isNotDisplayed()) {
-          // One Tap completamente bloqueado (incógnito, FedCM desativado, etc.)
           reject(new Error('Para fazer login, abra uma aba normal do navegador com sua conta Google conectada.'));
         }
-        // isSkippedMoment = One Tap apareceu mas foi ignorado/o usuário vai interagir
-        // isDismissedMoment = usuário fechou, não faz nada
       });
     });
-  }, []);
+  };
 
   const signOut = async () => {
-    // Desativa o auto-select do Google para evitar re-login automático
     window.google?.accounts?.id?.disableAutoSelect();
     const { error } = await supabase.auth.signOut();
     if (error) throw error;
