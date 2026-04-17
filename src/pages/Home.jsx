@@ -451,29 +451,29 @@ const Home = () => {
 
         <div className="testimonials-track hide-scrollbar" style={{ display: 'flex', gap: '2rem', overflowX: 'auto', padding: '1rem 0.5rem 3rem', scrollSnapType: 'x mandatory' }}>
           {testimonials.length > 0 ? (
-            testimonials.map(t => (
-              <div key={t.id} style={{ minWidth: '320px', maxWidth: '350px', background: 'var(--surface-color)', padding: '2.5rem', borderRadius: 'var(--radius-lg)', border: '1px solid var(--border-color)', textAlign: 'left', position: 'relative', scrollSnapAlign: 'center', boxShadow: '0 10px 30px rgba(0,0,0,0.3)' }}>
+            testimonials.map(testimonial => (
+              <div key={testimonial.id} style={{ minWidth: '320px', maxWidth: '350px', background: 'var(--surface-color)', padding: '2.5rem', borderRadius: 'var(--radius-lg)', border: '1px solid var(--border-color)', textAlign: 'left', position: 'relative', scrollSnapAlign: 'center', boxShadow: '0 10px 30px rgba(0,0,0,0.3)' }}>
                 <div style={{ position: 'absolute', top: '-12px', right: '20px', background: 'var(--accent-color)', color: '#000', fontSize: '0.7rem', fontWeight: 900, padding: '0.3rem 0.8rem', borderRadius: '4px', textTransform: 'uppercase' }}>
-                  {t('social_proof_client_since')} {new Date(t.date).getFullYear()}
+                  {t('social_proof_client_since')} {testimonial.date ? new Date(testimonial.date).getFullYear() : new Date().getFullYear()}
                 </div>
 
                 <div style={{ color: '#FFB81C', marginBottom: '1.2rem', display: 'flex', gap: '2px' }}>
-                  {Array.from({ length: t.rating }).map((_, i) => <Star key={i} size={16} fill="#FFB81C" />)}
+                  {Array.from({ length: Number(testimonial.rating) || 5 }).map((_, i) => <Star key={i} size={16} fill="#FFB81C" />)}
                 </div>
 
-                <p style={{ fontSize: '1.1rem', marginBottom: '2rem', fontStyle: 'italic', color: '#fff', lineHeight: 1.6 }}>"{t.content}"</p>
+                <p style={{ fontSize: '1.1rem', marginBottom: '2rem', fontStyle: 'italic', color: '#fff', lineHeight: 1.6 }}>"{testimonial.content}"</p>
 
                 <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-                  {t.avatar_url ? (
-                    <img src={t.avatar_url} alt={t.name} style={{ width: '50px', height: '50px', borderRadius: '50%', border: '2px solid var(--accent-color)', objectFit: 'cover' }} />
+                  {testimonial.avatar_url ? (
+                    <img src={testimonial.avatar_url} alt={testimonial.name} style={{ width: '50px', height: '50px', borderRadius: '50%', border: '2px solid var(--accent-color)', objectFit: 'cover' }} />
                   ) : (
                     <div style={{ width: '50px', height: '50px', borderRadius: '50%', background: 'linear-gradient(135deg, var(--accent-color) 0%, #fff 100%)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 900, color: '#000', fontSize: '1.2rem', boxShadow: '0 4px 15px rgba(164, 210, 51, 0.3)' }}>
-                      {t.name.charAt(0)}
+                      {(testimonial.name || '?').charAt(0)}
                     </div>
                   )}
                   <div>
-                    <p style={{ fontWeight: 800, color: '#fff', fontSize: '1rem' }}>{t.name}</p>
-                    <p style={{ color: 'var(--text-muted)', fontSize: '0.8rem' }}>{t.location}</p>
+                    <p style={{ fontWeight: 800, color: '#fff', fontSize: '1rem' }}>{testimonial.name}</p>
+                    <p style={{ color: 'var(--text-muted)', fontSize: '0.8rem' }}>{testimonial.location}</p>
                   </div>
                 </div>
               </div>
