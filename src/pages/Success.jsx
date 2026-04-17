@@ -79,7 +79,7 @@ const Success = () => {
               }}
             >
               <MessageCircle size={24} />
-              Tirar dúvidas com nossa equipe
+              {t('success_support_btn')}
             </button>
           </div>
 

@@ -4,9 +4,11 @@ import { supabase } from '../services/supabase';
 import ProductCard from '../components/ProductCard';
 import { mockEcommerceProducts, getAllProducts } from '../data/mockProducts';
 import { Filter, ChevronDown, ChevronRight, X } from 'lucide-react';
+import { useLanguage } from '../context/LanguageContext';
 
 const CategoryPage = () => {
   const { category_id } = useParams();
+  const { t, language } = useLanguage();
   const [products, setProducts] = useState([]);
   const [teams, setTeams] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -14,16 +16,24 @@ const CategoryPage = () => {
   const [sortOrder, setSortOrder] = useState('popular');
   const [versionFilters, setVersionFilters] = useState([]);
   
-  // Quick map to beautiful names
   const categoryNames = {
-    'brasileirao': 'Brasileirão',
-    'selecoes': 'Seleções',
-    'internacionais': 'Internacionais',
-    'retro': 'Retrô',
-    'lancamentos': 'Lançamentos'
+    pt: {
+      'brasileirao': 'Brasileirão',
+      'selecoes': 'Seleções',
+      'internacionais': 'Internacionais',
+      'retro': 'Retrô',
+      'lancamentos': 'Lançamentos'
+    },
+    en: {
+      'brasileirao': 'Brazilian League',
+      'selecoes': 'National Teams',
+      'internacionais': 'International',
+      'retro': 'Retro',
+      'lancamentos': 'New Arrivals'
+    }
   };
 
-  const title = categoryNames[category_id] || decodeURIComponent(category_id).toUpperCase();
+  const title = (categoryNames[language] || categoryNames.pt)[category_id] || decodeURIComponent(category_id).toUpperCase();
 
   useEffect(() => {
     async function fetchCategoryProducts() {
@@ -89,12 +99,12 @@ const CategoryPage = () => {
       <div style={{ background: 'linear-gradient(90deg, #1A1A24 0%, #0D0D14 100%)', padding: '3rem 0', borderBottom: '1px solid var(--border-color)' }}>
         <div className="container">
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: 'var(--text-muted)', fontSize: '0.9rem', marginBottom: '1rem' }}>
-            <Link to="/" style={{ color: 'var(--text-muted)' }}>Início</Link>
+            <Link to="/" style={{ color: 'var(--text-muted)' }}>{t('category_home')}</Link>
             <ChevronRight size={14} />
             <span style={{ color: 'var(--accent-color)' }}>{title}</span>
           </div>
           <h1 style={{ fontSize: '3rem', color: '#fff', fontFamily: 'var(--font-display)' }}>{title}</h1>
-          <p style={{ color: 'var(--text-muted)', marginTop: '0.5rem' }}>{products.length} itens encontrados</p>
+          <p style={{ color: 'var(--text-muted)', marginTop: '0.5rem' }}>{products.length} {t('category_items_found')}</p>
         </div>
       </div>
 
@@ -103,10 +113,10 @@ const CategoryPage = () => {
         {/* Sidebar Desktop */}
         <aside style={{ width: '250px', display: 'none' }} className="desktop-filters">
           <div style={{ position: 'sticky', top: '100px' }}>
-            <h3 style={{ marginBottom: '1rem', borderBottom: '1px solid var(--border-color)', paddingBottom: '0.5rem' }}>Filtros</h3>
+            <h3 style={{ marginBottom: '1rem', borderBottom: '1px solid var(--border-color)', paddingBottom: '0.5rem' }}>{t('category_filters')}</h3>
             
             <div style={{ marginBottom: '2rem' }}>
-              <h4 style={{ color: 'var(--text-muted)', marginBottom: '0.8rem', fontSize: '0.9rem', textTransform: 'uppercase' }}>Versão da Camisa</h4>
+              <h4 style={{ color: 'var(--text-muted)', marginBottom: '0.8rem', fontSize: '0.9rem', textTransform: 'uppercase' }}>{t('category_jersey_version')}</h4>
               {['Torcedor', 'Jogador', 'Retrô'].map(ver => (
                 <label key={ver} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.5rem', cursor: 'pointer' }}>
                   <input
@@ -119,7 +129,7 @@ const CategoryPage = () => {
                 </label>
               ))}
               {versionFilters.length > 0 && (
-                <button onClick={() => setVersionFilters([])} style={{ marginTop: '0.5rem', background: 'transparent', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', fontSize: '0.85rem', textDecoration: 'underline' }}>Limpar filtros</button>
+                <button onClick={() => setVersionFilters([])} style={{ marginTop: '0.5rem', background: 'transparent', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', fontSize: '0.85rem', textDecoration: 'underline' }}>{t('category_clear_filters')}</button>
               )}
             </div>
           </div>
@@ -128,34 +138,34 @@ const CategoryPage = () => {
         {/* Mobile Filter Toggle */}
         <div className="mobile-filter-toggle" style={{ width: '100%', marginBottom: '1rem', display: 'none' }}>
            <button onClick={() => setMobileFilterOpen(true)} className="btn-secondary" style={{ width: '100%', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '0.5rem' }}>
-             <Filter size={20} /> Filtrar Produtos
+             <Filter size={20} /> {t('category_filter_btn')}
            </button>
         </div>
 
         {/* Main Content */}
         <main style={{ flex: 1 }}>
            <div className="category-controls-bar">
-              <span className="results-count">Exibindo {displayedProducts.length} de {products.length} produtos{versionFilters.length > 0 ? ` (filtrado por: ${versionFilters.join(', ')})` : ''}</span>
-              <div className="sort-controls">
-                 <span className="sort-label">Ordenar por:</span>
-                 <select
-                   value={sortOrder}
-                   onChange={e => setSortOrder(e.target.value)}
-                   className="sort-select"
-                 >
-                    <option value="popular">Mais Populares</option>
-                    <option value="price_asc">Menor Preço</option>
-                    <option value="price_desc">Maior Preço</option>
-                 </select>
-              </div>
-           </div>
+               <span className="results-count">{t('category_showing')} {displayedProducts.length} {t('category_of')} {products.length} {t('category_products')}{versionFilters.length > 0 ? ` (${t('category_filtered_by')} ${versionFilters.join(', ')})` : ''}</span>
+               <div className="sort-controls">
+                  <span className="sort-label">{t('category_sort_by')}</span>
+                  <select
+                    value={sortOrder}
+                    onChange={e => setSortOrder(e.target.value)}
+                    className="sort-select"
+                  >
+                     <option value="popular">{t('category_sort_popular')}</option>
+                     <option value="price_asc">{t('category_sort_price_asc')}</option>
+                     <option value="price_desc">{t('category_sort_price_desc')}</option>
+                  </select>
+               </div>
+            </div>
 
            {loading ? (
-              <div style={{ textAlign: 'center', padding: '4rem 0', color: 'var(--text-muted)' }}>Buscando o manto sagrado...</div>
+              <div style={{ textAlign: 'center', padding: '4rem 0', color: 'var(--text-muted)' }}>{t('category_loading')}</div>
            ) : products.length === 0 ? (
               <div style={{ textAlign: 'center', padding: '4rem 0', background: 'var(--surface-color)', borderRadius: 'var(--radius-md)' }}>
-                <h3 style={{ marginBottom: '1rem' }}>Vestiário vazio!</h3>
-                <p style={{ color: 'var(--text-muted)' }}>Não encontramos camisas para essa categoria no momento.</p>
+                <h3 style={{ marginBottom: '1rem' }}>{t('category_empty_title')}</h3>
+                <p style={{ color: 'var(--text-muted)' }}>{t('category_empty_text')}</p>
               </div>
            ) : (
               <div className="grid-products reveal delay-1" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(var(--card-min-width, 240px), 1fr))', gap: '1.5rem', justifyContent: 'center' }}>
