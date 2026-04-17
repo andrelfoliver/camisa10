@@ -10,21 +10,12 @@ const Profile = () => {
   const { t } = useLanguage();
   const navigate = useNavigate();
 
-  const handleLogout = async () => {
-    await signOut();
-    navigate('/');
-  };
-
-  if (authLoading) return <div style={{ minHeight: '80vh', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-muted)' }}>{t('profile_loading')}</div>;
-  if (!user) return <Navigate to="/auth" />;
-  if (isAdmin) return <Navigate to="/admin" />;
-
+  // ✅ ALL HOOKS MUST BE BEFORE CONDITIONAL RETURNS
   const [activeTab, setActiveTab] = useState('pedidos');
   const [myFeedbacks, setMyFeedbacks] = useState([]);
   const [myOrders, setMyOrders] = useState([]);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
-  
   const [rating, setRating] = useState(5);
   const [content, setContent] = useState('');
   const [location, setLocation] = useState('');
@@ -42,6 +33,11 @@ const Profile = () => {
     setLoading(false);
   };
 
+  const handleLogout = async () => {
+    await signOut();
+    navigate('/');
+  };
+
   const getStatusLabel = (status) => {
     const map = {
       pending: t('profile_status_pending'),
@@ -56,7 +52,6 @@ const Profile = () => {
   const handleSubmitFeedback = async (e) => {
     e.preventDefault();
     setSubmitting(true);
-
     const feedbackData = {
       user_id: user.id,
       name: user.user_metadata?.full_name || 'Fan',
@@ -67,9 +62,7 @@ const Profile = () => {
       date: new Date().toISOString().split('T')[0],
       status: 'pending'
     };
-
     const { error } = await supabase.from('testimonials').insert([feedbackData]);
-
     if (error) {
       alert(t('profile_feedback_error') + error.message);
     } else {
@@ -79,6 +72,11 @@ const Profile = () => {
     }
     setSubmitting(false);
   };
+
+  // ✅ CONDITIONAL RETURNS ONLY AFTER ALL HOOKS
+  if (authLoading) return <div style={{ minHeight: '80vh', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-muted)' }}>{t('profile_loading')}</div>;
+  if (!user) return <Navigate to="/auth" />;
+  if (isAdmin) return <Navigate to="/admin" />;
 
   return (
     <div className="container" style={{ padding: '4rem 1rem', minHeight: '80vh' }}>
