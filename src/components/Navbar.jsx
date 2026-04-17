@@ -102,7 +102,7 @@ const Navbar = () => {
           transition: 'min-height 0.3s'
         }}>
           
-          {/* Coluna Esquerda (3 Itens): Menu + WhatsApp + Login */}
+          {/* Coluna Esquerda (3 Itens): Menu + WhatsApp + Busca */}
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.2rem' }}>
             {/* 1. Menu (Mobile Only) */}
             <button 
@@ -134,50 +134,8 @@ const Navbar = () => {
               </svg>
             </a>
 
-            {/* 3. Login / Perfil (Desktop + Mobile) */}
-            <button 
-               onClick={() => {
-                  if(!user) navigate('/auth');
-                  else if(isAdmin) navigate('/admin');
-                  else navigate('/perfil');
-               }} 
-               style={{ color: user ? 'var(--accent-color)' : 'var(--text-main)', padding: '0.35rem', background: 'transparent', border: 'none', cursor: 'pointer' }}
-               title={user ? 'Minha Conta' : 'Fazer Login'}
-            >
-               {user?.user_metadata?.avatar_url ? (
-                 <img src={user.user_metadata.avatar_url} alt="Profile" style={{ width: '22px', height: '22px', borderRadius: '50%', border: `1px solid var(--accent-color)`, objectFit: 'cover' }} />
-               ) : (
-                 <UserCircle size={22} />
-               )}
-            </button>
-          </div>
-
-          {/* Coluna Central: Logo (Responsiva) */}
-          <div style={{ display: 'flex', justifyContent: 'center' }}>
-            <Link to="/" style={{ 
-              display: 'flex', 
-              alignItems: 'center', 
-              fontWeight: 900, 
-              fontSize: window.innerWidth < 500 
-                ? (scrolled ? '1.3rem' : '1.7rem') 
-                : (scrolled ? '1.6rem' : '2.2rem'), 
-              fontFamily: 'var(--font-display)', 
-              fontStyle: 'italic',
-              letterSpacing: '-1.5px',
-              transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)'
-            }}
-            onMouseOver={(e) => e.currentTarget.style.transform = 'scale(1.05)'}
-            onMouseOut={(e) => e.currentTarget.style.transform = 'scale(1)'}
-            >
-              <span style={{ color: 'var(--accent-color)' }}>i</span><span style={{ color: '#fff' }}>Footy</span><span style={{ color: 'var(--accent-color)' }}>.</span>
-            </Link>
-          </div>
-          
-          {/* Coluna Direita (3 Itens): Busca + Idioma + Sacola */}
-          <div style={{ display: 'flex', gap: '0.2rem', alignItems: 'center', justifyContent: 'flex-end' }}>
-            
-            {/* 1. Busca (Desktop: Input | Mobile: Icon) */}
-            <div className="desktop-only" style={{ marginRight: '0.2rem' }}>
+            {/* 3. Busca (Desktop: Input | Mobile: Icon) */}
+            <div className="desktop-only" style={{ marginLeft: '0.2rem' }}>
               <form onSubmit={handleSearchSubmit} style={{ position: 'relative', width: '160px' }}>
                 <input 
                   type="text"
@@ -206,6 +164,48 @@ const Navbar = () => {
               style={{ color: 'var(--text-main)', padding: '0.35rem', background: 'transparent', border: 'none', cursor: 'pointer' }}
             >
                <Search size={22} />
+            </button>
+          </div>
+
+          {/* Coluna Central: Logo (Responsiva) */}
+          <div style={{ display: 'flex', justifyContent: 'center' }}>
+            <Link to="/" style={{ 
+              display: 'flex', 
+              alignItems: 'center', 
+              fontWeight: 900, 
+              fontSize: window.innerWidth < 500 
+                ? (scrolled ? '1.3rem' : '1.7rem') 
+                : (scrolled ? '1.6rem' : '2.2rem'), 
+              fontFamily: 'var(--font-display)', 
+              fontStyle: 'italic',
+              letterSpacing: '-1.5px',
+              transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)'
+            }}
+            onMouseOver={(e) => e.currentTarget.style.transform = 'scale(1.05)'}
+            onMouseOut={(e) => e.currentTarget.style.transform = 'scale(1)'}
+            >
+              <span style={{ color: 'var(--accent-color)' }}>i</span><span style={{ color: '#fff' }}>Footy</span><span style={{ color: 'var(--accent-color)' }}>.</span>
+            </Link>
+          </div>
+          
+          {/* Coluna Direita (3 Itens): Login + Idioma + Sacola */}
+          <div style={{ display: 'flex', gap: '0.2rem', alignItems: 'center', justifyContent: 'flex-end' }}>
+
+            {/* 1. Login / Perfil (Desktop + Mobile) */}
+            <button 
+               onClick={() => {
+                  if(!user) navigate('/auth');
+                  else if(isAdmin) navigate('/admin');
+                  else navigate('/perfil');
+               }} 
+               style={{ color: user ? 'var(--accent-color)' : 'var(--text-main)', padding: '0.35rem', background: 'transparent', border: 'none', cursor: 'pointer' }}
+               title={user ? 'Minha Conta' : 'Fazer Login'}
+            >
+               {user?.user_metadata?.avatar_url ? (
+                 <img src={user.user_metadata.avatar_url} alt="Profile" style={{ width: '22px', height: '22px', borderRadius: '50%', border: `1px solid var(--accent-color)`, objectFit: 'cover' }} />
+               ) : (
+                 <UserCircle size={22} />
+               )}
             </button>
             
             {/* 2. Seletor de Idioma (Hover - Estilo ifutz) */}
