@@ -1,8 +1,10 @@
+import React, { useState, useEffect } from 'react';
+import { useCart } from '../context/CartContext';
+import { useAuth } from '../context/AuthContext';
 import { ArrowLeft, LogIn, MapPin, Truck, Save, AlertCircle, X } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import WhatsAppIcon from '../components/WhatsAppIcon';
 import { supabase } from '../services/supabase';
-import { useEffect } from 'react';
 import { useLanguage } from '../context/LanguageContext';
 
 const Checkout = () => {
