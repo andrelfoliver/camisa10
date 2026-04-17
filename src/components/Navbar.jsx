@@ -268,24 +268,23 @@ const Navbar = () => {
           </div>
         </div>
 
-        {/* BARRA 3: CATEGORY BAR (LINKS) */}
-        {!scrolled && (
-          <div className="desktop-only" style={{ 
-            borderTop: '1px solid rgba(255,255,255,0.05)', 
-            marginTop: '1rem', 
-            paddingTop: '1rem',
-            animation: 'fadeIn 0.3s ease-out'
-          }}>
-            <div className="container" style={{ display: 'flex', gap: '2rem', justifyContent: 'center' }}>
-              <Link to="/" style={{ fontWeight: 600, fontSize: '0.85rem', textTransform: 'uppercase', letterSpacing: '1px', transition: 'color 0.2s', color: 'var(--text-main)' }}>{t('nav_home')}</Link>
-              <Link to="/colecao/selecoes" style={{ fontWeight: 600, fontSize: '0.85rem', textTransform: 'uppercase', letterSpacing: '1px', transition: 'color 0.2s', color: 'var(--text-main)' }}>{language === 'pt' ? 'Seleções' : 'National Teams'}</Link>
-              <Link to="/colecao/brasileirao" style={{ fontWeight: 600, fontSize: '0.85rem', textTransform: 'uppercase', letterSpacing: '1px', transition: 'color 0.2s', color: 'var(--text-main)' }}>{t('nav_br')}</Link>
-              <Link to="/colecao/internacionais" style={{ fontWeight: 600, fontSize: '0.85rem', textTransform: 'uppercase', letterSpacing: '1px', transition: 'color 0.2s', color: 'var(--text-main)' }}>{t('nav_intl')}</Link>
-              <Link to="/colecao/lancamentos" style={{ fontWeight: 600, fontSize: '0.85rem', textTransform: 'uppercase', letterSpacing: '1px', transition: 'color 0.2s', color: 'var(--accent-color)' }}>{language === 'pt' ? 'Lançamentos' : 'New Drops'} 🔥</Link>
-              <Link to="/colecao/retro" style={{ fontWeight: 600, fontSize: '0.85rem', textTransform: 'uppercase', letterSpacing: '1px', transition: 'color 0.2s', color: 'var(--text-main)' }}>{t('nav_retro')}</Link>
-            </div>
+        {/* BARRA 3: CATEGORY BAR (ALWAYS VISIBLE) */}
+        <div className="desktop-only" style={{ 
+          borderTop: '1px solid rgba(255,255,255,0.05)', 
+          marginTop: scrolled ? '0.5rem' : '1rem',
+          paddingTop: scrolled ? '0.5rem' : '1rem',
+          paddingBottom: scrolled ? '0.25rem' : '0',
+          transition: 'all 0.3s ease'
+        }}>
+          <div className="container" style={{ display: 'flex', gap: scrolled ? '1.5rem' : '2rem', justifyContent: 'center', transition: 'gap 0.3s ease' }}>
+            <Link to="/" style={{ fontWeight: 600, fontSize: scrolled ? '0.78rem' : '0.85rem', textTransform: 'uppercase', letterSpacing: '1px', transition: 'all 0.2s', color: 'var(--text-main)' }}>{t('nav_home')}</Link>
+            <Link to="/colecao/selecoes" style={{ fontWeight: 600, fontSize: scrolled ? '0.78rem' : '0.85rem', textTransform: 'uppercase', letterSpacing: '1px', transition: 'all 0.2s', color: 'var(--text-main)' }}>{language === 'pt' ? 'Seleções' : 'National Teams'}</Link>
+            <Link to="/colecao/brasileirao" style={{ fontWeight: 600, fontSize: scrolled ? '0.78rem' : '0.85rem', textTransform: 'uppercase', letterSpacing: '1px', transition: 'all 0.2s', color: 'var(--text-main)' }}>{t('nav_br')}</Link>
+            <Link to="/colecao/internacionais" style={{ fontWeight: 600, fontSize: scrolled ? '0.78rem' : '0.85rem', textTransform: 'uppercase', letterSpacing: '1px', transition: 'all 0.2s', color: 'var(--text-main)' }}>{t('nav_intl')}</Link>
+            <Link to="/colecao/lancamentos" style={{ fontWeight: 600, fontSize: scrolled ? '0.78rem' : '0.85rem', textTransform: 'uppercase', letterSpacing: '1px', transition: 'all 0.2s', color: 'var(--accent-color)' }}>{language === 'pt' ? 'Lançamentos' : 'New Drops'} 🔥</Link>
+            <Link to="/colecao/retro" style={{ fontWeight: 600, fontSize: scrolled ? '0.78rem' : '0.85rem', textTransform: 'uppercase', letterSpacing: '1px', transition: 'all 0.2s', color: 'var(--text-main)' }}>{t('nav_retro')}</Link>
           </div>
-        )}
+        </div>
 
         <style>{`
           .desktop-only { display: none !important; }
