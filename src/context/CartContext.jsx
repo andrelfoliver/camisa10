@@ -8,7 +8,15 @@ export const useCart = () => {
 };
 
 export const CartProvider = ({ children }) => {
-  const [cartItems, setCartItems] = useState([]);
+  // Carrega o carrinho do localStorage ao inicializar
+  const [cartItems, setCartItems] = useState(() => {
+    try {
+      const saved = localStorage.getItem('ifooty_cart');
+      return saved ? JSON.parse(saved) : [];
+    } catch {
+      return [];
+    }
+  });
   const [isCartOpen, setIsCartOpen] = useState(false);
   
   const [pricing, setPricing] = useState({
@@ -23,6 +31,13 @@ export const CartProvider = ({ children }) => {
       { qty: 10, percent: 20 }
     ]
   });
+
+  // Salva o carrinho no localStorage sempre que mudar
+  useEffect(() => {
+    try {
+      localStorage.setItem('ifooty_cart', JSON.stringify(cartItems));
+    } catch {}
+  }, [cartItems]);
 
   useEffect(() => {
     async function loadPricing() {
