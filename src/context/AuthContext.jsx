@@ -24,7 +24,7 @@ export function AuthProvider({ children }) {
   const [loading, setLoading] = useState(true);
 
   // Email Mestre do Administrador
-  const ADMIN_EMAIL = 'bivisualizerr@gmail.com';
+  const ADMIN_EMAIL = 'ifootycanada@gmail.com';
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
