@@ -134,14 +134,14 @@ const CategoryPage = () => {
 
         {/* Main Content */}
         <main style={{ flex: 1 }}>
-           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem', paddingBottom: '1rem', borderBottom: '1px solid var(--border-color)' }}>
-              <span style={{ color: 'var(--text-muted)' }}>Exibindo {displayedProducts.length} de {products.length} produtos{versionFilters.length > 0 ? ` (filtrado por: ${versionFilters.join(', ')})` : ''}</span>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                 <span style={{ color: 'var(--text-muted)', fontSize: '0.9rem' }}>Ordenar por:</span>
+           <div className="category-controls-bar">
+              <span className="results-count">Exibindo {displayedProducts.length} de {products.length} produtos{versionFilters.length > 0 ? ` (filtrado por: ${versionFilters.join(', ')})` : ''}</span>
+              <div className="sort-controls">
+                 <span className="sort-label">Ordenar por:</span>
                  <select
                    value={sortOrder}
                    onChange={e => setSortOrder(e.target.value)}
-                   style={{ background: 'var(--surface-color)', color: '#fff', border: '1px solid var(--border-color)', padding: '0.5rem', borderRadius: '4px', cursor: 'pointer' }}
+                   className="sort-select"
                  >
                     <option value="popular">Mais Populares</option>
                     <option value="price_asc">Menor Preço</option>
@@ -158,7 +158,7 @@ const CategoryPage = () => {
                 <p style={{ color: 'var(--text-muted)' }}>Não encontramos camisas para essa categoria no momento.</p>
               </div>
            ) : (
-              <div className="grid-products reveal delay-1" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(240px, 1fr))', gap: '2rem' }}>
+              <div className="grid-products reveal delay-1" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(var(--card-min-width, 240px), 1fr))', gap: '1.5rem', justifyContent: 'center' }}>
                 {displayedProducts.map(product => (
                   <ProductCard key={product.id} product={product} />
                 ))}
@@ -168,12 +168,49 @@ const CategoryPage = () => {
       </div>
 
       <style>{`
+        :root {
+          --card-min-width: 240px;
+        }
+        .category-controls-bar {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          margin-bottom: 2rem;
+          padding-bottom: 1rem;
+          border-bottom: 1px solid var(--border-color);
+        }
+        .results-count { color: var(--text-muted); }
+        .sort-controls { display: flex; alignItems: center; gap: 0.5rem; }
+        .sort-label { color: var(--text-muted); font-size: 0.9rem; }
+        .sort-select { background: var(--surface-color); color: #fff; border: 1px solid var(--border-color); padding: 0.5rem; borderRadius: 4px; cursor: pointer; }
+
         @media (min-width: 992px) {
           .desktop-filters { display: block !important; }
           .mobile-filter-toggle { display: none !important; }
         }
         @media (max-width: 991px) {
           .mobile-filter-toggle { display: block !important; }
+          .category-controls-bar {
+            flex-direction: column;
+            gap: 1rem;
+            align-items: flex-start;
+          }
+          .sort-controls {
+            width: 100%;
+            justify-content: space-between;
+          }
+          .sort-select {
+            flex: 1;
+            max-width: 200px;
+          }
+        }
+        @media (max-width: 500px) {
+          :root {
+            --card-min-width: 160px;
+          }
+          .grid-products {
+            gap: 1rem !important;
+          }
         }
       `}</style>
     </div>
