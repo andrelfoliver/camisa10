@@ -45,8 +45,9 @@ export default async function handler(req, res) {
 
     // --- EMAIL 1: NOTIFICAÇÃO PARA O ADMIN (VOCÊ) ---
     const adminEmailPromise = resend.emails.send({
-      from: 'iFooty Alerts <onboarding@resend.dev>',
+      from: 'iFooty Alerts <vendas@ifooty.ca>',
       to: ['bivisualizerr@gmail.com'],
+      replyTo: 'bivisualizerr@gmail.com',
       subject: `⚽ NOVO PEDIDO: ${order.customer_name}`,
       html: `
         <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; max-width: 650px; margin: 0 auto; background: #ffffff;">
@@ -79,8 +80,9 @@ export default async function handler(req, res) {
 
     // --- EMAIL 2: CONFIRMAÇÃO PARA O CLIENTE ---
     const customerEmailPromise = resend.emails.send({
-      from: 'iFooty Store <onboarding@resend.dev>',
+      from: 'iFooty Store <vendas@ifooty.ca>',
       to: [order.customer_email],
+      replyTo: 'bivisualizerr@gmail.com',
       subject: `⚽ Pedido Recebido! Próximos passos na iFooty`,
       html: `
         <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; max-width: 650px; margin: 0 auto; background: #ffffff; border: 1px solid #edf2f7; border-radius: 8px; overflow: hidden;">
@@ -112,7 +114,7 @@ export default async function handler(req, res) {
           </div>
           
           <div style="padding: 20px; background: #f7fafc; text-align: center; color: #a0aec0; font-size: 0.8rem;">
-            <p>© 2026 iFooty Store Canada. Vestindo a paixão brasileira no Canadá.</p>
+            <p>© ${new Date().getFullYear()} iFooty Store Canada. Vestindo a paixão brasileira no Canadá.</p>
           </div>
         </div>
       `,
@@ -121,12 +123,26 @@ export default async function handler(req, res) {
     // Enviar ambos simultaneamente
     const [adminRes, customerRes] = await Promise.all([adminEmailPromise, customerEmailPromise]);
 
-    if (adminRes.error) console.error('Admin Email Error:', adminRes.error);
-    if (customerRes.error) console.error('Customer Email Error:', customerRes.error);
+    if (adminRes.error) {
+      console.error('❌ Resend Admin Error:', JSON.stringify(adminRes.error, null, 2));
+    } else {
+      console.log('✅ Admin Notification Sent:', adminRes.data?.id);
+    }
 
-    res.status(200).json({ success: true, admin: adminRes.data?.id, customer: customerRes.data?.id });
+    if (customerRes.error) {
+      console.error('❌ Resend Customer Error:', JSON.stringify(customerRes.error, null, 2));
+    } else {
+      console.log('✅ Customer Confirmation Sent:', customerRes.data?.id);
+    }
+
+    res.status(200).json({ 
+      success: true, 
+      admin: adminRes.data?.id, 
+      customer: customerRes.data?.id,
+      errors: (adminRes.error || customerRes.error) ? { admin: adminRes.error, customer: customerRes.error } : null
+    });
   } catch (err) {
-    console.error('Server Error:', err);
-    res.status(500).json({ error: 'Internal server error' });
+    console.error('📛 Massive Server Error:', err);
+    res.status(500).json({ error: 'Internal server error', details: err.message });
   }
 }
