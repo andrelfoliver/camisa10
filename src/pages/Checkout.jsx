@@ -9,7 +9,7 @@ import { useLanguage } from '../context/LanguageContext';
 
 const Checkout = () => {
   const { t } = useLanguage();
-  const { cartItems, cartTotal, subtotal, discount } = useCart();
+  const { cartItems, cartTotal, subtotal, discount, clearCart } = useCart();
   const { user } = useAuth();
   const navigate = useNavigate();
   
@@ -155,10 +155,8 @@ const Checkout = () => {
         }).eq('id', user.id);
       }
 
-      // 3. Abrir WhatsApp
-      const message = generateWhatsAppMessage();
-      const encodedMessage = encodeURIComponent(message);
-      window.open(`https://wa.me/${waNumber.replace(/\D/g, '')}?text=${encodedMessage}`, '_blank');
+      // 3. Redirecionar para Sucesso e WhatsApp
+      handleFinalizeRedirect();
       
     } catch (error) {
       console.error("Erro ao processar pedido:", error);
@@ -166,6 +164,20 @@ const Checkout = () => {
     } finally {
       setIsSubmitting(false);
     }
+  };
+
+  // Redirecionamento e limpeza após salvar
+  const handleFinalizeRedirect = () => {
+    const message = generateWhatsAppMessage();
+    // 1. Tentar abrir o WhatsApp
+    const encodedMessage = encodeURIComponent(message);
+    window.open(`https://wa.me/${waNumber.replace(/\D/g, '')}?text=${encodedMessage}`, '_blank');
+    
+    // 2. Limpar carrinho
+    clearCart();
+    
+    // 3. Ir para página de sucesso com os dados para fallback
+    navigate('/sucesso', { state: { orderMessage: message, waNumber } });
   };
 
   if (!user) {

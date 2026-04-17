@@ -93,7 +93,13 @@ export const translations = {
     about_title: 'Nossa História ⚽',
     about_text1: 'Nascida em Coquitlam/BC, em 2022, a iFooty surgiu de um desejo simples, mas poderoso: aproximar os brasileiros no Canadá de suas raízes. Sabemos que uma camisa de futebol não é apenas uma peça de roupa, é uma segunda pele que carrega memórias e pertencimento.',
     about_text2: 'Após conquistar nossa comunidade na Columbia Britânica, agora chegamos com tudo em Calgary, especializados em entregar mantos oficiais de alta qualidade para que cada grito de "gol" tenha o orgulho do seu time do coração.',
-    checkout_summary_footer_note: 'Você enviará um resumo do pedido para nosso atendimento. O pagamento só será feito após confirmarmos os detalhes do pedido com você. Pagamento via e-Transfer Interac!'
+    checkout_summary_footer_note: 'Você enviará um resumo do pedido para nosso atendimento. O pagamento só será feito após confirmarmos os detalhes do pedido com você. Pagamento via e-Transfer Interac!',
+    success_title: 'Pedido Recebido! ⚽',
+    success_subtitle: 'Seu manto já está sendo preparado.',
+    success_message: 'Enviamos um resumo detalhado para seu e-mail. Por favor, verifique sua caixa de entrada (e a pasta de spam).',
+    success_whatsapp_error: 'Não conseguiu abrir o WhatsApp?',
+    success_whatsapp_btn: 'Enviar Resumo Manualmente',
+    success_home_btn: 'Voltar para a Loja'
   },
   en: {
     nav_home: 'Home',
@@ -185,7 +191,13 @@ export const translations = {
     about_title: 'Our Story ⚽',
     about_text1: 'Born in Coquitlam, BC in 2022, iFooty emerged from a simple but powerful desire: to bring Brazilians in Canada closer to their roots. We know that a football jersey is not just a piece of clothing, it is a second skin that carries memories and belonging.',
     about_text2: 'After winning over our community in British Columbia, we have now arrived in Calgary, specialized in delivering high-quality official fan jerseys so that every shout of "goal" carries the pride of your heart team.',
-    checkout_summary_footer_note: 'You will send an order summary to our support. Payment will only be made after we confirm the order details with you. Payment via Interac e-Transfer!'
+    checkout_summary_footer_note: 'You will send an order summary to our support. Payment will only be made after we confirm the order details with you. Payment via Interac e-Transfer!',
+    success_title: 'Order Received! ⚽',
+    success_subtitle: 'Your jersey is being prepared.',
+    success_message: "We've sent a detailed summary to your email. Please check your inbox (and spam folder).",
+    success_whatsapp_error: "Couldn't open WhatsApp?",
+    success_whatsapp_btn: 'Send Summary Manually',
+    success_home_btn: 'Back to Shop'
   }
 };
 
