@@ -82,6 +82,11 @@ export const CartProvider = ({ children }) => {
     setCartItems(prev => prev.filter(item => item.cartId !== cartId));
   };
 
+  const clearCart = () => {
+    setCartItems([]);
+    try { localStorage.removeItem('ifooty_cart'); } catch {}
+  };
+
   const updateQuantity = (cartId, quantity) => {
     if (quantity <= 0) return removeFromCart(cartId);
     setCartItems(prev =>
@@ -123,6 +128,7 @@ export const CartProvider = ({ children }) => {
         cartItems,
         addToCart,
         removeFromCart,
+        clearCart,
         updateQuantity,
         isCartOpen,
         setIsCartOpen,

@@ -1,22 +1,18 @@
 import React from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { CheckCircle2, MessageCircle, Home, Mail, ShoppingBag } from 'lucide-react';
+import { CheckCircle2, MessageCircle, Home, Mail } from 'lucide-react';
 import { useLanguage } from '../context/LanguageContext';
 
 const Success = () => {
   const { t } = useLanguage();
   const location = useLocation();
   const navigate = useNavigate();
-  const { orderMessage, waNumber } = location.state || {};
+  const { waNumber } = location.state || {};
 
-  const handleWhatsAppManual = () => {
-    if (orderMessage && waNumber) {
-      const encodedMessage = encodeURIComponent(orderMessage);
-      window.open(`https://wa.me/${waNumber.replace(/\D/g, '')}?text=${encodedMessage}`, '_blank');
-    } else {
-      // Fallback a contato genérico se não houver mensagem salva
-      window.open(`https://wa.me/${waNumber?.replace(/\D/g, '') || '5584991847739'}`, '_blank');
-    }
+  const handleContactSupport = () => {
+    const number = (waNumber || '5584991847739').replace(/\D/g, '');
+    const message = encodeURIComponent('Olá! Acabei de fazer um pedido na iFooty e gostaria de tirar algumas dúvidas. 😊');
+    window.open(`https://wa.me/${number}?text=${message}`, '_blank');
   };
 
   return (
@@ -62,19 +58,16 @@ const Success = () => {
           marginBottom: '2.5rem',
           border: '1px solid rgba(255,255,255,0.05)'
         }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '10px', justifyContent: 'center', color: 'var(--text-muted)', marginBottom: '0.5rem' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px', justifyContent: 'center', color: 'var(--text-muted)' }}>
             <Mail size={18} />
             <p style={{ margin: 0 }}>{t('success_message')}</p>
           </div>
         </div>
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-          <div style={{ marginTop: '1rem', borderTop: '1px solid var(--border-color)', paddingTop: '2rem' }}>
-            <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem', marginBottom: '1.2rem' }}>
-               {t('success_whatsapp_error')}
-            </p>
+          <div style={{ borderTop: '1px solid var(--border-color)', paddingTop: '2rem' }}>
             <button 
-              onClick={handleWhatsAppManual}
+              onClick={handleContactSupport}
               className="btn-primary" 
               style={{ 
                 width: '100%', 
@@ -86,7 +79,7 @@ const Success = () => {
               }}
             >
               <MessageCircle size={24} />
-              {t('success_whatsapp_btn')}
+              Tirar dúvidas com nossa equipe
             </button>
           </div>
 
@@ -97,7 +90,6 @@ const Success = () => {
               width: '100%', 
               justifyContent: 'center',
               padding: '1rem',
-              marginTop: '1rem'
             }}
           >
             <Home size={20} />
