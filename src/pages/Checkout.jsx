@@ -83,7 +83,7 @@ const Checkout = () => {
 
   const handleSubmitOrder = async () => {
     if (!formData.street || !formData.city || !formData.province || !formData.postalCode) {
-      showPopup("Por favor, preencha todos os campos obrigatórios de endereço.");
+      showPopup(t('checkout_validation_error'));
       return;
     }
 
@@ -213,7 +213,7 @@ const Checkout = () => {
           sessionStorage.setItem('ifooty_redirect_after_login', '/checkout');
           navigate('/auth');
         }} style={{ marginTop: '2rem', display: 'inline-flex', alignItems: 'center', gap: '0.5rem' }}>
-          <LogIn size={20} /> Fazer Login / Cadastro
+          <LogIn size={20} /> {t('checkout_login_btn')}
         </button>
       </div>
     );
@@ -222,9 +222,9 @@ const Checkout = () => {
   if (cartItems.length === 0) {
     return (
       <div className="container" style={{ padding: '6rem 1.5rem', textAlign: 'center' }}>
-        <h2>Seu carrinho está vazio.</h2>
+        <h2>{t('checkout_cart_empty_title')}</h2>
         <button className="btn-secondary" onClick={() => navigate('/')} style={{ marginTop: '2rem' }}>
-          Voltar as Compras
+          {t('checkout_back_shopping')}
         </button>
       </div>
     );
@@ -261,12 +261,12 @@ const Checkout = () => {
         {/* Form */}
         <div>
           <h2 style={{ fontSize: '2rem', marginBottom: '2rem', display: 'flex', alignItems: 'center', gap: '0.8rem' }}>
-            <MapPin color="var(--accent-color)" /> Entrega no Canadá
+            <MapPin color="var(--accent-color)" /> {t('checkout_delivery_title')}
           </h2>
           <div className="glass-panel" style={{ padding: '2.5rem', borderRadius: 'var(--radius-md)' }}>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
               <div>
-                <label style={{ display: 'block', marginBottom: '0.5rem', color: 'var(--text-muted)' }}>Nome Completo *</label>
+                <label style={{ display: 'block', marginBottom: '0.5rem', color: 'var(--text-muted)' }}>{t('checkout_name')}</label>
                 <input 
                   type="text" 
                   value={formData.name} onChange={e => setFormData({...formData, name: e.target.value})}
@@ -276,7 +276,7 @@ const Checkout = () => {
 
               <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '1rem' }}>
                 <div>
-                  <label style={{ display: 'block', marginBottom: '0.5rem', color: 'var(--text-muted)' }}>Endereço (Rua e Número) *</label>
+                  <label style={{ display: 'block', marginBottom: '0.5rem', color: 'var(--text-muted)' }}>{t('checkout_street')}</label>
                   <input 
                     type="text" placeholder="Ex: 123 Bay St"
                     value={formData.street} onChange={e => setFormData({...formData, street: e.target.value})}
@@ -284,7 +284,7 @@ const Checkout = () => {
                   />
                 </div>
                 <div>
-                  <label style={{ display: 'block', marginBottom: '0.5rem', color: 'var(--text-muted)' }}>Apto/Suite</label>
+                  <label style={{ display: 'block', marginBottom: '0.5rem', color: 'var(--text-muted)' }}>{t('checkout_apt')}</label>
                   <input 
                     type="text" placeholder="Ex: 402"
                     value={formData.apartment} onChange={e => setFormData({...formData, apartment: e.target.value})}
@@ -295,7 +295,7 @@ const Checkout = () => {
 
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '1rem' }}>
                 <div>
-                  <label style={{ display: 'block', marginBottom: '0.5rem', color: 'var(--text-muted)' }}>Cidade *</label>
+                  <label style={{ display: 'block', marginBottom: '0.5rem', color: 'var(--text-muted)' }}>{t('checkout_city')}</label>
                   <input 
                     type="text" placeholder="Ex: Toronto"
                     value={formData.city} onChange={e => setFormData({...formData, city: e.target.value})}
@@ -303,7 +303,7 @@ const Checkout = () => {
                   />
                 </div>
                 <div>
-                  <label style={{ display: 'block', marginBottom: '0.5rem', color: 'var(--text-muted)' }}>Província *</label>
+                  <label style={{ display: 'block', marginBottom: '0.5rem', color: 'var(--text-muted)' }}>{t('checkout_province')}</label>
                   <select 
                     value={formData.province} onChange={e => setFormData({...formData, province: e.target.value})}
                     style={{ width: '100%', padding: '0.75rem', borderRadius: 'var(--radius-sm)', background: 'var(--bg-color)', border: '1px solid var(--border-color)', color: 'var(--text-main)', fontSize: '1rem' }}
@@ -322,7 +322,7 @@ const Checkout = () => {
                   </select>
                 </div>
                 <div>
-                  <label style={{ display: 'block', marginBottom: '0.5rem', color: 'var(--text-muted)' }}>Postal Code *</label>
+                  <label style={{ display: 'block', marginBottom: '0.5rem', color: 'var(--text-muted)' }}>{t('checkout_postal')}</label>
                   <input 
                     type="text" placeholder="M5H 2N2"
                     value={formData.postalCode} onChange={e => setFormData({...formData, postalCode: e.target.value.toUpperCase()})}
@@ -332,7 +332,7 @@ const Checkout = () => {
               </div>
 
               <div>
-                <label style={{ display: 'block', marginBottom: '0.5rem', color: 'var(--text-muted)' }}>Instagram ou WhatsApp (Opcional)</label>
+                <label style={{ display: 'block', marginBottom: '0.5rem', color: 'var(--text-muted)' }}>{t('checkout_social')}</label>
                 <input 
                   type="text" placeholder="@seuinsta ou Telefone"
                   value={formData.instagram} onChange={e => setFormData({...formData, instagram: e.target.value})}
@@ -344,7 +344,7 @@ const Checkout = () => {
                 <div style={{ width: '24px', height: '24px', borderRadius: '6px', border: '2px solid var(--accent-color)', background: formData.saveAddress ? 'var(--accent-color)' : 'transparent', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'all 0.2s' }}>
                   {formData.saveAddress && <Save size={14} color="#000" />}
                 </div>
-                <span style={{ fontSize: '0.9rem', color: 'var(--text-main)' }}>Salvar este endereço para futuras compras</span>
+                <span style={{ fontSize: '0.9rem', color: 'var(--text-main)' }}>{t('checkout_save_address')}</span>
               </div>
             </div>
           </div>
@@ -352,7 +352,7 @@ const Checkout = () => {
 
         {/* Order Summary */}
         <div>
-          <h2 style={{ fontSize: '2rem', marginBottom: '2rem' }}>Resumo</h2>
+          <h2 style={{ fontSize: '2rem', marginBottom: '2rem' }}>{t('checkout_summary_title')}</h2>
           <div className="glass-panel" style={{ padding: '2rem', borderRadius: 'var(--radius-md)' }}>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', borderBottom: '1px solid var(--border-color)', paddingBottom: '1.5rem', marginBottom: '1.5rem' }}>
               {cartItems.map(item => (
@@ -386,7 +386,7 @@ const Checkout = () => {
               disabled={isSubmitting}
             >
               <WhatsAppIcon size={24} />
-              {isSubmitting ? 'Processando...' : 'Concluir via WhatsApp'}
+              {isSubmitting ? t('checkout_processing') : t('checkout_confirm_btn')}
             </button>
             <p style={{ textAlign: 'center', marginTop: '1rem', fontSize: '0.85rem', color: 'var(--text-muted)' }}>
               {t('checkout_summary_footer_note')}
