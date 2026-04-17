@@ -795,8 +795,41 @@ button {
   100% { transform: translateY(0px) rotate(0deg); }
 }
 
-.animate-float {
-  animation: float 6s ease-in-out infinite;
+/* Profile Page Responsive Layout */
+.profile-grid {
+  display: grid;
+  grid-template-columns: 280px 1fr;
+  gap: 2.5rem;
+  align-items: start;
+}
+
+.profile-content-panel {
+  padding: 3rem;
+}
+
+@media (max-width: 992px) {
+  .profile-grid {
+    grid-template-columns: 1fr;
+    gap: 1.5rem;
+  }
+  
+  .profile-content-panel {
+    padding: 1.5rem;
+  }
+  
+  .profile-header {
+    flex-direction: column;
+    text-align: center;
+    gap: 1rem;
+  }
+}
+
+.product-item {
+  transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.product-item:hover {
+  transform: translateY(-8px);
 }
 
 .product-tilt-container {

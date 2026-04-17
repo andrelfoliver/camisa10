@@ -77,7 +77,7 @@ const Profile = () => {
   return (
     <div className="container" style={{ padding: '4rem 1rem', minHeight: '80vh' }}>
       
-      <div style={{ display: 'flex', alignItems: 'center', gap: '1.5rem', marginBottom: '3rem' }}>
+      <div className="profile-header" style={{ display: 'flex', alignItems: 'center', gap: '1.5rem', marginBottom: '3rem' }}>
         <img 
           src={user.user_metadata?.avatar_url || 'https://via.placeholder.com/100'} 
           alt="Avatar" 
@@ -89,7 +89,7 @@ const Profile = () => {
         </div>
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: 'minmax(250px, 1fr) 2fr', gap: '2rem' }}>
+      <div className="profile-grid">
         
         {/* Sidebar Menu */}
         <div className="glass-panel" style={{ padding: '2rem', borderRadius: 'var(--radius-md)', height: 'fit-content' }}>
@@ -121,7 +121,7 @@ const Profile = () => {
         </div>
 
         {/* Content Area */}
-        <div className="glass-panel" style={{ padding: '3rem', borderRadius: 'var(--radius-md)' }}>
+        <div className="glass-panel profile-content-panel" style={{ borderRadius: 'var(--radius-md)' }}>
           
           {activeTab === 'pedidos' && (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
