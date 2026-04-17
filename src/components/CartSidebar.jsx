@@ -93,7 +93,7 @@ const CartSidebar = () => {
           </div>
           <button 
             className="btn-primary" 
-            style={{ width: '100%', padding: '1rem' }}
+            style={{ width: '100%', padding: '1rem', marginBottom: '0.8rem' }}
             disabled={cartItems.length === 0}
             onClick={() => {
               setIsCartOpen(false);
@@ -101,6 +101,26 @@ const CartSidebar = () => {
             }}
           >
             {t('cart_checkout')} <ArrowRight size={20} />
+          </button>
+
+          <button 
+            style={{ 
+              width: '100%', padding: '1rem', 
+              background: 'transparent', 
+              color: 'var(--text-main)',
+              border: '1px solid var(--border-color)',
+              borderRadius: 'var(--radius-sm)',
+              fontWeight: 700,
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: '0.5rem',
+              transition: 'all 0.2s'
+            }}
+            onClick={() => setIsCartOpen(false)}
+          >
+            {t('cart_continue_shopping')}
           </button>
         </div>
       </div>
