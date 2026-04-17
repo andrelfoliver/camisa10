@@ -3,6 +3,7 @@ import { supabase } from '../services/supabase';
 import { CheckCircle2, X } from 'lucide-react';
 
 import { useLanguage } from '../context/LanguageContext';
+import { useLocation } from 'react-router-dom';
 
 const NAMES = [
   // Brasileiros
@@ -18,6 +19,7 @@ const TIMES = ['há 2 minutos', 'agora mesmo', 'há 5 minutos', 'há 10 minutos'
 
 
 const SalesPopup = () => {
+  const location = useLocation();
   const { t, language, translateProductDisplay } = useLanguage();
   const [products, setProducts] = useState([]);
   const [realOrders, setRealOrders] = useState([]);
@@ -115,7 +117,7 @@ const SalesPopup = () => {
     return str.replace('há ', '').replace(' minutos', 'm ago').replace(' minuto', 'm ago').replace(' hora', 'h ago').replace('agora mesmo', 'just now');
   };
 
-  if (!currentSale) return null;
+  if (!currentSale || location.pathname !== '/checkout') return null;
 
   return (
     <div style={{

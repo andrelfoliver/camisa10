@@ -1,6 +1,9 @@
 import React from 'react';
+import { useLanguage } from '../context/LanguageContext';
 
 const Footer = () => {
+  const { t } = useLanguage();
+
   return (
     <footer style={{ borderTop: '1px solid var(--border-color)', paddingTop: '4rem', paddingBottom: '2rem', marginTop: '4rem', background: '#050507' }}>
       <div className="container" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '3rem', marginBottom: '3rem' }}>
@@ -9,30 +12,30 @@ const Footer = () => {
             <span style={{ color: 'var(--accent-color)' }}>i</span><span style={{ color: '#fff' }}>Footy</span><span style={{ color: 'var(--accent-color)' }}>.</span>
           </h2>
           <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem' }}>
-            A sua conexão com o futebol, onde quer que você esteja. Especialistas em camisas de futebol para brasileiros no Canadá.
+            {t('footer_about')}
           </p>
         </div>
         <div>
-          <h3 style={{ marginBottom: '1rem', fontSize: '1.1rem' }}>Links Rápidos</h3>
+          <h3 style={{ marginBottom: '1rem', fontSize: '1.1rem' }}>{t('footer_links')}</h3>
           <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-            <li><a href="/" style={{ color: 'var(--text-muted)', transition: '0.2s' }}>Catálogo</a></li>
-            <li><a href="/#faq" style={{ color: 'var(--text-muted)', transition: '0.2s' }}>Como Comprar</a></li>
-            <li><a href="/#about" style={{ color: 'var(--text-muted)', transition: '0.2s' }}>Sobre Nós</a></li>
+            <li><a href="/" style={{ color: 'var(--text-muted)', transition: '0.2s' }}>{t('footer_catalog')}</a></li>
+            <li><a href="/#faq" style={{ color: 'var(--text-muted)', transition: '0.2s' }}>{t('footer_how_to_buy')}</a></li>
+            <li><a href="/#about" style={{ color: 'var(--text-muted)', transition: '0.2s' }}>{t('footer_about_us')}</a></li>
           </ul>
         </div>
         <div>
-          <h3 style={{ marginBottom: '1rem', fontSize: '1.1rem' }}>Pagamento</h3>
+          <h3 style={{ marginBottom: '1rem', fontSize: '1.1rem' }}>{t('footer_payment')}</h3>
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', background: 'var(--surface-color)', padding: '0.5rem 1rem', borderRadius: 'var(--radius-sm)', width: 'fit-content', border: '1px solid var(--border-color)' }}>
             <span style={{ fontWeight: 600, color: '#FFB81C' }}>Interac</span> <span style={{ fontWeight: 400, color: 'var(--text-main)' }}>e-Transfer</span>
           </div>
           <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem', marginTop: '1rem' }}>
-            Aceitamos transferências Interac simples, rápidas e seguras.
+            {t('footer_payment_desc')}
           </p>
         </div>
       </div>
       <div className="container" style={{ borderTop: '1px solid var(--border-color)', paddingTop: '2rem', textAlign: 'center', color: 'var(--text-muted)', fontSize: '0.85rem' }}>
-        &copy; {new Date().getFullYear()} iFooty. Todos os direitos reservados.
-        <div style={{ marginTop: '0.5rem', opacity: 0.5, fontSize: '0.7rem' }}>Desenvolvido por BIVisualizer</div>
+        &copy; {new Date().getFullYear()} iFooty. {t('footer_rights')}
+        <div style={{ marginTop: '0.5rem', opacity: 0.5, fontSize: '0.7rem' }}>{t('footer_dev')} BIVisualizer</div>
       </div>
     </footer>
   );
