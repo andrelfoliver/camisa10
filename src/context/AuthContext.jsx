@@ -1,7 +1,9 @@
-import React, { createContext, useContext, useEffect, useState } from 'react';
+import React, { createContext, useContext, useEffect, useState, useCallback } from 'react';
 import { supabase } from '../services/supabase';
 
 const AuthContext = createContext();
+
+const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID;
 
 export function AuthProvider({ children }) {
   const [session, setSession] = useState(null);
@@ -9,7 +11,7 @@ export function AuthProvider({ children }) {
   const [loading, setLoading] = useState(true);
 
   // Email Mestre do Administrador
-  const ADMIN_EMAIL = 'bivisualizerr@gmail.com'; 
+  const ADMIN_EMAIL = 'bivisualizerr@gmail.com';
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -27,17 +29,59 @@ export function AuthProvider({ children }) {
     return () => subscription.unsubscribe();
   }, []);
 
-  const signInWithGoogle = async () => {
-    const { error } = await supabase.auth.signInWithOAuth({
-      provider: 'google',
-      options: {
-        redirectTo: window.location.origin + '/perfil',
+  const signInWithGoogle = useCallback(async () => {
+    return new Promise(async (resolve, reject) => {
+      const gis = window.google?.accounts?.id;
+
+      if (!gis) {
+        reject(new Error('SDK do Google ainda não carregou. Aguarde e tente novamente.'));
+        return;
       }
+
+      // Gera nonce aleatório e faz hash SHA-256 (exigido pelo Supabase)
+      const rawNonce = crypto.randomUUID();
+      const hashBuffer = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(rawNonce));
+      const hashedNonce = Array.from(new Uint8Array(hashBuffer))
+        .map(b => b.toString(16).padStart(2, '0'))
+        .join('');
+
+      gis.initialize({
+        client_id: GOOGLE_CLIENT_ID,
+        nonce: hashedNonce,
+        callback: async ({ credential }) => {
+          try {
+            const { error } = await supabase.auth.signInWithIdToken({
+              provider: 'google',
+              token: credential,
+              nonce: rawNonce,
+            });
+            if (error) throw error;
+            resolve();
+          } catch (err) {
+            reject(err);
+          }
+        },
+        auto_select: false,
+        cancel_on_tap_outside: true,
+      });
+
+      gis.prompt((notification) => {
+        // One Tap bloqueado (aba anônima, cookies, etc) — usa OAuth como fallback
+        if (notification.isNotDisplayed() || notification.isSkippedMoment()) {
+          supabase.auth.signInWithOAuth({
+            provider: 'google',
+            options: { redirectTo: window.location.origin + '/perfil' },
+          })
+            .then(() => resolve())
+            .catch(reject);
+        }
+      });
     });
-    if (error) throw error;
-  };
+  }, []);
 
   const signOut = async () => {
+    // Desativa o auto-select do Google para evitar re-login automático
+    window.google?.accounts?.id?.disableAutoSelect();
     const { error } = await supabase.auth.signOut();
     if (error) throw error;
   };
