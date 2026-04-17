@@ -98,7 +98,7 @@ const CategoryPage = () => {
         </div>
       </div>
 
-      <div className="container" style={{ display: 'flex', gap: '2rem', marginTop: '2rem', paddingBottom: '5rem' }}>
+      <div className="container category-page-wrapper">
         
         {/* Sidebar Desktop */}
         <aside style={{ width: '250px', display: 'none' }} className="desktop-filters">
@@ -171,6 +171,12 @@ const CategoryPage = () => {
         :root {
           --card-min-width: 240px;
         }
+        .category-page-wrapper {
+          display: flex;
+          gap: 2rem;
+          margin-top: 2rem;
+          padding-bottom: 5rem;
+        }
         .category-controls-bar {
           display: flex;
           justify-content: space-between;
@@ -189,7 +195,11 @@ const CategoryPage = () => {
           .mobile-filter-toggle { display: none !important; }
         }
         @media (max-width: 991px) {
-          .mobile-filter-toggle { display: block !important; }
+          .mobile-filter-toggle { display: block !important; width: 100%; margin-bottom: 1.5rem !important; }
+          .category-page-wrapper {
+            flex-direction: column !important;
+            gap: 1rem !important;
+          }
           .category-controls-bar {
             flex-direction: column;
             gap: 1rem;
