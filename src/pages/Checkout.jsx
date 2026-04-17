@@ -1,13 +1,12 @@
-import React, { useState } from 'react';
-import { useCart } from '../context/CartContext';
-import { useAuth } from '../context/AuthContext';
-import { ArrowLeft, LogIn, MapPin, Truck, Save } from 'lucide-react';
+import { ArrowLeft, LogIn, MapPin, Truck, Save, AlertCircle, X } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import WhatsAppIcon from '../components/WhatsAppIcon';
 import { supabase } from '../services/supabase';
 import { useEffect } from 'react';
+import { useLanguage } from '../context/LanguageContext';
 
 const Checkout = () => {
+  const { t } = useLanguage();
   const { cartItems, cartTotal, subtotal, discount } = useCart();
   const { user } = useAuth();
   const navigate = useNavigate();
@@ -25,8 +24,10 @@ const Checkout = () => {
   });
 
   const [isSubmitting, setIsSubmitting] = useState(false);
-
   const [waNumber, setWaNumber] = useState('5584991847739');
+  
+  // Custom Notification State
+  const [notification, setNotification] = useState({ show: false, message: '', type: 'error' });
 
   useEffect(() => {
     async function loadConfig() {
@@ -55,6 +56,10 @@ const Checkout = () => {
     }
   }, [user]);
 
+  const showPopup = (message, type = 'error') => {
+    setNotification({ show: true, message, type });
+  };
+
   const generateWhatsAppMessage = () => {
     let message = `*NOVO PEDIDO - iFOOTY*\n\n`;
     message += `*CLIENTE:* ${formData.name}\n`;
@@ -76,7 +81,7 @@ const Checkout = () => {
 
   const handleSubmitOrder = async () => {
     if (!formData.street || !formData.city || !formData.province || !formData.postalCode) {
-      alert("Por favor, preencha todos os campos obrigatórios de endereço.");
+      showPopup("Por favor, preencha todos os campos obrigatórios de endereço.");
       return;
     }
 
@@ -153,10 +158,9 @@ const Checkout = () => {
       const encodedMessage = encodeURIComponent(message);
       window.open(`https://wa.me/${waNumber.replace(/\D/g, '')}?text=${encodedMessage}`, '_blank');
       
-      // Opcional: Limpar carrinho aqui ou navegar para sucesso
     } catch (error) {
       console.error("Erro ao processar pedido:", error);
-      alert("Houve um erro ao salvar seu pedido. Tente novamente.");
+      showPopup("Houve um erro ao salvar seu pedido. Tente novamente.");
     } finally {
       setIsSubmitting(false);
     }
@@ -187,6 +191,26 @@ const Checkout = () => {
 
   return (
     <div className="container" style={{ padding: '4rem 1.5rem' }}>
+      {/* Premium Notification Modal */}
+      {notification.show && (
+        <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.85)', backdropFilter: 'blur(10px)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 9999, padding: '1.5rem' }}>
+          <div style={{ background: 'var(--surface-color)', padding: '2.5rem', borderRadius: 'var(--radius-lg)', maxWidth: '450px', width: '100%', border: '1px solid var(--accent-color)', textAlign: 'center', boxShadow: '0 0 40px rgba(0,0,0,0.5)', animation: 'modalIn 0.3s ease-out forwards' }}>
+            <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '1.5rem' }}>
+              <div style={{ background: 'rgba(204, 255, 0, 0.1)', padding: '1rem', borderRadius: '50%' }}>
+                <AlertCircle size={48} color="var(--accent-color)" />
+              </div>
+            </div>
+            <h3 style={{ fontSize: '1.5rem', marginBottom: '1rem' }}>Atenção</h3>
+            <p style={{ color: 'var(--text-muted)', fontSize: '1.1rem', lineHeight: 1.6, marginBottom: '2rem' }}>
+               {notification.message}
+            </p>
+            <button className="btn-primary" style={{ width: '100%', justifyContent: 'center', padding: '1rem' }} onClick={() => setNotification({ ...notification, show: false })}>
+              Pode deixar!
+            </button>
+          </div>
+        </div>
+      )}
+
       <button onClick={() => navigate('/')} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: 'var(--text-muted)', marginBottom: '2rem' }}>
         <ArrowLeft size={20} /> Voltar
       </button>
@@ -324,11 +348,18 @@ const Checkout = () => {
               {isSubmitting ? 'Processando...' : 'Concluir via WhatsApp'}
             </button>
             <p style={{ textAlign: 'center', marginTop: '1rem', fontSize: '0.85rem', color: 'var(--text-muted)' }}>
-              Você enviará um resumo do pedido para nosso atendimento. O pagamento só será feito após confirmarmos os detalhes do pedido com você. Pagamento via e-Transfer Interac!
+              {t('checkout_summary_footer_note')}
             </p>
           </div>
         </div>
       </div>
+
+      <style>{`
+        @keyframes modalIn {
+          from { opacity: 0; transform: scale(0.95) translateY(10px); }
+          to { opacity: 1; transform: scale(1) translateY(0); }
+        }
+      `}</style>
     </div>
   );
 };
