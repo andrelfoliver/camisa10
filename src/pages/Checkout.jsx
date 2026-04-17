@@ -324,7 +324,7 @@ const Checkout = () => {
               {isSubmitting ? 'Processando...' : 'Concluir via WhatsApp'}
             </button>
             <p style={{ textAlign: 'center', marginTop: '1rem', fontSize: '0.85rem', color: 'var(--text-muted)' }}>
-              Você enviará um resumo do pedido para nosso atendimento. O pagamento só será feito após confirmarmos os tamanhos com você via e-Transfer Interac!
+              Você enviará um resumo do pedido para nosso atendimento. O pagamento só será feito após confirmarmos os detalhes do pedido com você. Pagamento via e-Transfer Interac!
             </p>
           </div>
         </div>
