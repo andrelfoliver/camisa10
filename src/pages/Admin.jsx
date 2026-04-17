@@ -419,6 +419,60 @@ const Admin = () => {
     }
   };
 
+  const CALCULATED_COSTS = {
+    FAN: 12.33,
+    PLAYER_ADIDAS: 19.18,
+    PLAYER_NIKE: 20.55,
+    RETRO: 20.55,
+    KIT_INF_SM: 13.70,
+    KIT_INF_LG: 15.07,
+    KIT_ADULT: 19.18,
+    SHORTS_FAN: 12.33,
+    SHORTS_PLAYER: 19.18,
+    MANGA_LONGA: 16.44,
+    CORTA_VENTO: 42.47,
+    PERSONALIZA: 4.11,
+    PATCH: 1.37,
+    SIZE_UP_2XL: 2.74,
+    SIZE_UP_4XL: 4.11
+  };
+
+  const calculateItemCost = (item) => {
+    let cost = CALCULATED_COSTS.FAN;
+    const name = item.name?.toLowerCase() || '';
+    const size = item.size || '';
+    
+    if (name.includes('corta vento')) cost = CALCULATED_COSTS.CORTA_VENTO;
+    else if (name.includes('manga longa')) cost = CALCULATED_COSTS.MANGA_LONGA;
+    else if (name.includes('retrô') || name.includes('retro')) cost = CALCULATED_COSTS.RETRO;
+    else if (name.includes('jogador')) {
+      if (name.includes('nike')) cost = CALCULATED_COSTS.PLAYER_NIKE;
+      else if (name.includes('adidas')) cost = CALCULATED_COSTS.PLAYER_ADIDAS;
+      else cost = 19.86; // Média para jogadores sem marca especificada
+    } else if (name.includes('kit infantil')) {
+      const sizeVal = parseInt(size);
+      if (sizeVal >= 16 && sizeVal <= 22) cost = CALCULATED_COSTS.KIT_INF_SM;
+      else cost = CALCULATED_COSTS.KIT_INF_LG;
+    } else if (name.includes('kit adulto')) cost = CALCULATED_COSTS.KIT_ADULT;
+    else if (name.includes('shorts')) {
+      if (name.includes('jogador')) cost = CALCULATED_COSTS.SHORTS_PLAYER;
+      else cost = CALCULATED_COSTS.SHORTS_FAN;
+    }
+    
+    // Adicionais unitários
+    let unitAddons = 0;
+    if (item.extras?.nameNumber) unitAddons += CALCULATED_COSTS.PERSONALIZA;
+    if (item.extras?.patch) unitAddons += CALCULATED_COSTS.PATCH;
+    if (['2XL', '3XL'].includes(size)) unitAddons += CALCULATED_COSTS.SIZE_UP_2XL;
+    if (size === '4XL') unitAddons += CALCULATED_COSTS.SIZE_UP_4XL;
+    
+    return (cost + unitAddons) * (item.quantity || 1);
+  };
+
+  const calculateOrderCost = (order) => {
+    return (order.items || []).reduce((acc, item) => acc + calculateItemCost(item), 0);
+  };
+
   const uploadImageToSupabase = async (file) => {
     const ext = (file.name.split('.').pop() || 'jpg').toLowerCase();
     const filename = `${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
@@ -1213,22 +1267,35 @@ const Admin = () => {
             <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem', maxWidth: '1200px' }}>
               
               {/* STATS SUMMARY BAR */}
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1.5rem' }}>
-                <div className="glass-panel" style={{ padding: '1rem 1.5rem', borderRadius: '12px', borderLeft: '4px solid #FFB81C' }}>
-                  <p style={{ fontSize: '0.7rem', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: 800 }}>Novos Pedidos</p>
-                  <h3 style={{ fontSize: '1.5rem', color: '#fff', margin: 0 }}>{orders.filter(o => o.status === 'pending').length}</h3>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '1rem' }}>
+                <div className="glass-panel" style={{ padding: '0.8rem 1.2rem', borderRadius: '12px', borderLeft: '4px solid #FFB81C' }}>
+                  <p style={{ fontSize: '0.65rem', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: 800 }}>Novos Pedidos</p>
+                  <h3 style={{ fontSize: '1.4rem', color: '#fff', margin: 0 }}>{orders.filter(o => o.status === 'pending').length}</h3>
                 </div>
-                <div className="glass-panel" style={{ padding: '1rem 1.5rem', borderRadius: '12px', borderLeft: '4px solid #3B82F6' }}>
-                  <p style={{ fontSize: '0.7rem', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: 800 }}>Em Preparação</p>
-                  <h3 style={{ fontSize: '1.5rem', color: '#fff', margin: 0 }}>{orders.filter(o => o.status === 'processing').length}</h3>
+                <div className="glass-panel" style={{ padding: '0.8rem 1.2rem', borderRadius: '12px', borderLeft: '4px solid #3B82F6' }}>
+                  <p style={{ fontSize: '0.65rem', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: 800 }}>Em Preparação</p>
+                  <h3 style={{ fontSize: '1.4rem', color: '#fff', margin: 0 }}>{orders.filter(o => o.status === 'processing').length}</h3>
                 </div>
-                <div className="glass-panel" style={{ padding: '1rem 1.5rem', borderRadius: '12px', borderLeft: '4px solid #10B981' }}>
-                  <p style={{ fontSize: '0.7rem', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: 800 }}>Concluídos</p>
-                  <h3 style={{ fontSize: '1.5rem', color: '#fff', margin: 0 }}>{orders.filter(o => ['shipped', 'completed'].includes(o.status)).length}</h3>
+                <div className="glass-panel" style={{ padding: '0.8rem 1.2rem', borderRadius: '12px', borderLeft: '4px solid #10B981' }}>
+                  <p style={{ fontSize: '0.65rem', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: 800 }}>Concluídos</p>
+                  <h3 style={{ fontSize: '1.4rem', color: '#fff', margin: 0 }}>{orders.filter(o => ['shipped', 'completed'].includes(o.status)).length}</h3>
                 </div>
-                <div className="glass-panel" style={{ padding: '1rem 1.5rem', borderRadius: '12px', borderLeft: '4px solid var(--accent-color)' }}>
-                  <p style={{ fontSize: '0.7rem', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: 800 }}>Receita Total</p>
-                  <h3 style={{ fontSize: '1.5rem', color: 'var(--accent-color)', margin: 0 }}>${orders.reduce((acc, o) => acc + Number(o.total_price || 0), 0).toFixed(2)}</h3>
+                <div className="glass-panel" style={{ padding: '0.8rem 1.2rem', borderRadius: '12px', borderLeft: '4px solid var(--accent-color)' }}>
+                  <p style={{ fontSize: '0.65rem', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: 800 }}>Receita Total</p>
+                  <h3 style={{ fontSize: '1.4rem', color: 'var(--accent-color)', margin: 0 }}>${orders.reduce((acc, o) => acc + Number(o.total_price || 0), 0).toFixed(2)}</h3>
+                </div>
+                <div className="glass-panel" style={{ padding: '0.8rem 1.2rem', borderRadius: '12px', borderLeft: '4px solid #64748b' }}>
+                  <p style={{ fontSize: '0.65rem', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: 800 }}>Custo Total</p>
+                  <h3 style={{ fontSize: '1.4rem', color: '#fff', margin: 0 }}>
+                    ${orders.reduce((acc, order) => acc + calculateOrderCost(order), 0).toFixed(2)}
+                  </h3>
+                </div>
+                <div className="glass-panel" style={{ padding: '0.8rem 1.2rem', borderRadius: '12px', borderLeft: '4px solid #22c55e' }}>
+                  <p style={{ fontSize: '0.65rem', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: 800 }}>Lucro Estimado</p>
+                  <h3 style={{ fontSize: '1.4rem', color: '#22c55e', margin: 0 }}>
+                    ${(orders.reduce((acc, o) => acc + Number(o.total_price || 0), 0) - 
+                       orders.reduce((acc, order) => acc + calculateOrderCost(order), 0)).toFixed(2)}
+                  </h3>
                 </div>
               </div>
 
