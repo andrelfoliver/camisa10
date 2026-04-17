@@ -33,6 +33,7 @@ const Admin = () => {
   const [showAddForm, setShowAddForm] = useState(false);
   
   const [productToDelete, setProductToDelete] = useState(null);
+  const [orderToDelete, setOrderToDelete] = useState(null);
   const [editingProduct, setEditingProduct] = useState(null);
   const [teams, setTeams] = useState([]);
   const [editingTeam, setEditingTeam] = useState(null);
@@ -574,6 +575,28 @@ const Admin = () => {
     setProducts(products.filter(p => p.id !== productToDelete.id));
     setSaved(true);
     setProductToDelete(null);
+    setTimeout(() => setSaved(false), 3000);
+  };
+
+  const confirmDeleteOrder = async () => {
+    if (!orderToDelete) return;
+    const { data, error } = await supabase.from('orders').delete().eq('id', orderToDelete.id).select();
+    
+    if (error) {
+      alert("Erro ao deletar pedido: " + error.message);
+      setOrderToDelete(null);
+      return;
+    }
+
+    if (!data || data.length === 0) {
+      alert("⚠️ ALERTA: O pedido NÃO foi excluído. Verifique as permissões de DELETE no Supabase.");
+      setOrderToDelete(null);
+      return;
+    }
+    
+    setOrders(orders.filter(o => o.id !== orderToDelete.id));
+    setSaved(true);
+    setOrderToDelete(null);
     setTimeout(() => setSaved(false), 3000);
   };
 
@@ -1500,6 +1523,12 @@ const Admin = () => {
                               style={{ padding: '0.6rem', borderRadius: '4px', background: 'rgba(168, 85, 247, 0.1)', color: '#A855F7', border: '1px solid #A855F7', fontWeight: 700, cursor: 'pointer', fontSize: '0.8rem' }}
                             >
                               MARCAR COMO ENTREGUE
+                            </button>
+                            <button 
+                              onClick={() => setOrderToDelete(order)}
+                              style={{ padding: '0.6rem', borderRadius: '4px', background: 'rgba(239, 68, 68, 0.1)', color: '#EF4444', border: '1px solid rgba(239, 68, 68, 0.3)', fontWeight: 700, cursor: 'pointer', fontSize: '0.8rem', marginTop: '1rem' }}
+                            >
+                              <Trash2 size={14} style={{ marginRight: '0.5rem' }} /> EXCLUIR PEDIDO
                             </button>
                           </div>
                         </div>
