@@ -4,7 +4,7 @@ import { supabase } from '../services/supabase';
 const AuthContext = createContext();
 
 // Email Mestre do Administrador
-const ADMIN_EMAIL = 'ifootycanada@gmail.com';
+const ADMIN_EMAIL = 'camisadez085@gmail.com';
 
 // Exposta para Auth.jsx usar no callback do GIS
 export async function generateNonce() {

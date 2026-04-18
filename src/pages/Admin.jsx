@@ -262,7 +262,7 @@ const Admin = () => {
         setOrders(data);
         
         // Trigger Welcome Popup for Manager
-        if (!welcomeTriggered && user?.email === 'ifootycanada@gmail.com') {
+        if (!welcomeTriggered && user?.email === 'camisadez085@gmail.com') {
           const pendingCount = data.filter(o => o.status === 'pending').length;
           if (pendingCount > 0) {
             setShowWelcomePopup(true);
