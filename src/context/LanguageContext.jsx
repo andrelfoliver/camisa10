@@ -8,7 +8,7 @@ export const translations = {
     nav_br: 'Brasileirão',
     nav_intl: 'Internacionais',
     nav_retro: 'Retrô',
-    top_bar_announcement: '⚡ Entrega para todo Canadá | Em até 24h em Calgary se disponível',
+    top_bar_announcement: '⚡ Entrega para todo Canadá | Para Calgary (24h), se disponível',
     nav_admin: 'Admin',
     hero_title_part1: 'VISTA AS CORES DO SEU TIME MESMO ',
     hero_title_accent: 'LONGE DE CASA',
