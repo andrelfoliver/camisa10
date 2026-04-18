@@ -346,7 +346,6 @@ button {
 
 .hero-funnel {
   position: relative;
-  width: 100%;
   min-height: 85vh;
   display: flex;
   align-items: center;
@@ -354,25 +353,58 @@ button {
   background: #000;
 }
 
-.hero-funnel::before {
-  content: '';
+/* Camadas de Slides */
+.hero-slide-bg {
   position: absolute;
   inset: 0;
-  background: var(--hero-bg-url, transparent) 25% center/cover no-repeat;
+  background-size: cover;
+  background-position: 25% center;
+  background-repeat: no-repeat;
+  opacity: 0;
+  transition: opacity 1.2s ease-in-out;
   z-index: 0;
+}
+
+.hero-slide-bg.active {
   opacity: 1;
 }
 
-.hero-funnel::after {
-  content: '';
+/* Overlay Estático (Garante leitura do texto em todos os heros) */
+.hero-overlay-static {
   position: absolute;
   inset: 0;
   background: linear-gradient(to right, 
-    rgba(0,0,0,0.8) 0%, 
-    rgba(0,0,0,0.4) 30%, 
+    rgba(0,0,0,0.85) 0%, 
+    rgba(0,0,0,0.5) 35%, 
     rgba(0,0,0,0) 70%
   );
   z-index: 1;
+}
+
+/* Indicadores do Carrossel */
+.hero-carousel-dots {
+  display: flex;
+  gap: 0.75rem;
+  margin-top: 2rem;
+  z-index: 10;
+}
+
+.dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.2);
+  border: 1px solid rgba(255,255,255,0.3);
+  cursor: pointer;
+  transition: all 0.3s;
+  padding: 0;
+}
+
+.dot.active {
+  background: var(--accent-color);
+  transform: scale(1.2);
+  box-shadow: 0 0 10px var(--accent-color);
+  border-color: var(--accent-color);
 }
 
 @media (max-width: 768px) {
@@ -380,14 +412,14 @@ button {
     min-height: 100vh;
     align-items: flex-end;
   }
-  .hero-funnel::before {
+  .hero-slide-bg {
     background-position: center 10%;
   }
-  .hero-funnel::after {
+  .hero-overlay-static {
     background: linear-gradient(to top, 
-      rgba(0,0,0,0.8) 0%, 
-      rgba(0,0,0,0.4) 40%, 
-      rgba(0,0,0,0) 80%
+      rgba(0,0,0,0.95) 0%, 
+      rgba(0,0,0,0.6) 40%, 
+      rgba(0,0,0,0) 85%
     );
   }
   .hero-container-modern {
@@ -395,6 +427,10 @@ button {
     justify-content: flex-end !important;
     padding-bottom: 2rem !important;
     margin-top: auto;
+  }
+  .hero-carousel-dots {
+    margin-top: 1.5rem;
+    justify-content: center;
   }
   .hero-trust-badges {
     flex-direction: row !important;
