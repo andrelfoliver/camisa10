@@ -17,15 +17,6 @@ export async function migrateTeamsToSupabase() {
         throw new Error('Erro ao verificar times existentes: ' + fetchError.message);
     }
 
-    const existingNames = new Set((existingTeams || []).map(t => t.name.toLowerCase()));
-    
-    // Filtramos apenas os que NÃO estão no banco ainda
-    const teamsToInsert = highQualityTeams.filter(t => !existingNames.has(t.name.toLowerCase()));
-
-    if (teamsToInsert.length === 0) {
-        return { successCount: 0, message: 'Todos os times da lista já estão no banco de dados.' };
-    }
-
     // Mapeamento de logos de alta qualidade (Wikipedia/Wikimedia)
     const highQualityTeams = [
         // Brasileirão
@@ -64,6 +55,8 @@ export async function migrateTeamsToSupabase() {
         { name: 'Bayern de Munique', league: 'Bundesliga', logo: 'https://upload.wikimedia.org/wikipedia/en/1/1b/FC_Bayern_München_logo_%282017%29.svg' }
     ];
 
+    const existingNames = new Set((existingTeams || []).map(t => t.name.toLowerCase()));
+    
     // Filtramos apenas os que NÃO estão no banco ainda
     const teamsToInsert = highQualityTeams.filter(t => !existingNames.has(t.name.toLowerCase()));
 
