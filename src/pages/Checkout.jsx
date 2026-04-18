@@ -3,6 +3,7 @@ import { useCart } from '../context/CartContext';
 import { useAuth } from '../context/AuthContext';
 import { ArrowLeft, LogIn, MapPin, Truck, Save, AlertCircle, X } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { useRef } from 'react';
 import WhatsAppIcon from '../components/WhatsAppIcon';
 import { supabase } from '../services/supabase';
 import { useLanguage } from '../context/LanguageContext';
@@ -37,6 +38,46 @@ const Checkout = () => {
       if (data && data.value) setWaNumber(data.value);
     }
     loadConfig();
+  }, []);
+
+  const addressInputRef = useRef(null);
+
+  useEffect(() => {
+    if (!window.google) return;
+
+    const autocomplete = new window.google.maps.places.Autocomplete(addressInputRef.current, {
+      componentRestrictions: { country: 'ca' },
+      fields: ['address_components', 'geometry'],
+      types: ['address']
+    });
+
+    autocomplete.addListener('place_changed', () => {
+      const place = autocomplete.getPlace();
+      if (!place.address_components) return;
+
+      let streetNumber = '';
+      let route = '';
+      let city = '';
+      let province = '';
+      let postalCode = '';
+
+      place.address_components.forEach(component => {
+        const types = component.types;
+        if (types.includes('street_number')) streetNumber = component.long_name;
+        if (types.includes('route')) route = component.long_name;
+        if (types.includes('locality')) city = component.long_name;
+        if (types.includes('administrative_area_level_1')) province = component.short_name;
+        if (types.includes('postal_code')) postalCode = component.long_name;
+      });
+
+      setFormData(prev => ({
+        ...prev,
+        street: `${streetNumber} ${route}`.trim(),
+        city,
+        province,
+        postalCode
+      }));
+    });
   }, []);
 
   useEffect(() => {
@@ -305,6 +346,7 @@ const Checkout = () => {
                   <label style={{ display: 'block', marginBottom: '0.5rem', color: 'var(--text-muted)' }}>{t('checkout_street')}</label>
                   <input 
                     type="text" placeholder="Ex: 123 Bay St"
+                    ref={addressInputRef}
                     value={formData.street} onChange={e => setFormData({...formData, street: e.target.value})}
                     style={{ width: '100%', padding: '0.75rem', borderRadius: 'var(--radius-sm)', background: 'var(--bg-color)', border: '1px solid var(--border-color)', color: 'var(--text-main)', fontSize: '1rem' }} 
                   />
