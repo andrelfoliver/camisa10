@@ -79,7 +79,7 @@ const Navbar = () => {
         textTransform: 'uppercase',
         letterSpacing: '1px'
       }}>
-        {language === 'pt' ? '🚀 Entrega prioritária para Calgary' : '🚀 Priority Delivery to Calgary'}
+        {t('top_bar_announcement')}
       </div>
 
       {/* BARRA 2: MAIN HEADER (SEARCH | LOGO | ACTIONS) */}
