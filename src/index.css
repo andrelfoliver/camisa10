@@ -997,7 +997,7 @@ button {
   color: #fff;
 }
 
-/* Google Places Autocomplete Styling */
+/* Google Places Autocomplete Styling - Limpeza Agressiva */
 .pac-container {
   background-color: #121218 !important;
   border: 1px solid var(--border-color) !important;
@@ -1006,6 +1006,7 @@ button {
   font-family: var(--font-body) !important;
   margin-top: 5px !important;
   z-index: 100000 !important;
+  padding: 5px 0 !important;
 }
 
 .pac-item {
@@ -1015,6 +1016,8 @@ button {
   cursor: pointer !important;
   transition: all 0.2s !important;
   line-height: 1.5 !important;
+  display: flex !important;
+  align-items: center !important;
 }
 
 .pac-item:hover {
@@ -1025,15 +1028,28 @@ button {
   color: var(--accent-color) !important;
   font-size: 1rem !important;
   padding-right: 5px !important;
+  margin-left: 0 !important;
 }
 
 .pac-matched {
   font-weight: 700 !important;
 }
 
-/* Esconde agressivamente qualquer ícone de erro ou placeholder do Google */
-.pac-icon, .pac-icon-marker, .pac-placeholder {
+/* ELIMINAÇÃO TOTAL DE ÍCONES E EXCLAMAÇÕES */
+.pac-icon, 
+.pac-icon-marker, 
+.pac-placeholder, 
+.pac-item > span:first-child:not(.pac-item-query) {
   display: none !important;
   width: 0 !important;
+  height: 0 !important;
   margin: 0 !important;
+  padding: 0 !important;
+  visibility: hidden !important;
+  background-image: none !important;
+}
+
+/* Remove a logo "Powered by Google" se ela estiver causando ruído visual com exclamações */
+.pac-logo:after {
+  display: none !important;
 }
