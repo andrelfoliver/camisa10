@@ -8,7 +8,7 @@ import { useLanguage } from '../context/LanguageContext';
 const ProductCard = ({ product }) => {
   const { addToCart } = useCart();
   const navigate = useNavigate();
-  const { translateProductDisplay, language } = useLanguage();
+  const { translateProductDisplay, language, t } = useLanguage();
   const [selectedSize, setSelectedSize] = useState('M');
   const [imageError, setImageError] = useState(false);
   const sizes = ['S', 'M', 'L', 'XL'];
