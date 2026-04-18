@@ -877,15 +877,15 @@ const Admin = () => {
                 <Plus size={18} /> Nova Camisa
               </button>
             )}
-            {supplierTab === 'TEAMS' && teams.length === 0 && (
+            {supplierTab === 'TEAMS' && (
               <button 
                 onClick={handleTeamsMigration} 
                 disabled={isMigratingTeams}
                 className="btn-primary" 
-                style={{ background: '#10B981', color: '#fff' }}
+                style={{ background: '#10B981', color: '#fff', display: 'flex', alignItems: 'center', gap: '0.5rem' }}
               >
                 <RefreshCw size={18} className={isMigratingTeams ? 'spinning' : ''} /> 
-                {isMigratingTeams ? 'IMPORTANDO...' : 'IMPORTAR ESCUDOS OFICIAIS'}
+                {isMigratingTeams ? 'SINCRONIZANDO...' : 'SINCRONIZAR ESCUDOS'}
               </button>
             )}
             {isCatalogTab && (
