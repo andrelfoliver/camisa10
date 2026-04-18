@@ -3,6 +3,7 @@ import { ShoppingBag, Menu, X, Search, UserCircle } from 'lucide-react';
 import { useCart } from '../context/CartContext';
 import { useAuth } from '../context/AuthContext';
 import { Link, useNavigate } from 'react-router-dom';
+import { supabase } from '../services/supabase';
 
 import { useLanguage } from '../context/LanguageContext';
 
