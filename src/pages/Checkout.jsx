@@ -48,11 +48,12 @@ const Checkout = () => {
     const initAutocomplete = () => {
       if (!window.google || !window.google.maps || !window.google.maps.places) return false;
       
-      autocomplete = new window.google.maps.places.Autocomplete(addressInputRef.current, {
+    autocomplete = new window.google.maps.places.Autocomplete(addressInputRef.current, {
         componentRestrictions: { country: 'ca' },
         fields: ['address_components', 'geometry'],
         types: ['address']
       });
+      console.log("✅ Google Autocomplete Initialized Successfully");
 
       autocomplete.addListener('place_changed', () => {
         const place = autocomplete.getPlace();
@@ -482,6 +483,11 @@ const Checkout = () => {
         @keyframes modalIn {
           from { opacity: 0; transform: scale(0.95) translateY(10px); }
           to { opacity: 1; transform: scale(1) translateY(0); }
+        }
+        /* Força a visibilidade das sugestões do Google */
+        .pac-container {
+          z-index: 99999 !important;
+          pointer-events: auto !important;
         }
       `}</style>
     </div>
