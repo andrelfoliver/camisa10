@@ -46,21 +46,7 @@ const teamsToMigrate = [
 async function migrate() {
   console.log('🚀 Iniciando migração de logos para o Supabase Storage...');
 
-  // 1. Tentar criar o bucket se não existir
-  const { data: bucket, error: bucketError } = await supabase.storage.getBucket(BUCKET_NAME);
-  if (bucketError) {
-    console.log(`📦 Criando bucket "${BUCKET_NAME}"...`);
-    const { error: createError } = await supabase.storage.createBucket(BUCKET_NAME, {
-      public: true,
-      allowedMimeTypes: ['image/png', 'image/jpeg', 'image/svg+xml'],
-      fileSizeLimit: 1048576 // 1MB
-    });
-    if (createError) {
-      console.error('❌ Erro ao criar bucket. Verifique se sua chave tem permissão.', createError.message);
-      // Se falhar a criação, tentamos continuar assumindo que o bucket já existe ou será resolvido manualmente.
-    }
-  }
-
+  // Assumimos que o bucket 'team-logos' já foi criado manualmente pelo usuário
   for (const team of teamsToMigrate) {
     try {
       console.log(`\n⏳ Processando ${team.name}...`);
@@ -68,8 +54,13 @@ async function migrate() {
       // Gerar nome de arquivo seguro
       const fileName = `${team.name.toLowerCase().replace(/\s+/g, '-')}.png`;
 
-      // 1. Download da imagem
-      const response = await axios.get(team.logo, { responseType: 'arraybuffer' });
+      // 1. Download da imagem com User-Agent para evitar 404
+      const response = await axios.get(team.logo, { 
+        responseType: 'arraybuffer',
+        headers: {
+            'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
+        }
+      });
       const buffer = Buffer.from(response.data, 'binary');
 
       // 2. Upload para o Supabase
