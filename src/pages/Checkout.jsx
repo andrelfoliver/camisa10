@@ -58,6 +58,31 @@ const Checkout = () => {
     }
   }, [user]);
 
+  useEffect(() => {
+    const cleanPostal = formData.postalCode.replace(/\s/g, '').toUpperCase();
+    if (cleanPostal.length === 3) {
+      const fetchAddress = async () => {
+        try {
+          const res = await fetch(`https://api.zippopotam.us/ca/${cleanPostal}`);
+          if (res.ok) {
+            const data = await res.json();
+            if (data.places && data.places.length > 0) {
+              const place = data.places[0];
+              setFormData(prev => ({
+                ...prev,
+                city: place['place name'],
+                province: place['state abbreviation']
+              }));
+            }
+          }
+        } catch (err) {
+          console.warn("Address lookup failed", err);
+        }
+      };
+      fetchAddress();
+    }
+  }, [formData.postalCode]);
+
   const showPopup = (message, type = 'error') => {
     setNotification({ show: true, message, type });
   };
@@ -334,7 +359,7 @@ const Checkout = () => {
               <div>
                 <label style={{ display: 'block', marginBottom: '0.5rem', color: 'var(--text-muted)' }}>{t('checkout_social')}</label>
                 <input 
-                  type="text" placeholder="@seuinsta ou Telefone"
+                  type="text" placeholder={t('checkout_social_placeholder')}
                   value={formData.instagram} onChange={e => setFormData({...formData, instagram: e.target.value})}
                   style={{ width: '100%', padding: '0.75rem', borderRadius: 'var(--radius-sm)', background: 'var(--bg-color)', border: '1px solid var(--border-color)', color: 'var(--text-main)', fontSize: '1rem' }} 
                 />
