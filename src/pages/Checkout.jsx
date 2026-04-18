@@ -72,15 +72,19 @@ const Checkout = () => {
       return;
     }
 
+    console.log("🔍 Buscando sugestões para:", val);
     autocompleteService.current.getPlacePredictions({
       input: val,
       componentRestrictions: { country: 'ca' },
       types: ['address']
     }, (results, status) => {
+      console.log("📡 Status do Google:", status);
       if (status === window.google.maps.places.PlacesServiceStatus.OK && results) {
+        console.log("✅ Sugestões encontradas:", results.length);
         setPredictions(results);
         setShowPredictions(true);
       } else {
+        console.warn("❌ Falha na busca ou nada encontrado. Status:", status);
         setPredictions([]);
       }
     });
