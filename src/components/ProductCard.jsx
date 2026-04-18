@@ -49,12 +49,12 @@ const ProductCard = ({ product }) => {
       }}>
         {product.is_bestseller && (
           <div className="badge" style={{ position: 'relative', top: 0, left: 0, background: '#EF4444', color: '#fff', boxShadow: '0 0 15px rgba(239, 68, 68, 0.4)', border: '1px solid rgba(255,255,255,0.2)' }}>
-            {language === 'pt' ? '🔥 Mais Vendido' : '🔥 Best Seller'}
+            {t('section_best_seller')}
           </div>
         )}
         {product.is_new && !product.is_bestseller && (
           <div className="badge" style={{ position: 'relative', top: 0, left: 0, background: '#FFB81C', color: '#000' }}>
-            {language === 'pt' ? '⭐ Novo' : '⭐ New'}
+            {t('section_new')}
           </div>
         )}
         {product.version && (
@@ -67,7 +67,7 @@ const ProductCard = ({ product }) => {
             fontSize: '0.65rem',
             border: '1px solid rgba(255,255,255,0.1)'
           }}>
-            {product.version}
+            {translateProductDisplay(product.version)}
           </div>
         )}
       </div>
@@ -122,7 +122,7 @@ const ProductCard = ({ product }) => {
             style={{ width: '100%', justifyContent: 'center' }}
             onClick={handleView}
           >
-            {language === 'pt' ? 'Personalizar e Comprar' : 'Customize and Buy'}
+            {t('product_buy_now')}
           </button>
         </div>
       </div>

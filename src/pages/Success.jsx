@@ -1,17 +1,20 @@
-import React from 'react';
-import { useLocation, useNavigate } from 'react-router-dom';
-import { CheckCircle2, MessageCircle, Home, Mail } from 'lucide-react';
-import { useLanguage } from '../context/LanguageContext';
+import { useCart } from '../context/CartContext';
 
 const Success = () => {
   const { t } = useLanguage();
+  const { clearCart } = useCart();
   const location = useLocation();
   const navigate = useNavigate();
   const { waNumber } = location.state || {};
 
+  // Limpa o carrinho definitivamente ao chegar na página de sucesso
+  React.useEffect(() => {
+    clearCart();
+  }, [clearCart]);
+
   const handleContactSupport = () => {
     const number = (waNumber || '5584991847739').replace(/\D/g, '');
-    const message = encodeURIComponent('Olá! Acabei de fazer um pedido na iFooty e gostaria de tirar algumas dúvidas. 😊');
+    const message = encodeURIComponent(t('success_support_wa_msg') || 'Olá! Gostaria de tirar dúvidas sobre meu pedido.');
     window.open(`https://wa.me/${number}?text=${message}`, '_blank');
   };
 
