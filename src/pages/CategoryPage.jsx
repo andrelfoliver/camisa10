@@ -117,15 +117,21 @@ const CategoryPage = () => {
             
             <div style={{ marginBottom: '2rem' }}>
               <h4 style={{ color: 'var(--text-muted)', marginBottom: '0.8rem', fontSize: '0.9rem', textTransform: 'uppercase' }}>{t('category_jersey_version')}</h4>
-              {['Torcedor', 'Jogador', 'Retrô'].map(ver => (
-                <label key={ver} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.5rem', cursor: 'pointer' }}>
+              {[
+                { labelKey: 'category_filter_fan', value: 'Torcedor' },
+                { labelKey: 'category_filter_player', value: 'Jogador' },
+                { labelKey: 'category_filter_retro', value: 'Retrô' }
+              ].map(ver => (
+                <label key={ver.value} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.5rem', cursor: 'pointer' }}>
                   <input
                     type="checkbox"
-                    checked={versionFilters.includes(ver)}
-                    onChange={() => toggleVersion(ver)}
+                    checked={versionFilters.includes(ver.value)}
+                    onChange={() => toggleVersion(ver.value)}
                     style={{ accentColor: 'var(--accent-color)', width: '16px', height: '16px' }}
                   />
-                  <span style={{ color: versionFilters.includes(ver) ? 'var(--accent-color)' : 'var(--text-main)', fontWeight: versionFilters.includes(ver) ? 600 : 400 }}>{ver}</span>
+                  <span style={{ color: versionFilters.includes(ver.value) ? 'var(--accent-color)' : 'var(--text-main)', fontWeight: versionFilters.includes(ver.value) ? 600 : 400 }}>
+                    {t(ver.labelKey)}
+                  </span>
                 </label>
               ))}
               {versionFilters.length > 0 && (
@@ -145,7 +151,17 @@ const CategoryPage = () => {
         {/* Main Content */}
         <main style={{ flex: 1 }}>
            <div className="category-controls-bar">
-               <span className="results-count">{t('category_showing')} {displayedProducts.length} {t('category_of')} {products.length} {t('category_products')}{versionFilters.length > 0 ? ` (${t('category_filtered_by')} ${versionFilters.join(', ')})` : ''}</span>
+               <span className="results-count">
+                 {t('category_showing')} {displayedProducts.length} {t('category_of')} {products.length} {t('category_products')}
+                 {versionFilters.length > 0 && (
+                   ` (${t('category_filtered_by')} ${versionFilters.map(v => {
+                     if (v === 'Torcedor') return t('category_filter_fan');
+                     if (v === 'Jogador') return t('category_filter_player');
+                     if (v === 'Retrô') return t('category_filter_retro');
+                     return v;
+                   }).join(', ')})`
+                 )}
+               </span>
                <div className="sort-controls">
                   <span className="sort-label">{t('category_sort_by')}</span>
                   <select
@@ -176,6 +192,64 @@ const CategoryPage = () => {
            )}
         </main>
       </div>
+
+      {/* Mobile Filter Modal */}
+      {mobileFilterOpen && (
+        <div style={{ position: 'fixed', inset: 0, zIndex: 1000, display: 'flex', flexDirection: 'column' }}>
+          <div 
+            style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.8)', backdropFilter: 'blur(4px)' }} 
+            onClick={() => setMobileFilterOpen(false)}
+          />
+          <div style={{ 
+            position: 'absolute', bottom: 0, left: 0, right: 0, 
+            background: 'var(--bg-color)', borderTop: '1px solid var(--border-color)',
+            borderTopLeftRadius: '20px', borderTopRightRadius: '20px',
+            padding: '2rem', zIndex: 1001,
+            maxHeight: '80vh', overflowY: 'auto'
+          }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
+              <h3 style={{ margin: 0 }}>{t('category_filters')}</h3>
+              <button 
+                onClick={() => setMobileFilterOpen(false)}
+                style={{ background: 'var(--surface-hover)', border: 'none', color: '#fff', padding: '0.5rem', borderRadius: '50%' }}
+              >
+                <X size={20} />
+              </button>
+            </div>
+
+            <div style={{ marginBottom: '2rem' }}>
+              <h4 style={{ color: 'var(--text-muted)', marginBottom: '1rem', fontSize: '0.9rem', textTransform: 'uppercase' }}>{t('category_jersey_version')}</h4>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                {[
+                  { labelKey: 'category_filter_fan', value: 'Torcedor' },
+                  { labelKey: 'category_filter_player', value: 'Jogador' },
+                  { labelKey: 'category_filter_retro', value: 'Retrô' }
+                ].map(ver => (
+                  <label key={ver.value} style={{ display: 'flex', alignItems: 'center', gap: '1rem', cursor: 'pointer', background: versionFilters.includes(ver.value) ? 'rgba(219, 254, 135, 0.05)' : 'transparent', padding: '0.8rem', borderRadius: '8px', border: `1px solid ${versionFilters.includes(ver.value) ? 'var(--accent-color)' : 'var(--border-color)'}` }}>
+                    <input
+                      type="checkbox"
+                      checked={versionFilters.includes(ver.value)}
+                      onChange={() => toggleVersion(ver.value)}
+                      style={{ accentColor: 'var(--accent-color)', width: '20px', height: '20px' }}
+                    />
+                    <span style={{ color: versionFilters.includes(ver.value) ? 'var(--accent-color)' : 'var(--text-main)', fontWeight: versionFilters.includes(ver.value) ? 600 : 400 }}>
+                      {t(ver.labelKey)}
+                    </span>
+                  </label>
+                ))}
+              </div>
+            </div>
+
+            <button 
+              className="btn-primary" 
+              style={{ width: '100%', padding: '1.2rem', fontSize: '1.1rem' }}
+              onClick={() => setMobileFilterOpen(false)}
+            >
+              {t('category_filter_btn')}
+            </button>
+          </div>
+        </div>
+      )}
 
       <style>{`
         :root {

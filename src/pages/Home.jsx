@@ -209,7 +209,7 @@ const Home = () => {
               }
               {allProductsData.filter(p => p.team?.toLowerCase().includes(activeTeamFilter.toLowerCase()) || p.name?.toLowerCase().includes(activeTeamFilter.toLowerCase())).length === 0 && (
                 <div style={{ gridColumn: '1 / -1', textAlign: 'center', padding: '4rem', color: 'var(--text-muted)', border: '1px dashed var(--border-color)', borderRadius: '12px' }}>
-                  Nenhuma camisa do {activeTeamFilter} encontrada no momento. Tente outro clube!
+                  {t('home_empty_team')}
                 </div>
               )}
             </div>
@@ -227,7 +227,7 @@ const Home = () => {
         <div className="container">
           <div style={{ textAlign: 'center', marginBottom: '3rem' }}>
             <h2 style={{ fontSize: '1.5rem', opacity: 0.6, textTransform: 'uppercase', letterSpacing: '2px', fontWeight: 600 }}>
-              {language === 'pt' ? 'Nossos números' : 'Our numbers'}
+              {t('home_numbers_title')}
             </h2>
           </div>
           
@@ -339,7 +339,7 @@ const Home = () => {
                   <p style={{ color: 'var(--text-muted)', fontSize: '1rem', marginBottom: '0.2rem' }}>{t('promo_banner_from')} <del>${normalPrice2.toFixed(2)}</del> {t('promo_banner_for')}</p>
                   <p style={{ fontSize: '3rem', fontWeight: 800, color: 'var(--text-main)', marginBottom: '1rem', lineHeight: 1 }}>${finalTotal2.toFixed(2)}</p>
                   <div style={{ background: 'rgba(255,255,255,0.05)', padding: '0.8rem', borderRadius: '8px', marginBottom: '1.5rem', fontSize: '0.95rem' }}>
-                    <span style={{ display: 'block', marginBottom: '0.2rem' }}>{language === 'pt' ? 'Sai por' : 'Comes out to'} <strong>${finalPricePerUnit2.toFixed(2)}</strong> {t('promo_banner_each')}</span>
+                    <span style={{ display: 'block', marginBottom: '0.2rem' }}>{t('home_comes_out_to')} <strong>${finalPricePerUnit2.toFixed(2)}</strong> {t('promo_banner_each')}</span>
                     <span style={{ color: '#10B981', fontWeight: 700 }}>💰 {t('promo_banner_savings')} ${savings2.toFixed(2)}</span>
                   </div>
 
@@ -355,8 +355,8 @@ const Home = () => {
                   <p style={{ color: 'var(--text-muted)', fontSize: '1rem', marginBottom: '0.2rem' }}>{t('promo_banner_from')} <del>${normalPrice3.toFixed(2)}</del> {t('promo_banner_for')}</p>
                   <p style={{ fontSize: '3rem', fontWeight: 800, color: 'var(--accent-color)', marginBottom: '1rem', lineHeight: 1 }}>${finalTotal3.toFixed(2)}</p>
                   <div style={{ background: 'rgba(219, 254, 135, 0.1)', border: '1px solid rgba(219, 254, 135, 0.3)', padding: '0.8rem', borderRadius: '8px', marginBottom: '1.5rem', fontSize: '0.95rem' }}>
-                    <span style={{ display: 'block', color: 'var(--text-main)', marginBottom: '0.2rem' }}>{language === 'pt' ? 'Sai por só' : 'Only'} <strong>${finalPricePerUnit3.toFixed(2)}</strong> {t('promo_banner_each')}</span>
-                    <span style={{ color: '#10B981', fontWeight: 700 }}>🔥 {language === 'pt' ? 'Você economiza' : 'You save'} ${savings3.toFixed(2)}!</span>
+                    <span style={{ display: 'block', color: 'var(--text-main)', marginBottom: '0.2rem' }}>{t('home_only')} <strong>${finalPricePerUnit3.toFixed(2)}</strong> {t('promo_banner_each')}</span>
+                    <span style={{ color: '#10B981', fontWeight: 700 }}>🔥 {t('home_savings')} ${savings3.toFixed(2)}!</span>
                   </div>
 
                   <div style={{ marginTop: 'auto' }}>
@@ -381,10 +381,10 @@ const Home = () => {
                   {t(`nav_${catName.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace('brasileirao', 'br').replace('internacionais', 'intl').replace('retro', 'retro')}`)}
                 </h2>
                 <p style={{ color: 'var(--text-muted)' }}>
-                  {language === 'pt' ? `As melhores opções em ${catName.toLowerCase()}` : `The best options in ${t(`nav_${catName.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace('brasileirao', 'br').replace('internacionais', 'intl').replace('retro', 'retro')}`).toLowerCase()}`}
+                  {t('home_best_options')} {t(`nav_${catName.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace('brasileirao', 'br').replace('internacionais', 'intl').replace('retro', 'retro')}`).toLowerCase()}
                 </p>
               </div>
-              <a href={`/colecao/${catName.toLowerCase().replace('ç', 'c').replace('õ', 'o').replace('ã', 'a')}`} style={{ color: 'var(--accent-color)', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '0.5rem' }}>{language === 'pt' ? 'Ver todas' : 'View all'} <ChevronRight size={16} /></a>
+              <a href={`/colecao/${catName.toLowerCase().replace('ç', 'c').replace('õ', 'o').replace('ã', 'a')}`} style={{ color: 'var(--accent-color)', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '0.5rem' }}>{t('home_view_all')} <ChevronRight size={16} /></a>
             </div>
 
             <div className="hide-scrollbar" style={{ display: 'flex', overflowX: 'auto', gap: '1.5rem', paddingBottom: '1.5rem' }}>
@@ -395,7 +395,7 @@ const Home = () => {
               ))}
               {!loading && products.length === 0 && (
                 <div style={{ padding: '2rem', color: 'var(--text-muted)', border: '1px dashed var(--border-color)', borderRadius: 'var(--radius-md)', width: '100%', textAlign: 'center' }}>
-                  Novidades em breve de {catName}!
+                  {t('home_comming_soon')} {catName}!
                 </div>
               )}
             </div>
