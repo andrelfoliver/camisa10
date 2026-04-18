@@ -40,65 +40,24 @@ const Checkout = () => {
     loadConfig();
   }, []);
 
-  const [predictions, setPredictions] = useState([]);
-  const [showPredictions, setShowPredictions] = useState(false);
+  const addressInputRef = useRef(null);
 
-  // Inicialização do Serviço de Autocomplete do Google (Manual)
-  const autocompleteService = useRef(null);
-
+  // Inicialização Robusta do Google Autocomplete (Padrão JS API)
   useEffect(() => {
-    const initServices = () => {
+    let autocomplete;
+    const initAutocomplete = () => {
       if (!window.google || !window.google.maps || !window.google.maps.places) return false;
-      if (!autocompleteService.current) {
-        autocompleteService.current = new window.google.maps.places.AutocompleteService();
-      }
-      return true;
-    };
+      
+      autocomplete = new window.google.maps.places.Autocomplete(addressInputRef.current, {
+        componentRestrictions: { country: 'ca' },
+        fields: ['address_components', 'geometry'],
+        types: ['address']
+      });
 
-    if (!initServices()) {
-      const interval = setInterval(() => {
-        if (initServices()) clearInterval(interval);
-      }, 500);
-      return () => clearInterval(interval);
-    }
-  }, []);
+      autocomplete.addListener('place_changed', () => {
+        const place = autocomplete.getPlace();
+        if (!place.address_components) return;
 
-  const handleAddressChange = (val) => {
-    setFormData({...formData, street: val});
-    
-    if (!val || val.length < 3 || !autocompleteService.current) {
-      setPredictions([]);
-      setShowPredictions(false);
-      return;
-    }
-
-    console.log("🔍 Buscando sugestões para:", val);
-    autocompleteService.current.getPlacePredictions({
-      input: val,
-      componentRestrictions: { country: 'ca' },
-      types: ['address']
-    }, (results, status) => {
-      console.log("📡 Status do Google:", status);
-      if (status === window.google.maps.places.PlacesServiceStatus.OK && results) {
-        console.log("✅ Sugestões encontradas:", results.length);
-        setPredictions(results);
-        setShowPredictions(true);
-      } else {
-        console.warn("❌ Falha na busca ou nada encontrado. Status:", status);
-        setPredictions([]);
-      }
-    });
-  };
-
-  const handleSelectPrediction = (prediction) => {
-    // Usamos um div temporário apenas para instanciar o PlacesService
-    const service = new window.google.maps.places.PlacesService(document.createElement('div'));
-    
-    service.getDetails({
-      placeId: prediction.place_id,
-      fields: ['address_components']
-    }, (place, status) => {
-      if (status === window.google.maps.places.PlacesServiceStatus.OK && place.address_components) {
         let streetNumber = '';
         let route = '';
         let city = '';
@@ -121,11 +80,17 @@ const Checkout = () => {
           province: province || prev.province,
           postalCode: postalCode || prev.postalCode
         }));
-        setPredictions([]);
-        setShowPredictions(false);
-      }
-    });
-  };
+      });
+      return true;
+    };
+
+    if (!initAutocomplete()) {
+      const interval = setInterval(() => {
+        if (initAutocomplete()) clearInterval(interval);
+      }, 500);
+      return () => clearInterval(interval);
+    }
+  }, []);
 
   useEffect(() => {
     if (user) {
@@ -391,34 +356,14 @@ const Checkout = () => {
               </div>
 
               <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '1rem' }}>
-                <div style={{ position: 'relative' }}>
+                <div>
                   <label style={{ display: 'block', marginBottom: '0.5rem', color: 'var(--text-muted)' }}>{t('checkout_street')}</label>
                   <input 
                     type="text" placeholder="Ex: 123 Bay St"
-                    autoComplete="off"
-                    value={formData.street} 
-                    onChange={e => handleAddressChange(e.target.value)}
-                    onBlur={() => setTimeout(() => setShowPredictions(false), 200)}
-                    onFocus={() => formData.street.length >= 3 && setShowPredictions(true)}
+                    ref={addressInputRef}
+                    value={formData.street} onChange={e => setFormData({...formData, street: e.target.value})}
                     style={{ width: '100%', padding: '0.75rem', borderRadius: 'var(--radius-sm)', background: 'var(--bg-color)', border: '1px solid var(--border-color)', color: 'var(--text-main)', fontSize: '1rem' }} 
                   />
-                  
-                  {/* Custom Suggestions List */}
-                  {showPredictions && predictions.length > 0 && (
-                    <div style={{ position: 'absolute', top: '100%', left: 0, right: 0, background: '#121218', border: '1px solid var(--border-color)', borderRadius: '0 0 var(--radius-sm) var(--radius-sm)', zIndex: 1000, boxShadow: '0 10px 40px rgba(0,0,0,0.5)', overflow: 'hidden' }}>
-                      {predictions.map((p) => (
-                        <div 
-                          key={p.place_id}
-                          onClick={() => handleSelectPrediction(p)}
-                          style={{ padding: '0.75rem 1rem', cursor: 'pointer', borderBottom: '1px solid rgba(255,255,255,0.05)', color: '#fff', fontSize: '0.9rem', transition: 'background 0.2s' }}
-                          onMouseEnter={(e) => e.target.style.background = 'rgba(204, 255, 0, 0.1)'}
-                          onMouseLeave={(e) => e.target.style.background = 'transparent'}
-                        >
-                          {p.description}
-                        </div>
-                      ))}
-                    </div>
-                  )}
                 </div>
                 <div>
                   <label style={{ display: 'block', marginBottom: '0.5rem', color: 'var(--text-muted)' }}>{t('checkout_apt')}</label>
