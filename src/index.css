@@ -996,5 +996,38 @@ button {
   margin-bottom: 0.25rem;
   color: #fff;
 }
+/* Google Places Autocomplete Dark Mode */
+.pac-container {
+  background-color: #121218 !important;
+  border: 1px solid rgba(255,255,255,0.1) !important;
+  border-radius: 8px !important;
+  box-shadow: 0 10px 40px rgba(0,0,0,0.5) !important;
+  font-family: inherit !important;
+  margin-top: 5px !important;
+  z-index: 99999 !important;
+}
 
+.pac-item {
+  color: #fff !important;
+  border-top: 1px solid rgba(255,255,255,0.05) !important;
+  padding: 10px 15px !important;
+  cursor: pointer !important;
+}
 
+.pac-item:hover {
+  background-color: rgba(204, 255, 0, 0.1) !important;
+}
+
+.pac-item-query {
+  color: #ccff00 !important;
+  font-size: 1rem !important;
+  padding-right: 5px !important;
+}
+
+.pac-matched {
+  font-weight: 700 !important;
+}
+
+.pac-icon {
+  display: none !important;
+}
