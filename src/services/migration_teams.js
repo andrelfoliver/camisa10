@@ -34,11 +34,11 @@ export async function migrateTeamsToSupabase() {
         { name: 'Vasco da Gama', league: 'Brasileirão', logo: 'https://s.glbimg.com/es/sde/f/equipes/2014/04/14/vasco_60x60.png' },
         { name: 'Vitória', league: 'Brasileirão', logo: 'https://s.glbimg.com/es/sde/f/equipes/2014/04/14/vitoria_60x60.png' },
         
-        // Internacionais & Seleções (Wikimedia PNG Thumbnails - Confiáveis e Estáveis)
+        // Internacionais & Seleções (Wikimedia PNG Thumbnails - Estabilidade Máxima)
         { name: 'Al-Nassr', league: 'Saudi Pro League', logo: 'https://upload.wikimedia.org/wikipedia/en/thumb/4/4b/Al_Nassr_FC_logo.svg/200px-Al_Nassr_FC_logo.svg.png' },
         { name: 'Al-Hilal', league: 'Saudi Pro League', logo: 'https://upload.wikimedia.org/wikipedia/en/thumb/f/fa/Al-Hilal_Saudi_FC_logo.svg/200px-Al_Hilal_Saudi_FC_logo.svg.png' },
         { name: 'Real Madrid', league: 'La Liga', logo: 'https://upload.wikimedia.org/wikipedia/en/thumb/5/56/Real_Madrid_CF.svg/200px-Real_Madrid_CF.svg.png' },
-        { name: 'Barcelona', league: 'La Liga', logo: 'https://upload.wikimedia.org/wikipedia/en/thumb/4/47/FC_Barcelona_%28crest%29.svg/200px-FC_Barcelona_%28crest%29.svg.png' },
+        { name: 'Barcelona', league: 'La Liga', logo: 'https://upload.wikimedia.org/wikipedia/commons/thumb/4/47/FC_Barcelona_%28crest%29.svg/200px-FC_Barcelona_%28crest%29.svg.png' },
         { name: 'Inter Miami', league: 'MLS', logo: 'https://upload.wikimedia.org/wikipedia/en/thumb/1/1c/Inter_Miami_CF_logo.svg/200px-Inter_Miami_CF_logo.svg.png' },
         { name: 'Manchester City', league: 'Premier League', logo: 'https://upload.wikimedia.org/wikipedia/en/thumb/e/eb/Manchester_City_FC_badge.svg/200px-Manchester_City_FC_badge.svg.png' },
         { name: 'Manchester United', league: 'Premier League', logo: 'https://upload.wikimedia.org/wikipedia/en/thumb/7/7a/Manchester_United_FC_crest.svg/200px-Manchester_United_FC_crest.svg.png' },
