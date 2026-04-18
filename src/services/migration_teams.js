@@ -75,7 +75,7 @@ export async function migrateTeamsToSupabase() {
         { name: 'Botafogo', league: 'Brasileirão', logo: 'https://images.weserv.nl/?url=s.glbimg.com/es/sde/f/equipes/2014/04/14/botafogo_60x60.png&w=200' },
         { name: 'Corinthians', league: 'Brasileirão', logo: 'https://images.weserv.nl/?url=s.glbimg.com/es/sde/f/equipes/2014/04/14/corinthians_60x60.png&w=200' },
         { name: 'Cruzeiro', league: 'Brasileirão', logo: 'https://images.weserv.nl/?url=s.glbimg.com/es/sde/f/equipes/2015/04/29/cruzeiro_60x60.png&w=200' },
-        { name: 'Flamengo', league: 'Brasileirão', logo: 'https://images.weserv.nl/?url=s.glbimg.com/es/sde/f/equipes/2018/04/10/flamengo.png&w=200' },
+        { name: 'Flamengo', league: 'Brasileirão', logo: 'https://images.weserv.nl/?url=upload.wikimedia.org/wikipedia/commons/thumb/9/96/Clube_de_Regatas_do_Flamengo_logo.svg/250px-Clube_de_Regatas_do_Flamengo_logo.svg.png' },
         { name: 'Fluminense', league: 'Brasileirão', logo: 'https://images.weserv.nl/?url=s.glbimg.com/es/sde/f/equipes/2014/04/14/fluminense_60x60.png&w=200' },
         { name: 'Grêmio', league: 'Brasileirão', logo: 'https://images.weserv.nl/?url=s.glbimg.com/es/sde/f/equipes/2014/04/14/gremio_60x60.png&w=200' },
         { name: 'Internacional', league: 'Brasileirão', logo: 'https://images.weserv.nl/?url=s.glbimg.com/es/sde/f/equipes/2014/04/14/internacional_60x60.png&w=200' },
