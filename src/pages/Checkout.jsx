@@ -42,72 +42,85 @@ const Checkout = () => {
 
   const addressInputRef = useRef(null);
 
-  // Inicialização Moderna do Google Places (API New)
+  // Inicialização Robusta do Google Autocomplete
   useEffect(() => {
     let autocomplete;
-    const initAutocomplete = async () => {
-      try {
-        if (!window.google) return;
-        
-        // Carrega a biblioteca 'places' de forma moderna
-        const { Autocomplete } = await window.google.maps.importLibrary("places");
-        
-        if (!addressInputRef.current) return;
+    const initAutocomplete = () => {
+      // Guard de segurança: Verifica se todas as bibliotecas do Google estão carregadas
+      if (!window.google || !window.google.maps || !window.google.maps.places) return false;
+      
+      if (!addressInputRef.current) return false;
 
-        autocomplete = new Autocomplete(addressInputRef.current, {
-          componentRestrictions: { country: 'ca' },
-          fields: ['address_components', 'geometry'],
-          types: ['address']
+      autocomplete = new window.google.maps.places.Autocomplete(addressInputRef.current, {
+        componentRestrictions: { country: 'ca' },
+        fields: ['address_components', 'geometry'],
+        types: ['address']
+      });
+
+      autocomplete.addListener('place_changed', () => {
+        const place = autocomplete.getPlace();
+        if (!place.address_components) return;
+
+        let streetNumber = '';
+        let route = '';
+        let city = '';
+        let province = '';
+        let postalCode = '';
+
+        place.address_components.forEach(component => {
+          const types = component.types;
+          if (types.includes('street_number')) streetNumber = component.long_name;
+          if (types.includes('route')) route = component.long_name;
+          if (types.includes('locality')) city = component.long_name;
+          if (types.includes('administrative_area_level_1')) province = component.short_name;
+          if (types.includes('postal_code')) postalCode = component.long_name;
         });
 
-        autocomplete.addListener('place_changed', () => {
-          const place = autocomplete.getPlace();
-          if (!place.address_components) return;
-
-          let streetNumber = '';
-          let route = '';
-          let city = '';
-          let province = '';
-          let postalCode = '';
-
-          place.address_components.forEach(component => {
-            const types = component.types;
-            if (types.includes('street_number')) streetNumber = component.long_name;
-            if (types.includes('route')) route = component.long_name;
-            if (types.includes('locality')) city = component.long_name;
-            if (types.includes('administrative_area_level_1')) province = component.short_name;
-            if (types.includes('postal_code')) postalCode = component.long_name;
-          });
-
-          setFormData(prev => ({
-            ...prev,
-            street: `${streetNumber} ${route}`.trim(),
-            city: city || prev.city,
-            province: province || prev.province,
-            postalCode: postalCode || prev.postalCode
-          }));
-        });
-      } catch (err) {
-        console.error("📛 Error loading Google Places:", err);
-      }
+        setFormData(prev => ({
+          ...prev,
+          street: `${streetNumber} ${route}`.trim(),
+          city: city || prev.city,
+          province: province || prev.province,
+          postalCode: postalCode || prev.postalCode
+        }));
+      });
+      return true;
     };
 
-    initAutocomplete();
+    // Tenta inicializar. Se o script do Google ainda não carregou, tenta novamente em intervalos curtos.
+    const interval = setInterval(() => {
+      if (initAutocomplete()) {
+        console.log("✅ Google Autocomplete Initialized");
+        clearInterval(interval);
+      }
+    }, 500);
+
+    return () => clearInterval(interval);
   }, []);
 
   useEffect(() => {
     if (user) {
       const fetchProfile = async () => {
-        const { data, error } = await supabase.from('profiles').select('*').eq('id', user.id).single();
-        if (data) {
-          setFormData(prev => ({
-            ...prev,
-            street: data.street || '',
-            apartment: data.apartment || '',
-            city: data.city || '',
-            province: data.province || '',
-            postalCode: data.postal_code || ''
-          }));
+        try {
+          // Busca o perfil de forma segura para evitar erro 406
+          const { data, error } = await supabase
+            .from('profiles')
+            .select('*')
+            .eq('id', user.id);
+          
+          if (data && data.length > 0) {
+            const profile = data[0];
+            setFormData(prev => ({
+              ...prev,
+              street: profile.street || '',
+              apartment: profile.apartment || '',
+              city: profile.city || '',
+              province: profile.province || '',
+              postalCode: profile.postal_code || ''
+            }));
+          }
+        } catch (err) {
+          console.warn("⚠️ Perfil não encontrado ou erro na busca:", err);
         }
       };
       fetchProfile();
