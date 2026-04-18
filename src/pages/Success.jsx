@@ -1,5 +1,5 @@
 import React from 'react';
-import { useLocation, useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate, Link } from 'react-router-dom';
 import { CheckCircle2, Mail, MessageCircle, Home } from 'lucide-react';
 import { useCart } from '../context/CartContext';
 import { useLanguage } from '../context/LanguageContext';
@@ -90,18 +90,19 @@ const Success = () => {
             </button>
           </div>
 
-          <button 
-            onClick={() => navigate('/')}
+          <Link 
+            to="/"
             className="btn-secondary" 
             style={{ 
               width: '100%', 
               justifyContent: 'center',
               padding: '1rem',
+              textDecoration: 'none'
             }}
           >
             <Home size={20} />
             {t('success_home_btn')}
-          </button>
+          </Link>
         </div>
       </div>
 
