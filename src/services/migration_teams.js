@@ -64,53 +64,66 @@ export async function migrateTeamsToSupabase() {
     // Primeiro, normalizamos os dados existentes
     await normalizeTeamData();
 
-    // Mapeamento de logos de alta qualidade e estabilidade
+    // Mapeamento de logos locais (Pasta public/escudos - Estabilidade 100%)
+    // Usamos caminhos relativos para que funcionem tanto em dev quanto em produção (Vercel)
+    const BASE_URL = '/escudos';
+    
     const highQualityTeams = [
-        // Brasileirão (Links corrigidos - SDE Oficial)
-        { name: 'Athletico-PR', league: 'Brasileirão', logo: 'https://s.glbimg.com/es/sde/f/equipes/2018/12/11/atletico-pr_60x60.png' },
-        { name: 'Atlético-GO', league: 'Brasileirão', logo: 'https://s.glbimg.com/es/sde/f/equipes/2020/07/02/atletico-go_60x60.png' },
-        { name: 'Atlético-MG', league: 'Brasileirão', logo: 'https://s.glbimg.com/es/sde/f/equipes/2014/04/14/atletico_mg_60x60.png' }, // Usando o oficial como base, mas garantindo que o nome seja Atlético-MG
-        { name: 'Bahia', league: 'Brasileirão', logo: 'https://s.glbimg.com/es/sde/f/equipes/2014/04/14/bahia_60x60.png' },
-        { name: 'Botafogo', league: 'Brasileirão', logo: 'https://s.glbimg.com/es/sde/f/equipes/2014/04/14/botafogo_60x60.png' },
-        { name: 'Corinthians', league: 'Brasileirão', logo: 'https://s.glbimg.com/es/sde/f/equipes/2014/04/14/corinthians_60x60.png' },
-        { name: 'Coritiba', league: 'Brasileirão', logo: 'https://s.glbimg.com/es/sde/f/equipes/2014/04/14/coritiba_60x60.png' },
-        { name: 'Criciúma', league: 'Brasileirão', logo: 'https://s.glbimg.com/es/sde/f/equipes/2014/04/14/criciuma_60x60.png' },
-        { name: 'Cruzeiro', league: 'Brasileirão', logo: 'https://s.glbimg.com/es/sde/f/equipes/2015/04/29/cruzeiro_60x60.png' },
-        { name: 'Cuiabá', league: 'Brasileirão', logo: 'https://s.glbimg.com/es/sde/f/equipes/2014/04/14/cuiaba_60x60.png' },
-        { name: 'Flamengo', league: 'Brasileirão', logo: 'https://s.glbimg.com/es/sde/f/equipes/2018/03/10/flamengo_60x60.png' },
-        { name: 'Fluminense', league: 'Brasileirão', logo: 'https://s.glbimg.com/es/sde/f/equipes/2014/04/14/fluminense_60x60.png' },
-        { name: 'Fortaleza', league: 'Brasileirão', logo: 'https://s.glbimg.com/es/sde/f/equipes/2018/03/10/fortaleza_60x60.png' },
-        { name: 'Grêmio', league: 'Brasileirão', logo: 'https://s.glbimg.com/es/sde/f/equipes/2014/04/14/gremio_60x60.png' },
-        { name: 'Internacional', league: 'Brasileirão', logo: 'https://s.glbimg.com/es/sde/f/equipes/2016/05/03/internacional_60x60.png' },
-        { name: 'Juventude', league: 'Brasileirão', logo: 'https://s.glbimg.com/es/sde/f/equipes/2014/04/14/juventude_60x60.png' },
-        { name: 'Mirassol', league: 'Brasileirão', logo: 'https://s.glbimg.com/es/sde/f/equipes/2014/04/14/mirassol_60x60.png' },
-        { name: 'Palmeiras', league: 'Brasileirão', logo: 'https://s.glbimg.com/es/sde/f/equipes/2014/04/14/palmeiras_60x60.png' },
-        { name: 'Bragantino', league: 'Brasileirão', logo: 'https://s.glbimg.com/es/sde/f/equipes/2020/01/17/bragantino_60x60.png' },
-        { name: 'São Paulo', league: 'Brasileirão', logo: 'https://s.glbimg.com/es/sde/f/equipes/2014/04/14/sao_paulo_60x60.png' },
-        { name: 'Vasco da Gama', league: 'Brasileirão', logo: 'https://s.glbimg.com/es/sde/f/equipes/2014/04/14/vasco_60x60.png' },
-        { name: 'Vitória', league: 'Brasileirão', logo: 'https://s.glbimg.com/es/sde/f/equipes/2014/04/14/vitoria_60x60.png' },
-        { name: 'Santos', league: 'Brasileirão', logo: 'https://s.glbimg.com/es/sde/f/equipes/2014/04/14/santos_60x60.png' },
+        // Brasileirão
+        { name: 'Athletico-PR', league: 'Brasileirão', logo: `${BASE_URL}/athletico-paranaense.png` },
+        { name: 'Atlético-GO', league: 'Brasileirão', logo: `${BASE_URL}/atletico-go.png` },
+        { name: 'Atlético-MG', league: 'Brasileirão', logo: `${BASE_URL}/atletico-mineiro.png` },
+        { name: 'Bahia', league: 'Brasileirão', logo: `${BASE_URL}/bahia.png` },
+        { name: 'Botafogo', league: 'Brasileirão', logo: `${BASE_URL}/botafogo.png` },
+        { name: 'Corinthians', league: 'Brasileirão', logo: `${BASE_URL}/corinthians.png` },
+        { name: 'Coritiba', league: 'Brasileirão', logo: `${BASE_URL}/coritiba.png` },
+        { name: 'Criciúma', league: 'Brasileirão', logo: `${BASE_URL}/criciuma.png` },
+        { name: 'Cruzeiro', league: 'Brasileirão', logo: `${BASE_URL}/cruzeiro.png` },
+        { name: 'Cuiabá', league: 'Brasileirão', logo: `${BASE_URL}/cuiaba.png` },
+        { name: 'Flamengo', league: 'Brasileirão', logo: `${BASE_URL}/flamengo.png` },
+        { name: 'Fluminense', league: 'Brasileirão', logo: `${BASE_URL}/fluminense.png` },
+        { name: 'Fortaleza', league: 'Brasileirão', logo: `${BASE_URL}/fortaleza.png` },
+        { name: 'Grêmio', league: 'Brasileirão', logo: `${BASE_URL}/gremio.png` },
+        { name: 'Internacional', league: 'Brasileirão', logo: `${BASE_URL}/internacional.png` },
+        { name: 'Juventude', league: 'Brasileirão', logo: `${BASE_URL}/juventude.png` },
+        { name: 'Mirassol', league: 'Brasileirão', logo: `${BASE_URL}/mirassol-sp.png` },
+        { name: 'Palmeiras', league: 'Brasileirão', logo: `${BASE_URL}/palmeiras.png` },
+        { name: 'Bragantino', league: 'Brasileirão', logo: `${BASE_URL}/red-bull-bragantino.png` },
+        { name: 'São Paulo', league: 'Brasileirão', logo: `${BASE_URL}/sao-paulo.png` },
+        { name: 'Vasco da Gama', league: 'Brasileirão', logo: `${BASE_URL}/vasco-da-gama.png` },
+        { name: 'Vitória', league: 'Brasileirão', logo: `${BASE_URL}/vitoria.png` },
+        { name: 'Santos', league: 'Brasileirão', logo: `${BASE_URL}/santos.png` },
         
-        // Internacionais (Novos links - Wikimedia Commons / RAW JSON / LogosVGPNG)
-        { name: 'Al-Nassr', league: 'Saudi Pro League', logo: 'https://upload.wikimedia.org/wikipedia/commons/thumb/4/4b/Al_Nassr_FC_logo.svg/200px-Al_Nassr_FC_logo.svg.png' },
-        { name: 'Al-Hilal', league: 'Saudi Pro League', logo: 'https://upload.wikimedia.org/wikipedia/commons/thumb/f/fa/Al-Hilal_Saudi_FC_logo.svg/200px-Al-Hilal_Saudi_FC_logo.svg.png' },
-        { name: 'Real Madrid', league: 'La Liga', logo: 'https://upload.wikimedia.org/wikipedia/commons/thumb/5/56/Real_Madrid_CF.svg/200px-Real_Madrid_CF.svg.png' },
-        { name: 'Barcelona', league: 'La Liga', logo: 'https://upload.wikimedia.org/wikipedia/commons/thumb/4/47/FC_Barcelona_%28crest%29.svg/200px-FC_Barcelona_%28crest%29.svg.png' },
-        { name: 'Inter Miami', league: 'MLS', logo: 'https://upload.wikimedia.org/wikipedia/commons/thumb/1/1c/Inter_Miami_CF_logo.svg/200px-Inter_Miami_CF_logo.svg.png' },
-        { name: 'Manchester City', league: 'Premier League', logo: 'https://upload.wikimedia.org/wikipedia/commons/thumb/e/eb/Manchester_City_FC_badge.svg/200px-Manchester_City_FC_badge.svg.png' },
-        { name: 'Manchester United', league: 'Premier League', logo: 'https://upload.wikimedia.org/wikipedia/commons/thumb/7/7a/Manchester_United_FC_crest.svg/200px-Manchester_United_FC_crest.svg.png' },
-        { name: 'Liverpool', league: 'Premier League', logo: 'https://upload.wikimedia.org/wikipedia/commons/thumb/0/0c/Liverpool_FC.svg/200px-Liverpool_FC.svg.png' },
-        { name: 'Bayern de Munique', league: 'Bundesliga', logo: 'https://upload.wikimedia.org/wikipedia/commons/thumb/1/1b/FC_Bayern_M%C3%BCnchen_logo_%282017%29.svg/200px-FC_Bayern_M%C3%BCnchen_logo_%282017%29.svg.png' },
-        { name: 'Paris Saint-Germain', league: 'Ligue 1', logo: 'https://upload.wikimedia.org/wikipedia/commons/thumb/8/86/Paris_Saint-Germain_FC_crest.svg/200px-Paris_Saint-Germain_FC_crest.svg.png' },
-        { name: 'Chelsea', league: 'Premier League', logo: 'https://upload.wikimedia.org/wikipedia/commons/thumb/c/cc/Chelsea_FC.svg/200px-Chelsea_FC.svg.png' },
-        { name: 'Arsenal', league: 'Premier League', logo: 'https://upload.wikimedia.org/wikipedia/commons/thumb/0/03/Arsenal_FC.svg/200px-Arsenal_FC.svg.png' },
+        // Internacionais
+        { name: 'Al-Nassr', league: 'Saudi Pro League', logo: `${BASE_URL}/al-nassr.png` },
+        { name: 'Al-Hilal', league: 'Saudi Pro League', logo: `${BASE_URL}/al-hilal.png` },
+        { name: 'Real Madrid', league: 'La Liga', logo: `${BASE_URL}/real-madrid.png` },
+        { name: 'Barcelona', league: 'La Liga', logo: `${BASE_URL}/barcelona.png` },
+        { name: 'Inter Miami', league: 'MLS', logo: `${BASE_URL}/inter-miami.png` },
+        { name: 'Manchester City', league: 'Premier League', logo: `${BASE_URL}/manchester-city.png` },
+        { name: 'Manchester United', league: 'Premier League', logo: `${BASE_URL}/manchester-united.png` },
+        { name: 'Liverpool', league: 'Premier League', logo: `${BASE_URL}/liverpool.png` },
+        { name: 'Bayern de Munique', league: 'Bundesliga', logo: `${BASE_URL}/bayern-de-munique.png` },
+        { name: 'Paris Saint-Germain', league: 'Ligue 1', logo: `${BASE_URL}/psg.png` },
+        { name: 'Chelsea', league: 'Premier League', logo: `${BASE_URL}/chelsea.png` },
+        { name: 'Arsenal', league: 'Premier League', logo: `${BASE_URL}/arsenal.png` },
+        { name: 'Borussia Dortmund', league: 'Bundesliga', logo: `${BASE_URL}/borussia-dortmund.png` },
+        { name: 'Boca Juniors', league: 'Superliga Argentina', logo: `${BASE_URL}/boca-juniors.png` },
+        { name: 'River Plate', league: 'Superliga Argentina', logo: `${BASE_URL}/river-plate.png` },
+        { name: 'AC Milan', league: 'Serie A', logo: `${BASE_URL}/ac-milan.png` },
+        { name: 'Inter de Milão', league: 'Serie A', logo: `${BASE_URL}/inter-milao.png` },
+        { name: 'Juventus', league: 'Serie A', logo: `${BASE_URL}/juventus.png` },
         
         // Seleções
-        { name: 'Alemanha', league: 'Seleções', logo: 'https://upload.wikimedia.org/wikipedia/commons/thumb/e/e3/Germany_national_football_team_crest.svg/200px-Germany_national_football_team_crest.svg.png' },
-        { name: 'Argentina', league: 'Seleções', logo: 'https://upload.wikimedia.org/wikipedia/commons/thumb/d/d3/Argentina_national_football_team_crest.svg/200px-Argentina_national_football_team_crest.svg.png' },
-        { name: 'Brasil', league: 'Seleções', logo: 'https://upload.wikimedia.org/wikipedia/commons/thumb/0/05/Brazil_national_football_team_crest.svg/200px-Brazil_national_football_team_crest.svg.png' },
-        { name: 'Portugal', league: 'Seleções', logo: 'https://upload.wikimedia.org/wikipedia/commons/thumb/5/5f/Portuguese_Football_Federation.svg/200px-Portuguese_Football_Federation.svg.png' },
-        { name: 'França', league: 'Seleções', logo: 'https://upload.wikimedia.org/wikipedia/commons/thumb/a/a7/France_national_football_team_crest.svg/200px-France_national_football_team_crest.svg.png' }
+        { name: 'Alemanha', league: 'Seleções', logo: `${BASE_URL}/alemanha.png` },
+        { name: 'Argentina', league: 'Seleções', logo: `${BASE_URL}/argentina.png` },
+        { name: 'Brasil', league: 'Seleções', logo: `${BASE_URL}/brasil.png` },
+        { name: 'Portugal', league: 'Seleções', logo: `${BASE_URL}/portugal.png` },
+        { name: 'França', league: 'Seleções', logo: `${BASE_URL}/franca.png` },
+        { name: 'Espanha', league: 'Seleções', logo: `${BASE_URL}/espanha.png` },
+        { name: 'Inglaterra', league: 'Seleções', logo: `${BASE_URL}/inglaterra.png` },
+        { name: 'Itália', league: 'Seleções', logo: `${BASE_URL}/italia.png` },
+        { name: 'Uruguai', league: 'Seleções', logo: `${BASE_URL}/uruguai.png` }
     ];
 
     // Ajuste específico para o Atlético-MG sem estrela (Galo Puro)
