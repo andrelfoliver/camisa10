@@ -96,8 +96,8 @@ export default async function handler(req, res) {
     // --- EMAIL 1: NOTIFICAÇÃO PARA O ADMIN (VOCÊ) - SEMPRE EM PT ---
     const adminEmailPromise = resend.emails.send({
       from: 'iFooty Alerts <vendas@ifooty.ca>',
-      to: ['ifootycanada@gmail.com'],
-      replyTo: 'ifootycanada@gmail.com',
+      to: ['camisadez085@gmail.com'],
+      replyTo: 'camisadez085@gmail.com',
       subject: `⚽ NOVO PEDIDO: ${order.customer_name}`,
       html: `
         <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; max-width: 650px; margin: 0 auto; background: #ffffff;">
@@ -134,7 +134,7 @@ export default async function handler(req, res) {
     const customerEmailPromise = resend.emails.send({
       from: 'iFooty Store <vendas@ifooty.ca>',
       to: [order.customer_email],
-      replyTo: 'ifootycanada@gmail.com',
+      replyTo: 'camisadez085@gmail.com',
       subject: t.customerSubject,
       html: `
         <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; max-width: 650px; margin: 0 auto; background: #ffffff; border: 1px solid #edf2f7; border-radius: 8px; overflow: hidden;">
