@@ -1,5 +1,6 @@
 import React from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
+import { CheckCircle2, Mail, MessageCircle, Home } from 'lucide-react';
 import { useCart } from '../context/CartContext';
 import { useLanguage } from '../context/LanguageContext';
 
