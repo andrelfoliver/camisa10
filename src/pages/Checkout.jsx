@@ -42,54 +42,57 @@ const Checkout = () => {
 
   const addressInputRef = useRef(null);
 
-  // Inicialização Robusta do Google Autocomplete (Padrão JS API)
+  // Inicialização Moderna do Google Places (API New)
   useEffect(() => {
     let autocomplete;
-    const initAutocomplete = () => {
-      if (!window.google || !window.google.maps || !window.google.maps.places) return false;
-      
-      autocomplete = new window.google.maps.places.Autocomplete(addressInputRef.current, {
-        componentRestrictions: { country: 'ca' },
-        fields: ['address_components', 'geometry'],
-        types: ['address']
-      });
+    const initAutocomplete = async () => {
+      try {
+        if (!window.google) return;
+        
+        // Carrega a biblioteca 'places' de forma moderna
+        const { Autocomplete } = await window.google.maps.importLibrary("places");
+        
+        if (!addressInputRef.current) return;
 
-      autocomplete.addListener('place_changed', () => {
-        const place = autocomplete.getPlace();
-        if (!place.address_components) return;
-
-        let streetNumber = '';
-        let route = '';
-        let city = '';
-        let province = '';
-        let postalCode = '';
-
-        place.address_components.forEach(component => {
-          const types = component.types;
-          if (types.includes('street_number')) streetNumber = component.long_name;
-          if (types.includes('route')) route = component.long_name;
-          if (types.includes('locality')) city = component.long_name;
-          if (types.includes('administrative_area_level_1')) province = component.short_name;
-          if (types.includes('postal_code')) postalCode = component.long_name;
+        autocomplete = new Autocomplete(addressInputRef.current, {
+          componentRestrictions: { country: 'ca' },
+          fields: ['address_components', 'geometry'],
+          types: ['address']
         });
 
-        setFormData(prev => ({
-          ...prev,
-          street: `${streetNumber} ${route}`.trim(),
-          city: city || prev.city,
-          province: province || prev.province,
-          postalCode: postalCode || prev.postalCode
-        }));
-      });
-      return true;
+        autocomplete.addListener('place_changed', () => {
+          const place = autocomplete.getPlace();
+          if (!place.address_components) return;
+
+          let streetNumber = '';
+          let route = '';
+          let city = '';
+          let province = '';
+          let postalCode = '';
+
+          place.address_components.forEach(component => {
+            const types = component.types;
+            if (types.includes('street_number')) streetNumber = component.long_name;
+            if (types.includes('route')) route = component.long_name;
+            if (types.includes('locality')) city = component.long_name;
+            if (types.includes('administrative_area_level_1')) province = component.short_name;
+            if (types.includes('postal_code')) postalCode = component.long_name;
+          });
+
+          setFormData(prev => ({
+            ...prev,
+            street: `${streetNumber} ${route}`.trim(),
+            city: city || prev.city,
+            province: province || prev.province,
+            postalCode: postalCode || prev.postalCode
+          }));
+        });
+      } catch (err) {
+        console.error("📛 Error loading Google Places:", err);
+      }
     };
 
-    if (!initAutocomplete()) {
-      const interval = setInterval(() => {
-        if (initAutocomplete()) clearInterval(interval);
-      }, 500);
-      return () => clearInterval(interval);
-    }
+    initAutocomplete();
   }, []);
 
   useEffect(() => {
