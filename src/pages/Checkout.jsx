@@ -8,7 +8,7 @@ import { supabase } from '../services/supabase';
 import { useLanguage } from '../context/LanguageContext';
 
 const Checkout = () => {
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
   const { cartItems, cartTotal, subtotal, discount, clearCart } = useCart();
   const { user } = useAuth();
   const navigate = useNavigate();
