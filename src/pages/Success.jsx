@@ -90,19 +90,22 @@ const Success = () => {
             </button>
           </div>
 
-          <Link 
-            to="/"
+          <a 
+            href="/"
             className="btn-secondary" 
             style={{ 
               width: '100%', 
               justifyContent: 'center',
               padding: '1rem',
-              textDecoration: 'none'
+              textDecoration: 'none',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '0.5rem'
             }}
           >
             <Home size={20} />
             {t('success_home_btn')}
-          </Link>
+          </a>
         </div>
       </div>
 
