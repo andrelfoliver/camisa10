@@ -18,6 +18,7 @@ import Success from './pages/Success';
 import NotFound from './pages/NotFound';
 import WhatsAppIcon from './components/WhatsAppIcon';
 import SalesPopup from './components/SalesPopup';
+import ExitIntentPopup from './components/ExitIntentPopup';
 
 const ScrollToTop = () => {
   const { pathname } = useLocation();
@@ -76,6 +77,9 @@ const AppLayout = () => {
         Only display on storefront pages, hide on Admin to reduce noise. 
       */}
       {!isAdminPage && <SalesPopup />}
+      
+      {/* Exit Intent Feedback Popup */}
+      {!isAdminPage && <ExitIntentPopup />}
     </div>
   );
 };
