@@ -127,21 +127,7 @@ export async function migrateTeamsToSupabase() {
         { name: 'Inglaterra', league: 'Seleções', logo: 'https://images.weserv.nl/?url=upload.wikimedia.org/wikipedia/en/thumb/8/8b/England_national_football_team_crest.svg/200px-England_national_football_team_crest.svg.png' },
         { name: 'Itália', league: 'Seleções', logo: 'https://images.weserv.nl/?url=upload.wikimedia.org/wikipedia/en/thumb/1/1c/Italy_national_football_team_crest.svg/200px-Italy_national_football_team_crest.svg.png' },
         { name: 'Uruguai', league: 'Seleções', logo: 'https://images.weserv.nl/?url=upload.wikimedia.org/wikipedia/en/thumb/c/c1/Uruguay_football_association.svg/200px-Uruguay_football_association.svg.png' }
-    ];        { name: 'Real Madrid', league: 'La Liga', logo: 'https://images.weserv.nl/?url=upload.wikimedia.org/wikipedia/en/thumb/5/56/Real_Madrid_CF.svg/200px-Real_Madrid_CF.svg.png' },
-        { name: 'Barcelona', league: 'La Liga', logo: 'https://images.weserv.nl/?url=upload.wikimedia.org/wikipedia/en/thumb/4/47/FC_Barcelona_%28crest%29.svg/200px-FC_Barcelona_%28crest%29.svg.png' },
-        { name: 'Inter Miami', league: 'MLS', logo: 'https://images.weserv.nl/?url=upload.wikimedia.org/wikipedia/en/thumb/1/1c/Inter_Miami_CF_logo.svg/200px-Inter_Miami_CF_logo.svg.png' },
-        { name: 'Manchester City', league: 'Premier League', logo: 'https://images.weserv.nl/?url=upload.wikimedia.org/wikipedia/en/thumb/e/eb/Manchester_City_FC_badge.svg/200px-Manchester_City_FC_badge.svg.png' },
-        { name: 'Manchester United', league: 'Premier League', logo: 'https://images.weserv.nl/?url=upload.wikimedia.org/wikipedia/en/thumb/7/7a/Manchester_United_FC_crest.svg/200px-Manchester_United_FC_crest.svg.png' },
-        { name: 'Liverpool', league: 'Premier League', logo: 'https://images.weserv.nl/?url=upload.wikimedia.org/wikipedia/en/thumb/0/0c/Liverpool_FC.svg/200px-Liverpool_FC.svg.png' },
-        { name: 'Bayern de Munique', league: 'Bundesliga', logo: 'https://images.weserv.nl/?url=upload.wikimedia.org/wikipedia/commons/thumb/1/1b/FC_Bayern_M%C3%BCnchen_logo_%282017%29.svg/200px-FC_Bayern_M%C3%BCnchen_logo_%282017%29.svg.png' },
-        { name: 'Paris Saint-Germain', league: 'Ligue 1', logo: 'https://images.weserv.nl/?url=upload.wikimedia.org/wikipedia/en/thumb/a/a7/Paris_Saint-Germain_F.C..svg/200px-Paris_Saint-Germain_F.C..svg.png' },
-        { name: 'Chelsea', league: 'Premier League', logo: 'https://images.weserv.nl/?url=upload.wikimedia.org/wikipedia/en/thumb/c/cc/Chelsea_FC.svg/200px-Chelsea_FC.svg.png' },
-        { name: 'Arsenal', league: 'Premier League', logo: 'https://images.weserv.nl/?url=upload.wikimedia.org/wikipedia/en/thumb/5/53/Arsenal_FC.svg/200px-Arsenal_FC.svg.png' },
-        { name: 'Borussia Dortmund', league: 'Bundesliga', logo: 'https://images.weserv.nl/?url=upload.wikimedia.org/wikipedia/commons/thumb/6/67/Borussia_Dortmund_logo.svg/200px-Borussia_Dortmund_logo.svg.png' },
-        { name: 'Boca Juniors', league: 'Superliga Argentina', logo: 'https://images.weserv.nl/?url=upload.wikimedia.org/wikipedia/commons/thumb/c/c9/Boca_Juniors_logo18.svg/200px-Boca_Juniors_logo18.svg.png' },
-        { name: 'River Plate', league: 'Superliga Argentina', logo: 'https://images.weserv.nl/?url=upload.wikimedia.org/wikipedia/commons/thumb/3/3f/Logo_C.A._River_Plate.svg/200px-Logo_C.A._River_Plate.svg.png' },
-        { name: 'AC Milan', league: 'Serie A', logo: 'https://images.weserv.nl/?url=upload.wikimedia.org/wikipedia/commons/thumb/d/d0/Logo_of_AC_Milan.svg/200px-Logo_of_AC_Milan.svg.png' },
-        { name: 'Inter de Milão', league: 'Serie A', logo: 'https://images.weserv.nl/?url=upload.wikimedia.org/wikipedia/commons/thumb/0/05/FC_Internazionale_Milano_2021.svg/200px-FC_Internazionale_Milano_2021.svg.png' },
+    ];,
         { name: 'Juventus', league: 'Serie A', logo: 'https://images.weserv.nl/?url=upload.wikimedia.org/wikipedia/commons/thumb/a/a8/Juventus_FC_-_pictogram_black_%28Italy%2C_2017%29.svg/200px-Juventus_FC_-_pictogram_black_%28Italy%2C_2017%29.svg.png' },
         
         // Seleções (Thumbnails Wikimedia)
