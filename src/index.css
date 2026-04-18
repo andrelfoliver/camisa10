@@ -999,36 +999,41 @@ button {
 
 /* Google Places Autocomplete Styling */
 .pac-container {
-  background-color: #121218;
-  border: 1px solid var(--border-color);
-  border-radius: var(--radius-md);
-  box-shadow: 0 10px 40px rgba(0,0,0,0.5);
-  font-family: var(--font-body);
-  margin-top: 5px;
-  z-index: 10000;
+  background-color: #121218 !important;
+  border: 1px solid var(--border-color) !important;
+  border-radius: var(--radius-md) !important;
+  box-shadow: 0 10px 40px rgba(0,0,0,0.5) !important;
+  font-family: var(--font-body) !important;
+  margin-top: 5px !important;
+  z-index: 100000 !important;
 }
 
 .pac-item {
-  color: var(--text-main);
-  border-top: 1px solid rgba(255,255,255,0.05);
-  padding: 10px 15px;
-  cursor: pointer;
-  transition: all 0.2s;
+  color: #fff !important;
+  border-top: 1px solid rgba(255,255,255,0.05) !important;
+  padding: 12px 15px !important;
+  cursor: pointer !important;
+  transition: all 0.2s !important;
+  line-height: 1.5 !important;
 }
 
 .pac-item:hover {
-  background-color: rgba(204, 255, 0, 0.1);
+  background-color: rgba(204, 255, 0, 0.1) !important;
 }
 
 .pac-item-query {
-  color: var(--accent-color);
-  font-size: 1rem;
+  color: var(--accent-color) !important;
+  font-size: 1rem !important;
+  padding-right: 5px !important;
 }
 
 .pac-matched {
-  font-weight: 700;
+  font-weight: 700 !important;
 }
 
-.pac-icon {
-  display: none; /* Esconde o ícone padrão para um visual mais limpo */
+/* Esconde agressivamente qualquer ícone de erro ou placeholder do Google */
+.pac-icon, .pac-icon-marker, .pac-placeholder {
+  display: none !important;
+  width: 0 !important;
+  margin: 0 !important;
 }
