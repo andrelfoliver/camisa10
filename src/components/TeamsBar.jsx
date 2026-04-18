@@ -59,7 +59,7 @@ const TeamsBar = ({ teams = [], onSelectTeam }) => {
         `}
       </style>
       
-      <div className="teams-track" style={{ animationDuration: `${teams.length * 3}s` }}>
+      <div className="teams-track" style={{ animationDuration: `${teams.length * 1.5}s` }}>
         {fullTrack.map((team, index) => (
           <div 
             key={`${team.name}-${index}`} 
