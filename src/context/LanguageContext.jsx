@@ -228,7 +228,12 @@ export const translations = {
     checkout_processing: 'Processando...',
     checkout_confirm_btn: 'Confirmar Pedido (WhatsApp)',
     checkout_cart_empty_title: 'Seu carrinho está vazio.',
-    checkout_back_shopping: 'Voltar às Compras',
+    checkout_wa_order_title: '*NOVO PEDIDO - iFOOTY*',
+    checkout_wa_customer: '*CLIENTE:*',
+    checkout_wa_shipping: '*ENDEREÇO DE ENTREGA:*',
+    checkout_wa_items: '*ITENS DO PEDIDO:*',
+    checkout_wa_total: '*TOTAL:*',
+    checkout_wa_footer: 'Aguardo as instruções para o Interac e-Transfer! 🇨🇦',
   },
   en: {
     nav_home: 'Home',
@@ -456,6 +461,12 @@ export const translations = {
     checkout_confirm_btn: 'Place Order (WhatsApp)',
     checkout_cart_empty_title: 'Your cart is empty.',
     checkout_back_shopping: 'Back to Shopping',
+    checkout_wa_order_title: '*NEW ORDER - iFOOTY*',
+    checkout_wa_customer: '*CUSTOMER:*',
+    checkout_wa_shipping: '*SHIPPING ADDRESS:*',
+    checkout_wa_items: '*ORDER ITEMS:*',
+    checkout_wa_total: '*TOTAL:*',
+    checkout_wa_footer: 'I await the instructions for Interac e-Transfer! 🇨🇦',
   }
 };
 

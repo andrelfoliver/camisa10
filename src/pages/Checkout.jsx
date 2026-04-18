@@ -88,20 +88,20 @@ const Checkout = () => {
   };
 
   const generateWhatsAppMessage = () => {
-    let message = `*NOVO PEDIDO - iFOOTY*\n\n`;
-    message += `*CLIENTE:* ${formData.name}\n`;
-    message += `*ENDEREÇO DE ENTREGA:*\n`;
+    let message = `${t('checkout_wa_order_title')}\n\n`;
+    message += `${t('checkout_wa_customer')} ${formData.name}\n`;
+    message += `${t('checkout_wa_shipping')}\n`;
     message += `${formData.street}${formData.apartment ? ', Apt ' + formData.apartment : ''}\n`;
     message += `${formData.city}, ${formData.province}\n`;
     message += `${formData.postalCode}\n\n`;
     
-    message += `*ITENS DO PEDIDO:*\n`;
+    message += `${t('checkout_wa_items')}\n`;
     cartItems.forEach(item => {
       message += `- ${item.quantity}x ${item.name} (${item.size}) - $${(item.price * item.quantity).toFixed(2)}\n`;
     });
     
-    message += `\n*TOTAL: $${cartTotal.toFixed(2)} CAD*\n\n`;
-    message += `Aguardo as instruções para o Interac e-Transfer! 🇨🇦`;
+    message += `\n${t('checkout_wa_total')} $${cartTotal.toFixed(2)} CAD\n\n`;
+    message += t('checkout_wa_footer');
     
     return message;
   };
@@ -150,6 +150,7 @@ const Checkout = () => {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ 
+            language,
             order: {
               ...orderData,
               customer_name: formData.name,
