@@ -996,3 +996,39 @@ button {
   margin-bottom: 0.25rem;
   color: #fff;
 }
+
+/* Google Places Autocomplete Styling */
+.pac-container {
+  background-color: #121218;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  box-shadow: 0 10px 40px rgba(0,0,0,0.5);
+  font-family: var(--font-body);
+  margin-top: 5px;
+  z-index: 10000;
+}
+
+.pac-item {
+  color: var(--text-main);
+  border-top: 1px solid rgba(255,255,255,0.05);
+  padding: 10px 15px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.pac-item:hover {
+  background-color: rgba(204, 255, 0, 0.1);
+}
+
+.pac-item-query {
+  color: var(--accent-color);
+  font-size: 1rem;
+}
+
+.pac-matched {
+  font-weight: 700;
+}
+
+.pac-icon {
+  display: none; /* Esconde o ícone padrão para um visual mais limpo */
+}
