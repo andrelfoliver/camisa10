@@ -44,15 +44,22 @@ export async function migrateTeamsToSupabase() {
         { name: 'Vitória', league: 'Brasileirão', logo: 'https://upload.wikimedia.org/wikipedia/pt/1/12/Esporte_Clube_Vit%C3%B3ria.svg' },
         
         // Internacionais & Saudi
-        { name: 'Al-Nassr', league: 'Saudi Pro League', logo: 'https://upload.wikimedia.org/wikipedia/en/3/30/Al-Nassr_FC_logo.svg' },
-        { name: 'Al-Hilal', league: 'Saudi Pro League', logo: 'https://upload.wikimedia.org/wikipedia/en/f/fa/Al-Hilal_Saudi_FC_logo.svg' },
-        { name: 'Real Madrid', league: 'La Liga', logo: 'https://upload.wikimedia.org/wikipedia/en/5/56/Real_Madrid_CF.svg' },
-        { name: 'Barcelona', league: 'La Liga', logo: 'https://upload.wikimedia.org/wikipedia/en/4/47/FC_Barcelona_%28crest%29.svg' },
-        { name: 'Inter Miami', league: 'MLS', logo: 'https://upload.wikimedia.org/wikipedia/en/1/1c/Inter_Miami_CF_logo.svg' },
-        { name: 'Manchester City', league: 'Premier League', logo: 'https://upload.wikimedia.org/wikipedia/en/e/eb/Manchester_City_FC_badge.svg' },
-        { name: 'Manchester United', league: 'Premier League', logo: 'https://upload.wikimedia.org/wikipedia/en/7/7a/Manchester_United_FC_crest.svg' },
-        { name: 'Liverpool', league: 'Premier League', logo: 'https://upload.wikimedia.org/wikipedia/en/0/0c/Liverpool_FC.svg' },
-        { name: 'Bayern de Munique', league: 'Bundesliga', logo: 'https://upload.wikimedia.org/wikipedia/en/1/1b/FC_Bayern_München_logo_%282017%29.svg' }
+        { name: 'Al-Nassr', league: 'Saudi Pro League', logo: 'https://a.espncdn.com/combiner/i?img=/i/teamlogos/soccer/500/2901.png' },
+        { name: 'Al-Hilal', league: 'Saudi Pro League', logo: 'https://a.espncdn.com/combiner/i?img=/i/teamlogos/soccer/500/2903.png' },
+        { name: 'Real Madrid', league: 'La Liga', logo: 'https://a.espncdn.com/combiner/i?img=/i/teamlogos/soccer/500/86.png' },
+        { name: 'Barcelona', league: 'La Liga', logo: 'https://a.espncdn.com/combiner/i?img=/i/teamlogos/soccer/500/83.png' },
+        { name: 'Inter Miami', league: 'MLS', logo: 'https://a.espncdn.com/combiner/i?img=/i/teamlogos/soccer/500/20232.png' },
+        { name: 'Manchester City', league: 'Premier League', logo: 'https://a.espncdn.com/combiner/i?img=/i/teamlogos/soccer/500/382.png' },
+        { name: 'Manchester United', league: 'Premier League', logo: 'https://a.espncdn.com/combiner/i?img=/i/teamlogos/soccer/500/360.png' },
+        { name: 'Liverpool', league: 'Premier League', logo: 'https://a.espncdn.com/combiner/i?img=/i/teamlogos/soccer/500/364.png' },
+        { name: 'Bayern de Munique', league: 'Bundesliga', logo: 'https://a.espncdn.com/combiner/i?img=/i/teamlogos/soccer/500/132.png' },
+        
+        // Seleções
+        { name: 'Alemanha', league: 'Seleções', logo: 'https://a.espncdn.com/combiner/i?img=/i/teamlogos/soccer/500/481.png' },
+        { name: 'Argentina', league: 'Seleções', logo: 'https://a.espncdn.com/combiner/i?img=/i/teamlogos/soccer/500/202.png' },
+        { name: 'Brasil', league: 'Seleções', logo: 'https://a.espncdn.com/combiner/i?img=/i/teamlogos/soccer/500/205.png' },
+        { name: 'Portugal', league: 'Seleções', logo: 'https://a.espncdn.com/combiner/i?img=/i/teamlogos/soccer/500/482.png' },
+        { name: 'França', league: 'Seleções', logo: 'https://a.espncdn.com/combiner/i?img=/i/teamlogos/soccer/500/478.png' }
     ];
 
     const existingNames = new Set((existingTeams || []).map(t => t.name.toLowerCase()));
