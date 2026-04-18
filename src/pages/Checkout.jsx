@@ -207,8 +207,8 @@ const Checkout = () => {
   if (!user) {
     return (
       <div className="container" style={{ padding: '6rem 1.5rem', textAlign: 'center' }}>
-        <h2 style={{ marginBottom: '1rem' }}>Calma lá, artilheiro!</h2>
-        <p style={{ color: 'var(--text-muted)' }}>Você precisa se identificar no nosso sistema para separar suas camisas.</p>
+        <h2 style={{ marginBottom: '1rem' }}>{t('checkout_login_title')}</h2>
+        <p style={{ color: 'var(--text-muted)' }}>{t('checkout_login_text')}</p>
         <button className="btn-primary" onClick={() => {
           sessionStorage.setItem('ifooty_redirect_after_login', '/checkout');
           navigate('/auth');
@@ -241,19 +241,19 @@ const Checkout = () => {
                 <AlertCircle size={48} color="var(--accent-color)" />
               </div>
             </div>
-            <h3 style={{ fontSize: '1.5rem', marginBottom: '1rem' }}>Atenção</h3>
+            <h3 style={{ fontSize: '1.5rem', marginBottom: '1rem' }}>{t('checkout_attention')}</h3>
             <p style={{ color: 'var(--text-muted)', fontSize: '1.1rem', lineHeight: 1.6, marginBottom: '2rem' }}>
                {notification.message}
             </p>
             <button className="btn-primary" style={{ width: '100%', justifyContent: 'center', padding: '1rem' }} onClick={() => setNotification({ ...notification, show: false })}>
-              Pode deixar!
+              {t('checkout_attention_btn')}
             </button>
           </div>
         </div>
       )}
 
       <button onClick={() => navigate('/')} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: 'var(--text-muted)', marginBottom: '2rem' }}>
-        <ArrowLeft size={20} /> Voltar
+        <ArrowLeft size={20} /> {t('checkout_back_btn')}
       </button>
       
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '4rem' }}>
@@ -308,7 +308,7 @@ const Checkout = () => {
                     value={formData.province} onChange={e => setFormData({...formData, province: e.target.value})}
                     style={{ width: '100%', padding: '0.75rem', borderRadius: 'var(--radius-sm)', background: 'var(--bg-color)', border: '1px solid var(--border-color)', color: 'var(--text-main)', fontSize: '1rem' }}
                   >
-                    <option value="">Selecione...</option>
+                    <option value="">{t('checkout_select_province')}</option>
                     <option value="ON">Ontario (ON)</option>
                     <option value="BC">British Columbia (BC)</option>
                     <option value="QC">Quebec (QC)</option>
@@ -364,18 +364,18 @@ const Checkout = () => {
             </div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '0.8rem', borderBottom: '1px solid var(--border-color)', paddingBottom: '1.5rem', marginBottom: '1.5rem' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', color: 'var(--text-main)' }}>
-                 <span>Subtotal</span>
+                 <span>{t('cart_subtotal')}</span>
                  <span>${subtotal.toFixed(2)}</span>
               </div>
               {discount > 0 && (
                 <div style={{ display: 'flex', justifyContent: 'space-between', color: '#10B981', fontWeight: 600 }}>
-                   <span>Desconto Progressivo</span>
+                   <span>{t('checkout_discount')}</span>
                    <span>- ${discount.toFixed(2)}</span>
                 </div>
               )}
             </div>
             <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '1.25rem', fontWeight: 'bold', marginBottom: '2rem' }}>
-              <span>Total CAD</span>
+              <span>{t('cart_total')} CAD</span>
               <span style={{ color: 'var(--accent-color)' }}>${cartTotal.toFixed(2)}</span>
             </div>
 
