@@ -40,25 +40,61 @@ const Checkout = () => {
     loadConfig();
   }, []);
 
-  const addressInputRef = useRef(null);
+  const [predictions, setPredictions] = useState([]);
+  const [showPredictions, setShowPredictions] = useState(false);
 
-  // Inicialização Robusta do Google Autocomplete
+  // Inicialização do Serviço de Autocomplete do Google (Manual)
+  const autocompleteService = useRef(null);
+
   useEffect(() => {
-    let autocomplete;
-    const initAutocomplete = () => {
+    const initServices = () => {
       if (!window.google || !window.google.maps || !window.google.maps.places) return false;
-      
-    autocomplete = new window.google.maps.places.Autocomplete(addressInputRef.current, {
-        componentRestrictions: { country: 'ca' },
-        fields: ['address_components', 'geometry'],
-        types: ['address']
-      });
-      console.log("✅ Google Autocomplete Initialized Successfully");
+      if (!autocompleteService.current) {
+        autocompleteService.current = new window.google.maps.places.AutocompleteService();
+      }
+      return true;
+    };
 
-      autocomplete.addListener('place_changed', () => {
-        const place = autocomplete.getPlace();
-        if (!place.address_components) return;
+    if (!initServices()) {
+      const interval = setInterval(() => {
+        if (initServices()) clearInterval(interval);
+      }, 500);
+      return () => clearInterval(interval);
+    }
+  }, []);
 
+  const handleAddressChange = (val) => {
+    setFormData({...formData, street: val});
+    
+    if (!val || val.length < 3 || !autocompleteService.current) {
+      setPredictions([]);
+      setShowPredictions(false);
+      return;
+    }
+
+    autocompleteService.current.getPlacePredictions({
+      input: val,
+      componentRestrictions: { country: 'ca' },
+      types: ['address']
+    }, (results, status) => {
+      if (status === window.google.maps.places.PlacesServiceStatus.OK && results) {
+        setPredictions(results);
+        setShowPredictions(true);
+      } else {
+        setPredictions([]);
+      }
+    });
+  };
+
+  const handleSelectPrediction = (prediction) => {
+    // Usamos um div temporário apenas para instanciar o PlacesService
+    const service = new window.google.maps.places.PlacesService(document.createElement('div'));
+    
+    service.getDetails({
+      placeId: prediction.place_id,
+      fields: ['address_components']
+    }, (place, status) => {
+      if (status === window.google.maps.places.PlacesServiceStatus.OK && place.address_components) {
         let streetNumber = '';
         let route = '';
         let city = '';
@@ -81,18 +117,11 @@ const Checkout = () => {
           province: province || prev.province,
           postalCode: postalCode || prev.postalCode
         }));
-      });
-      return true;
-    };
-
-    // Tenta inicializar. Se o script do Google ainda não carregou, tenta novamente em intervalos curtos.
-    if (!initAutocomplete()) {
-      const interval = setInterval(() => {
-        if (initAutocomplete()) clearInterval(interval);
-      }, 500);
-      return () => clearInterval(interval);
-    }
-  }, []);
+        setPredictions([]);
+        setShowPredictions(false);
+      }
+    });
+  };
 
   useEffect(() => {
     if (user) {
@@ -358,14 +387,34 @@ const Checkout = () => {
               </div>
 
               <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '1rem' }}>
-                <div>
+                <div style={{ position: 'relative' }}>
                   <label style={{ display: 'block', marginBottom: '0.5rem', color: 'var(--text-muted)' }}>{t('checkout_street')}</label>
                   <input 
                     type="text" placeholder="Ex: 123 Bay St"
-                    ref={addressInputRef}
-                    value={formData.street} onChange={e => setFormData({...formData, street: e.target.value})}
+                    autoComplete="off"
+                    value={formData.street} 
+                    onChange={e => handleAddressChange(e.target.value)}
+                    onBlur={() => setTimeout(() => setShowPredictions(false), 200)}
+                    onFocus={() => formData.street.length >= 3 && setShowPredictions(true)}
                     style={{ width: '100%', padding: '0.75rem', borderRadius: 'var(--radius-sm)', background: 'var(--bg-color)', border: '1px solid var(--border-color)', color: 'var(--text-main)', fontSize: '1rem' }} 
                   />
+                  
+                  {/* Custom Suggestions List */}
+                  {showPredictions && predictions.length > 0 && (
+                    <div style={{ position: 'absolute', top: '100%', left: 0, right: 0, background: '#121218', border: '1px solid var(--border-color)', borderRadius: '0 0 var(--radius-sm) var(--radius-sm)', zIndex: 1000, boxShadow: '0 10px 40px rgba(0,0,0,0.5)', overflow: 'hidden' }}>
+                      {predictions.map((p) => (
+                        <div 
+                          key={p.place_id}
+                          onClick={() => handleSelectPrediction(p)}
+                          style={{ padding: '0.75rem 1rem', cursor: 'pointer', borderBottom: '1px solid rgba(255,255,255,0.05)', color: '#fff', fontSize: '0.9rem', transition: 'background 0.2s' }}
+                          onMouseEnter={(e) => e.target.style.background = 'rgba(204, 255, 0, 0.1)'}
+                          onMouseLeave={(e) => e.target.style.background = 'transparent'}
+                        >
+                          {p.description}
+                        </div>
+                      ))}
+                    </div>
+                  )}
                 </div>
                 <div>
                   <label style={{ display: 'block', marginBottom: '0.5rem', color: 'var(--text-muted)' }}>{t('checkout_apt')}</label>
@@ -483,11 +532,6 @@ const Checkout = () => {
         @keyframes modalIn {
           from { opacity: 0; transform: scale(0.95) translateY(10px); }
           to { opacity: 1; transform: scale(1) translateY(0); }
-        }
-        /* Força a visibilidade das sugestões do Google */
-        .pac-container {
-          z-index: 99999 !important;
-          pointer-events: auto !important;
         }
       `}</style>
     </div>
