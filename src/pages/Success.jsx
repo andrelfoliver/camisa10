@@ -1,4 +1,7 @@
+import React from 'react';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { useCart } from '../context/CartContext';
+import { useLanguage } from '../context/LanguageContext';
 
 const Success = () => {
   const { t } = useLanguage();
