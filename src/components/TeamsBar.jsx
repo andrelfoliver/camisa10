@@ -4,7 +4,6 @@ const TeamsBar = ({ teams = [], onSelectTeam }) => {
   if (!teams || teams.length === 0) return null;
 
   // Garantimos que a track tenha itens suficientes para não quebrar a animação infinita
-  // Se houver poucos times, duplicamos mais vezes para preencher a largura da tela
   const multiplier = teams.length < 5 ? 4 : 2;
   const fullTrack = Array(multiplier).fill(teams).flat();
 
@@ -27,9 +26,10 @@ const TeamsBar = ({ teams = [], onSelectTeam }) => {
             display: flex;
             width: max-content;
             animation: marquee 40s linear infinite;
+            pointer-events: auto;
           }
           .teams-track:hover {
-            animation-play-state: paused;
+            animation-play-state: paused !important;
           }
           .team-item {
             width: 80px;
@@ -66,12 +66,16 @@ const TeamsBar = ({ teams = [], onSelectTeam }) => {
             className="team-item" 
             title={team.name}
             onClick={() => onSelectTeam && onSelectTeam(team.name)}
+            style={{ display: 'flex' }}
           >
             <img 
               src={team.logo} 
               alt={team.name} 
               className="team-logo"
-              onError={(e) => { e.target.style.opacity = '0'; }}
+              onError={(e) => { 
+                const container = e.target.closest('.team-item');
+                if (container) container.style.display = 'none';
+              }}
             />
           </div>
         ))}
