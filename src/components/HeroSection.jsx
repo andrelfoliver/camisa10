@@ -1,37 +1,48 @@
 import React, { useState, useEffect } from 'react';
-import { ShieldCheck, Truck, Clock } from 'lucide-react';
-import { supabase } from '../services/supabase';
-
+import { ShieldCheck, Truck } from 'lucide-react';
 import { useLanguage } from '../context/LanguageContext';
 
 const HeroSection = () => {
-  const { t, language } = useLanguage();
-  const [heroBgUrl, setHeroBgUrl] = useState(() => {
-    return localStorage.getItem('cached_hero_bg') || '';
-  });
+  const { t } = useLanguage();
+  const [currentIndex, setCurrentIndex] = useState(0);
+
+  const heroImages = [
+    'https://agbskncncrnzmutaubdn.supabase.co/storage/v1/object/public/product-images/branding/hero-1.png',
+    'https://agbskncncrnzmutaubdn.supabase.co/storage/v1/object/public/product-images/branding/hero-2.png',
+    'https://agbskncncrnzmutaubdn.supabase.co/storage/v1/object/public/product-images/branding/hero-3.png',
+    'https://agbskncncrnzmutaubdn.supabase.co/storage/v1/object/public/product-images/branding/hero-4.png',
+    'https://agbskncncrnzmutaubdn.supabase.co/storage/v1/object/public/product-images/branding/hero-5.png'
+  ];
 
   useEffect(() => {
-    async function loadHero() {
-      const { data } = await supabase.from('store_settings').select('value').eq('key', 'hero_bg').single();
-      if (data && data.value) {
-        setHeroBgUrl(data.value);
-        localStorage.setItem('cached_hero_bg', data.value);
-      }
-    }
-    loadHero();
+    const timer = setInterval(() => {
+      setCurrentIndex((prev) => (prev + 1) % heroImages.length);
+    }, 6000); // 6 segundos para cada craque
+    return () => clearInterval(timer);
   }, []);
 
   return (
-    <section className="hero-funnel" style={{ '--hero-bg-url': `url('${heroBgUrl}')` }}>
+    <section className="hero-funnel">
+      {/* Background Slides */}
+      {heroImages.map((src, index) => (
+        <div 
+          key={src}
+          className={`hero-slide-bg ${index === currentIndex ? 'active' : ''}`}
+          style={{ backgroundImage: `url('${src}')` }}
+        />
+      ))}
       
+      {/* Overlay fixo para contraste */}
+      <div className="hero-overlay-static"></div>
+
       <div className="hero-container-modern animate-fade-in">
         
-        {/* Social Proof no topo à direita */}
+        {/* Social Proof no topo à direita - Fixo */}
         <div className="hero-social-proof-top">
           {t('hero_satisfied_clients')}
         </div>
 
-        {/* Content Box */}
+        {/* Content Box - Fixo */}
         <div className="hero-zone-west">
           <h1 className="hero-giant-title">
             {t('hero_title_part1')}
@@ -71,9 +82,18 @@ const HeroSection = () => {
           </div>
         </div>
 
+        {/* Carousel Dots */}
+        <div className="hero-carousel-dots">
+          {heroImages.map((_, i) => (
+            <button 
+              key={i} 
+              className={`dot ${i === currentIndex ? 'active' : ''}`}
+              onClick={() => setCurrentIndex(i)}
+            />
+          ))}
+        </div>
       </div>
 
-      {/* Background Decor */}
       <div className="hero-decor-line"></div>
     </section>
   );
