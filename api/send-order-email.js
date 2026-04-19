@@ -93,6 +93,36 @@ export default async function handler(req, res) {
       `;
     }).join('');
 
+    // --- NOVA SEÇÃO: RESUMO PARA O FORNECEDOR (SEM PREÇOS) ---
+    const supplierItemsHtml = order.items.map(item => {
+      const imageUrl = normalizeImgUrl(item.image);
+      const customization = item.extras?.nameNumber 
+        ? `<div style="margin-top: 5px; padding: 6px; background: #f0f4f8; border-radius: 4px; font-size: 0.85rem; color: #2d3748;">
+             🛠️ <strong>PERSONALIZADO:</strong> ${item.extras.customName || 'N/A'} - ${item.extras.customNumber || 'N/A'}
+           </div>`
+        : '';
+      
+      const patches = item.extras?.patches 
+        ? `<div style="margin-top: 3px; font-size: 0.85rem; color: #4a5568;">🎖️ <strong>+ Patches</strong></div>`
+        : '';
+ 
+      return `
+        <div style="margin-bottom: 15px; padding: 12px; border: 1px solid #e2e8f0; border-radius: 8px; display: flex; align-items: center; gap: 12px; background: #ffffff;">
+          <div style="flex-shrink: 0;">
+            <img src="${imageUrl}" alt="${item.name}" style="width: 70px; height: 90px; object-fit: cover; border-radius: 4px;" />
+          </div>
+          <div style="flex-grow: 1;">
+            <h4 style="margin: 0 0 5px 0; color: #1a202c; font-size: 1rem; line-height: 1.2;">${item.name}</h4>
+            <div style="font-size: 1rem; color: #2d3748; font-weight: 700;">
+              TAMANHO: <span style="color: #ef4444;">${item.size}</span> | QTD: <span style="color: #ef4444;">${item.quantity}</span>
+            </div>
+            ${customization}
+            ${patches}
+          </div>
+        </div>
+      `;
+    }).join('');
+
     // --- EMAIL 1: NOTIFICAÇÃO PARA O ADMIN (VOCÊ) - SEMPRE EM PT ---
     const adminEmailPromise = resend.emails.send({
       from: 'iFooty Alerts <vendas@ifooty.ca>',
@@ -116,19 +146,28 @@ export default async function handler(req, res) {
                 <tr><td style="padding: 8px 0; color: #718096;">WhatsApp:</td><td style="padding: 8px 0; color: #1a202c;">${order.customer_phone}</td></tr>
               </table>
             </div>
+
+            <div style="margin-bottom: 40px; padding: 25px; background: #f8fafc; border-radius: 12px; border: 2px dashed #cbd5e1;">
+              <h2 style="color: #1e293b; font-size: 1.3rem; margin-top: 0; margin-bottom: 5px;">📦 RESUMO PARA O FORNECEDOR</h2>
+              <p style="color: #64748b; font-size: 0.85rem; margin-bottom: 20px;">(Ideal para printar e enviar)</p>
+              ${supplierItemsHtml}
+            </div>
+
             <div style="margin-bottom: 30px;">
-              <h2 style="color: #2d3748; font-size: 1.5rem; margin-bottom: 20px;">Itens do Pedido</h2>
+              <h2 style="color: #2d3748; font-size: 1.5rem; margin-bottom: 20px;">Detalhes Financeiros (Sua Referência)</h2>
               ${itemsHtml}
             </div>
+            
             <div style="background: #f7fafc; padding: 25px; border-radius: 8px; margin-bottom: 30px;">
               <table style="width: 100%;">
-                <tr><td style="font-size: 1.4rem; font-weight: 800; color: #1a202c;">TOTAL</td><td style="text-align: right; font-size: 1.4rem; font-weight: 900; color: #CCFF00; background: #000; padding: 10px 15px; border-radius: 6px;">$${order.total_price.toFixed(2)} CAD</td></tr>
+                <tr><td style="font-size: 1.4rem; font-weight: 800; color: #1a202c;">TOTAL DO PEDIDO</td><td style="text-align: right; font-size: 1.4rem; font-weight: 900; color: #CCFF00; background: #000; padding: 10px 15px; border-radius: 6px;">$${order.total_price.toFixed(2)} CAD</td></tr>
               </table>
             </div>
           </div>
         </div>
       `,
     });
+
 
     // --- EMAIL 2: CONFIRMAÇÃO PARA O CLIENTE (MULTI-IDIOMA) ---
     const customerEmailPromise = resend.emails.send({
