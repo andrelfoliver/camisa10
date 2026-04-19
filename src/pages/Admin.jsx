@@ -152,6 +152,7 @@ const Admin = () => {
   const [newCoupon, setNewCoupon] = useState({ code: '', agent_id: '', discount_percent: 5 });
   const [agentSearch, setAgentSearch] = useState('');
   const [showAgentResults, setShowAgentResults] = useState(false);
+  const [sentEmails, setSentEmails] = useState(new Set());
   const [showWelcomePopup, setShowWelcomePopup] = useState(false);
   const [welcomeTriggered, setWelcomeTriggered] = useState(false);
   const [expandedOrderId, setExpandedOrderId] = useState(null);
@@ -457,6 +458,7 @@ const Admin = () => {
 
       const result = await res.json();
       if(result.success) {
+        setSentEmails(prev => new Set([...prev, coupon.id]));
         showAlert("Sucesso!", `Convite enviado para ${customer.email} com sucesso.`);
       } else {
         throw new Error(result.error);
@@ -1559,9 +1561,23 @@ const Admin = () => {
                             <div style={{ display: 'flex', gap: '1rem', justifyContent: 'flex-end' }}>
                               <button 
                                 onClick={() => handleSendAgentEmail(c)} 
-                                style={{ color: 'var(--accent-color)', background: 'none', border: '1px solid var(--accent-color)', cursor: 'pointer', padding: '0.3rem 0.6rem', borderRadius: '4px', fontSize: '0.75rem', display: 'flex', alignItems: 'center', gap: '0.3rem' }}
+                                disabled={sentEmails.has(c.id)}
+                                style={{ 
+                                  color: sentEmails.has(c.id) ? '#10B981' : 'var(--accent-color)', 
+                                  background: 'none', 
+                                  border: `1px solid ${sentEmails.has(c.id) ? '#10B981' : 'var(--accent-color)'}`, 
+                                  cursor: sentEmails.has(c.id) ? 'default' : 'pointer', 
+                                  padding: '0.3rem 0.6rem', 
+                                  borderRadius: '4px', 
+                                  fontSize: '0.75rem', 
+                                  display: 'flex', 
+                                  alignItems: 'center', 
+                                  gap: '0.3rem',
+                                  opacity: sentEmails.has(c.id) ? 0.8 : 1
+                                }}
                               >
-                                <MessageSquare size={14} /> ENVIAR E-MAIL
+                                {sentEmails.has(c.id) ? <Check size={14} /> : <MessageSquare size={14} />}
+                                {sentEmails.has(c.id) ? 'E-MAIL ENVIADO' : 'ENVIAR E-MAIL'}
                               </button>
                               <button onClick={() => handleDeleteCoupon(c.id)} style={{ color: '#EF4444', background: 'none', border: 'none', cursor: 'pointer' }}>
                                 <Trash2 size={16} />
