@@ -170,23 +170,32 @@ const Navbar = () => {
 
           {/* Coluna Central: Logo (Responsiva) */}
           <div style={{ display: 'flex', justifyContent: 'center' }}>
-            <Link to="/" style={{ 
-              display: 'flex', 
-              alignItems: 'center', 
-              fontWeight: 900, 
-              fontSize: window.innerWidth < 500 
-                ? (scrolled ? '1.3rem' : '1.7rem') 
-                : (scrolled ? '1.6rem' : '2.2rem'), 
-              fontFamily: 'var(--font-display)', 
-              fontStyle: 'italic',
-              letterSpacing: '-1.5px',
-              transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)'
-            }}
-            onMouseOver={(e) => e.currentTarget.style.transform = 'scale(1.05)'}
-            onMouseOut={(e) => e.currentTarget.style.transform = 'scale(1)'}
+            <div 
+              onClick={() => {
+                if (window.location.pathname === '/') {
+                  window.scrollTo({ top: 0, behavior: 'smooth' });
+                } else {
+                  navigate('/');
+                }
+              }}
+              style={{ 
+                display: 'flex', 
+                alignItems: 'center', 
+                fontWeight: 900, 
+                fontSize: window.innerWidth < 500 
+                  ? (scrolled ? '1.3rem' : '1.7rem') 
+                  : (scrolled ? '1.6rem' : '2.2rem'), 
+                fontFamily: 'var(--font-display)', 
+                fontStyle: 'italic',
+                letterSpacing: '-1.5px',
+                transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                cursor: 'pointer'
+              }}
+              onMouseOver={(e) => e.currentTarget.style.transform = 'scale(1.05)'}
+              onMouseOut={(e) => e.currentTarget.style.transform = 'scale(1)'}
             >
               <span style={{ color: 'var(--accent-color)' }}>i</span><span style={{ color: '#fff' }}>Footy</span><span style={{ color: 'var(--accent-color)' }}>.</span>
-            </Link>
+            </div>
           </div>
           
           {/* Coluna Direita (3 Itens): Login + Idioma + Sacola */}

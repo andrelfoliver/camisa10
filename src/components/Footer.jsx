@@ -52,7 +52,26 @@ const Footer = () => {
     <footer style={{ borderTop: '1px solid var(--border-color)', paddingTop: '4rem', paddingBottom: '2rem', marginTop: '4rem', background: '#050507' }}>
       <div className="container" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '3rem', marginBottom: '3rem' }}>
         <div>
-          <h2 style={{ display: 'flex', alignItems: 'center', gap: '0', marginBottom: '1rem', fontFamily: 'var(--font-display)', fontSize: '1.8rem', fontStyle: 'italic', fontWeight: 900 }}>
+          <h2 
+            onClick={() => {
+              if (window.location.pathname === '/') {
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+              } else {
+                window.location.href = '/';
+              }
+            }}
+            style={{ 
+              display: 'flex', 
+              alignItems: 'center', 
+              gap: '0', 
+              marginBottom: '1rem', 
+              fontFamily: 'var(--font-display)', 
+              fontSize: '1.8rem', 
+              fontStyle: 'italic', 
+              fontWeight: 900,
+              cursor: 'pointer'
+            }}
+          >
             <span style={{ color: 'var(--accent-color)' }}>i</span><span style={{ color: '#fff' }}>Footy</span><span style={{ color: 'var(--accent-color)' }}>.</span>
           </h2>
           <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem' }}>
