@@ -11,120 +11,96 @@ export const useCart = () => {
 
 export const CartProvider = ({ children }) => {
   const { user } = useAuth();
-  // Inicialização preguiçosa para evitar o estado vazio [] no mount
+// Constantes de persistência fora do componente para evitar problemas de hoisting e escopo
+const GUEST_KEY = 'ifooty_cart_guest';
+const getCartKey = (user) => user ? `ifooty_cart_${user?.id}` : GUEST_KEY;
+
+export const CartProvider = ({ children }) => {
+  const { user } = useAuth();
+  
+  // Inicialização síncrona imediata baseada no localStorage
   const [cartItems, setCartItems] = useState(() => {
     try {
-      const key = user ? `ifooty_cart_${user.id}` : GUEST_KEY;
+      // Aqui usamos o user SE ele já estiver disponível no mount (o que acontece se AuthContext estiver pronto)
+      const key = getCartKey(user);
       return JSON.parse(localStorage.getItem(key) || '[]');
-    } catch {
-      return [];
-    }
+    } catch { return []; }
   });
   
   const [isCartOpen, setIsCartOpen] = useState(false);
-  const isInitialLoad = useRef(true);
   const [isSyncing, setIsSyncing] = useState(false);
+  const [cartReady, setCartReady] = useState(false); // TRAVA DE SEGURANÇA
   
-  // Chave base do localStorage (Fallback e Visitante)
-  const GUEST_KEY = 'ifooty_cart_guest';
-  const getCartKey = () => user ? `ifooty_cart_${user.id}` : GUEST_KEY;
-
   const [pricing, setPricing] = useState({
-    nameNumber: 11.90,
-    patch: 3.90,
-    size2XL3XL: 7.90,
-    size4XL: 11.90,
-    shippingCost: 0,
-    freeShippingThreshold: 0,
-    discounts: [
-      { qty: 2, percent: 8 },
-      { qty: 3, percent: 12 },
-      { qty: 5, percent: 15 },
-      { qty: 10, percent: 20 }
-    ]
+    nameNumber: 11.90, patch: 3.90, size2XL3XL: 7.90, size4XL: 11.90,
+    shippingCost: 0, freeShippingThreshold: 0,
+    discounts: [{ qty: 2, percent: 8 }, { qty: 3, percent: 12 }, { qty: 5, percent: 15 }, { qty: 10, percent: 20 }]
   });
 
-  // Efeito de Sincronização de Login/Logout
+  // 1. Efeito de Carregamento e Sincronização
   useEffect(() => {
-    const syncCart = async () => {
-      // Se não houver usuário, as itens já foram carregados pelo useState inicial (usando GUEST_KEY)
+    const initializeCart = async () => {
+      setCartReady(false); // Bloqueia salvamento enquanto inicializa
+      
       if (!user) {
-        isInitialLoad.current = false;
+        // Se for visitante, o useState já carregou o GUEST_KEY. Só liberamos o pronto.
+        setCartReady(true);
         return;
       }
 
       setIsSyncing(true);
       try {
-        // 1. Busca a cesta da nuvem
-        const { data: profile, error } = await supabase
-          .from('profiles')
-          .select('cart')
-          .eq('id', user.id)
-          .single();
-
-        let cloudItems = (profile && profile.cart) ? profile.cart : [];
+        const { data: profile } = await supabase.from('profiles').select('cart').eq('id', user.id).single();
+        let cloudItems = profile?.cart || [];
         const guestItems = JSON.parse(localStorage.getItem(GUEST_KEY) || '[]');
         
-        let finalItems = [...cloudItems];
-
-        // 2. Mescla itens do convidado se houver (Migração para conta logada)
+        let merged = [...cloudItems];
         if (guestItems.length > 0) {
-          guestItems.forEach(gItem => {
-            const exists = finalItems.find(m => m.cartId === gItem.cartId);
-            if (exists) {
-              exists.quantity += gItem.quantity;
-            } else {
-              finalItems.push(gItem);
-            }
+          guestItems.forEach(g => {
+            const exists = merged.find(m => m.cartId === g.cartId);
+            if (exists) exists.quantity += g.quantity; else merged.push(g);
           });
           localStorage.removeItem(GUEST_KEY);
-          toast.success("Cesta recuperada e sincronizada! ⚽", { duration: 3000 });
-        } else if (isInitialLoad.current && cloudItems.length > 0) {
-          // Apenas avisa se houver algo para carregar no primeiro mount
-          toast.success("Sua cesta está pronta! ⚽", { icon: '🛒' });
+          toast.success("Recuperamos sua sacola salva! ⚽");
+        } else if (cloudItems.length > 0) {
+          // Apenas notifica se houver itens vindo da nuvem para o usuário logado
+          toast.success("Sua sacola está pronta! 🛒");
         }
-
-        setCartItems(finalItems);
+        
+        setCartItems(merged);
       } catch (err) {
         console.error("Erro ao sincronizar cesta:", err);
-        // Fallback já está no estado inicial
       } finally {
         setIsSyncing(false);
-        // CRUCIAL: Só liberar salvamento APÓS terminar a sincronização
-        isInitialLoad.current = false;
+        setCartReady(true); // LIBERA O SALVAMENTO APENAS AQUI
       }
     };
 
-    syncCart();
+    initializeCart();
   }, [user]);
 
-  // Salva o carrinho localmente e na nuvem
+  // 2. Efeito de Salvamento (Backup Local e Nuvem)
   const dbSyncTimeout = useRef(null);
-
   useEffect(() => {
-    if (isInitialLoad.current || isSyncing) return;
+    if (!cartReady || isSyncing) return; // PROTEÇÃO: Nunca salva se ainda estiver carregando
 
-    // Salva Localmente sempre (Backup)
+    // A. Backup Local (Prevenção contra crash)
     try {
-      localStorage.setItem(getCartKey(), JSON.stringify(cartItems));
+      localStorage.setItem(getCartKey(user), JSON.stringify(cartItems));
     } catch {}
 
-    // Salva na Nuvem (Sync) se houver usuário
+    // B. Sincronização Cloud (Debounced)
     if (user) {
       if (dbSyncTimeout.current) clearTimeout(dbSyncTimeout.current);
-      
       dbSyncTimeout.current = setTimeout(async () => {
         try {
-          await supabase
-            .from('profiles')
-            .update({ cart: cartItems })
-            .eq('id', user.id);
+          await supabase.from('profiles').update({ cart: cartItems }).eq('id', user.id);
         } catch (err) {
           console.error("Erro ao salvar cesta na nuvem:", err);
         }
-      }, 1000); // Debounce de 1s
+      }, 1500); // 1.5s de debounce
     }
-  }, [cartItems, user, isSyncing]);
+  }, [cartItems, user, cartReady, isSyncing]);
 
   useEffect(() => {
     async function loadPricing() {

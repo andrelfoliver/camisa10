@@ -367,7 +367,7 @@ const Checkout = () => {
   }
 
   return (
-    <div className="container" style={{ padding: '4rem 1.5rem' }}>
+    <div className="checkout-container" style={{ padding: '2rem 1rem' }}>
       {/* Premium Notification Modal */}
       {notification.show && (
         <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.85)', backdropFilter: 'blur(10px)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 9999, padding: '1.5rem' }}>
@@ -399,7 +399,7 @@ const Checkout = () => {
           <h2 style={{ fontSize: '2rem', marginBottom: '2rem', display: 'flex', alignItems: 'center', gap: '0.8rem' }}>
             <MapPin color="var(--accent-color)" /> {t('checkout_delivery_title')}
           </h2>
-          <div className="glass-panel" style={{ padding: '2.5rem', borderRadius: 'var(--radius-md)' }}>
+          <div className="glass-panel checkout-form-panel" style={{ padding: '1.5rem', borderRadius: 'var(--radius-md)' }}>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
               <div>
                 <label style={{ display: 'block', marginBottom: '0.5rem', color: 'var(--text-muted)' }}>{t('checkout_name')}</label>
@@ -410,7 +410,7 @@ const Checkout = () => {
                 />
               </div>
 
-              <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '1rem' }}>
+              <div className="address-grid-row">
                 <div>
                   <label style={{ display: 'block', marginBottom: '0.5rem', color: 'var(--text-muted)' }}>{t('checkout_street')}</label>
                   <input 
@@ -430,7 +430,7 @@ const Checkout = () => {
                 </div>
               </div>
 
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '1rem' }}>
+              <div className="address-grid-triple">
                 <div>
                   <label style={{ display: 'block', marginBottom: '0.5rem', color: 'var(--text-muted)' }}>{t('checkout_city')}</label>
                   <input 
@@ -581,6 +581,31 @@ const Checkout = () => {
         @keyframes modalIn {
           from { opacity: 0; transform: scale(0.95) translateY(10px); }
           to { opacity: 1; transform: scale(1) translateY(0); }
+        }
+        .checkout-container {
+          max-width: 1200px;
+          margin: 0 auto;
+        }
+        .address-grid-row {
+          display: grid;
+          grid-template-columns: 2fr 1fr;
+          gap: 1rem;
+        }
+        .address-grid-triple {
+          display: grid;
+          grid-template-columns: 1fr 1fr 1fr;
+          gap: 1rem;
+        }
+        @media (max-width: 768px) {
+          .address-grid-row, .address-grid-triple {
+            grid-template-columns: 1fr;
+          }
+          .checkout-form-panel {
+            padding: 1.25rem !important;
+          }
+          h2 {
+            font-size: 1.5rem !important;
+          }
         }
       `}</style>
     </div>
