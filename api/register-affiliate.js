@@ -7,14 +7,19 @@ export default async function handler(req, res) {
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
-  const { name, email, social, story, payment } = req.body;
+  const { 
+    name, email, social, story, payment, 
+    followers_insta, followers_tiktok, followers_x, followers_facebook 
+  } = req.body;
 
   if (!name || !email || !social) {
     return res.status(400).json({ error: 'Preencha todos os campos obrigatórios.' });
   }
 
+  const totalFollowers = (Number(followers_insta || 0) + Number(followers_tiktok || 0) + Number(followers_x || 0) + Number(followers_facebook || 0)).toLocaleString();
+
   try {
-    // 1. Enviar E-mail para o Administrador (André)
+    // 1. Enviar E-mail para o Administrador (Admin)
     const adminEmail = await resend.emails.send({
       from: 'Sistema iFooty <parceiros@ifooty.ca>',
       to: ['camisadez085@gmail.com'],
@@ -25,7 +30,19 @@ export default async function handler(req, res) {
           <h2 style="color: #000; border-bottom: 2px solid #CCFF00; padding-bottom: 10px;">Nova Candidatura de Afiliado</h2>
           <p><strong>Nome:</strong> ${name}</p>
           <p><strong>E-mail:</strong> ${email}</p>
-          <p><strong>Redes Sociais:</strong> ${social}</p>
+          <p><strong>Canais:</strong> ${social}</p>
+          
+          <div style="background: #f9f9f9; padding: 15px; border-radius: 8px; margin: 20px 0; border: 1px solid #eee;">
+            <p style="margin-top: 0; font-weight: 800; color: #333;">ALCANCE SOCIAL:</p>
+            <table style="width: 100%; font-size: 0.9rem;">
+              <tr><td>Instagram:</td><td style="text-align: right; font-weight: 700;">${Number(followers_insta || 0).toLocaleString()}</td></tr>
+              <tr><td>TikTok:</td><td style="text-align: right; font-weight: 700;">${Number(followers_tiktok || 0).toLocaleString()}</td></tr>
+              <tr><td>X (Twitter):</td><td style="text-align: right; font-weight: 700;">${Number(followers_x || 0).toLocaleString()}</td></tr>
+              <tr><td>Facebook:</td><td style="text-align: right; font-weight: 700;">${Number(followers_facebook || 0).toLocaleString()}</td></tr>
+              <tr style="border-top: 1px solid #ddd;"><td style="padding-top: 10px; font-weight: 800;">TOTAL:</td><td style="padding-top: 10px; text-align: right; font-weight: 800; color: #10B981;">${totalFollowers}</td></tr>
+            </table>
+          </div>
+
           <p><strong>Como planeja divulgar:</strong><br/> ${story.replace(/\n/g, '<br/>')}</p>
           <p><strong>Forma de Pagamento Preferida:</strong> ${payment}</p>
           <hr style="border: 0; border-top: 1px solid #eee; margin: 20px 0;">

@@ -23,7 +23,11 @@ const AffiliateProgram = () => {
     email: '',
     social: '',
     story: '',
-    payment: 'E-Transfer'
+    payment: 'E-Transfer',
+    followers_insta: '',
+    followers_tiktok: '',
+    followers_x: '',
+    followers_facebook: ''
   });
   const [status, setStatus] = useState('idle'); // idle, submitting, success, error
 
@@ -47,7 +51,10 @@ const AffiliateProgram = () => {
       const result = await res.json();
       if (result.success) {
         setStatus('success');
-        setFormData({ name: '', email: '', social: '', story: '', payment: 'E-Transfer' });
+        setFormData({ 
+          name: '', email: '', social: '', story: '', payment: 'E-Transfer',
+          followers_insta: '', followers_tiktok: '', followers_x: '', followers_facebook: ''
+        });
       } else {
         setStatus('error');
       }
@@ -329,13 +336,13 @@ const AffiliateProgram = () => {
                 </div>
 
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-                  <label style={{ fontSize: '0.85rem', color: '#fff', fontWeight: 600 }}>Rede Social Principal *</label>
+                  <label style={{ fontSize: '0.85rem', color: '#fff', fontWeight: 600 }}>Canais (Instagram/TikTok/YouTube) *</label>
                   <input 
                     required
                     type="text" 
                     value={formData.social}
                     onChange={e => setFormData({...formData, social: e.target.value})}
-                    placeholder="@seuusuario (Instagram/TikTok)"
+                    placeholder="Link ou @das-suas-contas"
                     style={{ background: 'rgba(0,0,0,0.3)', border: '1px solid var(--border-color)', borderRadius: '8px', padding: '0.8rem', color: '#fff', outline: 'none' }}
                   />
                 </div>
@@ -351,6 +358,58 @@ const AffiliateProgram = () => {
                     <option value="PIX">PIX (Brasil)</option>
                     <option value="Wise">Wise (Internacional)</option>
                   </select>
+                </div>
+
+                <div style={{ gridColumn: '1 / -1', background: 'rgba(255,255,255,0.03)', padding: '1.5rem', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.05)' }}>
+                  <label style={{ fontSize: '1rem', color: 'var(--accent-color)', fontWeight: 800, marginBottom: '1.5rem', display: 'block' }}>NÚMERO DE SEGUIDORES</label>
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: '1rem' }}>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                      <label style={{ fontSize: '0.75rem', color: 'var(--text-muted)', fontWeight: 700 }}>INSTAGRAM</label>
+                      <input 
+                        type="number" 
+                        value={formData.followers_insta}
+                        onChange={e => setFormData({...formData, followers_insta: e.target.value})}
+                        placeholder="0"
+                        style={{ background: 'rgba(0,0,0,0.3)', border: '1px solid var(--border-color)', borderRadius: '8px', padding: '0.6rem', color: '#fff', outline: 'none' }}
+                      />
+                    </div>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                      <label style={{ fontSize: '0.75rem', color: 'var(--text-muted)', fontWeight: 700 }}>TIKTOK</label>
+                      <input 
+                        type="number" 
+                        value={formData.followers_tiktok}
+                        onChange={e => setFormData({...formData, followers_tiktok: e.target.value})}
+                        placeholder="0"
+                        style={{ background: 'rgba(0,0,0,0.3)', border: '1px solid var(--border-color)', borderRadius: '8px', padding: '0.6rem', color: '#fff', outline: 'none' }}
+                      />
+                    </div>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                      <label style={{ fontSize: '0.75rem', color: 'var(--text-muted)', fontWeight: 700 }}>X (TWITTER)</label>
+                      <input 
+                        type="number" 
+                        value={formData.followers_x}
+                        onChange={e => setFormData({...formData, followers_x: e.target.value})}
+                        placeholder="0"
+                        style={{ background: 'rgba(0,0,0,0.3)', border: '1px solid var(--border-color)', borderRadius: '8px', padding: '0.6rem', color: '#fff', outline: 'none' }}
+                      />
+                    </div>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                      <label style={{ fontSize: '0.75rem', color: 'var(--text-muted)', fontWeight: 700 }}>FACEBOOK</label>
+                      <input 
+                        type="number" 
+                        value={formData.followers_facebook}
+                        onChange={e => setFormData({...formData, followers_facebook: e.target.value})}
+                        placeholder="0"
+                        style={{ background: 'rgba(0,0,0,0.3)', border: '1px solid var(--border-color)', borderRadius: '8px', padding: '0.6rem', color: '#fff', outline: 'none' }}
+                      />
+                    </div>
+                  </div>
+                  <div style={{ marginTop: '1.5rem', paddingTop: '1rem', borderTop: '1px solid rgba(255,255,255,0.05)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <span style={{ fontSize: '0.9rem', color: '#fff', fontWeight: 700 }}>TOTAL ACUMULADO:</span>
+                    <span style={{ fontSize: '1.2rem', color: 'var(--accent-color)', fontWeight: 900 }}>
+                      {(Number(formData.followers_insta || 0) + Number(formData.followers_tiktok || 0) + Number(formData.followers_x || 0) + Number(formData.followers_facebook || 0)).toLocaleString()}
+                    </span>
+                  </div>
                 </div>
 
                 <div style={{ gridColumn: '1 / -1', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
