@@ -34,6 +34,16 @@ const AppLayout = () => {
   const [waNumber, setWaNumber] = useState('5584991847739');
 
   useEffect(() => {
+    // Lista de caminhos que representam "navegação de compras" (listas de produtos)
+    const shoppingPaths = ['/', '/busca'];
+    const isCategoryPath = pathname.startsWith('/colecao/');
+    
+    if (shoppingPaths.includes(pathname) || isCategoryPath) {
+      sessionStorage.setItem('ifooty_last_browsed_path', pathname + (window.location.search || ''));
+    }
+  }, [pathname]);
+
+  useEffect(() => {
     async function loadConfig() {
       const { data } = await supabase.from('store_settings').select('value').eq('key', 'whatsapp_number').single();
       if (data && data.value) setWaNumber(data.value);

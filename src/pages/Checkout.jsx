@@ -298,13 +298,16 @@ const Checkout = () => {
     }
   };
 
+  // Determinar o caminho de retorno (categoria anterior ou home)
+  const returnPath = sessionStorage.getItem('ifooty_last_browsed_path') || '/';
+
   if (!user) {
     return (
       <div className="container" style={{ padding: '6rem 1.5rem', textAlign: 'center' }}>
         <h2 style={{ marginBottom: '1rem' }}>{t('checkout_login_title')}</h2>
         <p style={{ color: 'var(--text-muted)' }}>{t('checkout_login_text')}</p>
         <button className="btn-primary" onClick={() => {
-          sessionStorage.setItem('ifooty_redirect_after_login', '/checkout');
+          sessionStorage.setItem('ifooty_last_browsed_path', '/checkout'); // Se logar, volta pra cá
           navigate('/auth');
         }} style={{ marginTop: '2rem', display: 'inline-flex', alignItems: 'center', gap: '0.5rem' }}>
           <LogIn size={20} /> {t('checkout_login_btn')}
@@ -317,7 +320,7 @@ const Checkout = () => {
     return (
       <div className="container" style={{ padding: '6rem 1.5rem', textAlign: 'center' }}>
         <h2>{t('checkout_cart_empty_title')}</h2>
-        <button className="btn-secondary" onClick={() => navigate('/')} style={{ marginTop: '2rem' }}>
+        <button className="btn-secondary" onClick={() => navigate(returnPath)} style={{ marginTop: '2rem' }}>
           {t('checkout_back_shopping')}
         </button>
       </div>
@@ -346,7 +349,7 @@ const Checkout = () => {
         </div>
       )}
 
-      <button onClick={() => navigate('/')} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: 'var(--text-muted)', marginBottom: '2rem' }}>
+      <button onClick={() => navigate(returnPath)} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: 'var(--text-muted)', marginBottom: '2rem' }}>
         <ArrowLeft size={20} /> {t('checkout_back_btn')}
       </button>
       

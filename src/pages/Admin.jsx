@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from '../services/supabase';
 import { useAuth } from '../context/AuthContext';
-import { Save, Check, Crown, Heart, Database, HardDrive, Star, LogOut, Package, Plus, Trash2, X, Users, Image, DollarSign, MapPin, RefreshCw, Shield, AlertTriangle, MessageSquare, ChevronDown, ChevronUp, MoreHorizontal, ExternalLink } from 'lucide-react';
+import { Save, Check, Crown, Heart, Database, HardDrive, Star, LogOut, Package, Plus, Trash2, Edit, X, Users, Image, DollarSign, MapPin, RefreshCw, Shield, AlertTriangle, MessageSquare, ChevronDown, ChevronUp, MoreHorizontal, ExternalLink } from 'lucide-react';
 import { migrateProductsToSupabase } from '../services/migration';
 import { migrateTeamsToSupabase } from '../services/migration_teams';
 import WhatsAppIcon from '../components/WhatsAppIcon';
@@ -37,6 +37,8 @@ const Admin = () => {
   const [editingProduct, setEditingProduct] = useState(null);
   const [teams, setTeams] = useState([]);
   const [editingTeam, setEditingTeam] = useState(null);
+  const [editingTestimonial, setEditingTestimonial] = useState(null);
+
 
   const handleUpdateProduct = async (e) => {
     e.preventDefault();
@@ -361,7 +363,7 @@ const Admin = () => {
     setSaved(false);
     const { data, error } = await supabase.from('testimonials').insert([newTestimonial]).select();
     if(error){
-      alert("Erro ao salvar depoimento: " + error.message);
+      showAlert("Erro ao Salvar", error.message);
       return;
     }
     if(data) {
@@ -377,23 +379,58 @@ const Admin = () => {
     const newStatus = currentStatus === 'approved' ? 'pending' : 'approved';
     const { error } = await supabase.from('testimonials').update({ status: newStatus }).eq('id', id);
     if(error) {
-      alert("Erro ao mudar status: " + error.message);
+      showAlert("Erro de Status", error.message);
     } else {
       setTestimonials(testimonials.map(t => t.id === id ? {...t, status: newStatus} : t));
     }
   };
 
-  const handleDeleteTestimonial = async (id) => {
-    if(!window.confirm("Apagar este depoimento definitivamente?")) return;
-    const { error: deleteError } = await supabase.from('testimonials').delete().eq('id', id);
-    if(deleteError) alert("Erro ao excluir!");
-    else setTestimonials(testimonials.filter(t => t.id !== id));
+  const handleDeleteTestimonial = (id) => {
+    showConfirm(
+      "Excluir Depoimento",
+      "Tem certeza que deseja apagar este depoimento definitivamente? Esta ação não pode ser desfeita.",
+      async () => {
+        const { error: deleteError } = await supabase.from('testimonials').delete().eq('id', id);
+        if(deleteError) {
+          showAlert("Erro", "Não foi possível excluir o depoimento.");
+        } else {
+          setTestimonials(testimonials.filter(t => t.id !== id));
+          setSaved(true);
+          setTimeout(() => setSaved(false), 3000);
+        }
+      }
+    );
   };
+
+
+  const handleUpdateTestimonial = async (e) => {
+    e.preventDefault();
+    setSaved(false);
+    if (!editingTestimonial) return;
+
+    try {
+      const { id, created_at, ...rest } = editingTestimonial;
+      const { error } = await supabase.from('testimonials').update(rest).eq('id', id);
+      
+      if (error) {
+        showAlert("Erro ao editar depoimento!", error.message);
+        return;
+      }
+      
+      setTestimonials(testimonials.map(t => t.id === id ? editingTestimonial : t));
+      setEditingTestimonial(null);
+      setSaved(true);
+      setTimeout(() => setSaved(false), 3000);
+    } catch (err) {
+      showAlert("Erro inesperado", err.message);
+    }
+  };
+
 
   const handleUpdateOrderStatus = async (orderId, newStatus) => {
     const { error } = await supabase.from('orders').update({ status: newStatus }).eq('id', orderId);
     if (error) {
-      alert("Erro ao atualizar status: " + error.message);
+      showAlert("Erro ao Atualizar", error.message);
     } else {
       setOrders(orders.map(o => o.id === orderId ? { ...o, status: newStatus } : o));
     }
@@ -561,13 +598,13 @@ const Admin = () => {
     const { data, error } = await supabase.from('products').delete().eq('id', productToDelete.id).select();
     
     if (error) {
-      alert("Erro ao deletar: " + error.message);
+      showAlert("Falha Técnica", error.message);
       setProductToDelete(null);
       return;
     }
 
     if (!data || data.length === 0) {
-      alert("⚠️ ALERTA DE SEGURANÇA SUPABASE:\nA camisa NÃO foi excluída. Desative o RLS ou crie uma Policy liberando DELETE.");
+      showAlert("Acesso Negado", "A camisa NÃO foi excluída. Verifique as políticas de RLS ou permissões no Supabase.");
       setProductToDelete(null);
       return;
     }
@@ -583,13 +620,13 @@ const Admin = () => {
     const { data, error } = await supabase.from('orders').delete().eq('id', orderToDelete.id).select();
     
     if (error) {
-      alert("Erro ao deletar pedido: " + error.message);
+      showAlert("Erro no Pedido", error.message);
       setOrderToDelete(null);
       return;
     }
 
     if (!data || data.length === 0) {
-      alert("⚠️ ALERTA: O pedido NÃO foi excluído. Verifique as permissões de DELETE no Supabase.");
+      showAlert("Erro de Permissão", "O pedido NÃO foi excluído. Verifique as permissões de DELETE no Supabase.");
       setOrderToDelete(null);
       return;
     }
@@ -1278,24 +1315,133 @@ const Admin = () => {
                     <p style={{ color: 'var(--text-main)', fontSize: '0.95rem', lineHeight: 1.5, marginBottom: '1.5rem', fontStyle: 'italic' }}>"{t.content}"</p>
                     <div style={{ display: 'flex', gap: '0.8rem' }}>
                       <button 
+                        onClick={() => setEditingTestimonial(t)}
+                        style={{ padding: '0.5rem 1rem', borderRadius: '4px', background: 'var(--surface-hover)', color: '#fff', fontSize: '0.8rem', fontWeight: 700, border: '1px solid var(--border-color)', display: 'flex', alignItems: 'center', gap: '0.4rem' }}
+                      >
+                        <Edit size={14} /> Editar
+                      </button>
+                      <button 
                         onClick={() => handleToggleTestimonial(t.id, t.status)} 
-                        style={{ padding: '0.5rem 1rem', borderRadius: '4px', background: t.status === 'approved' ? '#EF4444' : 'var(--accent-color)', color: t.status === 'approved' ? '#fff' : '#000', fontSize: '0.8rem', fontWeight: 700 }}
+                        style={{ padding: '0.5rem 1rem', borderRadius: '4px', background: t.status === 'approved' ? 'rgba(239, 68, 68, 0.1)' : 'var(--accent-color)', color: t.status === 'approved' ? '#EF4444' : '#000', fontSize: '0.8rem', fontWeight: 700, border: t.status === 'approved' ? '1px solid rgba(239, 68, 68, 0.2)' : 'none' }}
                       >
                         {t.status === 'approved' ? 'Ocultar' : 'Aprovar'}
                       </button>
                       <button 
                         onClick={() => handleDeleteTestimonial(t.id)} 
-                        style={{ padding: '0.5rem 1rem', borderRadius: '4px', background: 'rgba(255,255,255,0.05)', color: '#EF4444', fontSize: '0.8rem', border: '1px solid rgba(239, 68, 68, 0.2)' }}
+                        style={{ padding: '0.5rem 1rem', borderRadius: '4px', background: 'rgba(255,255,255,0.05)', color: 'rgba(255,255,255,0.3)', fontSize: '0.8rem', border: '1px solid rgba(255,255,255,0.1)' }}
                       >
                         Excluir
                       </button>
                     </div>
+
                   </div>
                 ))}
                 {testimonials.length === 0 && (
                    <p style={{ gridColumn: '1 / -1', textAlign: 'center', padding: '3rem', color: 'var(--text-muted)' }}>Nenhum depoimento cadastrado. Adicione seus primeiros feedbacks de 2022!</p>
                 )}
               </div>
+
+              {/* MODAL DE EDIÇÃO DE DEPOIMENTO */}
+              {editingTestimonial && (
+                <div style={{ position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh', background: 'rgba(0,0,0,0.85)', zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '1rem', backdropFilter: 'blur(10px)' }}>
+                  <div style={{ background: 'var(--surface-color)', padding: '2.5rem', borderRadius: 'var(--radius-lg)', border: '1px solid var(--border-color)', width: '100%', maxWidth: '600px', maxHeight: '90vh', overflowY: 'auto' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
+                      <h2 style={{ color: '#fff', fontSize: '1.5rem', display: 'flex', alignItems: 'center', gap: '0.8rem' }}>
+                        <Star color="var(--accent-color)" /> Editar Depoimento
+                      </h2>
+                      <button onClick={() => setEditingTestimonial(null)} style={{ background: 'transparent', border: 'none', color: 'var(--text-muted)', cursor: 'pointer' }}><X size={24} /></button>
+                    </div>
+
+                    <form onSubmit={handleUpdateTestimonial} style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+                      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+                        <div>
+                          <label style={{ display: 'block', marginBottom: '0.5rem', color: 'var(--text-muted)', fontSize: '0.85rem' }}>Nome do Cliente</label>
+                          <input 
+                            required 
+                            type="text" 
+                            value={editingTestimonial.name} 
+                            onChange={e => setEditingTestimonial({...editingTestimonial, name: e.target.value})}
+                            style={{ width: '100%', padding: '0.8rem', background: 'var(--bg-color)', border: '1px solid var(--border-color)', borderRadius: '4px', color: '#fff' }} 
+                          />
+                        </div>
+                        <div>
+                          <label style={{ display: 'block', marginBottom: '0.5rem', color: 'var(--text-muted)', fontSize: '0.85rem' }}>Localização</label>
+                          <input 
+                            required 
+                            type="text" 
+                            value={editingTestimonial.location} 
+                            onChange={e => setEditingTestimonial({...editingTestimonial, location: e.target.value})}
+                            style={{ width: '100%', padding: '0.8rem', background: 'var(--bg-color)', border: '1px solid var(--border-color)', borderRadius: '4px', color: '#fff' }} 
+                          />
+                        </div>
+                      </div>
+
+                      <div>
+                        <label style={{ display: 'block', marginBottom: '0.5rem', color: 'var(--text-muted)', fontSize: '0.85rem' }}>Conteúdo do Depoimento</label>
+                        <textarea 
+                          required 
+                          rows={4}
+                          value={editingTestimonial.content} 
+                          onChange={e => setEditingTestimonial({...editingTestimonial, content: e.target.value})}
+                          style={{ width: '100%', padding: '0.8rem', background: 'var(--bg-color)', border: '1px solid var(--border-color)', borderRadius: '4px', color: '#fff', resize: 'vertical' }} 
+                        />
+                      </div>
+
+                      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '1rem' }}>
+                        <div>
+                          <label style={{ display: 'block', marginBottom: '0.5rem', color: 'var(--text-muted)', fontSize: '0.85rem' }}>Avaliação (Estrelas)</label>
+                          <select 
+                            value={editingTestimonial.rating} 
+                            onChange={e => setEditingTestimonial({...editingTestimonial, rating: parseInt(e.target.value)})}
+                            style={{ width: '100%', padding: '0.8rem', background: 'var(--bg-color)', border: '1px solid var(--border-color)', borderRadius: '4px', color: '#fff' }}
+                          >
+                            {[1,2,3,4,5].map(n => <option key={n} value={n}>{n} Estrelas</option>)}
+                          </select>
+                        </div>
+                        <div>
+                          <label style={{ display: 'block', marginBottom: '0.5rem', color: 'var(--text-muted)', fontSize: '0.85rem' }}>Data</label>
+                          <input 
+                            type="date" 
+                            value={editingTestimonial.date} 
+                            onChange={e => setEditingTestimonial({...editingTestimonial, date: e.target.value})}
+                            style={{ width: '100%', padding: '0.8rem', background: 'var(--bg-color)', border: '1px solid var(--border-color)', borderRadius: '4px', color: '#fff' }} 
+                          />
+                        </div>
+                        <div>
+                          <label style={{ display: 'block', marginBottom: '0.5rem', color: 'var(--text-muted)', fontSize: '0.85rem' }}>Status</label>
+                          <select 
+                            value={editingTestimonial.status} 
+                            onChange={e => setEditingTestimonial({...editingTestimonial, status: e.target.value})}
+                            style={{ width: '100%', padding: '0.8rem', background: 'var(--bg-color)', border: '1px solid var(--border-color)', borderRadius: '4px', color: '#fff' }}
+                          >
+                            <option value="approved">Aprovado</option>
+                            <option value="pending">Pendente</option>
+                          </select>
+                        </div>
+                      </div>
+
+                      <div>
+                        <label style={{ display: 'block', marginBottom: '0.5rem', color: 'var(--text-muted)', fontSize: '0.85rem' }}>URL do Avatar (Foto)</label>
+                        <input 
+                          type="url" 
+                          value={editingTestimonial.avatar_url || ''} 
+                          onChange={e => setEditingTestimonial({...editingTestimonial, avatar_url: e.target.value})}
+                          placeholder="https://..."
+                          style={{ width: '100%', padding: '0.8rem', background: 'var(--bg-color)', border: '1px solid var(--border-color)', borderRadius: '4px', color: '#fff' }} 
+                        />
+                        <p style={{ fontSize: '0.7rem', color: 'var(--text-muted)', marginTop: '0.5rem' }}>Dica: Use URLs do Supabase Storage para fotos oficiais.</p>
+                      </div>
+
+                      <div style={{ display: 'flex', gap: '1rem', marginTop: '1rem' }}>
+                        <button type="button" onClick={() => setEditingTestimonial(null)} className="btn-secondary" style={{ flex: 1 }}>Cancelar</button>
+                        <button type="submit" className="btn-primary" style={{ flex: 1, background: 'var(--accent-color)', color: '#000', fontWeight: 800 }}>
+                          Salvar Alterações
+                        </button>
+                      </div>
+                    </form>
+                  </div>
+                </div>
+              )}
             </div>
           ) : supplierTab === 'PEDIDOS' ? (() => {
             const filteredOrders = orders.filter(o => {
