@@ -11,7 +11,16 @@ export const useCart = () => {
 
 export const CartProvider = ({ children }) => {
   const { user } = useAuth();
-  const [cartItems, setCartItems] = useState([]);
+  // Inicialização preguiçosa para evitar o estado vazio [] no mount
+  const [cartItems, setCartItems] = useState(() => {
+    try {
+      const key = user ? `ifooty_cart_${user.id}` : GUEST_KEY;
+      return JSON.parse(localStorage.getItem(key) || '[]');
+    } catch {
+      return [];
+    }
+  });
+  
   const [isCartOpen, setIsCartOpen] = useState(false);
   const isInitialLoad = useRef(true);
   const [isSyncing, setIsSyncing] = useState(false);
@@ -38,50 +47,52 @@ export const CartProvider = ({ children }) => {
   // Efeito de Sincronização de Login/Logout
   useEffect(() => {
     const syncCart = async () => {
-      const localSaved = JSON.parse(localStorage.getItem(getCartKey()) || '[]');
-      
-      if (user) {
-        setIsSyncing(true);
-        try {
-          // 1. Busca a cesta da nuvem
-          const { data: profile, error } = await supabase
-            .from('profiles')
-            .select('cart')
-            .eq('id', user.id)
-            .single();
-
-          let cloudItems = (profile && profile.cart) ? profile.cart : [];
-          const guestItems = JSON.parse(localStorage.getItem(GUEST_KEY) || '[]');
-          
-          let finalItems = [...cloudItems];
-
-          // 2. Mescla itens do convidado se houver
-          if (guestItems.length > 0) {
-            guestItems.forEach(gItem => {
-              const exists = finalItems.find(m => m.cartId === gItem.cartId);
-              if (exists) {
-                exists.quantity += gItem.quantity;
-              } else {
-                finalItems.push(gItem);
-              }
-            });
-            localStorage.removeItem(GUEST_KEY);
-            toast.success("Cesta recuperada e sincronizada! ⚽", { duration: 3000 });
-          } else if (isInitialLoad.current && cloudItems.length > 0) {
-            toast.success("Sua cesta está pronta! ⚽", { icon: '🛒' });
-          }
-
-          setCartItems(finalItems);
-        } catch (err) {
-          console.error("Erro ao sincronizar cesta:", err);
-          setCartItems(localSaved);
-        } finally {
-          setIsSyncing(false);
-        }
-      } else {
-        setCartItems(localSaved);
+      // Se não houver usuário, as itens já foram carregados pelo useState inicial (usando GUEST_KEY)
+      if (!user) {
+        isInitialLoad.current = false;
+        return;
       }
-      isInitialLoad.current = false;
+
+      setIsSyncing(true);
+      try {
+        // 1. Busca a cesta da nuvem
+        const { data: profile, error } = await supabase
+          .from('profiles')
+          .select('cart')
+          .eq('id', user.id)
+          .single();
+
+        let cloudItems = (profile && profile.cart) ? profile.cart : [];
+        const guestItems = JSON.parse(localStorage.getItem(GUEST_KEY) || '[]');
+        
+        let finalItems = [...cloudItems];
+
+        // 2. Mescla itens do convidado se houver (Migração para conta logada)
+        if (guestItems.length > 0) {
+          guestItems.forEach(gItem => {
+            const exists = finalItems.find(m => m.cartId === gItem.cartId);
+            if (exists) {
+              exists.quantity += gItem.quantity;
+            } else {
+              finalItems.push(gItem);
+            }
+          });
+          localStorage.removeItem(GUEST_KEY);
+          toast.success("Cesta recuperada e sincronizada! ⚽", { duration: 3000 });
+        } else if (isInitialLoad.current && cloudItems.length > 0) {
+          // Apenas avisa se houver algo para carregar no primeiro mount
+          toast.success("Sua cesta está pronta! ⚽", { icon: '🛒' });
+        }
+
+        setCartItems(finalItems);
+      } catch (err) {
+        console.error("Erro ao sincronizar cesta:", err);
+        // Fallback já está no estado inicial
+      } finally {
+        setIsSyncing(false);
+        // CRUCIAL: Só liberar salvamento APÓS terminar a sincronização
+        isInitialLoad.current = false;
+      }
     };
 
     syncCart();
