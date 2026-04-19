@@ -14,10 +14,11 @@ export const CartProvider = ({ children }) => {
   const [cartItems, setCartItems] = useState([]);
   const [isCartOpen, setIsCartOpen] = useState(false);
   const isInitialLoad = useRef(true);
+  const [isSyncing, setIsSyncing] = useState(false);
   
-  // Chave base do localStorage
+  // Chave base do localStorage (Fallback e Visitante)
   const GUEST_KEY = 'ifooty_cart_guest';
-  const getCartKey = () => user ? `ifooty_cart_${user.email}` : GUEST_KEY;
+  const getCartKey = () => user ? `ifooty_cart_${user.id}` : GUEST_KEY;
 
   const [pricing, setPricing] = useState({
     nameNumber: 11.90,
@@ -34,45 +35,83 @@ export const CartProvider = ({ children }) => {
 
   // Efeito de Sincronização de Login/Logout
   useEffect(() => {
-    const currentKey = getCartKey();
-    const savedItems = JSON.parse(localStorage.getItem(currentKey) || '[]');
-    
-    if (user) {
-      // Se acabou de logar e havia itens como "convidado", perguntar ou mesclar
-      const guestItems = JSON.parse(localStorage.getItem(GUEST_KEY) || '[]');
-      if (guestItems.length > 0) {
-        // Mescla itens do convidado com os do usuário (evitando duplicatas exatas)
-        const merged = [...savedItems];
-        guestItems.forEach(gItem => {
-          const exists = merged.find(m => m.cartId === gItem.cartId);
-          if (exists) {
-            exists.quantity += gItem.quantity;
-          } else {
-            merged.push(gItem);
+    const syncCart = async () => {
+      const localSaved = JSON.parse(localStorage.getItem(getCartKey()) || '[]');
+      
+      if (user) {
+        setIsSyncing(true);
+        try {
+          // 1. Busca a cesta da nuvem
+          const { data: profile, error } = await supabase
+            .from('profiles')
+            .select('cart')
+            .eq('id', user.id)
+            .single();
+
+          let cloudItems = (profile && profile.cart) ? profile.cart : [];
+          const guestItems = JSON.parse(localStorage.getItem(GUEST_KEY) || '[]');
+          
+          let finalItems = [...cloudItems];
+
+          // 2. Mescla itens do convidado se houver
+          if (guestItems.length > 0) {
+            guestItems.forEach(gItem => {
+              const exists = finalItems.find(m => m.cartId === gItem.cartId);
+              if (exists) {
+                exists.quantity += gItem.quantity;
+              } else {
+                finalItems.push(gItem);
+              }
+            });
+            localStorage.removeItem(GUEST_KEY);
+            toast.success("Cesta recuperada e sincronizada! ⚽", { duration: 3000 });
+          } else if (isInitialLoad.current && cloudItems.length > 0) {
+            toast.success("Sua cesta está pronta! ⚽", { icon: '🛒' });
           }
-        });
-        setCartItems(merged);
-        localStorage.removeItem(GUEST_KEY);
-        toast.success("Recuperamos seu carrinho! ⚽", { duration: 4000 });
-      } else if (savedItems.length > 0 && isInitialLoad.current) {
-        setCartItems(savedItems);
-        toast.success("Bem-vindo de volta! Sua cesta está pronta. ⚽", { icon: '🛒' });
+
+          setCartItems(finalItems);
+        } catch (err) {
+          console.error("Erro ao sincronizar cesta:", err);
+          setCartItems(localSaved);
+        } finally {
+          setIsSyncing(false);
+        }
       } else {
-        setCartItems(savedItems);
+        setCartItems(localSaved);
       }
-    } else {
-      setCartItems(savedItems);
-    }
-    isInitialLoad.current = false;
+      isInitialLoad.current = false;
+    };
+
+    syncCart();
   }, [user]);
 
-  // Salva o carrinho na chave correta sempre que mudar
+  // Salva o carrinho localmente e na nuvem
+  const dbSyncTimeout = useRef(null);
+
   useEffect(() => {
-    if (isInitialLoad.current) return;
+    if (isInitialLoad.current || isSyncing) return;
+
+    // Salva Localmente sempre (Backup)
     try {
       localStorage.setItem(getCartKey(), JSON.stringify(cartItems));
     } catch {}
-  }, [cartItems, user]);
+
+    // Salva na Nuvem (Sync) se houver usuário
+    if (user) {
+      if (dbSyncTimeout.current) clearTimeout(dbSyncTimeout.current);
+      
+      dbSyncTimeout.current = setTimeout(async () => {
+        try {
+          await supabase
+            .from('profiles')
+            .update({ cart: cartItems })
+            .eq('id', user.id);
+        } catch (err) {
+          console.error("Erro ao salvar cesta na nuvem:", err);
+        }
+      }, 1000); // Debounce de 1s
+    }
+  }, [cartItems, user, isSyncing]);
 
   useEffect(() => {
     async function loadPricing() {
