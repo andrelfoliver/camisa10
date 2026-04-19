@@ -141,7 +141,8 @@ const Admin = () => {
       { qty: 10, amount: 35 }
     ],
     shippingCost: 0,
-    freeShippingThreshold: 0
+    freeShippingThreshold: 0,
+    promoBasePrice: 47.90
   };
   const [pricing, setPricing] = useState(defaultPricing);
   const [bulkAdjustmentValue, setBulkAdjustmentValue] = useState(5.00);
@@ -1833,6 +1834,10 @@ const Admin = () => {
                       <div style={{ flex: 1 }}>
                         <label style={{ display: 'block', marginBottom: '0.5rem', color: 'var(--text-muted)', fontSize: '0.85rem' }}>Frete Grátis Acima de ($)</label>
                         <input type="number" step="0.01" value={pricing.freeShippingThreshold} onChange={e => setPricing({...pricing, freeShippingThreshold: parseFloat(e.target.value)})} style={{ width: '100%', padding: '0.8rem', background: 'rgba(0,0,0,0.2)', color: '#fff', border: '1px solid var(--border-color)', borderRadius: '6px' }} />
+                      </div>
+                      <div style={{ flex: 1 }}>
+                        <label style={{ display: 'block', marginBottom: '0.5rem', color: 'var(--accent-color)', fontSize: '0.85rem', fontWeight: 800 }}>Preço Base Combo Oferta ($)</label>
+                        <input type="number" step="0.01" value={pricing.promoBasePrice} onChange={e => setPricing({...pricing, promoBasePrice: parseFloat(e.target.value)})} style={{ width: '100%', padding: '0.8rem', background: 'rgba(219, 254, 135, 0.05)', color: '#fff', border: '1px solid var(--accent-color)', borderRadius: '6px' }} />
                       </div>
                     </div>
                     <p style={{ marginTop: '0.8rem', fontSize: '0.75rem', color: 'var(--text-muted)' }}>Deixe 0 no limite para cobrar frete em todos os pedidos. Deixe 0 no custo para oferecer frete grátis sempre.</p>

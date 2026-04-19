@@ -317,7 +317,7 @@ const Home = () => {
         <div style={{ background: 'linear-gradient(135deg, rgba(255,184,28,0.1) 0%, rgba(0,0,0,0) 100%)', border: '1px solid var(--accent-color)', borderRadius: 'var(--radius-lg)', padding: '3rem', textAlign: 'center' }}>
           <h2 style={{ fontSize: '2.5rem', marginBottom: '2rem', color: '#EF4444', fontWeight: 800 }}>{t('promo_banner_title')}</h2>
           {(() => {
-            const basePromoPrice = 47.90;
+            const basePromoPrice = pricingConfig?.promoBasePrice || 47.90;
             const discountPercent2 = (pricingConfig?.discounts || []).find(d => d.qty === 2)?.percent || 8;
             const discountPercent3 = (pricingConfig?.discounts || []).find(d => d.qty === 3)?.percent || 12;
 
@@ -415,11 +415,11 @@ const Home = () => {
             <div style={{ display: 'flex', gap: '2rem', flexWrap: 'wrap', justifyContent: 'center' }}>
               <div style={{ background: 'rgba(255,255,255,0.03)', padding: '2rem', borderRadius: 'var(--radius-lg)', minWidth: '250px', border: '1px solid var(--border-color)' }}>
                 <p style={{ fontSize: '1.2rem', fontWeight: 600, marginBottom: '0.5rem' }}>{t('customization_item1')}</p>
-                <p style={{ color: 'var(--accent-color)', fontWeight: 800, fontSize: '1.5rem' }}>+ 11.90 CAD</p>
+                <p style={{ color: 'var(--accent-color)', fontWeight: 800, fontSize: '1.5rem' }}>+ {pricingConfig?.nameNumber || '11.90'} CAD</p>
               </div>
               <div style={{ background: 'rgba(255,255,255,0.03)', padding: '2rem', borderRadius: 'var(--radius-lg)', minWidth: '250px', border: '1px solid var(--border-color)' }}>
                 <p style={{ fontSize: '1.2rem', fontWeight: 600, marginBottom: '0.5rem' }}>{t('customization_item2')}</p>
-                <p style={{ color: 'var(--accent-color)', fontWeight: 800, fontSize: '1.5rem' }}>+ 3.90 CAD</p>
+                <p style={{ color: 'var(--accent-color)', fontWeight: 800, fontSize: '1.5rem' }}>+ {pricingConfig?.patch || '4.90'} CAD</p>
               </div>
             </div>
           </div>
