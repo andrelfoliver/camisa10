@@ -56,7 +56,16 @@ const HeroSection = () => {
         
         {/* Social Proof no topo à direita - Fixo */}
         <div className="hero-social-proof-top">
-          {t('hero_satisfied_clients')}
+          <div className="social-proof-avatars">
+            <img src="/avatar_amanda_1776561154203.png" alt="Client" />
+            <img src="/avatar_carlos_1776561167483.png" alt="Client" />
+            <img src="/avatar_mariana_1776561140352.png" alt="Client" />
+            <div className="avatar-more">+</div>
+          </div>
+          <div className="social-proof-content">
+            <span className="social-proof-number">+200</span>
+            <span className="social-proof-label">{t('hero_satisfied_clients').replace('⭐ +200 ', '')}</span>
+          </div>
         </div>
 
         {/* Content Box - Fixo */}
