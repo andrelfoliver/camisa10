@@ -372,15 +372,19 @@ const Admin = () => {
             };
           });
 
-          // Atualização em blocos para evitar limites da API
-          const chunkSize = 50;
-          for (let i = 0; i < updates.length; i += chunkSize) {
-            const chunk = updates.slice(i, i + chunkSize);
-            const { error: updateError } = await supabase.from('products').upsert(chunk);
+          // Atualização individual para evitar erros de NOT NULL em colunas ausentes (upsert falha em colunas obrigatórias)
+          let successCount = 0;
+          for (const up of updates) {
+            const { error: updateError } = await supabase
+              .from('products')
+              .update({ price: up.price })
+              .eq('id', up.id);
+            
             if (updateError) throw updateError;
+            successCount++;
           }
 
-          showAlert('Sucesso', 'Todo o catálogo foi reajustado com sucesso!');
+          showAlert('Sucesso', `${successCount} produtos foram reajustados com sucesso!`);
           // Recarregar produtos locais
           const { data: refreshed } = await supabase.from('products').select('*').order('id', { ascending: false });
           if (refreshed) setProducts(refreshed);
