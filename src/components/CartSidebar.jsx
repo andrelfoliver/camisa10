@@ -1,7 +1,7 @@
 import React from 'react';
 import { X, Trash2, ArrowRight } from 'lucide-react';
 import { useCart } from '../context/CartContext';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 
 import { useLanguage } from '../context/LanguageContext';
 
@@ -9,6 +9,17 @@ const CartSidebar = () => {
   const { isCartOpen, setIsCartOpen, cartItems, removeFromCart, updateQuantity, subtotal, discount, cartTotal } = useCart();
   const { t, language, translateProductDisplay } = useLanguage();
   const navigate = useNavigate();
+  const location = useLocation();
+
+  const handleContinueShopping = () => {
+    setIsCartOpen(false);
+    
+    // Se o usuário já estiver no checkout, "continuar comprando" deve levá-lo de volta ao catálogo
+    if (location.pathname === '/checkout') {
+      const returnPath = sessionStorage.getItem('ifooty_last_browsed_path') || '/';
+      navigate(returnPath);
+    }
+  };
 
   if (!isCartOpen) return null;
 
@@ -118,7 +129,7 @@ const CartSidebar = () => {
               gap: '0.5rem',
               transition: 'all 0.2s'
             }}
-            onClick={() => setIsCartOpen(false)}
+            onClick={handleContinueShopping}
           >
             {t('cart_continue_shopping')}
           </button>
