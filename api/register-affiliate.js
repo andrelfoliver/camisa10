@@ -21,7 +21,7 @@ export default async function handler(req, res) {
   try {
     // 1. Enviar E-mail para o Administrador (Admin)
     const adminEmail = await resend.emails.send({
-      from: 'Sistema iFooty <parceiros@ifooty.ca>',
+      from: 'Sistema iFooty <afiliado@ifooty.ca>',
       to: ['camisadez085@gmail.com'],
       replyTo: email,
       subject: `🚀 Nova Candidatura de Afiliado: ${name}`,
@@ -53,7 +53,7 @@ export default async function handler(req, res) {
 
     // 2. Enviar E-mail de Confirmação para o Candidato
     const candidateEmail = await resend.emails.send({
-      from: 'iFooty Parceiros <parceiros@ifooty.ca>',
+      from: 'iFooty Parceiros <afiliado@ifooty.ca>',
       to: [email],
       replyTo: 'camisadez085@gmail.com',
       subject: `⚽ Recebemos seu interesse na iFooty, ${name.split(' ')[0]}!`,

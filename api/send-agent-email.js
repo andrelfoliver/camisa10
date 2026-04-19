@@ -17,7 +17,7 @@ export default async function handler(req, res) {
 
   try {
     const { data, error } = await resend.emails.send({
-      from: 'iFooty Parceiros <parceiros@ifooty.ca>',
+      from: 'iFooty Parceiros <afiliado@ifooty.ca>',
       to: [agentEmail],
       replyTo: 'camisadez085@gmail.com',
       subject: `⚽ Bem-vindo ao time iFooty, ${agentName.split(' ')[0]}!`,
