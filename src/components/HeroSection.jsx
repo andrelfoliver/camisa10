@@ -1,25 +1,48 @@
 import React, { useState, useEffect } from 'react';
 import { ShieldCheck, Truck } from 'lucide-react';
 import { useLanguage } from '../context/LanguageContext';
+import { supabase } from '../services/supabase';
 
 const HeroSection = () => {
   const { t } = useLanguage();
   const [currentIndex, setCurrentIndex] = useState(0);
-
-  const heroImages = [
+  const [heroImages, setHeroImages] = useState([
     'https://agbskncncrnzmutaubdn.supabase.co/storage/v1/object/public/product-images/branding/hero-1.png',
     'https://agbskncncrnzmutaubdn.supabase.co/storage/v1/object/public/product-images/branding/hero-2.png',
     'https://agbskncncrnzmutaubdn.supabase.co/storage/v1/object/public/product-images/branding/hero-3.png',
     'https://agbskncncrnzmutaubdn.supabase.co/storage/v1/object/public/product-images/branding/hero-4.png',
     'https://agbskncncrnzmutaubdn.supabase.co/storage/v1/object/public/product-images/branding/hero-5.png'
-  ];
+  ]);
 
   useEffect(() => {
+    async function loadHeroSlides() {
+      const { data, error } = await supabase
+        .from('store_settings')
+        .select('value')
+        .eq('key', 'hero_slides')
+        .single();
+      
+      if (data && data.value) {
+        try {
+          const parsed = JSON.parse(data.value);
+          if (Array.isArray(parsed) && parsed.length > 0) {
+            setHeroImages(parsed);
+          }
+        } catch (e) {
+          console.error("Erro ao processar hero_slides:", e);
+        }
+      }
+    }
+    loadHeroSlides();
+  }, []);
+
+  useEffect(() => {
+    if (heroImages.length === 0) return;
     const timer = setInterval(() => {
       setCurrentIndex((prev) => (prev + 1) % heroImages.length);
     }, 6000); // 6 segundos para cada craque
     return () => clearInterval(timer);
-  }, []);
+  }, [heroImages.length]);
 
   return (
     <section className="hero-funnel">

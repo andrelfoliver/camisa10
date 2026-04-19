@@ -122,6 +122,8 @@ const Admin = () => {
   const [heroUrl, setHeroUrl] = useState('');
   const [heroImageFile, setHeroImageFile] = useState(null);
   const [heroImagePreview, setHeroImagePreview] = useState(null);
+  const [heroSlides, setHeroSlides] = useState([]);
+  const [isUploadingHero, setIsUploadingHero] = useState(false);
   const [whatsAppNumber, setWhatsAppNumber] = useState('5584991847739');
   const [showAddTestimonial, setShowAddTestimonial] = useState(false);
   const [newTestimonial, setNewTestimonial] = useState({ name: '', content: '', rating: 5, location: '', date: new Date().toISOString().split('T')[0], status: 'approved', avatar_url: '' });
@@ -247,6 +249,9 @@ const Admin = () => {
             if(s.key === 'catalog_ids' && Array.isArray(val)) {
               setCatalogIds(val.map(String));
             }
+            if(s.key === 'hero_slides' && Array.isArray(val)) {
+              setHeroSlides(val);
+            }
           } catch(e) {}
         });
       }
@@ -342,6 +347,56 @@ const Admin = () => {
       showAlert("Erro ao salvar Hero", err.message);
     } finally {
       setIsUploading(false);
+    }
+  };
+
+  const handleMoveHeroSlide = (index, direction) => {
+    const newSlides = [...heroSlides];
+    if (direction === 'up' && index > 0) {
+      [newSlides[index], newSlides[index - 1]] = [newSlides[index - 1], newSlides[index]];
+    } else if (direction === 'down' && index < newSlides.length - 1) {
+      [newSlides[index], newSlides[index + 1]] = [newSlides[index + 1], newSlides[index]];
+    }
+    setHeroSlides(newSlides);
+  };
+
+  const handleRemoveHeroSlide = (index) => {
+    const newSlides = heroSlides.filter((_, i) => i !== index);
+    setHeroSlides(newSlides);
+  };
+
+  const handleUploadHeroSlide = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    setIsUploadingHero(true);
+    try {
+      const url = await uploadImageToSupabase(file);
+      setHeroSlides([...heroSlides, url]);
+      showAlert("Sucesso", "Imagem adicionada ao pool. Não esqueça de Salvar a Ordem!");
+    } catch (err) {
+      showAlert("Erro unexpected", err.message);
+    } finally {
+      setIsUploadingHero(false);
+    }
+  };
+
+  const handleSaveHeroSlides = async () => {
+    setLoading(true);
+    try {
+      const { error } = await supabase.from('store_settings').upsert({ 
+        key: 'hero_slides', 
+        value: JSON.stringify(heroSlides) 
+      }, { onConflict: 'key' });
+      
+      if (error) throw error;
+      setSaved(true);
+      setTimeout(() => setSaved(false), 3000);
+      showAlert("Sucesso!", "Configuração de carrossel salva com sucesso.");
+    } catch (err) {
+      showAlert("Erro ao salvar", err.message);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -1044,85 +1099,106 @@ const Admin = () => {
                 </form>
               </div>
 
-              {/* CONFIGURAÇÃO HERO BANNER */}
+              {/* GESTÃO DO CARROSSEL HERO */}
               <div className="glass-panel" style={{ padding: '2.5rem', borderRadius: 'var(--radius-lg)' }}>
-                <h2 style={{ display: 'flex', alignItems: 'center', gap: '0.8rem', marginBottom: '1.5rem', fontSize: '1.5rem' }}>
-                   <Image color="#3B82F6" /> Banner da Home (Hero)
+                <h2 style={{ display: 'flex', alignItems: 'center', gap: '0.8rem', marginBottom: '0.5rem', fontSize: '1.5rem' }}>
+                   <Image color="#3B82F6" /> Carrossel da Home (Imagens de Fundo)
                 </h2>
-                
-                <form onSubmit={handleSaveHeroUrl} style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
-                  
-                  {/* Upgrade: Upload de Arquivo para o Hero */}
-                  <div>
-                    <label style={{ display: 'block', marginBottom: '0.5rem', color: 'var(--text-muted)', fontSize: '0.9rem' }}>
-                      📸 Upload de Background
-                    </label>
-                    <label
-                      htmlFor="hero-upload"
-                      style={{
-                        display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
-                        border: `2px dashed ${heroImagePreview ? 'var(--accent-color)' : 'var(--border-color)'}`,
-                        borderRadius: 'var(--radius-md)', padding: '1.5rem', cursor: 'pointer',
-                        background: heroImagePreview ? 'rgba(164,210,51,0.05)' : 'rgba(255,255,255,0.02)',
-                        transition: 'all 0.2s', position: 'relative', overflow: 'hidden'
-                      }}
-                    >
-                      <input
-                        id="hero-upload"
-                        type="file"
-                        accept="image/*"
-                        style={{ display: 'none' }}
-                        onChange={(e) => {
-                          const file = e.target.files[0];
-                          if (file) {
-                            setHeroImageFile(file);
-                            setHeroImagePreview(URL.createObjectURL(file));
-                          }
-                        }}
-                      />
-                      {heroImagePreview ? (
-                        <div style={{ width: '100%', textAlign: 'center' }}>
-                          <img src={heroImagePreview} alt="Preview" style={{ maxHeight: '150px', maxWidth: '100%', objectFit: 'contain', borderRadius: '8px' }} />
-                          <p style={{ marginTop: '0.5rem', fontSize: '0.75rem', color: 'var(--accent-color)', fontWeight: 700 }}>✅ Imagem selecionada</p>
-                        </div>
-                      ) : (
-                        <div style={{ textAlign: 'center', color: 'var(--text-muted)' }}>
-                          <div style={{ fontSize: '2rem', marginBottom: '0.5rem' }}>🖼️</div>
-                          <p style={{ fontSize: '0.85rem', color: '#fff' }}>Arraste o novo banner aqui</p>
-                        </div>
-                      )}
-                    </label>
-                  </div>
+                <p style={{ color: 'var(--text-muted)', marginBottom: '2rem', fontSize: '0.9rem' }}>
+                  Gerencie as imagens que aparecem no fundo da tela inicial. Arraste para reordenar (em breve) ou use as setas.
+                </p>
 
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                    <div style={{ flex: 1, height: '1px', background: 'var(--border-color)' }} />
-                    <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>ou use uma URL externa</span>
-                    <div style={{ flex: 1, height: '1px', background: 'var(--border-color)' }} />
-                  </div>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', marginBottom: '2rem' }}>
+                  {heroSlides.map((src, index) => (
+                    <div key={index} style={{ 
+                      display: 'flex', 
+                      alignItems: 'center', 
+                      gap: '1.5rem', 
+                      background: 'rgba(255,255,255,0.02)', 
+                      padding: '1rem', 
+                      borderRadius: '12px', 
+                      border: '1px solid var(--border-color)',
+                      animation: 'slideIn 0.3s ease-out'
+                    }}>
+                      <div style={{ width: '40px', height: '40px', borderRadius: '50%', background: 'rgba(255,255,255,0.05)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800, color: 'var(--accent-color)' }}>
+                        {index + 1}
+                      </div>
+                      
+                      <div style={{ width: '120px', height: '60px', borderRadius: '8px', overflow: 'hidden', border: '1px solid rgba(255,255,255,0.1)' }}>
+                        <img src={src} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                      </div>
 
-                  <div>
-                    <label style={{ display: 'block', marginBottom: '0.5rem', color: 'var(--text-muted)', fontWeight: 600 }}>URL da Imagem</label>
-                    <div style={{ display: 'flex', gap: '1rem' }}>
-                      <input 
-                        type="url" 
-                        value={heroUrl} 
-                        onChange={e => { setHeroUrl(e.target.value); if(e.target.value) { setHeroImageFile(null); setHeroImagePreview(null); } }} 
-                        placeholder="Ex: https://..." 
-                        style={{ flex: 1, padding: '1rem', background: 'rgba(255,255,255,0.05)', color: '#fff', border: '1px solid var(--border-color)', borderRadius: 'var(--radius-md)' }} 
-                      />
-                      <button type="submit" disabled={isUploading} className="btn-primary" style={{ background: '#3B82F6', color: '#fff', padding: '0 2rem' }}>
-                        {isUploading ? 'Salvando...' : 'Atualizar Banner'}
-                      </button>
+                      <div style={{ flex: 1, overflow: 'hidden' }}>
+                        <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', wordBreak: 'break-all', margin: 0 }}>{src.split('/').pop()}</p>
+                      </div>
+
+                      <div style={{ display: 'flex', gap: '0.5rem' }}>
+                        <button 
+                          onClick={() => handleMoveHeroSlide(index, 'up')} 
+                          disabled={index === 0}
+                          style={{ padding: '0.5rem', borderRadius: '6px', background: 'rgba(255,255,255,0.05)', color: '#fff', border: 'none', cursor: index === 0 ? 'not-allowed' : 'pointer', opacity: index === 0 ? 0.3 : 1 }}
+                        >
+                          <ChevronUp size={18} />
+                        </button>
+                        <button 
+                          onClick={() => handleMoveHeroSlide(index, 'down')} 
+                          disabled={index === heroSlides.length - 1}
+                          style={{ padding: '0.5rem', borderRadius: '6px', background: 'rgba(255,255,255,0.05)', color: '#fff', border: 'none', cursor: index === heroSlides.length - 1 ? 'not-allowed' : 'pointer', opacity: index === heroSlides.length - 1 ? 0.3 : 1 }}
+                        >
+                          <ChevronDown size={18} />
+                        </button>
+                        <button 
+                          onClick={() => handleRemoveHeroSlide(index)} 
+                          style={{ padding: '0.5rem', borderRadius: '6px', background: 'rgba(239, 68, 68, 0.1)', color: '#EF4444', border: 'none', cursor: 'pointer' }}
+                        >
+                          <Trash2 size={18} />
+                        </button>
+                      </div>
                     </div>
-                  </div>
-                </form>
-                
-                {(heroUrl || heroImagePreview) && (
-                  <div style={{ marginTop: '2.5rem' }}>
-                    <h3 style={{ marginBottom: '1rem', color: 'var(--text-muted)', fontSize: '0.9rem', textTransform: 'uppercase' }}>Preview em Tempo Real:</h3>
-                    <div style={{ width: '100%', height: '300px', borderRadius: 'var(--radius-md)', background: `url(${heroImagePreview || heroUrl}) center/cover no-repeat`, border: '1px solid var(--border-color)' }}></div>
-                  </div>
-                )}
+                  ))}
+
+                  {heroSlides.length === 0 && (
+                    <div style={{ textAlign: 'center', padding: '3rem', border: '1px dashed var(--border-color)', borderRadius: '12px', color: 'var(--text-muted)' }}>
+                      Nenhuma imagem no carrossel. Use o botão abaixo para adicionar.
+                    </div>
+                  )}
+                </div>
+
+                <div style={{ display: 'flex', gap: '1rem' }}>
+                  <label style={{ 
+                    flex: 1,
+                    display: 'flex', 
+                    alignItems: 'center', 
+                    justifyContent: 'center', 
+                    gap: '0.8rem', 
+                    padding: '1.2rem', 
+                    background: isUploadingHero ? '#555' : 'var(--surface-color)', 
+                    color: '#fff', 
+                    borderRadius: 'var(--radius-md)', 
+                    border: '1px dashed var(--border-color)', 
+                    cursor: isUploadingHero ? 'not-allowed' : 'pointer',
+                    fontWeight: 700,
+                    transition: 'all 0.2s'
+                  }}>
+                    <input type="file" accept="image/*" onChange={handleUploadHeroSlide} disabled={isUploadingHero} style={{ display: 'none' }} />
+                    {isUploadingHero ? (
+                      <div style={{ width: '20px', height: '20px', border: '3px solid rgba(255,255,255,0.3)', borderTopColor: '#fff', borderRadius: '50%', animation: 'spin 0.8s linear infinite' }} />
+                    ) : (
+                      <>
+                        <Plus size={20} /> Adicionar Nova Imagem
+                      </>
+                    )}
+                  </label>
+
+                  <button 
+                    onClick={handleSaveHeroSlides}
+                    disabled={loading}
+                    className="btn-primary"
+                    style={{ flex: 1, padding: '1.2rem', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.8rem' }}
+                  >
+                    <Save size={20} /> SALVAR ORDEM E ALTERAÇÕES
+                  </button>
+                </div>
               </div>
             </div>
           ) : supplierTab === 'TEAMS' ? (
