@@ -2,11 +2,18 @@ import React, { useState, useEffect } from 'react';
 import { supabase } from '../services/supabase';
 import { 
   TrendingUp, DollarSign, Gift, Calendar, Award, Globe, Rocket, Terminal, CheckCircle2, 
-  AlertCircle, MessageSquare, BarChart3, Shield, ChevronRight, Mail, X
+  AlertCircle, MessageSquare, BarChart3, Shield, ChevronRight, Mail, X, FileText
 } from 'lucide-react';
 
 const AffiliateProgram = () => {
-  const [waNumber, setWaNumber] = useState('');
+  const [formData, setFormData] = useState({
+    name: '',
+    email: '',
+    social: '',
+    story: '',
+    payment: 'E-Transfer'
+  });
+  const [status, setStatus] = useState('idle'); // idle, submitting, success, error
 
   useEffect(() => {
     async function loadConfig() {
@@ -17,7 +24,31 @@ const AffiliateProgram = () => {
     window.scrollTo(0, 0);
   }, []);
 
-  const waLink = `https://wa.me/${waNumber.replace(/\D/g, '')}?text=Olá!%20Li%20o%20guia%20completo%20e%20tenho%20interesse%20em%20me%20tornar%20um%20embaixador%20da%20iFooty.%20Podemos%20conversar?`;
+  const scrollToForm = () => {
+    document.getElementById('cadastro').scrollIntoView({ behavior: 'smooth' });
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setStatus('submitting');
+    try {
+      const res = await fetch('/api/register-affiliate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(formData)
+      });
+      const result = await res.json();
+      if (result.success) {
+        setStatus('success');
+        setFormData({ name: '', email: '', social: '', story: '', payment: 'E-Transfer' });
+      } else {
+        setStatus('error');
+      }
+    } catch (err) {
+      console.error(err);
+      setStatus('error');
+    }
+  };
 
   const Section = ({ icon: Icon, title, children, id }) => (
     <section id={id} style={{ marginBottom: '4rem' }}>
@@ -49,9 +80,9 @@ const AffiliateProgram = () => {
             Ganhe comissões agressivas promovendo camisas de futebol premium para a maior comunidade brasileira no Canadá. Seja o rosto da iFooty na sua cidade.
           </p>
           <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'center', gap: '1rem' }}>
-            <a href={waLink} className="btn-primary" style={{ padding: '1rem 2.5rem', fontSize: '1.1rem', fontWeight: 800, textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '0.8rem' }}>
+            <button onClick={scrollToForm} className="btn-primary" style={{ padding: '1rem 2.5rem', fontSize: '1.1rem', fontWeight: 800, border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.8rem' }}>
               QUERO ME INSCREVER <ChevronRight size={20} />
-            </a>
+            </button>
             <button onClick={() => document.getElementById('comissoes').scrollIntoView({ behavior: 'smooth' })} style={{ background: 'transparent', border: '1px solid rgba(255,255,255,0.1)', color: '#fff', padding: '1rem 2.5rem', borderRadius: 'var(--radius-md)', fontWeight: 600, cursor: 'pointer' }}>
               VER PLANO DE GANHOS
             </button>
@@ -258,21 +289,117 @@ const AffiliateProgram = () => {
           </div>
         </Section>
 
-        {/* CTA FINAL */}
+        {/* FORMULÁRIO DE CADASTRO */}
+        <Section icon={FileText} title="Formulário de Candidatura" id="cadastro">
+          <div className="glass-panel" style={{ padding: '2.5rem' }}>
+            {status === 'success' ? (
+              <div style={{ textAlign: 'center', padding: '3rem 1rem' }}>
+                <div style={{ width: '64px', height: '64px', borderRadius: '100px', background: 'rgba(74, 222, 128, 0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#4ADE80', margin: '0 auto 1.5rem' }}>
+                  <CheckCircle2 size={32} />
+                </div>
+                <h3 style={{ color: '#fff', fontSize: '1.5rem', marginBottom: '1rem' }}>Candidatura Enviada!</h3>
+                <p style={{ color: 'var(--text-muted)', lineHeight: 1.6 }}>
+                  Recebemos seu interesse! Analisaremos suas informações e entraremos em contato via WhatsApp ou e-mail em até <strong>24 horas</strong>.
+                </p>
+                <button onClick={() => setStatus('idle')} style={{ marginTop: '2rem', background: 'none', border: '1px solid var(--border-color)', color: '#fff', padding: '0.8rem 2rem', borderRadius: '100px', cursor: 'pointer' }}>Enviar outra candidatura</button>
+              </div>
+            ) : (
+              <form onSubmit={handleSubmit} style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem' }}>
+                <div style={{ gridColumn: '1 / -1' }}>
+                  <p style={{ color: 'var(--text-muted)', fontSize: '0.95rem', marginBottom: '1.5rem' }}>Preencha os dados abaixo para iniciar sua jornada como embaixador iFooty. André Oliveira analisará seu perfil pessoalmente.</p>
+                </div>
+                
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                  <label style={{ fontSize: '0.85rem', color: '#fff', fontWeight: 600 }}>Nome Completo *</label>
+                  <input 
+                    required
+                    type="text" 
+                    value={formData.name}
+                    onChange={e => setFormData({...formData, name: e.target.value})}
+                    placeholder="Seu nome"
+                    style={{ background: 'rgba(0,0,0,0.3)', border: '1px solid var(--border-color)', borderRadius: '8px', padding: '0.8rem', color: '#fff', outline: 'none' }}
+                  />
+                </div>
+
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                  <label style={{ fontSize: '0.85rem', color: '#fff', fontWeight: 600 }}>E-mail *</label>
+                  <input 
+                    required
+                    type="email" 
+                    value={formData.email}
+                    onChange={e => setFormData({...formData, email: e.target.value})}
+                    placeholder="seu@email.com"
+                    style={{ background: 'rgba(0,0,0,0.3)', border: '1px solid var(--border-color)', borderRadius: '8px', padding: '0.8rem', color: '#fff', outline: 'none' }}
+                  />
+                </div>
+
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                  <label style={{ fontSize: '0.85rem', color: '#fff', fontWeight: 600 }}>Rede Social Principal *</label>
+                  <input 
+                    required
+                    type="text" 
+                    value={formData.social}
+                    onChange={e => setFormData({...formData, social: e.target.value})}
+                    placeholder="@seuusuario (Instagram/TikTok)"
+                    style={{ background: 'rgba(0,0,0,0.3)', border: '1px solid var(--border-color)', borderRadius: '8px', padding: '0.8rem', color: '#fff', outline: 'none' }}
+                  />
+                </div>
+
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                  <label style={{ fontSize: '0.85rem', color: '#fff', fontWeight: 600 }}>Forma de Pagamento Preferida</label>
+                  <select 
+                    value={formData.payment}
+                    onChange={e => setFormData({...formData, payment: e.target.value})}
+                    style={{ background: 'rgba(0,0,0,0.3)', border: '1px solid var(--border-color)', borderRadius: '8px', padding: '0.8rem', color: '#fff', outline: 'none' }}
+                  >
+                    <option value="E-Transfer">E-Transfer (Canada)</option>
+                    <option value="PIX">PIX (Brasil)</option>
+                    <option value="Wise">Wise (Internacional)</option>
+                  </select>
+                </div>
+
+                <div style={{ gridColumn: '1 / -1', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                  <label style={{ fontSize: '0.85rem', color: '#fff', fontWeight: 600 }}>Como você planeja divulgar a iFooty? *</label>
+                  <textarea 
+                    required
+                    value={formData.story}
+                    onChange={e => setFormData({...formData, story: e.target.value})}
+                    placeholder="Ex: Vou postar unboxing no TikTok e divulgar nos grupos de brasileiros em Calgary..."
+                    style={{ background: 'rgba(0,0,0,0.3)', border: '1px solid var(--border-color)', borderRadius: '8px', padding: '0.8rem', color: '#fff', outline: 'none', minHeight: '120px', resize: 'vertical' }}
+                  />
+                </div>
+
+                {status === 'error' && (
+                  <div style={{ gridColumn: '1 / -1', color: '#F87171', fontSize: '0.85rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                    <AlertCircle size={16} /> Houve um erro ao enviar. Tente novamente ou fale no WhatsApp.
+                  </div>
+                )}
+
+                <div style={{ gridColumn: '1 / -1', marginTop: '1rem' }}>
+                  <button 
+                    disabled={status === 'submitting'}
+                    className="btn-primary" 
+                    style={{ width: '100%', padding: '1.2rem', fontSize: '1.2rem', fontWeight: 800, border: 'none', cursor: status === 'submitting' ? 'wait' : 'pointer', opacity: status === 'submitting' ? 0.7 : 1 }}
+                  >
+                    {status === 'submitting' ? 'ENVIANDO...' : 'ENVIAR MINHA CANDIDATURA'}
+                  </button>
+                </div>
+              </form>
+            )}
+          </div>
+        </Section>
+
+        {/* CTA FINAL ALTERADO PARA ROLAR */}
         <div style={{ padding: '5rem 2rem', background: 'var(--accent-color)', borderRadius: '32px', textAlign: 'center', color: '#000' }}>
           <h2 style={{ fontSize: 'clamp(2rem, 5vw, 3rem)', fontWeight: 900, marginBottom: '1rem', letterSpacing: '-0.02em' }}>PRONTO PARA SER UM EMBAIXADOR?</h2>
           <p style={{ fontSize: '1.2rem', fontWeight: 600, maxWidth: '600px', margin: '0 auto 3rem', opacity: 0.8 }}>
             André analisa todas as inscrições pessoalmente em até 24h. O seu sucesso é o nosso sucesso.
           </p>
-          <a 
-            href={waLink} 
-            className="btn-primary" 
-            style={{ background: '#000', color: '#fff', padding: '1.2rem 3.5rem', fontSize: '1.2rem', fontWeight: 800, textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: '1rem', borderRadius: '100px' }}
-          >
-            <MessageSquare size={22} /> INICIAR ENTREVISTA NO WHATSAPP
-          </a>
+          <button onClick={scrollToForm} className="btn-primary" style={{ background: '#000', color: '#fff', padding: '1.2rem 3rem', fontSize: '1.2rem', fontWeight: 800, textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: '1rem', border: 'none', cursor: 'pointer' }}>
+            <FileText size={22} /> PREENCHER FORMULÁRIO DE INSCRIÇÃO
+          </button>
           <div style={{ marginTop: '3rem', fontSize: '0.9rem', fontWeight: 700, opacity: 0.6, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '1.5rem' }}>
-            <span style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}><Mail size={16} /> afiliados@ifooty.ca</span>
+            <span style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}><Mail size={16} /> contato@ifooty.ca</span>
             <span style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}><Globe size={16} /> iFooty.ca</span>
           </div>
         </div>
