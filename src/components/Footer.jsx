@@ -136,15 +136,17 @@ const Footer = () => {
               <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>Fazer Spam, comprar pelo próprio link, fraudar cliques ou usar a marca em anúncios sem autorização.</p>
             </div>
 
-            <a 
-              href={`https://wa.me/${waNumber.replace(/\D/g, '')}?text=Olá!%20Tenho%20interesse%20em%20me%20tornar%20um%20afiliado%20da%20iFooty.%20Gostaria%20de%20saber%20mais%20detalhes.`}
-              target="_blank"
-              rel="noopener noreferrer"
+            <button 
+              onClick={() => { setActiveModal(null); window.location.href = '/afiliados#cadastro'; }}
               className="btn-primary"
-              style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.8rem', marginTop: '2.5rem', padding: '1.2rem', textDecoration: 'none', fontWeight: 800 }}
+              style={{ 
+                display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.8rem', 
+                marginTop: '2.5rem', padding: '1.2rem', width: '100%', border: 'none', 
+                cursor: 'pointer', fontSize: '1.1rem', fontWeight: 800 
+              }}
             >
-              <MessageSquare size={20} /> QUERO SER UM EMBAIXADOR
-            </a>
+              <FileText size={20} /> QUERO SER UM EMBAIXADOR
+            </button>
             
             <button 
               onClick={() => { setActiveModal(null); window.location.href = '/afiliados'; }}
