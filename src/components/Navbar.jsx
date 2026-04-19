@@ -8,63 +8,15 @@ import { supabase } from '../services/supabase';
 import { useLanguage } from '../context/LanguageContext';
 
 const Navbar = () => {
-  const { cartItems, setIsCartOpen } = useCart();
-  const { user, isAdmin } = useAuth();
-  const { language, setLanguage, t } = useLanguage();
-  const navigate = useNavigate();
-  const [mobileMenuOpen, setMobileMenuOpen] = React.useState(false);
-  const [isSearchOpen, setIsSearchOpen] = React.useState(false);
-  const [searchQuery, setSearchQuery] = React.useState('');
-  const [suggestions, setSuggestions] = React.useState([]);
-  const [scrolled, setScrolled] = React.useState(false);
-
-  React.useEffect(() => {
-    const handleScroll = () => {
-      setScrolled(window.scrollY > 50);
-    };
-    window.addEventListener('scroll', handleScroll);
-    return () => window.removeEventListener('scroll', handleScroll);
-  }, []);
-
-  const [waNumber, setWaNumber] = React.useState('5584991847739');
-
-  React.useEffect(() => {
-    async function getWa() {
-      const { data } = await supabase.from('store_settings').select('value').eq('key', 'whatsapp_number').single();
-      if (data && data.value) setWaNumber(data.value);
+  const handleNav = (e, path) => {
+    if (e && e.preventDefault) e.preventDefault();
+    setMobileMenuOpen(false);
+    
+    if (window.location.pathname === path) {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    } else {
+      navigate(path);
     }
-    getWa();
-  }, []);
-
-  const itemCount = cartItems.reduce((acc, item) => acc + item.quantity, 0);
-
-  // Busca sugestões em tempo real
-  React.useEffect(() => {
-    const fetchSuggestions = async () => {
-      if (searchQuery.length < 2) {
-        setSuggestions([]);
-        return;
-      }
-
-      const { data } = await supabase
-        .from('products')
-        .select('id, name, image')
-        .or(`name.ilike.%${searchQuery}%,team.ilike.%${searchQuery}%`)
-        .limit(5);
-      
-      if (data) setSuggestions(data);
-    };
-
-    const timer = setTimeout(fetchSuggestions, 300);
-    return () => clearTimeout(timer);
-  }, [searchQuery]);
-
-  const handleSearchSubmit = (e) => {
-    if (e) e.preventDefault();
-    if (!searchQuery.trim()) return;
-    navigate(`/busca?q=${encodeURIComponent(searchQuery)}`);
-    setIsSearchOpen(false);
-    setSearchQuery('');
   };
 
   return (
@@ -171,13 +123,7 @@ const Navbar = () => {
           {/* Coluna Central: Logo (Responsiva) */}
           <div style={{ display: 'flex', justifyContent: 'center' }}>
             <div 
-              onClick={() => {
-                if (window.location.pathname === '/') {
-                  window.scrollTo({ top: 0, behavior: 'smooth' });
-                } else {
-                  navigate('/');
-                }
-              }}
+              onClick={(e) => handleNav(e, '/')}
               style={{ 
                 display: 'flex', 
                 alignItems: 'center', 
@@ -287,12 +233,12 @@ const Navbar = () => {
           transition: 'all 0.3s ease'
         }}>
           <div className="container" style={{ display: 'flex', gap: scrolled ? '1.5rem' : '2rem', justifyContent: 'center', transition: 'gap 0.3s ease' }}>
-            <Link to="/" style={{ fontWeight: 600, fontSize: scrolled ? '0.78rem' : '0.85rem', textTransform: 'uppercase', letterSpacing: '1px', transition: 'all 0.2s', color: 'var(--text-main)' }}>{t('nav_home')}</Link>
-            <Link to="/colecao/selecoes" style={{ fontWeight: 600, fontSize: scrolled ? '0.78rem' : '0.85rem', textTransform: 'uppercase', letterSpacing: '1px', transition: 'all 0.2s', color: 'var(--text-main)' }}>{language === 'pt' ? 'Seleções' : 'National Teams'}</Link>
-            <Link to="/colecao/brasileirao" style={{ fontWeight: 600, fontSize: scrolled ? '0.78rem' : '0.85rem', textTransform: 'uppercase', letterSpacing: '1px', transition: 'all 0.2s', color: 'var(--text-main)' }}>{t('nav_br')}</Link>
-            <Link to="/colecao/internacionais" style={{ fontWeight: 600, fontSize: scrolled ? '0.78rem' : '0.85rem', textTransform: 'uppercase', letterSpacing: '1px', transition: 'all 0.2s', color: 'var(--text-main)' }}>{t('nav_intl')}</Link>
-            <Link to="/colecao/lancamentos" style={{ fontWeight: 600, fontSize: scrolled ? '0.78rem' : '0.85rem', textTransform: 'uppercase', letterSpacing: '1px', transition: 'all 0.2s', color: 'var(--accent-color)' }}>{language === 'pt' ? 'Lançamentos' : 'New Drops'} 🔥</Link>
-            <Link to="/colecao/retro" style={{ fontWeight: 600, fontSize: scrolled ? '0.78rem' : '0.85rem', textTransform: 'uppercase', letterSpacing: '1px', transition: 'all 0.2s', color: 'var(--text-main)' }}>{t('nav_retro')}</Link>
+            <Link to="/" onClick={(e) => handleNav(e, '/')} style={{ fontWeight: 600, fontSize: scrolled ? '0.78rem' : '0.85rem', textTransform: 'uppercase', letterSpacing: '1px', transition: 'all 0.2s', color: 'var(--text-main)' }}>{t('nav_home')}</Link>
+            <Link to="/colecao/selecoes" onClick={(e) => handleNav(e, '/colecao/selecoes')} style={{ fontWeight: 600, fontSize: scrolled ? '0.78rem' : '0.85rem', textTransform: 'uppercase', letterSpacing: '1px', transition: 'all 0.2s', color: 'var(--text-main)' }}>{language === 'pt' ? 'Seleções' : 'National Teams'}</Link>
+            <Link to="/colecao/brasileirao" onClick={(e) => handleNav(e, '/colecao/brasileirao')} style={{ fontWeight: 600, fontSize: scrolled ? '0.78rem' : '0.85rem', textTransform: 'uppercase', letterSpacing: '1px', transition: 'all 0.2s', color: 'var(--text-main)' }}>{t('nav_br')}</Link>
+            <Link to="/colecao/internacionais" onClick={(e) => handleNav(e, '/colecao/internacionais')} style={{ fontWeight: 600, fontSize: scrolled ? '0.78rem' : '0.85rem', textTransform: 'uppercase', letterSpacing: '1px', transition: 'all 0.2s', color: 'var(--text-main)' }}>{t('nav_intl')}</Link>
+            <Link to="/colecao/lancamentos" onClick={(e) => handleNav(e, '/colecao/lancamentos')} style={{ fontWeight: 600, fontSize: scrolled ? '0.78rem' : '0.85rem', textTransform: 'uppercase', letterSpacing: '1px', transition: 'all 0.2s', color: 'var(--accent-color)' }}>{language === 'pt' ? 'Lançamentos' : 'New Drops'} 🔥</Link>
+            <Link to="/colecao/retro" onClick={(e) => handleNav(e, '/colecao/retro')} style={{ fontWeight: 600, fontSize: scrolled ? '0.78rem' : '0.85rem', textTransform: 'uppercase', letterSpacing: '1px', transition: 'all 0.2s', color: 'var(--text-main)' }}>{t('nav_retro')}</Link>
           </div>
         </div>
 
@@ -318,12 +264,12 @@ const Navbar = () => {
             >
                <Search size={20} /> {language === 'pt' ? 'Buscar Produto' : 'Search Product'}
             </button>
-            <Link to="/" onClick={() => setMobileMenuOpen(false)}>{t('nav_home')}</Link>
-            <Link to="/colecao/selecoes" onClick={() => setMobileMenuOpen(false)}>{language === 'pt' ? 'Seleções' : 'National Teams'}</Link>
-            <Link to="/colecao/brasileirao" onClick={() => setMobileMenuOpen(false)}>{t('nav_br')}</Link>
-            <Link to="/colecao/internacionais" onClick={() => setMobileMenuOpen(false)}>{t('nav_intl')}</Link>
-            <Link to="/colecao/lancamentos" onClick={() => setMobileMenuOpen(false)} style={{ color: 'var(--accent-color)' }}>{language === 'pt' ? 'Lançamentos' : 'New Drops'} 🔥</Link>
-            <Link to="/colecao/retro" onClick={() => setMobileMenuOpen(false)}>{t('nav_retro')}</Link>
+            <Link to="/" onClick={(e) => handleNav(e, '/')}>{t('nav_home')}</Link>
+            <Link to="/colecao/selecoes" onClick={(e) => handleNav(e, '/colecao/selecoes')}>{language === 'pt' ? 'Seleções' : 'National Teams'}</Link>
+            <Link to="/colecao/brasileirao" onClick={(e) => handleNav(e, '/colecao/brasileirao')}>{t('nav_br')}</Link>
+            <Link to="/colecao/internacionais" onClick={(e) => handleNav(e, '/colecao/internacionais')}>{t('nav_intl')}</Link>
+            <Link to="/colecao/lancamentos" onClick={(e) => handleNav(e, '/colecao/lancamentos')} style={{ color: 'var(--accent-color)' }}>{language === 'pt' ? 'Lançamentos' : 'New Drops'} 🔥</Link>
+            <Link to="/colecao/retro" onClick={(e) => handleNav(e, '/colecao/retro')}>{t('nav_retro')}</Link>
           </div>
         )}
 
