@@ -553,6 +553,11 @@ const Checkout = () => {
                    <span>- ${(cartTotal - finalTotal).toFixed(2)}</span>
                 </div>
               )}
+
+              <div style={{ display: 'flex', justifyContent: 'space-between', color: appliedShipping === 0 && pricingConfig.shippingCost > 0 ? '#10B981' : 'var(--text-main)', fontWeight: appliedShipping === 0 && pricingConfig.shippingCost > 0 ? 600 : 400 }}>
+                 <span>Frete / Shipping</span>
+                 <span>{appliedShipping === 0 && pricingConfig.shippingCost > 0 ? 'GRÁTIS' : `$${appliedShipping.toFixed(2)}`}</span>
+              </div>
             </div>
             <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '1.25rem', fontWeight: 'bold', marginBottom: '2rem' }}>
               <span>{t('cart_total')} CAD</span>

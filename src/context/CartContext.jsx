@@ -25,6 +25,8 @@ export const CartProvider = ({ children }) => {
     patch: 3.90,
     size2XL3XL: 7.90,
     size4XL: 11.90,
+    shippingCost: 0,
+    freeShippingThreshold: 0,
     discounts: [
       { qty: 2, percent: 8 },
       { qty: 3, percent: 12 },
@@ -186,15 +188,29 @@ export const CartProvider = ({ children }) => {
        discount = baseSubtotal * (matchedDiscount.percent / 100);
     }
 
+    // Lógica de Frete
+    let appliedShipping = 0;
+    if (totalItems > 0) {
+      const threshold = Number(pricing.freeShippingThreshold || 0);
+      const cost = Number(pricing.shippingCost || 0);
+      
+      if (threshold > 0 && subtotal >= threshold) {
+        appliedShipping = 0;
+      } else {
+        appliedShipping = cost;
+      }
+    }
+
     return {
       subtotal,
       discount,
-      total: Math.max(0, subtotal - discount),
+      appliedShipping,
+      total: Math.max(0, subtotal - discount + appliedShipping),
       totalItems
     };
   };
 
-  const { subtotal, discount, total: cartTotal, totalItems } = computeTotals();
+  const { subtotal, discount, appliedShipping, total: cartTotal, totalItems } = computeTotals();
 
   return (
     <CartContext.Provider
@@ -208,6 +224,7 @@ export const CartProvider = ({ children }) => {
         setIsCartOpen,
         subtotal,
         discount,
+        appliedShipping,
         cartTotal,
         totalItems,
         pricingConfig: pricing

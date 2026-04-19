@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from '../services/supabase';
 import { useAuth } from '../context/AuthContext';
-import { Save, Check, Crown, Heart, Database, HardDrive, Star, LogOut, Package, Plus, Trash2, Edit, X, Users, Image, DollarSign, MapPin, RefreshCw, Shield, AlertTriangle, MessageSquare, ChevronDown, ChevronUp, MoreHorizontal, ExternalLink, Settings, Tag, TrendingUp } from 'lucide-react';
+import { Save, Check, Crown, Heart, Database, HardDrive, Star, LogOut, Package, Plus, Trash2, Edit, X, Users, Image, DollarSign, MapPin, RefreshCw, Shield, AlertTriangle, MessageSquare, ChevronDown, ChevronUp, MoreHorizontal, ExternalLink, Settings, Tag, TrendingUp, Truck, BarChart } from 'lucide-react';
 import { migrateProductsToSupabase } from '../services/migration';
 import { migrateTeamsToSupabase } from '../services/migration_teams';
 import WhatsAppIcon from '../components/WhatsAppIcon';
@@ -139,9 +139,13 @@ const Admin = () => {
       { qty: 4, amount: 25 },
       { qty: 5, amount: 30 },
       { qty: 10, amount: 35 }
-    ]
+    ],
+    shippingCost: 0,
+    freeShippingThreshold: 0
   };
   const [pricing, setPricing] = useState(defaultPricing);
+  const [bulkAdjustmentValue, setBulkAdjustmentValue] = useState(5.00);
+  const [bulkAdjustmentType, setBulkAdjustmentType] = useState('fixed'); // 'fixed' ou 'percent'
   const [orderFilter, setOrderFilter] = useState(null);
   const [statusFilter, setStatusFilter] = useState('all');
   const [dateRange, setDateRange] = useState({ start: '', end: '' });
@@ -338,6 +342,55 @@ const Admin = () => {
     }
     setSaved(true);
     setTimeout(() => setSaved(false), 3000);
+  };
+
+  const handleBulkPriceUpdate = async (multiplier = 1) => {
+    const actionLabel = multiplier > 0 ? 'Aumentar' : 'Diminuir';
+    showConfirm(
+      'Reajuste em Massa',
+      `Deseja realmenta ${actionLabel.toLowerCase()} o preço de TODOS os produtos do catálogo em ${bulkAdjustmentType === 'fixed' ? '$' : ''}${bulkAdjustmentValue}${bulkAdjustmentType === 'percent' ? '%' : ''}? Esta ação é irreversível.`,
+      async () => {
+        setIsMigrating(true);
+        try {
+          const { data: allProducts, error: fetchError } = await supabase.from('products').select('id, price');
+          if (fetchError) throw fetchError;
+
+          const updates = allProducts.map(p => {
+            let newPrice;
+            const currentPrice = Number(p.price);
+            const val = Number(bulkAdjustmentValue) * multiplier;
+            
+            if (bulkAdjustmentType === 'fixed') {
+              newPrice = currentPrice + val;
+            } else {
+              newPrice = currentPrice * (1 + (val / 100));
+            }
+
+            return {
+              id: p.id,
+              price: Number(newPrice.toFixed(2))
+            };
+          });
+
+          // Atualização em blocos para evitar limites da API
+          const chunkSize = 50;
+          for (let i = 0; i < updates.length; i += chunkSize) {
+            const chunk = updates.slice(i, i + chunkSize);
+            const { error: updateError } = await supabase.from('products').upsert(chunk);
+            if (updateError) throw updateError;
+          }
+
+          showAlert('Sucesso', 'Todo o catálogo foi reajustado com sucesso!');
+          // Recarregar produtos locais
+          const { data: refreshed } = await supabase.from('products').select('*').order('id', { ascending: false });
+          if (refreshed) setProducts(refreshed);
+        } catch (err) {
+          showAlert('Erro no Reajuste', err.message);
+        } finally {
+          setIsMigrating(false);
+        }
+      }
+    );
   };
 
   const handleSaveHeroUrl = async (e) => {
@@ -1699,6 +1752,45 @@ const Admin = () => {
             </div>
           ) : supplierTab === 'PRICING' ? (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem', maxWidth: '800px' }}>
+              {/* REAJUSTE GLOBAL - NOVA FERRAMENTA */}
+              <div className="glass-panel" style={{ padding: '2.5rem', borderRadius: 'var(--radius-lg)', border: '1px solid rgba(245, 158, 11, 0.3)', background: 'linear-gradient(135deg, rgba(245, 158, 11, 0.05), transparent)' }}>
+                <h2 style={{ display: 'flex', alignItems: 'center', gap: '0.8rem', marginBottom: '1.5rem', fontSize: '1.5rem', color: '#F59E0B' }}>
+                   <BarChart size={24} /> Reajuste Global de Catálogo
+                </h2>
+                <p style={{ color: 'var(--text-muted)', marginBottom: '1.5rem', fontSize: '0.9rem' }}>
+                  Use esta ferramenta para aumentar ou diminuir o preço de **todos os produtos** da loja simultaneamente. Útil para repassar aumentos do fornecedor.
+                </p>
+                
+                <div style={{ display: 'flex', gap: '1rem', alignItems: 'flex-end', background: 'rgba(0,0,0,0.2)', padding: '1.5rem', borderRadius: '12px', border: '1px solid var(--border-color)' }}>
+                  <div style={{ flex: 1 }}>
+                    <label style={{ display: 'block', marginBottom: '0.5rem', color: 'var(--text-muted)', fontSize: '0.85rem' }}>Tipo de Reajuste</label>
+                    <select 
+                      value={bulkAdjustmentType} 
+                      onChange={e => setBulkAdjustmentType(e.target.value)}
+                      style={{ width: '100%', padding: '0.8rem', background: 'var(--bg-color)', color: '#fff', border: '1px solid var(--border-color)', borderRadius: '6px' }}
+                    >
+                      <option value="fixed">Valor Fixo ($ CAD)</option>
+                      <option value="percent">Percentual (%)</option>
+                    </select>
+                  </div>
+                  <div style={{ flex: 1 }}>
+                    <label style={{ display: 'block', marginBottom: '0.5rem', color: 'var(--text-muted)', fontSize: '0.85rem' }}>Valor do Ajuste</label>
+                    <input 
+                      type="number" 
+                      step="0.01" 
+                      value={bulkAdjustmentValue} 
+                      onChange={e => setBulkAdjustmentValue(e.target.value)} 
+                      style={{ width: '100%', padding: '0.8rem', background: 'var(--bg-color)', color: '#fff', border: '1px solid var(--border-color)', borderRadius: '6px' }} 
+                    />
+                  </div>
+                  <div style={{ display: 'flex', gap: '0.5rem' }}>
+                    <button onClick={() => handleBulkPriceUpdate(-1)} className="btn-secondary" style={{ borderColor: '#EF4444', color: '#EF4444', height: '45px' }}>Reduzir</button>
+                    <button onClick={() => handleBulkPriceUpdate(1)} className="btn-primary" style={{ background: '#F59E0B', color: '#000', height: '45px', fontWeight: 800 }}>Aumentar Tudo</button>
+                  </div>
+                </div>
+              </div>
+
+              {/* VALORES FIXOS E FRETE */}
               <div className="glass-panel" style={{ padding: '2.5rem', borderRadius: 'var(--radius-lg)' }}>
                 <h2 style={{ display: 'flex', alignItems: 'center', gap: '0.8rem', marginBottom: '1.5rem', fontSize: '1.5rem', color: '#FCD34D' }}>
                    <DollarSign color="#FCD34D" /> Valores Adicionais Fixos
@@ -1723,6 +1815,23 @@ const Admin = () => {
                       <label style={{ display: 'block', marginBottom: '0.5rem', color: 'var(--text-muted)', fontWeight: 600 }}>Tamanho Máximo (4XL)</label>
                       <input required type="number" step="0.01" value={pricing.size4XL} onChange={e => setPricing({...pricing, size4XL: parseFloat(e.target.value)})} style={{ width: '100%', padding: '1rem', background: 'rgba(255,255,255,0.05)', color: '#fff', border: '1px solid var(--border-color)', borderRadius: 'var(--radius-md)' }} />
                     </div>
+                  </div>
+
+                  <div style={{ marginTop: '1.5rem', padding: '1.5rem', background: 'rgba(59, 130, 246, 0.05)', borderRadius: '12px', border: '1px solid rgba(59, 130, 246, 0.2)' }}>
+                    <h3 style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', marginBottom: '1.2rem', fontSize: '1.1rem', color: '#60A5FA' }}>
+                      <Truck size={20} /> Gestão de Entrega (Frete)
+                    </h3>
+                    <div style={{ display: 'flex', gap: '1rem' }}>
+                      <div style={{ flex: 1 }}>
+                        <label style={{ display: 'block', marginBottom: '0.5rem', color: 'var(--text-muted)', fontSize: '0.85rem' }}>Custo de Frete Padrão ($)</label>
+                        <input type="number" step="0.01" value={pricing.shippingCost} onChange={e => setPricing({...pricing, shippingCost: parseFloat(e.target.value)})} style={{ width: '100%', padding: '0.8rem', background: 'rgba(0,0,0,0.2)', color: '#fff', border: '1px solid var(--border-color)', borderRadius: '6px' }} />
+                      </div>
+                      <div style={{ flex: 1 }}>
+                        <label style={{ display: 'block', marginBottom: '0.5rem', color: 'var(--text-muted)', fontSize: '0.85rem' }}>Frete Grátis Acima de ($)</label>
+                        <input type="number" step="0.01" value={pricing.freeShippingThreshold} onChange={e => setPricing({...pricing, freeShippingThreshold: parseFloat(e.target.value)})} style={{ width: '100%', padding: '0.8rem', background: 'rgba(0,0,0,0.2)', color: '#fff', border: '1px solid var(--border-color)', borderRadius: '6px' }} />
+                      </div>
+                    </div>
+                    <p style={{ marginTop: '0.8rem', fontSize: '0.75rem', color: 'var(--text-muted)' }}>Deixe 0 no limite para cobrar frete em todos os pedidos. Deixe 0 no custo para oferecer frete grátis sempre.</p>
                   </div>
                   
                   <div style={{ marginTop: '2rem', borderTop: '1px solid var(--border-color)', paddingTop: '2rem' }}>
@@ -1753,7 +1862,7 @@ const Admin = () => {
                     ))}
                   </div>
 
-                  <button type="submit" className="btn-primary" style={{ background: '#3B82F6', color: '#fff', padding: '1rem', fontSize: '1.1rem', marginTop: '1rem' }}>Salvar Tabela de Preços</button>
+                  <button type="submit" className="btn-primary" style={{ background: '#3B82F6', color: '#fff', padding: '1rem', fontSize: '1.1rem', marginTop: '1rem' }}>Salvar Configurações de Preço</button>
                 </form>
               </div>
             </div>
