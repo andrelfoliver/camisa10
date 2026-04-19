@@ -65,7 +65,13 @@ const AffiliateProgram = () => {
   };
 
   return (
-    <div style={{ background: '#050507', color: 'var(--text-main)', minHeight: '100vh', paddingTop: '6rem' }}>
+    <div style={{ 
+      background: '#050507', 
+      color: 'var(--text-main)', 
+      minHeight: '100vh', 
+      paddingTop: '6rem',
+      overflowX: 'hidden' // Garante que nada transborde horizontalmente
+    }}>
       {/* HERO SECTION */}
       <div style={{ 
         padding: '4rem 1rem 6rem', textAlign: 'center', position: 'relative',
@@ -92,26 +98,39 @@ const AffiliateProgram = () => {
         </div>
       </div>
 
-      <div className="container" style={{ maxWidth: '1000px', display: 'grid', gridTemplateColumns: '1fr', gap: '4rem', paddingBottom: '8rem' }}>
+      <div className="container" style={{ 
+        maxWidth: '1000px', 
+        display: 'grid', 
+        gridTemplateColumns: 'minmax(0, 1fr)', // Evita estouro de grid 
+        gap: '4rem', 
+        paddingBottom: '8rem',
+        paddingLeft: '1rem',
+        paddingRight: '1rem'
+      }}>
         
         {/* VISÃO GERAL */}
         <Section icon={Terminal} title="Visão Geral do Programa" id="geral">
-          <div className="glass-panel" style={{ padding: '2rem', display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1.5rem' }}>
+          <div className="glass-panel" style={{ 
+            padding: window.innerWidth < 500 ? '1.5rem' : '2rem', 
+            display: 'grid', 
+            gridTemplateColumns: 'repeat(auto-fit, minmax(130px, 1fr))', // Diminuído para caber 2 em telas pequenas
+            gap: '1.5rem' 
+          }}>
             <div>
-              <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginBottom: '0.5rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Modelo</div>
-              <div style={{ fontWeight: 700, color: '#fff' }}>Comissão por venda + Bônus</div>
+              <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginBottom: '0.4rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Modelo</div>
+              <div style={{ fontWeight: 700, color: '#fff', fontSize: '0.95rem' }}>Comissão por venda + Bônus</div>
             </div>
             <div>
-              <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginBottom: '0.5rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Tracking (Cookie)</div>
-              <div style={{ fontWeight: 700, color: '#fff' }}>30 Dias de validade</div>
+              <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginBottom: '0.4rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Tracking (Cookie)</div>
+              <div style={{ fontWeight: 700, color: '#fff', fontSize: '0.95rem' }}>30 Dias de validade</div>
             </div>
             <div>
-              <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginBottom: '0.5rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Pagamento</div>
-              <div style={{ fontWeight: 700, color: '#fff' }}>Todo dia 05 (Mensal)</div>
+              <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginBottom: '0.4rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Pagamento</div>
+              <div style={{ fontWeight: 700, color: '#fff', fontSize: '0.95rem' }}>Todo dia 05 (Mensal)</div>
             </div>
             <div>
-              <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginBottom: '0.5rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Mínimo Saque</div>
-              <div style={{ fontWeight: 700, color: '#fff' }}>CA$ 50</div>
+              <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginBottom: '0.4rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Mínimo Saque</div>
+              <div style={{ fontWeight: 700, color: '#fff', fontSize: '0.95rem' }}>CA$ 50</div>
             </div>
           </div>
         </Section>
@@ -164,7 +183,7 @@ const AffiliateProgram = () => {
 
         {/* BÔNUS E INCENTIVOS */}
         <Section icon={Gift} title="Bônus e Incentivos" id="bonus">
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '1.5rem' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '1.5rem' }}>
             {/* Meta Mensal */}
             <div className="glass-panel" style={{ padding: '1.5rem' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '0.8rem', marginBottom: '1.5rem' }}>
