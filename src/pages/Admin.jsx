@@ -150,6 +150,8 @@ const Admin = () => {
   const [discountRate, setDiscountRate] = useState(5);
   const [isAddingCoupon, setIsAddingCoupon] = useState(false);
   const [newCoupon, setNewCoupon] = useState({ code: '', agent_id: '', discount_percent: 5 });
+  const [agentSearch, setAgentSearch] = useState('');
+  const [showAgentResults, setShowAgentResults] = useState(false);
   const [showWelcomePopup, setShowWelcomePopup] = useState(false);
   const [welcomeTriggered, setWelcomeTriggered] = useState(false);
   const [expandedOrderId, setExpandedOrderId] = useState(null);
@@ -1432,20 +1434,54 @@ const Admin = () => {
                         style={{ width: '100%', padding: '0.6rem', background: 'var(--bg-color)', color: '#fff', border: '1px solid var(--border-color)', borderRadius: '6px' }}
                       />
                     </div>
-                    <div>
-                      <label style={{ display: 'block', fontSize: '0.8rem', color: 'var(--text-muted)', marginBottom: '0.4rem' }}>Colaborador / Agente</label>
-                      <select 
-                        value={newCoupon.agent_id} 
-                        onChange={e => setNewCoupon({...newCoupon, agent_id: e.target.value})}
-                        style={{ width: '100%', padding: '0.6rem', background: 'var(--bg-color)', color: '#fff', border: '1px solid var(--border-color)', borderRadius: '6px' }}
-                      >
-                        <option value="">(Sem vínculo direto)</option>
-                        {customers.map(c => (
-                          <option key={c.id} value={c.full_name || c.email}>
-                            {c.full_name || 'Sem Nome'} ({c.email})
-                          </option>
-                        ))}
-                      </select>
+                    <div style={{ position: 'relative' }}>
+                      <label style={{ display: 'block', fontSize: '0.8rem', color: 'var(--text-muted)', marginBottom: '0.4rem' }}>Buscar Colaborador / Agente</label>
+                      <div style={{ position: 'relative' }}>
+                        <input 
+                          type="text" 
+                          placeholder="Digite nome ou e-mail..."
+                          value={agentSearch || newCoupon.agent_id} 
+                          onChange={e => {
+                            setAgentSearch(e.target.value);
+                            setShowAgentResults(true);
+                            if(e.target.value === '') setNewCoupon({...newCoupon, agent_id: ''});
+                          }}
+                          onFocus={() => setShowAgentResults(true)}
+                          style={{ width: '100%', padding: '0.6rem', paddingLeft: '2.5rem', background: 'var(--bg-color)', color: '#fff', border: '1px solid var(--border-color)', borderRadius: '6px' }}
+                        />
+                        <Users size={16} style={{ position: 'absolute', left: '0.8rem', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }} />
+                      </div>
+
+                      {showAgentResults && agentSearch && (
+                        <div className="glass-panel" style={{ position: 'absolute', top: '100%', left: 0, width: '100%', maxHeight: '200px', overflowY: 'auto', zIndex: 100, marginTop: '5px', boxShadow: '0 10px 30px rgba(0,0,0,0.5)', border: '1px solid var(--border-color)', padding: '0.5rem' }}>
+                          {customers
+                            .filter(c => 
+                              (c.full_name?.toLowerCase().includes(agentSearch.toLowerCase())) || 
+                              (c.email?.toLowerCase().includes(agentSearch.toLowerCase()))
+                            )
+                            .slice(0, 10)
+                            .map(c => (
+                              <div 
+                                key={c.id} 
+                                onClick={() => {
+                                  setNewCoupon({...newCoupon, agent_id: c.full_name || c.email});
+                                  setAgentSearch(c.full_name || c.email);
+                                  setShowAgentResults(false);
+                                }}
+                                style={{ padding: '0.8rem', cursor: 'pointer', borderRadius: '4px', transition: 'all 0.2s', borderBottom: '1px solid rgba(255,255,255,0.03)' }}
+                                onMouseEnter={e => e.currentTarget.style.background = 'rgba(255,255,255,0.05)'}
+                                onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
+                              >
+                                <div style={{ fontSize: '0.9rem', color: '#fff', fontWeight: 600 }}>{c.full_name || 'Sem Nome'}</div>
+                                <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{c.email}</div>
+                              </div>
+                            ))
+                          }
+                          {customers.filter(c => (c.full_name?.toLowerCase().includes(agentSearch.toLowerCase())) || (c.email?.toLowerCase().includes(agentSearch.toLowerCase()))).length === 0 && (
+                            <div style={{ padding: '1rem', textAlign: 'center', color: 'var(--text-muted)', fontSize: '0.85rem' }}>Nenhum cliente encontrado.</div>
+                          )}
+                        </div>
+                      )}
                     </div>
                     <div>
                       <label style={{ display: 'block', fontSize: '0.8rem', color: 'var(--text-muted)', marginBottom: '0.4rem' }}>Desconto %</label>
