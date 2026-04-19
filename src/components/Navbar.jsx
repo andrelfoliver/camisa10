@@ -67,14 +67,12 @@ const Navbar = () => {
     setSearchQuery('');
   };
 
-  const handleNav = (e, path) => {
-    if (e && e.preventDefault) e.preventDefault();
+  const handleNav = (path) => {
     setMobileMenuOpen(false);
     
+    // Se já estivermos na página, apenas rolamos para o topo suavemente
     if (window.location.pathname === path) {
       window.scrollTo({ top: 0, behavior: 'smooth' });
-    } else {
-      navigate(path);
     }
   };
 
@@ -182,7 +180,7 @@ const Navbar = () => {
           {/* Coluna Central: Logo (Responsiva) */}
           <div style={{ display: 'flex', justifyContent: 'center' }}>
             <div 
-              onClick={(e) => handleNav(e, '/')}
+              onClick={() => handleNav('/')}
               style={{ 
                 display: 'flex', 
                 alignItems: 'center', 
@@ -292,12 +290,12 @@ const Navbar = () => {
           transition: 'all 0.3s ease'
         }}>
           <div className="container" style={{ display: 'flex', gap: scrolled ? '1.5rem' : '2rem', justifyContent: 'center', transition: 'gap 0.3s ease' }}>
-            <Link to="/" onClick={(e) => handleNav(e, '/')} style={{ fontWeight: 600, fontSize: scrolled ? '0.78rem' : '0.85rem', textTransform: 'uppercase', letterSpacing: '1px', transition: 'all 0.2s', color: 'var(--text-main)' }}>{t('nav_home')}</Link>
-            <Link to="/colecao/selecoes" onClick={(e) => handleNav(e, '/colecao/selecoes')} style={{ fontWeight: 600, fontSize: scrolled ? '0.78rem' : '0.85rem', textTransform: 'uppercase', letterSpacing: '1px', transition: 'all 0.2s', color: 'var(--text-main)' }}>{language === 'pt' ? 'Seleções' : 'National Teams'}</Link>
-            <Link to="/colecao/brasileirao" onClick={(e) => handleNav(e, '/colecao/brasileirao')} style={{ fontWeight: 600, fontSize: scrolled ? '0.78rem' : '0.85rem', textTransform: 'uppercase', letterSpacing: '1px', transition: 'all 0.2s', color: 'var(--text-main)' }}>{t('nav_br')}</Link>
-            <Link to="/colecao/internacionais" onClick={(e) => handleNav(e, '/colecao/internacionais')} style={{ fontWeight: 600, fontSize: scrolled ? '0.78rem' : '0.85rem', textTransform: 'uppercase', letterSpacing: '1px', transition: 'all 0.2s', color: 'var(--text-main)' }}>{t('nav_intl')}</Link>
-            <Link to="/colecao/lancamentos" onClick={(e) => handleNav(e, '/colecao/lancamentos')} style={{ fontWeight: 600, fontSize: scrolled ? '0.78rem' : '0.85rem', textTransform: 'uppercase', letterSpacing: '1px', transition: 'all 0.2s', color: 'var(--accent-color)' }}>{language === 'pt' ? 'Lançamentos' : 'New Drops'} 🔥</Link>
-            <Link to="/colecao/retro" onClick={(e) => handleNav(e, '/colecao/retro')} style={{ fontWeight: 600, fontSize: scrolled ? '0.78rem' : '0.85rem', textTransform: 'uppercase', letterSpacing: '1px', transition: 'all 0.2s', color: 'var(--text-main)' }}>{t('nav_retro')}</Link>
+            <Link to="/" onClick={() => handleNav('/')} style={{ fontWeight: 600, fontSize: scrolled ? '0.78rem' : '0.85rem', textTransform: 'uppercase', letterSpacing: '1px', transition: 'all 0.2s', color: 'var(--text-main)' }}>{t('nav_home')}</Link>
+            <Link to="/colecao/selecoes" onClick={() => handleNav('/colecao/selecoes')} style={{ fontWeight: 600, fontSize: scrolled ? '0.78rem' : '0.85rem', textTransform: 'uppercase', letterSpacing: '1px', transition: 'all 0.2s', color: 'var(--text-main)' }}>{language === 'pt' ? 'Seleções' : 'National Teams'}</Link>
+            <Link to="/colecao/brasileirao" onClick={() => handleNav('/colecao/brasileirao')} style={{ fontWeight: 600, fontSize: scrolled ? '0.78rem' : '0.85rem', textTransform: 'uppercase', letterSpacing: '1px', transition: 'all 0.2s', color: 'var(--text-main)' }}>{t('nav_br')}</Link>
+            <Link to="/colecao/internacionais" onClick={() => handleNav('/colecao/internacionais')} style={{ fontWeight: 600, fontSize: scrolled ? '0.78rem' : '0.85rem', textTransform: 'uppercase', letterSpacing: '1px', transition: 'all 0.2s', color: 'var(--text-main)' }}>{t('nav_intl')}</Link>
+            <Link to="/colecao/lancamentos" onClick={() => handleNav('/colecao/lancamentos')} style={{ fontWeight: 600, fontSize: scrolled ? '0.78rem' : '0.85rem', textTransform: 'uppercase', letterSpacing: '1px', transition: 'all 0.2s', color: 'var(--accent-color)' }}>{language === 'pt' ? 'Lançamentos' : 'New Drops'} 🔥</Link>
+            <Link to="/colecao/retro" onClick={() => handleNav('/colecao/retro')} style={{ fontWeight: 600, fontSize: scrolled ? '0.78rem' : '0.85rem', textTransform: 'uppercase', letterSpacing: '1px', transition: 'all 0.2s', color: 'var(--text-main)' }}>{t('nav_retro')}</Link>
           </div>
         </div>
 
@@ -323,12 +321,12 @@ const Navbar = () => {
             >
                <Search size={20} /> {language === 'pt' ? 'Buscar Produto' : 'Search Product'}
             </button>
-            <Link to="/" onClick={(e) => handleNav(e, '/')}>{t('nav_home')}</Link>
-            <Link to="/colecao/selecoes" onClick={(e) => handleNav(e, '/colecao/selecoes')}>{language === 'pt' ? 'Seleções' : 'National Teams'}</Link>
-            <Link to="/colecao/brasileirao" onClick={(e) => handleNav(e, '/colecao/brasileirao')}>{t('nav_br')}</Link>
-            <Link to="/colecao/internacionais" onClick={(e) => handleNav(e, '/colecao/internacionais')}>{t('nav_intl')}</Link>
-            <Link to="/colecao/lancamentos" onClick={(e) => handleNav(e, '/colecao/lancamentos')} style={{ color: 'var(--accent-color)' }}>{language === 'pt' ? 'Lançamentos' : 'New Drops'} 🔥</Link>
-            <Link to="/colecao/retro" onClick={(e) => handleNav(e, '/colecao/retro')}>{t('nav_retro')}</Link>
+            <Link to="/" onClick={() => handleNav('/')}>{t('nav_home')}</Link>
+            <Link to="/colecao/selecoes" onClick={() => handleNav('/colecao/selecoes')}>{language === 'pt' ? 'Seleções' : 'National Teams'}</Link>
+            <Link to="/colecao/brasileirao" onClick={() => handleNav('/colecao/brasileirao')}>{t('nav_br')}</Link>
+            <Link to="/colecao/internacionais" onClick={() => handleNav('/colecao/internacionais')}>{t('nav_intl')}</Link>
+            <Link to="/colecao/lancamentos" onClick={() => handleNav('/colecao/lancamentos')} style={{ color: 'var(--accent-color)' }}>{language === 'pt' ? 'Lançamentos' : 'New Drops'} 🔥</Link>
+            <Link to="/colecao/retro" onClick={() => handleNav('/colecao/retro')}>{t('nav_retro')}</Link>
           </div>
         )}
 

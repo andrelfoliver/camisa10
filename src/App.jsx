@@ -32,6 +32,7 @@ const ScrollToTop = () => {
 const AppLayout = () => {
   const { pathname } = useLocation();
   const isAdminPage = pathname.startsWith('/admin');
+  const isBlacklisted = ['/checkout', '/auth', '/admin', '/perfil', '/sucesso'].some(p => pathname.startsWith(p));
   const [waNumber, setWaNumber] = useState('5584991847739');
 
   useEffect(() => {
@@ -107,8 +108,8 @@ const AppLayout = () => {
       */}
       {!isAdminPage && <SalesPopup />}
       
-      {/* Exit Intent Feedback Popup */}
-      {!isAdminPage && <ExitIntentPopup />}
+      {/* Exit Intent Feedback Popup - Disabled on process pages to avoid blocking navigation */}
+      {!isAdminPage && !isBlacklisted && <ExitIntentPopup />}
     </div>
   );
 };
