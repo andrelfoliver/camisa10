@@ -6,13 +6,7 @@ import { supabase } from '../services/supabase';
 const HeroSection = () => {
   const { t } = useLanguage();
   const [currentIndex, setCurrentIndex] = useState(0);
-  const [heroImages, setHeroImages] = useState([
-    'https://agbskncncrnzmutaubdn.supabase.co/storage/v1/object/public/product-images/branding/hero-1.png',
-    'https://agbskncncrnzmutaubdn.supabase.co/storage/v1/object/public/product-images/branding/hero-2.png',
-    'https://agbskncncrnzmutaubdn.supabase.co/storage/v1/object/public/product-images/branding/hero-3.png',
-    'https://agbskncncrnzmutaubdn.supabase.co/storage/v1/object/public/product-images/branding/hero-4.png',
-    'https://agbskncncrnzmutaubdn.supabase.co/storage/v1/object/public/product-images/branding/hero-5.png'
-  ]);
+  const [heroImages, setHeroImages] = useState([]);
 
   useEffect(() => {
     async function loadHeroSlides() {
