@@ -145,6 +145,18 @@ const Footer = () => {
             >
               <MessageSquare size={20} /> QUERO SER UM EMBAIXADOR
             </a>
+            
+            <button 
+              onClick={() => { setActiveModal(null); window.location.href = '/afiliados'; }}
+              style={{ 
+                display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem', 
+                marginTop: '1.5rem', width: '100%', background: 'none', border: 'none', 
+                color: 'var(--text-muted)', cursor: 'pointer', fontSize: '0.9rem', fontWeight: 600,
+                textDecoration: 'underline'
+              }}
+            >
+              <FileText size={16} /> VER GUIA COMPLETO DO PROGRAMA
+            </button>
           </div>
         </InfoModal>
       )}
