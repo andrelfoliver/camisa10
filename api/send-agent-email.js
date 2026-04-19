@@ -7,7 +7,7 @@ export default async function handler(req, res) {
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
-  const { agentName, agentEmail, couponCode, discountPercent } = req.body;
+  const { agentName, agentEmail, couponCode, discountPercent, commissionPercent } = req.body;
 
   if (!agentEmail || !couponCode) {
     return res.status(400).json({ error: 'Missing required fields' });
@@ -51,11 +51,17 @@ export default async function handler(req, res) {
             </div>
 
             <div style="margin-bottom: 30px;">
-              <h3 style="color: #1a202c; font-size: 1.2rem; margin-bottom: 15px;">Como funciona?</h3>
+              <h3 style="color: #1a202c; font-size: 1.2rem; margin-bottom: 15px;">💰 Seu Plano de Recompensas</h3>
+              <div style="background: #fff; border-left: 4px solid #CCFF00; padding: 15px; margin-bottom: 20px; box-shadow: 0 2px 5px rgba(0,0,0,0.05);">
+                <p style="margin: 0; color: #1a202c; font-weight: 700; font-size: 1.1rem;">Comissão de ${commissionPercent || 10}% por venda</p>
+                <p style="margin: 5px 0 0 0; color: #718096; font-size: 0.9rem;">Você recebe sobre o valor líquido dos produtos em cada pedido atribuído a você.</p>
+              </div>
+              
               <ul style="color: #4a5568; line-height: 1.6; padding-left: 20px;">
-                <li style="margin-bottom: 10px;"><strong>Link</strong>: Se alguém clicar no seu link e comprar qualquer item em até 30 dias, a venda é sua.</li>
-                <li style="margin-bottom: 10px;"><strong>Cupom</strong>: Se o cliente usar o seu cupom no fechamento, você ganha a comissão e ele ganha o desconto.</li>
-                <li><strong>Pagamento</strong>: Todas as suas comissões são contabilizadas automaticamente no nosso sistema e pagas conforme o combinado.</li>
+                <li style="margin-bottom: 10px;"><strong>Rastreamento via Link</strong>: Se o cliente clicar no seu link, os cookies dele ficam marcados por 30 dias. Qualquer compra que ele fizer nesse período conta para você.</li>
+                <li style="margin-bottom: 10px;"><strong>Fechamento via Cupom</strong>: O uso do seu código <strong>${couponCode}</strong> no checkout garante a sua comissão instantaneamente e dá <strong>${discountPercent}% OFF</strong> para o cliente.</li>
+                <li style="margin-bottom: 10px;"><strong>Bonificações Extra</strong>: Parceiros com alta performance (acima de $1.000 em vendas/mês) são elegíveis a prêmios e bônus de aceleramento.</li>
+                <li><strong>Pagamentos</strong>: O fechamento das comissões acontece mensalmente e os pagamentos são realizados via <strong>Interac e-Transfer</strong> até o dia 10 do mês seguinte.</li>
               </ul>
             </div>
 

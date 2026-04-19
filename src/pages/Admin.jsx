@@ -451,7 +451,8 @@ const Admin = () => {
           agentName: customer.full_name || coupon.agent_id,
           agentEmail: customer.email,
           couponCode: coupon.code,
-          discountPercent: coupon.discount_percent
+          discountPercent: coupon.discount_percent,
+          commissionPercent: commissionRate
         })
       });
 
