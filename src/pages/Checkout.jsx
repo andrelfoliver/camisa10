@@ -28,6 +28,10 @@ const Checkout = () => {
 
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [waNumber, setWaNumber] = useState('5584991847739');
+  const [couponCode, setCouponCode] = useState('');
+  const [appliedCoupon, setAppliedCoupon] = useState(null);
+  const [isVerifyingCoupon, setIsVerifyingCoupon] = useState(false);
+  const [couponError, setCouponError] = useState('');
   
   // Custom Notification State
   const [notification, setNotification] = useState({ show: false, message: '', type: 'error' });
@@ -168,11 +172,46 @@ const Checkout = () => {
       message += `- ${item.quantity}x ${item.name} (${item.size}) - $${(item.price * item.quantity).toFixed(2)}\n`;
     });
     
-    message += `\n${t('checkout_wa_total')} $${cartTotal.toFixed(2)} CAD\n\n`;
-    message += t('checkout_wa_footer');
+    message += `\n${t('checkout_wa_total')} $${(cartTotal - (appliedCoupon ? (cartTotal * (appliedCoupon.discount_percent / 100)) : 0)).toFixed(2)} CAD\n`;
+    if (appliedCoupon) {
+      message += `(Cupom: ${appliedCoupon.code} - ${appliedCoupon.discount_percent}% OFF)\n`;
+    }
+    message += `\n${t('checkout_wa_footer')}`;
     
     return message;
   };
+
+  const handleApplyCoupon = async () => {
+    if (!couponCode) return;
+    setIsVerifyingCoupon(true);
+    setCouponError('');
+    try {
+      const { data, error } = await supabase
+        .from('coupons')
+        .select('*')
+        .eq('code', couponCode.toUpperCase())
+        .eq('is_active', true)
+        .single();
+      
+      if (error || !data) {
+        setCouponError('Cupom inválido ou expirado');
+        setAppliedCoupon(null);
+      } else {
+        setAppliedCoupon(data);
+        if (data.agent_id) {
+          localStorage.setItem('ifooty_referrer', data.agent_id);
+        }
+      }
+    } catch (err) {
+      setCouponError('Erro ao validar cupom');
+    } finally {
+      setIsVerifyingCoupon(false);
+    }
+  };
+
+  const finalTotal = appliedCoupon 
+    ? cartTotal * (1 - appliedCoupon.discount_percent / 100)
+    : cartTotal;
 
   const handleSubmitOrder = async () => {
     if (!formData.street || !formData.city || !formData.province || !formData.postalCode) {
@@ -205,8 +244,11 @@ const Checkout = () => {
           image: item.image,
           extras: item.extras || {}
         })),
-        total_price: cartTotal,
-        status: 'pending'
+        total_price: finalTotal,
+        status: 'pending',
+        referrer: localStorage.getItem('ifooty_referrer') || null,
+        coupon_code: appliedCoupon?.code || null,
+        coupon_discount: appliedCoupon ? (cartTotal - finalTotal) : 0
       };
 
       const { error: orderError } = await supabase.from('orders').insert([orderData]);
@@ -465,16 +507,56 @@ const Checkout = () => {
                  <span>{t('cart_subtotal')}</span>
                  <span>${subtotal.toFixed(2)}</span>
               </div>
+              
+              {/* CAMPO DE CUPOM */}
+              <div style={{ marginTop: '0.5rem' }}>
+                 <div style={{ display: 'flex', gap: '0.5rem' }}>
+                    <input 
+                      type="text" 
+                      placeholder="Cupom de Desconto"
+                      value={couponCode}
+                      onChange={e => setCouponCode(e.target.value.toUpperCase())}
+                      disabled={appliedCoupon}
+                      style={{ flex: 1, padding: '0.6rem', borderRadius: 'var(--radius-sm)', background: 'rgba(255,255,255,0.05)', border: '1px solid var(--border-color)', color: '#fff', fontSize: '0.9rem' }}
+                    />
+                    {!appliedCoupon ? (
+                      <button 
+                        onClick={handleApplyCoupon}
+                        disabled={isVerifyingCoupon || !couponCode}
+                        style={{ padding: '0 1rem', borderRadius: 'var(--radius-sm)', background: 'var(--surface-hover)', color: 'var(--accent-color)', border: '1px solid var(--border-color)', fontSize: '0.85rem', fontWeight: 700, cursor: 'pointer' }}
+                      >
+                        {isVerifyingCoupon ? '...' : 'Aplicar'}
+                      </button>
+                    ) : (
+                      <button 
+                        onClick={() => { setAppliedCoupon(null); setCouponCode(''); }}
+                        style={{ padding: '0 1rem', borderRadius: 'var(--radius-sm)', background: 'rgba(239, 68, 68, 0.1)', color: '#EF4444', border: '1px solid rgba(239, 68, 68, 0.2)', fontSize: '0.85rem' }}
+                      >
+                        Remover
+                      </button>
+                    )}
+                 </div>
+                 {couponError && <p style={{ color: '#EF4444', fontSize: '0.75rem', marginTop: '0.4rem' }}>{couponError}</p>}
+                 {appliedCoupon && <p style={{ color: '#10B981', fontSize: '0.75rem', marginTop: '0.4rem' }}>Cupom <strong>{appliedCoupon.code}</strong> aplicado! ({appliedCoupon.discount_percent}% OFF)</p>}
+              </div>
+
               {discount > 0 && (
                 <div style={{ display: 'flex', justifyContent: 'space-between', color: '#10B981', fontWeight: 600 }}>
                    <span>{t('checkout_discount')}</span>
                    <span>- ${discount.toFixed(2)}</span>
                 </div>
               )}
+              
+              {appliedCoupon && (
+                <div style={{ display: 'flex', justifyContent: 'space-between', color: '#10B981', fontWeight: 600 }}>
+                   <span>Desconto do Cupom</span>
+                   <span>- ${(cartTotal - finalTotal).toFixed(2)}</span>
+                </div>
+              )}
             </div>
             <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '1.25rem', fontWeight: 'bold', marginBottom: '2rem' }}>
               <span>{t('cart_total')} CAD</span>
-              <span style={{ color: 'var(--accent-color)' }}>${cartTotal.toFixed(2)}</span>
+              <span style={{ color: 'var(--accent-color)' }}>${finalTotal.toFixed(2)}</span>
             </div>
 
             <button 

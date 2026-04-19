@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from '../services/supabase';
 import { useAuth } from '../context/AuthContext';
-import { Save, Check, Crown, Heart, Database, HardDrive, Star, LogOut, Package, Plus, Trash2, Edit, X, Users, Image, DollarSign, MapPin, RefreshCw, Shield, AlertTriangle, MessageSquare, ChevronDown, ChevronUp, MoreHorizontal, ExternalLink } from 'lucide-react';
+import { Save, Check, Crown, Heart, Database, HardDrive, Star, LogOut, Package, Plus, Trash2, Edit, X, Users, Image, DollarSign, MapPin, RefreshCw, Shield, AlertTriangle, MessageSquare, ChevronDown, ChevronUp, MoreHorizontal, ExternalLink, Settings, Tag, TrendingUp } from 'lucide-react';
 import { migrateProductsToSupabase } from '../services/migration';
 import { migrateTeamsToSupabase } from '../services/migration_teams';
 import WhatsAppIcon from '../components/WhatsAppIcon';
@@ -145,6 +145,11 @@ const Admin = () => {
   const [orderFilter, setOrderFilter] = useState(null);
   const [statusFilter, setStatusFilter] = useState('all');
   const [dateRange, setDateRange] = useState({ start: '', end: '' });
+  const [coupons, setCoupons] = useState([]);
+  const [commissionRate, setCommissionRate] = useState(10);
+  const [discountRate, setDiscountRate] = useState(5);
+  const [isAddingCoupon, setIsAddingCoupon] = useState(false);
+  const [newCoupon, setNewCoupon] = useState({ code: '', agent_id: '', discount_percent: 5 });
   const [showWelcomePopup, setShowWelcomePopup] = useState(false);
   const [welcomeTriggered, setWelcomeTriggered] = useState(false);
   const [expandedOrderId, setExpandedOrderId] = useState(null);
@@ -252,9 +257,16 @@ const Admin = () => {
             if(s.key === 'hero_slides' && Array.isArray(val)) {
               setHeroSlides(val);
             }
+            if(s.key === 'agent_commission_percent') setCommissionRate(Number(s.value));
+            if(s.key === 'agent_discount_percent') setDiscountRate(Number(s.value));
           } catch(e) {}
         });
       }
+    }
+
+    async function loadCoupons() {
+      const { data } = await supabase.from('coupons').select('*').order('created_at', { ascending: false });
+      if(data) setCoupons(data);
     }
 
     
@@ -298,8 +310,9 @@ const Admin = () => {
       loadTestimonials();
       loadOrders();
       fetchTeams();
+      loadCoupons();
     }
-  }, [isAdmin, supplierTab]);
+  }, [isAdmin, user]);
 
   
   const handleSavePricing = async (e) => {
@@ -395,6 +408,50 @@ const Admin = () => {
       showAlert("Sucesso!", "Configuração de carrossel salva com sucesso.");
     } catch (err) {
       showAlert("Erro ao salvar", err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleCreateCoupon = async (e) => {
+    e.preventDefault();
+    try {
+      const { error } = await supabase.from('coupons').insert([{
+        code: newCoupon.code.toUpperCase(),
+        agent_id: newCoupon.agent_id,
+        discount_percent: Number(newCoupon.discount_percent) || discountRate
+      }]);
+      if(error) throw error;
+      showAlert("Sucesso", "Cupom criado com sucesso!");
+      setIsAddingCoupon(false);
+      setNewCoupon({ code: '', agent_id: '', discount_percent: discountRate });
+      const { data } = await supabase.from('coupons').select('*').order('created_at', { ascending: false });
+      if(data) setCoupons(data);
+    } catch (err) {
+      showAlert("Erro ao criar cupom", err.message);
+    }
+  };
+
+  const handleDeleteCoupon = async (id) => {
+    showConfirm("Excluir Cupom", "Tem certeza que deseja remover este cupom?", async () => {
+      const { error } = await supabase.from('coupons').delete().eq('id', id);
+      if(error) showAlert("Erro", error.message);
+      else {
+        setCoupons(coupons.filter(c => c.id !== id));
+      }
+    });
+  };
+
+  const handleUpdateRates = async () => {
+    setLoading(true);
+    try {
+      await supabase.from('store_settings').upsert([
+        { key: 'agent_commission_percent', value: String(commissionRate) },
+        { key: 'agent_discount_percent', value: String(discountRate) }
+      ]);
+      showAlert("Configuração Salva", "As taxas foram atualizadas com sucesso!");
+    } catch (err) {
+      showAlert("Erro ao salvar taxas", err.message);
     } finally {
       setLoading(false);
     }
@@ -926,6 +983,12 @@ const Admin = () => {
           >
             <Shield size={18} /> Escudos Oficiais
           </button>
+          <button 
+            onClick={() => setSupplierTab('AGENTS')}
+            style={{ padding: '0.8rem 1rem', borderRadius: 'var(--radius-md)', display: 'flex', alignItems: 'center', gap: '0.8rem', width: '100%', textAlign: 'left', background: supplierTab === 'AGENTS' ? 'var(--accent-color)' : 'transparent', color: supplierTab === 'AGENTS' ? '#000' : 'var(--text-main)', fontWeight: supplierTab === 'AGENTS' ? 700 : 500, transition: 'all 0.2s' }}
+          >
+            <Crown size={18} /> Agentes & Vendas
+          </button>
 
         </nav>
 
@@ -1304,6 +1367,168 @@ const Admin = () => {
                   </div>
                 </div>
               )}
+            </div>
+          ) : supplierTab === 'AGENTS' ? (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
+              
+              {/* CONFIGURAÇÕES GLOBAIS */}
+              <div className="glass-panel" style={{ padding: '2rem', borderRadius: 'var(--radius-lg)' }}>
+                <h3 style={{ display: 'flex', alignItems: 'center', gap: '0.8rem', marginBottom: '1.5rem', color: 'var(--accent-color)' }}>
+                  <Settings size={20} /> Configurações de Comissionamento
+                </h3>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '2rem' }}>
+                  <div>
+                    <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.9rem', color: 'var(--text-muted)' }}>Desconto p/ Cliente (Ex: 5%)</label>
+                    <div style={{ display: 'flex', gap: '0.5rem' }}>
+                      <input 
+                        type="number" 
+                        value={discountRate} 
+                        onChange={e => setDiscountRate(e.target.value)}
+                        style={{ flex: 1, padding: '0.8rem', borderRadius: '8px', background: 'var(--bg-color)', border: '1px solid var(--border-color)', color: '#fff' }}
+                      />
+                      <span style={{ display: 'flex', alignItems: 'center', fontWeight: 'bold' }}>%</span>
+                    </div>
+                  </div>
+                  <div>
+                    <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.9rem', color: 'var(--text-muted)' }}>Comissão p/ Agente (Ex: 10%)</label>
+                    <div style={{ display: 'flex', gap: '0.5rem' }}>
+                      <input 
+                        type="number" 
+                        value={commissionRate} 
+                        onChange={e => setCommissionRate(e.target.value)}
+                        style={{ flex: 1, padding: '0.8rem', borderRadius: '8px', background: 'var(--bg-color)', border: '1px solid var(--border-color)', color: '#fff' }}
+                      />
+                      <span style={{ display: 'flex', alignItems: 'center', fontWeight: 'bold' }}>%</span>
+                    </div>
+                  </div>
+                  <div style={{ display: 'flex', alignItems: 'flex-end' }}>
+                    <button onClick={handleUpdateRates} className="btn-primary" style={{ width: '100%', padding: '0.8rem' }}>
+                      <Save size={18} /> ATUALIZAR TAXAS
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              {/* GESTÃO DE CUPONS */}
+              <div className="glass-panel" style={{ padding: '2rem', borderRadius: 'var(--radius-lg)' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
+                  <h3 style={{ display: 'flex', alignItems: 'center', gap: '0.8rem', color: '#fff' }}>
+                    <Tag size={20} /> Cupons Ativos
+                  </h3>
+                  <button onClick={() => setIsAddingCoupon(true)} className="btn-primary" style={{ padding: '0.6rem 1rem', fontSize: '0.85rem' }}>
+                    <Plus size={16} /> NOVO CUPOM
+                  </button>
+                </div>
+
+                {isAddingCoupon && (
+                  <form onSubmit={handleCreateCoupon} style={{ background: 'rgba(255,255,255,0.02)', padding: '1.5rem', borderRadius: '12px', border: '1px solid var(--border-color)', marginBottom: '1.5rem', display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '1rem', alignItems: 'flex-end' }}>
+                    <div>
+                      <label style={{ display: 'block', fontSize: '0.8rem', color: 'var(--text-muted)', marginBottom: '0.4rem' }}>Código (Ex: IF10)</label>
+                      <input 
+                        required
+                        type="text" 
+                        value={newCoupon.code} 
+                        onChange={e => setNewCoupon({...newCoupon, code: e.target.value})}
+                        style={{ width: '100%', padding: '0.6rem', background: 'var(--bg-color)', color: '#fff', border: '1px solid var(--border-color)', borderRadius: '6px' }}
+                      />
+                    </div>
+                    <div>
+                      <label style={{ display: 'block', fontSize: '0.8rem', color: 'var(--text-muted)', marginBottom: '0.4rem' }}>Agente (Opcional)</label>
+                      <input 
+                        type="text" 
+                        placeholder="Ex: Pedro"
+                        value={newCoupon.agent_id} 
+                        onChange={e => setNewCoupon({...newCoupon, agent_id: e.target.value})}
+                        style={{ width: '100%', padding: '0.6rem', background: 'var(--bg-color)', color: '#fff', border: '1px solid var(--border-color)', borderRadius: '6px' }}
+                      />
+                    </div>
+                    <div>
+                      <label style={{ display: 'block', fontSize: '0.8rem', color: 'var(--text-muted)', marginBottom: '0.4rem' }}>Desconto %</label>
+                      <input 
+                        type="number" 
+                        value={newCoupon.discount_percent} 
+                        onChange={e => setNewCoupon({...newCoupon, discount_percent: e.target.value})}
+                        style={{ width: '100%', padding: '0.6rem', background: 'var(--bg-color)', color: '#fff', border: '1px solid var(--border-color)', borderRadius: '6px' }}
+                      />
+                    </div>
+                    <div style={{ display: 'flex', gap: '0.5rem' }}>
+                      <button type="submit" className="btn-primary" style={{ flex: 1, padding: '0.6rem' }}>Criar</button>
+                      <button type="button" onClick={() => setIsAddingCoupon(false)} style={{ flex: 1, padding: '0.6rem', color: '#fff', background: 'rgba(255,255,255,0.1)', borderRadius: '6px' }}>X</button>
+                    </div>
+                  </form>
+                )}
+
+                <div className="table-responsive">
+                  <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+                    <thead>
+                      <tr style={{ textAlign: 'left', borderBottom: '1px solid var(--border-color)' }}>
+                        <th style={{ padding: '1rem', color: 'var(--text-muted)' }}>CÓDIGO</th>
+                        <th style={{ padding: '1rem', color: 'var(--text-muted)' }}>AGENTE VINCULADO</th>
+                        <th style={{ padding: '1rem', color: 'var(--text-muted)' }}>DESCONTO</th>
+                        <th style={{ padding: '1rem', color: 'var(--text-muted)', textAlign: 'right' }}>AÇÕES</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {coupons.map(c => (
+                        <tr key={c.id} style={{ borderBottom: '1px solid rgba(255,255,255,0.03)' }}>
+                          <td style={{ padding: '1rem', fontWeight: 700, color: 'var(--accent-color)' }}>{c.code}</td>
+                          <td style={{ padding: '1rem' }}>{c.agent_id || '-'}</td>
+                          <td style={{ padding: '1rem' }}>{c.discount_percent}%</td>
+                          <td style={{ padding: '1rem', textAlign: 'right' }}>
+                            <button onClick={() => handleDeleteCoupon(c.id)} style={{ color: '#EF4444', background: 'none', border: 'none', cursor: 'pointer' }}>
+                              <Trash2 size={16} />
+                            </button>
+                          </td>
+                        </tr>
+                      ))}
+                      {coupons.length === 0 && (
+                        <tr>
+                          <td colSpan="4" style={{ textAlign: 'center', padding: '2rem', color: 'var(--text-muted)' }}>Nenhum cupom criado ainda.</td>
+                        </tr>
+                      )}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+
+              {/* RELATÓRIO DE PRODUTIVIDADE */}
+              <div className="glass-panel" style={{ padding: '2rem', borderRadius: 'var(--radius-lg)' }}>
+                <h3 style={{ display: 'flex', alignItems: 'center', gap: '0.8rem', marginBottom: '1.5rem', color: '#fff' }}>
+                  <TrendingUp size={20} /> Relatório de Produtividade (Vendas por Agente)
+                </h3>
+                
+                <div className="table-responsive">
+                  <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+                    <thead>
+                      <tr style={{ textAlign: 'left', borderBottom: '1px solid var(--border-color)' }}>
+                        <th style={{ padding: '1rem', color: 'var(--text-muted)' }}>AGENTE / ORIGEM</th>
+                        <th style={{ padding: '1rem', color: 'var(--text-muted)' }}>PEDIDOS</th>
+                        <th style={{ padding: '1rem', color: 'var(--text-muted)' }}>TOTAL VENDIDO</th>
+                        <th style={{ padding: '1rem', color: 'var(--text-muted)' }}>COMISSÃO ({commissionRate}%)</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {Object.entries(orders.reduce((acc, order) => {
+                        const ref = order.referrer || 'Sem Indicação';
+                        if (!acc[ref]) acc[ref] = { count: 0, total: 0 };
+                        acc[ref].count += 1;
+                        acc[ref].total += Number(order.total_price || 0);
+                        return acc;
+                      }, {})).map(([agent, stats]) => (
+                        <tr key={agent} style={{ borderBottom: '1px solid rgba(255,255,255,0.03)' }}>
+                          <td style={{ padding: '1rem', fontWeight: 600 }}>{agent}</td>
+                          <td style={{ padding: '1rem' }}>{stats.count}</td>
+                          <td style={{ padding: '1rem' }}>${stats.total.toFixed(2)} CAD</td>
+                          <td style={{ padding: '1rem', color: 'var(--accent-color)', fontWeight: 700 }}>
+                            ${(stats.total * (commissionRate / 100)).toFixed(2)} CAD
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+
             </div>
           ) : supplierTab === 'PRICING' ? (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem', maxWidth: '800px' }}>
