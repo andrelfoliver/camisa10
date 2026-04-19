@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { ShieldCheck, Truck } from 'lucide-react';
 import { useLanguage } from '../context/LanguageContext';
 import { supabase } from '../services/supabase';
+import StatCounter from './StatCounter';
 
 const HeroSection = () => {
   const { t } = useLanguage();
@@ -63,7 +64,7 @@ const HeroSection = () => {
             <div className="avatar-more">+</div>
           </div>
           <div className="social-proof-content">
-            <span className="social-proof-number">+200</span>
+            <span className="social-proof-number">+<StatCounter target={200} duration={2500} /></span>
             <span className="social-proof-label">{t('hero_satisfied_clients').replace('⭐ +200 ', '')}</span>
           </div>
         </div>
