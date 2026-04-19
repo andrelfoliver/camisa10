@@ -5,6 +5,18 @@ import {
   AlertCircle, MessageSquare, BarChart3, Shield, ChevronRight, Mail, X, FileText
 } from 'lucide-react';
 
+const Section = ({ icon: Icon, title, children, id }) => (
+  <section id={id} style={{ marginBottom: '4rem' }}>
+    <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '2rem' }}>
+      <div style={{ width: '40px', height: '40px', borderRadius: '10px', background: 'rgba(204, 255, 0, 0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--accent-color)' }}>
+        <Icon size={22} />
+      </div>
+      <h2 style={{ fontSize: '1.8rem', fontWeight: 800, color: '#fff' }}>{title}</h2>
+    </div>
+    {children}
+  </section>
+);
+
 const AffiliateProgram = () => {
   const [formData, setFormData] = useState({
     name: '',
@@ -16,11 +28,6 @@ const AffiliateProgram = () => {
   const [status, setStatus] = useState('idle'); // idle, submitting, success, error
 
   useEffect(() => {
-    async function loadConfig() {
-      const { data } = await supabase.from('store_settings').select('value').eq('key', 'whatsapp_number').single();
-      if (data && data.value) setWaNumber(data.value);
-    }
-    loadConfig();
     window.scrollTo(0, 0);
   }, []);
 
@@ -49,18 +56,6 @@ const AffiliateProgram = () => {
       setStatus('error');
     }
   };
-
-  const Section = ({ icon: Icon, title, children, id }) => (
-    <section id={id} style={{ marginBottom: '4rem' }}>
-      <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '2rem' }}>
-        <div style={{ width: '40px', height: '40px', borderRadius: '10px', background: 'rgba(204, 255, 0, 0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--accent-color)' }}>
-          <Icon size={22} />
-        </div>
-        <h2 style={{ fontSize: '1.8rem', fontWeight: 800, color: '#fff' }}>{title}</h2>
-      </div>
-      {children}
-    </section>
-  );
 
   return (
     <div style={{ background: '#050507', color: 'var(--text-main)', minHeight: '100vh', paddingTop: '6rem' }}>
