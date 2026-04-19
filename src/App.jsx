@@ -38,8 +38,18 @@ const AppLayout = () => {
     const shoppingPaths = ['/', '/busca'];
     const isCategoryPath = pathname.startsWith('/colecao/');
     
-    if (shoppingPaths.includes(pathname) || isCategoryPath) {
+    // Impedir que telas de processo ou admin sejam salvas como "último local de compra"
+    const blacklist = ['/checkout', '/auth', '/admin', '/perfil', '/sucesso'];
+    const isBlacklisted = blacklist.some(p => pathname.startsWith(p));
+
+    if ((shoppingPaths.includes(pathname) || isCategoryPath) && !isBlacklisted) {
       sessionStorage.setItem('ifooty_last_browsed_path', pathname + (window.location.search || ''));
+    }
+
+    // Auto-correção: se por algum motivo o path salvo for o checkout ou auth, resetar para home
+    const saved = sessionStorage.getItem('ifooty_last_browsed_path');
+    if (saved === '/checkout' || saved === '/auth') {
+      sessionStorage.setItem('ifooty_last_browsed_path', '/');
     }
   }, [pathname]);
 
