@@ -1433,14 +1433,19 @@ const Admin = () => {
                       />
                     </div>
                     <div>
-                      <label style={{ display: 'block', fontSize: '0.8rem', color: 'var(--text-muted)', marginBottom: '0.4rem' }}>Agente (Opcional)</label>
-                      <input 
-                        type="text" 
-                        placeholder="Ex: Pedro"
+                      <label style={{ display: 'block', fontSize: '0.8rem', color: 'var(--text-muted)', marginBottom: '0.4rem' }}>Colaborador / Agente</label>
+                      <select 
                         value={newCoupon.agent_id} 
                         onChange={e => setNewCoupon({...newCoupon, agent_id: e.target.value})}
                         style={{ width: '100%', padding: '0.6rem', background: 'var(--bg-color)', color: '#fff', border: '1px solid var(--border-color)', borderRadius: '6px' }}
-                      />
+                      >
+                        <option value="">(Sem vínculo direto)</option>
+                        {customers.map(c => (
+                          <option key={c.id} value={c.full_name || c.email}>
+                            {c.full_name || 'Sem Nome'} ({c.email})
+                          </option>
+                        ))}
+                      </select>
                     </div>
                     <div>
                       <label style={{ display: 'block', fontSize: '0.8rem', color: 'var(--text-muted)', marginBottom: '0.4rem' }}>Desconto %</label>
