@@ -9,8 +9,6 @@ export const useCart = () => {
   return useContext(CartContext);
 };
 
-export const CartProvider = ({ children }) => {
-  const { user } = useAuth();
 // Constantes de persistência fora do componente para evitar problemas de hoisting e escopo
 const GUEST_KEY = 'ifooty_cart_guest';
 const getCartKey = (user) => user ? `ifooty_cart_${user?.id}` : GUEST_KEY;
