@@ -57,9 +57,9 @@ const HeroSection = () => {
         {/* Social Proof no topo à direita - Fixo */}
         <div className="hero-social-proof-top">
           <div className="social-proof-avatars">
-            <img src="/avatar_1.png" alt="Client" />
-            <img src="/avatar_2.png" alt="Client" />
-            <img src="/avatar_4.png" alt="Client" />
+            <img src="/avatar_front.png" alt="Client" />
+            <img src="/avatar_side.png" alt="Client" />
+            <img src="/avatar_34.png" alt="Client" />
             <div className="avatar-more">+</div>
           </div>
           <div className="social-proof-content">
