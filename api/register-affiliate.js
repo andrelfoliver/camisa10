@@ -53,7 +53,7 @@ export default async function handler(req, res) {
             <div style="background: #f7fafc; padding: 20px; border-radius: 8px; border-left: 4px solid #CCFF00; margin: 30px 0;">
               <p style="margin: 0; color: #1a202c; font-weight: 600;">O que acontece agora?</p>
               <p style="margin: 10px 0 0 0; color: #718096; font-size: 0.95rem;">
-                Nossa equipe (André Oliveira) analisará suas redes sociais e seu plano de divulgação. 
+                O Professor analisará suas redes sociais e seu plano de divulgação. 
                 Entraremos em contato via WhatsApp ou e-mail nas próximas <strong>24 horas</strong> para os próximos passos.
               </p>
             </div>

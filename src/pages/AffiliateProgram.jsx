@@ -301,7 +301,7 @@ const AffiliateProgram = () => {
             ) : (
               <form onSubmit={handleSubmit} style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem' }}>
                 <div style={{ gridColumn: '1 / -1' }}>
-                  <p style={{ color: 'var(--text-muted)', fontSize: '0.95rem', marginBottom: '1.5rem' }}>Preencha os dados abaixo para iniciar sua jornada como embaixador iFooty. André Oliveira analisará seu perfil pessoalmente.</p>
+                  <p style={{ color: 'var(--text-muted)', fontSize: '0.95rem', marginBottom: '1.5rem' }}>Preencha os dados abaixo para iniciar sua jornada como embaixador iFooty. O Professor analisará seu perfil pessoalmente.</p>
                 </div>
                 
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
@@ -386,9 +386,9 @@ const AffiliateProgram = () => {
 
         {/* CTA FINAL ALTERADO PARA ROLAR */}
         <div style={{ padding: '5rem 2rem', background: 'var(--accent-color)', borderRadius: '32px', textAlign: 'center', color: '#000' }}>
-          <h2 style={{ fontSize: 'clamp(2rem, 5vw, 3rem)', fontWeight: 900, marginBottom: '1rem', letterSpacing: '-0.02em' }}>PRONTO PARA SER UM EMBAIXADOR?</h2>
+          <h2 style={{ fontSize: 'clamp(2rem, 5vw, 3rem)', fontWeight: 900, marginBottom: '1rem', letterSpacing: '-0.02em' }}>PRONTO PARA JOGAR NO TIME DO iFOOTY?</h2>
           <p style={{ fontSize: '1.2rem', fontWeight: 600, maxWidth: '600px', margin: '0 auto 3rem', opacity: 0.8 }}>
-            André analisa todas as inscrições pessoalmente em até 24h. O seu sucesso é o nosso sucesso.
+            O Professor analisa todas as inscrições pessoalmente em até 24h. O seu sucesso é o nosso sucesso.
           </p>
           <button onClick={scrollToForm} className="btn-primary" style={{ background: '#000', color: '#fff', padding: '1.2rem 3rem', fontSize: '1.2rem', fontWeight: 800, textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: '1rem', border: 'none', cursor: 'pointer' }}>
             <FileText size={22} /> PREENCHER FORMULÁRIO DE INSCRIÇÃO
