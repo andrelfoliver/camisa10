@@ -190,7 +190,7 @@ const Footer = () => {
               </a>
 
               <a 
-                href="mailto:parceiros@ifooty.ca" 
+                href="mailto:camisadez085@gmail.com" 
                 style={{ 
                   display: 'flex', alignItems: 'center', gap: '1rem', padding: '1.5rem', 
                   background: 'rgba(255,255,255,0.05)', borderRadius: '16px', textDecoration: 'none',
@@ -203,8 +203,8 @@ const Footer = () => {
                   <Mail size={24} />
                 </div>
                 <div>
-                  <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginBottom: '0.2rem' }}>E-mail para Parcerias</div>
-                  <div style={{ color: '#fff', fontWeight: 700, fontSize: '1.1rem' }}>parceiros@ifooty.ca</div>
+                  <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginBottom: '0.2rem' }}>E-mail de Suporte</div>
+                  <div style={{ color: '#fff', fontWeight: 700, fontSize: '1.1rem' }}>contato@ifooty.ca</div>
                 </div>
               </a>
             </div>
