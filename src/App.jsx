@@ -15,6 +15,7 @@ import Auth from './pages/Auth';
 import Profile from './pages/Profile';
 import SearchPage from './pages/SearchPage';
 import Success from './pages/Success';
+import AffiliateProgram from './pages/AffiliateProgram';
 import NotFound from './pages/NotFound';
 import WhatsAppIcon from './components/WhatsAppIcon';
 import SalesPopup from './components/SalesPopup';
@@ -82,6 +83,7 @@ const AppLayout = () => {
           <Route path="/perfil" element={<Profile />} />
           <Route path="/admin" element={<Admin />} />
           <Route path="/busca" element={<SearchPage />} />
+          <Route path="/afiliados" element={<AffiliateProgram />} />
           <Route path="/sucesso" element={<Success />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
