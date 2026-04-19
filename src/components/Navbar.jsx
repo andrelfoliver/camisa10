@@ -1,5 +1,5 @@
 import React from 'react';
-import { ShoppingBag, Menu, X, Search, UserCircle } from 'lucide-react';
+import { ShoppingBag, Menu, X, Search, UserCircle, ChevronRight } from 'lucide-react';
 import { useCart } from '../context/CartContext';
 import { useAuth } from '../context/AuthContext';
 import { Link, useNavigate } from 'react-router-dom';
@@ -8,6 +8,65 @@ import { supabase } from '../services/supabase';
 import { useLanguage } from '../context/LanguageContext';
 
 const Navbar = () => {
+  const { cartItems, setIsCartOpen } = useCart();
+  const { user, isAdmin } = useAuth();
+  const { language, setLanguage, t } = useLanguage();
+  const navigate = useNavigate();
+  const [mobileMenuOpen, setMobileMenuOpen] = React.useState(false);
+  const [isSearchOpen, setIsSearchOpen] = React.useState(false);
+  const [searchQuery, setSearchQuery] = React.useState('');
+  const [suggestions, setSuggestions] = React.useState([]);
+  const [scrolled, setScrolled] = React.useState(false);
+
+  React.useEffect(() => {
+    const handleScroll = () => {
+      setScrolled(window.scrollY > 50);
+    };
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
+  const [waNumber, setWaNumber] = React.useState('5584991847739');
+
+  React.useEffect(() => {
+    async function getWa() {
+      const { data } = await supabase.from('store_settings').select('value').eq('key', 'whatsapp_number').single();
+      if (data && data.value) setWaNumber(data.value);
+    }
+    getWa();
+  }, []);
+
+  const itemCount = cartItems.reduce((acc, item) => acc + item.quantity, 0);
+
+  // Busca sugestões em tempo real
+  React.useEffect(() => {
+    const fetchSuggestions = async () => {
+      if (searchQuery.length < 2) {
+        setSuggestions([]);
+        return;
+      }
+
+      const { data } = await supabase
+        .from('products')
+        .select('id, name, image')
+        .or(`name.ilike.%${searchQuery}%,team.ilike.%${searchQuery}%`)
+        .limit(5);
+      
+      if (data) setSuggestions(data);
+    };
+
+    const timer = setTimeout(fetchSuggestions, 300);
+    return () => clearTimeout(timer);
+  }, [searchQuery]);
+
+  const handleSearchSubmit = (e) => {
+    if (e) e.preventDefault();
+    if (!searchQuery.trim()) return;
+    navigate(`/busca?q=${encodeURIComponent(searchQuery)}`);
+    setIsSearchOpen(false);
+    setSearchQuery('');
+  };
+
   const handleNav = (e, path) => {
     if (e && e.preventDefault) e.preventDefault();
     setMobileMenuOpen(false);
