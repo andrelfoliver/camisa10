@@ -160,7 +160,11 @@ export const CartProvider = ({ children }) => {
 
   const clearCart = () => {
     setCartItems([]);
-    try { localStorage.removeItem('ifooty_cart'); } catch {}
+    try { 
+      localStorage.removeItem(getCartKey()); 
+      // Limpa também o guest por segurança se houver login
+      localStorage.removeItem(GUEST_KEY);
+    } catch {}
   };
 
   const updateQuantity = (cartId, quantity) => {
