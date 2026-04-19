@@ -35,39 +35,54 @@ export const CartProvider = ({ children }) => {
     discounts: [{ qty: 2, percent: 8 }, { qty: 3, percent: 12 }, { qty: 5, percent: 15 }, { qty: 10, percent: 20 }]
   });
 
-  // 1. Efeito de Carregamento e Sincronização
+  // 1. Efeito de Carregamento e Sincronização (Login/Logout/Refresh)
   useEffect(() => {
     const initializeCart = async () => {
       setCartReady(false); // Bloqueia salvamento enquanto inicializa
       
       if (!user) {
-        // Se for visitante, o useState já carregou o GUEST_KEY. Só liberamos o pronto.
+        // CENÁRIO: Logout ou Visitante
+        // Se deslogou, limpamos o estado atual e voltamos para o carrinho de convidado (se houver)
+        const guestItems = JSON.parse(localStorage.getItem(GUEST_KEY) || '[]');
+        setCartItems(guestItems);
         setCartReady(true);
         return;
       }
 
       setIsSyncing(true);
       try {
-        const { data: profile } = await supabase.from('profiles').select('cart').eq('id', user.id).single();
+        // Busca a cesta da nuvem para o usuário logado
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('cart')
+          .eq('id', user.id)
+          .single();
+          
         let cloudItems = profile?.cart || [];
         const guestItems = JSON.parse(localStorage.getItem(GUEST_KEY) || '[]');
         
         let merged = [...cloudItems];
+
+        // Se houver itens de visitante AO LOGAR, eles migram para a conta e limpamos o cache de convidado
         if (guestItems.length > 0) {
           guestItems.forEach(g => {
             const exists = merged.find(m => m.cartId === g.cartId);
-            if (exists) exists.quantity += g.quantity; else merged.push(g);
+            if (exists) {
+              exists.quantity += g.quantity;
+            } else {
+              merged.push(g);
+            }
           });
           localStorage.removeItem(GUEST_KEY);
-          toast.success("Recuperamos sua sacola salva! ⚽");
+          toast.success("Sacola sincronizada com sua conta! ⚽");
         } else if (cloudItems.length > 0) {
-          // Apenas notifica se houver itens vindo da nuvem para o usuário logado
-          toast.success("Sua sacola está pronta! 🛒");
+          toast.success("Sua sacola foi recuperada! 🛒");
         }
         
         setCartItems(merged);
       } catch (err) {
         console.error("Erro ao sincronizar cesta:", err);
+        // Em caso de erro, mantemos o que já estava no state (carregado via localStorage no mount)
       } finally {
         setIsSyncing(false);
         setCartReady(true); // LIBERA O SALVAMENTO APENAS AQUI
@@ -80,23 +95,30 @@ export const CartProvider = ({ children }) => {
   // 2. Efeito de Salvamento (Backup Local e Nuvem)
   const dbSyncTimeout = useRef(null);
   useEffect(() => {
-    if (!cartReady || isSyncing) return; // PROTEÇÃO: Nunca salva se ainda estiver carregando
+    // PROTEÇÃO: Nunca salva se ainda estiver sincronizando ou se o estado não estiver pronto
+    if (!cartReady || isSyncing) return; 
 
-    // A. Backup Local (Prevenção contra crash)
+    // A. Backup Local (Chave dinâmica: user.id ou GUEST_KEY)
     try {
       localStorage.setItem(getCartKey(user), JSON.stringify(cartItems));
-    } catch {}
+    } catch (e) {}
 
-    // B. Sincronização Cloud (Debounced)
+    // B. Sincronização Cloud (Apenas se houver usuário autenticado)
     if (user) {
       if (dbSyncTimeout.current) clearTimeout(dbSyncTimeout.current);
       dbSyncTimeout.current = setTimeout(async () => {
         try {
-          await supabase.from('profiles').update({ cart: cartItems }).eq('id', user.id);
+          const { error } = await supabase
+            .from('profiles')
+            .update({ cart: cartItems })
+            .eq('id', user.id);
+            
+          if (error) throw error;
         } catch (err) {
           console.error("Erro ao salvar cesta na nuvem:", err);
+          // Opcional: Notificar o usuário se falhar repetidamente
         }
-      }, 1500); // 1.5s de debounce
+      }, 1500); // Debounce de 1.5s
     }
   }, [cartItems, user, cartReady, isSyncing]);
 
