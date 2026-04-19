@@ -247,7 +247,7 @@ const Home = () => {
                 </div>
               </div>
               <h3 style={{ fontSize: '1.6rem', fontWeight: 800, color: 'var(--accent-color)', marginBottom: '0.25rem' }}>
-                <StatCounter target={200} suffix="+" delay={0} />
+                <StatCounter target={200} variant="simple" suffix="+" delay={0} />
               </h3>
               <p style={{ color: 'var(--text-main)', opacity: 0.8, fontWeight: 500, fontSize: '0.8rem', textTransform: 'uppercase' }}>{t('stats_clients')}</p>
             </div>
@@ -260,7 +260,7 @@ const Home = () => {
                 </div>
               </div>
               <h3 style={{ fontSize: '1.6rem', fontWeight: 800, color: 'var(--accent-color)', marginBottom: '0.25rem' }}>
-                <StatCounter target={100} suffix="%" delay={400} />
+                <StatCounter target={100} variant="simple" suffix="%" delay={400} />
               </h3>
               <p style={{ color: 'var(--text-main)', opacity: 0.8, fontWeight: 500, fontSize: '0.8rem', textTransform: 'uppercase' }}>{t('stats_shipping')}</p>
             </div>
@@ -273,7 +273,7 @@ const Home = () => {
                 </div>
               </div>
               <h3 style={{ fontSize: '1.6rem', fontWeight: 800, color: 'var(--accent-color)', marginBottom: '0.25rem' }}>
-                <StatCounter target={15} suffix="min" delay={800} />
+                <StatCounter target={15} variant="simple" suffix="min" delay={800} />
               </h3>
               <p style={{ color: 'var(--text-main)', opacity: 0.8, fontWeight: 500, fontSize: '0.8rem', textTransform: 'uppercase' }}>{t('stats_whatsapp')}</p>
             </div>
@@ -286,7 +286,7 @@ const Home = () => {
                 </div>
               </div>
               <h3 style={{ fontSize: '1.6rem', fontWeight: 800, color: 'var(--accent-color)', marginBottom: '0.25rem' }}>
-                <StatCounter target={100} suffix="%" delay={1200} />
+                <StatCounter target={100} variant="simple" suffix="%" delay={1200} />
               </h3>
               <p style={{ color: 'var(--text-main)', opacity: 0.8, fontWeight: 500, fontSize: '0.8rem', textTransform: 'uppercase' }}>{t('stats_payment')}</p>
             </div>

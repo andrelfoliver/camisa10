@@ -64,7 +64,7 @@ const HeroSection = () => {
             <div className="avatar-more">+</div>
           </div>
           <div className="social-proof-content">
-            <span className="social-proof-number">+<StatCounter target={200} duration={2500} /></span>
+            <span className="social-proof-number">+<StatCounter target={200} variant="simple" duration={2000} /></span>
             <span className="social-proof-label">{t('hero_satisfied_clients').replace('⭐ +200 ', '')}</span>
           </div>
         </div>

@@ -1,14 +1,11 @@
 import React, { useState, useEffect, useRef } from 'react';
 
 /**
- * DigitReel: Roda os números de 0 até o dígito alvo.
+ * DigitReel: Roda os números de 0 até o dígito alvo (Efeito Mecânico).
  */
 const DigitReel = ({ targetDigit, duration = 2000, delay = 0, trigger }) => {
-  // Criamos a fita de números (4 cópias de 0-9 para dar efeito de giro)
   const iterations = 4;
   const numbers = Array.from({ length: iterations * 10 }, (_, i) => i % 10);
-  
-  // O índice final onde deve parar (na última iteração)
   const finalIndex = ((iterations - 1) * 10) + targetDigit;
   const percentage = (finalIndex / numbers.length) * 100;
 
@@ -37,7 +34,35 @@ const DigitReel = ({ targetDigit, duration = 2000, delay = 0, trigger }) => {
   );
 };
 
-const StatCounter = ({ target, delay = 0, suffix = '', prefix = '' }) => {
+/**
+ * SimpleCountUp: Incremento numérico fluido (Opção 1 escolhida pelo usuário).
+ */
+const SimpleCountUp = ({ target, duration = 2000, trigger }) => {
+  const [count, setCount] = useState(0);
+
+  useEffect(() => {
+    if (!trigger) return;
+
+    let startTimestamp = null;
+    const step = (timestamp) => {
+      if (!startTimestamp) startTimestamp = timestamp;
+      const progress = Math.min((timestamp - startTimestamp) / duration, 1);
+      
+      // Easing out quadratic
+      const easeProgress = progress * (2 - progress);
+      setCount(Math.floor(easeProgress * target));
+
+      if (progress < 1) {
+        window.requestAnimationFrame(step);
+      }
+    };
+    window.requestAnimationFrame(step);
+  }, [trigger, target, duration]);
+
+  return <span>{count}</span>;
+};
+
+const StatCounter = ({ target, delay = 0, suffix = '', prefix = '', variant = 'reel' }) => {
   const [trigger, setTrigger] = useState(false);
   const containerRef = useRef(null);
   
@@ -48,21 +73,18 @@ const StatCounter = ({ target, delay = 0, suffix = '', prefix = '' }) => {
     const observer = new IntersectionObserver(
       ([entry]) => {
         if (entry.isIntersecting) {
-          setTrigger(true);
+          setTimeout(() => {
+            setTrigger(true);
+          }, delay);
           observer.disconnect();
         }
       },
-      { threshold: 0.15 } // Dispara quando 15% do elemento estiver visível
+      { threshold: 0.15 }
     );
 
-    if (containerRef.current) {
-      observer.observe(containerRef.current);
-    }
-
-    return () => {
-      observer.disconnect();
-    };
-  }, []);
+    if (containerRef.current) observer.observe(containerRef.current);
+    return () => observer.disconnect();
+  }, [delay]);
 
   return (
     <div ref={containerRef} style={{ 
@@ -73,15 +95,19 @@ const StatCounter = ({ target, delay = 0, suffix = '', prefix = '' }) => {
       fontWeight: 'bold'
     }}>
       {prefix}
-      {digits.map((d, i) => (
-        <DigitReel 
-          key={i} 
-          targetDigit={d} 
-          trigger={trigger} 
-          delay={delay + (i * 100)} 
-          duration={2000 + (i * 300)} 
-        />
-      ))}
+      {variant === 'simple' ? (
+        <SimpleCountUp target={target} duration={2000} trigger={trigger} />
+      ) : (
+        digits.map((d, i) => (
+          <DigitReel 
+            key={i} 
+            targetDigit={d} 
+            trigger={trigger} 
+            delay={i * 100} 
+            duration={2000 + (i * 300)} 
+          />
+        ))
+      )}
       <span style={{ marginLeft: '1px' }}>{suffix}</span>
     </div>
   );
