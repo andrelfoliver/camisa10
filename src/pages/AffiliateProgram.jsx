@@ -325,7 +325,12 @@ const AffiliateProgram = () => {
                 <button onClick={() => setStatus('idle')} style={{ marginTop: '2rem', background: 'none', border: '1px solid var(--border-color)', color: '#fff', padding: '0.8rem 2rem', borderRadius: '100px', cursor: 'pointer' }}>Enviar outra candidatura</button>
               </div>
             ) : (
-              <form onSubmit={handleSubmit} style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem' }}>
+            ) : (
+              <form onSubmit={handleSubmit} style={{ 
+                display: 'grid', 
+                gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', 
+                gap: '1.5rem' 
+              }}>
                 <div style={{ gridColumn: '1 / -1' }}>
                   <p style={{ color: 'var(--text-muted)', fontSize: '0.95rem', marginBottom: '1.5rem' }}>Preencha os dados abaixo para iniciar sua jornada como embaixador iFooty. O Professor analisará seu perfil pessoalmente.</p>
                 </div>
@@ -379,9 +384,9 @@ const AffiliateProgram = () => {
                   </select>
                 </div>
 
-                <div style={{ gridColumn: '1 / -1', background: 'rgba(255,255,255,0.03)', padding: '1.5rem', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.05)' }}>
+                <div style={{ gridColumn: '1 / -1', background: 'rgba(255,255,255,0.03)', padding: window.innerWidth < 500 ? '1.2rem' : '1.5rem', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.05)', boxSizing: 'border-box' }}>
                   <label style={{ fontSize: '1rem', color: 'var(--accent-color)', fontWeight: 800, marginBottom: '1.5rem', display: 'block' }}>NÚMERO DE SEGUIDORES</label>
-                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: '1rem' }}>
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(130px, 1fr))', gap: '1rem' }}>
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
                       <label style={{ fontSize: '0.75rem', color: 'var(--text-muted)', fontWeight: 700 }}>INSTAGRAM</label>
                       <input 
@@ -389,7 +394,7 @@ const AffiliateProgram = () => {
                         value={formData.followers_insta}
                         onChange={e => setFormData({...formData, followers_insta: e.target.value})}
                         placeholder="0"
-                        style={{ background: 'rgba(0,0,0,0.3)', border: '1px solid var(--border-color)', borderRadius: '8px', padding: '0.6rem', color: '#fff', outline: 'none' }}
+                        style={{ width: '100%', boxSizing: 'border-box', background: 'rgba(0,0,0,0.3)', border: '1px solid var(--border-color)', borderRadius: '8px', padding: '0.6rem', color: '#fff', outline: 'none' }}
                       />
                     </div>
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
@@ -399,7 +404,7 @@ const AffiliateProgram = () => {
                         value={formData.followers_tiktok}
                         onChange={e => setFormData({...formData, followers_tiktok: e.target.value})}
                         placeholder="0"
-                        style={{ background: 'rgba(0,0,0,0.3)', border: '1px solid var(--border-color)', borderRadius: '8px', padding: '0.6rem', color: '#fff', outline: 'none' }}
+                        style={{ width: '100%', boxSizing: 'border-box', background: 'rgba(0,0,0,0.3)', border: '1px solid var(--border-color)', borderRadius: '8px', padding: '0.6rem', color: '#fff', outline: 'none' }}
                       />
                     </div>
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
@@ -409,7 +414,7 @@ const AffiliateProgram = () => {
                         value={formData.followers_x}
                         onChange={e => setFormData({...formData, followers_x: e.target.value})}
                         placeholder="0"
-                        style={{ background: 'rgba(0,0,0,0.3)', border: '1px solid var(--border-color)', borderRadius: '8px', padding: '0.6rem', color: '#fff', outline: 'none' }}
+                        style={{ width: '100%', boxSizing: 'border-box', background: 'rgba(0,0,0,0.3)', border: '1px solid var(--border-color)', borderRadius: '8px', padding: '0.6rem', color: '#fff', outline: 'none' }}
                       />
                     </div>
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
@@ -419,7 +424,7 @@ const AffiliateProgram = () => {
                         value={formData.followers_facebook}
                         onChange={e => setFormData({...formData, followers_facebook: e.target.value})}
                         placeholder="0"
-                        style={{ background: 'rgba(0,0,0,0.3)', border: '1px solid var(--border-color)', borderRadius: '8px', padding: '0.6rem', color: '#fff', outline: 'none' }}
+                        style={{ width: '100%', boxSizing: 'border-box', background: 'rgba(0,0,0,0.3)', border: '1px solid var(--border-color)', borderRadius: '8px', padding: '0.6rem', color: '#fff', outline: 'none' }}
                       />
                     </div>
                   </div>
