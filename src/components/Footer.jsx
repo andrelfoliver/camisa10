@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useLanguage } from '../context/LanguageContext';
 import { supabase } from '../services/supabase';
-import { X, MessageSquare, Mail, Award, CheckCircle2, AlertCircle, TrendingUp, DollarSign } from 'lucide-react';
+import { X, MessageSquare, Mail, Award, CheckCircle2, AlertCircle, TrendingUp, DollarSign, FileText } from 'lucide-react';
 
 const Footer = () => {
   const { t } = useLanguage();
