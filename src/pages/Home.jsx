@@ -3,7 +3,7 @@ import HeroSection from '../components/HeroSection';
 import TeamsBar from '../components/TeamsBar';
 import ProductCard from '../components/ProductCard';
 import { supabase } from '../services/supabase';
-import { ShieldCheck, Truck, Star, Package, Lock, CheckCircle2, AlertTriangle, ChevronDown, ChevronUp, ChevronRight, Users, Zap } from 'lucide-react';
+import { ShieldCheck, Truck, Star, Package, Lock, CheckCircle2, AlertTriangle, ChevronDown, ChevronUp, ChevronRight, Users, Zap, Quote } from 'lucide-react';
 import StatCounter from '../components/StatCounter';
 import { useNavigate } from 'react-router-dom';
 import { useCart } from '../context/CartContext';
@@ -449,31 +449,39 @@ const Home = () => {
           {t('social_proof_subtitle')}
         </p>
 
-        <div className="testimonials-track hide-scrollbar" style={{ display: 'flex', gap: '2rem', overflowX: 'auto', padding: '1rem 0.5rem 3rem', scrollSnapType: 'x mandatory' }}>
+        <div className="testimonials-track hide-scrollbar">
           {testimonials.length > 0 ? (
             testimonials.map(testimonial => (
-              <div key={testimonial.id} style={{ minWidth: '320px', maxWidth: '350px', background: 'var(--surface-color)', padding: '2.5rem', borderRadius: 'var(--radius-lg)', border: '1px solid var(--border-color)', textAlign: 'left', position: 'relative', scrollSnapAlign: 'center', boxShadow: '0 10px 30px rgba(0,0,0,0.3)' }}>
-                <div style={{ position: 'absolute', top: '-12px', right: '20px', background: 'var(--accent-color)', color: '#000', fontSize: '0.7rem', fontWeight: 900, padding: '0.3rem 0.8rem', borderRadius: '4px', textTransform: 'uppercase' }}>
+              <div key={testimonial.id} className="testimonial-card-premium shadow-hover">
+                <Quote className="testimonial-quote-icon" size={80} />
+                
+                <div className="testimonial-badge-year">
                   {t('social_proof_client_since')} {testimonial.date ? new Date(testimonial.date).getFullYear() : new Date().getFullYear()}
                 </div>
 
-                <div style={{ color: '#FFB81C', marginBottom: '1.2rem', display: 'flex', gap: '2px' }}>
-                  {Array.from({ length: Number(testimonial.rating) || 5 }).map((_, i) => <Star key={i} size={16} fill="#FFB81C" />)}
+                <div className="testimonial-stars-container">
+                  {Array.from({ length: Number(testimonial.rating) || 5 }).map((_, i) => (
+                    <Star key={i} size={16} fill="#FFB81C" />
+                  ))}
                 </div>
 
-                <p style={{ fontSize: '1.1rem', marginBottom: '2rem', fontStyle: 'italic', color: '#fff', lineHeight: 1.6 }}>"{testimonial.content}"</p>
+                <p className="testimonial-content-text">"{testimonial.content}"</p>
 
-                <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                <div className="testimonial-avatar-container">
                   {testimonial.avatar_url ? (
-                    <img src={testimonial.avatar_url} alt={testimonial.name} style={{ width: '50px', height: '50px', borderRadius: '50%', border: '2px solid var(--accent-color)', objectFit: 'cover' }} />
-                  ) : (
-                    <div style={{ width: '50px', height: '50px', borderRadius: '50%', background: 'linear-gradient(135deg, var(--accent-color) 0%, #fff 100%)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 900, color: '#000', fontSize: '1.2rem', boxShadow: '0 4px 15px rgba(164, 210, 51, 0.3)' }}>
-                      {(testimonial.name || '?').charAt(0)}
-                    </div>
-                  )}
+                    <img 
+                      src={testimonial.avatar_url} 
+                      alt={testimonial.name} 
+                      className="testimonial-avatar-img"
+                      onError={(e) => { e.target.style.display = 'none'; e.target.nextSibling.style.display = 'flex'; }}
+                    />
+                  ) : null}
+                  <div className="testimonial-avatar-fallback" style={{ display: testimonial.avatar_url ? 'none' : 'flex' }}>
+                    {(testimonial.name || '?').charAt(0)}
+                  </div>
                   <div>
-                    <p style={{ fontWeight: 800, color: '#fff', fontSize: '1rem' }}>{testimonial.name}</p>
-                    <p style={{ color: 'var(--text-muted)', fontSize: '0.8rem' }}>{testimonial.location}</p>
+                    <p style={{ fontWeight: 800, color: '#fff', fontSize: '1.1rem' }}>{testimonial.name}</p>
+                    <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem' }}>{testimonial.location}</p>
                   </div>
                 </div>
               </div>
@@ -481,8 +489,8 @@ const Home = () => {
           ) : (
             // Fallback caso não tenha nada no banco ainda
             [1, 2, 3].map(i => (
-              <div key={i} style={{ minWidth: '320px', background: 'var(--surface-color)', padding: '2.5rem', borderRadius: 'var(--radius-lg)', border: '1px solid var(--border-color)', textAlign: 'left', opacity: 0.5 }}>
-                <p style={{ color: 'var(--text-muted)' }}>Depoimento carregando...</p>
+              <div key={i} className="testimonial-card-premium" style={{ opacity: 0.5 }}>
+                <p style={{ color: 'var(--text-muted)' }}>{t('social_proof_loading') || 'Carregando depoimentos...'}</p>
               </div>
             ))
           )}

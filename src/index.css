@@ -694,6 +694,112 @@ button {
   border: 1px solid var(--border-color);
 }
 
+/* Depoimentos Premium */
+.testimonials-track {
+  display: flex;
+  gap: 2rem;
+  overflow-x: auto;
+  padding: 2rem 1rem 4rem;
+  scroll-snap-type: x mandatory;
+  scroll-behavior: smooth;
+  -webkit-overflow-scrolling: touch;
+}
+
+.testimonial-card-premium {
+  min-width: 320px;
+  max-width: 350px;
+  background: var(--surface-color);
+  padding: 3rem 2.5rem 2.5rem;
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--border-color);
+  text-align: left;
+  position: relative;
+  scroll-snap-align: center;
+  transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  overflow: visible !important;
+}
+
+.testimonial-card-premium:hover {
+  transform: translateY(-10px);
+  border-color: var(--accent-color);
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4), 0 0 20px rgba(164, 210, 51, 0.1);
+}
+
+.testimonial-quote-icon {
+  position: absolute;
+  top: -20px;
+  right: 30px;
+  color: var(--accent-color);
+  opacity: 0.15;
+  filter: blur(0.5px);
+}
+
+.testimonial-badge-year {
+  position: absolute; 
+  top: -12px; 
+  left: 30px; 
+  background: var(--accent-color); 
+  color: #000; 
+  font-size: 0.65rem; 
+  font-weight: 900; 
+  padding: 0.4rem 1rem; 
+  border-radius: 20px; 
+  text-transform: uppercase;
+  z-index: 10;
+  box-shadow: 0 4px 10px rgba(164, 210, 51, 0.3);
+}
+
+.testimonial-content-text {
+  font-size: 1.15rem; 
+  margin-bottom: 2rem; 
+  font-style: italic; 
+  color: #fff; 
+  line-height: 1.6;
+  font-family: var(--font-body);
+  flex-grow: 1;
+}
+
+.testimonial-avatar-container {
+  display: flex; 
+  align-items: center; 
+  gap: 1.2rem;
+  border-top: 1px solid rgba(255,255,255,0.05);
+  padding-top: 1.5rem;
+}
+
+.testimonial-avatar-img {
+  width: 55px; 
+  height: 55px; 
+  border-radius: 50%; 
+  border: 2px solid var(--accent-color); 
+  object-fit: cover;
+  box-shadow: 0 0 15px rgba(164, 210, 51, 0.2);
+}
+
+.testimonial-avatar-fallback {
+  width: 55px; 
+  height: 55px; 
+  border-radius: 50%; 
+  background: linear-gradient(135deg, var(--accent-color) 0%, #fff 100%); 
+  display: flex; 
+  align-items: center; 
+  justify-content: center; 
+  font-weight: 900; 
+  color: #000; 
+  font-size: 1.3rem;
+  box-shadow: 0 4px 15px rgba(164, 210, 51, 0.3);
+}
+
+.testimonial-stars-container {
+  color: #FFB81C; 
+  margin-bottom: 1.2rem; 
+  display: flex; 
+  gap: 3px;
+}
+
 @media (max-width: 900px) {
   .product-showcase {
     grid-template-columns: 1fr;
