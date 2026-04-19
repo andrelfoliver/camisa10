@@ -10,7 +10,7 @@ import { useLanguage } from '../context/LanguageContext';
 
 const Checkout = () => {
   const { t, language } = useLanguage();
-  const { cartItems, cartTotal, subtotal, discount, clearCart } = useCart();
+  const { cartItems, cartTotal, subtotal, discount, clearCart, appliedShipping, pricingConfig } = useCart();
   const { user } = useAuth();
   const navigate = useNavigate();
   
@@ -167,15 +167,12 @@ const Checkout = () => {
     message += `${formData.city}, ${formData.province}\n`;
     message += `${formData.postalCode}\n\n`;
     
-    message += `${t('checkout_wa_items')}\n`;
-    cartItems.forEach(item => {
-      message += `- ${item.quantity}x ${item.name} (${item.size}) - $${(item.price * item.quantity).toFixed(2)}\n`;
-    });
+    message += `\n${t('cart_subtotal')}: $${subtotal.toFixed(2)}\n`;
+    if (discount > 0) message += `Desconto Qtd: -$${discount.toFixed(2)}\n`;
+    if (appliedCoupon) message += `Cupom ${appliedCoupon.code}: -${appliedCoupon.discount_percent}% OFF\n`;
+    message += `Frete: ${appliedShipping === 0 ? 'GRÁTIS' : '$' + appliedShipping.toFixed(2)}\n`;
     
-    message += `\n${t('checkout_wa_total')} $${(cartTotal - (appliedCoupon ? (cartTotal * (appliedCoupon.discount_percent / 100)) : 0)).toFixed(2)} CAD\n`;
-    if (appliedCoupon) {
-      message += `(Cupom: ${appliedCoupon.code} - ${appliedCoupon.discount_percent}% OFF)\n`;
-    }
+    message += `\n${t('checkout_wa_total')} $${finalTotal.toFixed(2)} CAD\n`;
     message += `\n${t('checkout_wa_footer')}`;
     
     return message;
@@ -210,7 +207,7 @@ const Checkout = () => {
   };
 
   const finalTotal = appliedCoupon 
-    ? cartTotal * (1 - appliedCoupon.discount_percent / 100)
+    ? (subtotal - discount) * (1 - appliedCoupon.discount_percent / 100) + (appliedShipping || 0)
     : cartTotal;
 
   const handleSubmitOrder = async () => {
