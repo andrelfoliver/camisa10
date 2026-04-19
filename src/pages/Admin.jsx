@@ -156,6 +156,13 @@ const Admin = () => {
   const [welcomeTriggered, setWelcomeTriggered] = useState(false);
   const [expandedOrderId, setExpandedOrderId] = useState(null);
   const [expandedCustomerId, setExpandedCustomerId] = useState(null);
+  
+  // Filtros do Relatório de Produtividade
+  const [prodDateRange, setProdDateRange] = useState({
+    start: new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString().split('T')[0],
+    end: new Date().toISOString().split('T')[0]
+  });
+  const [prodAgentFilter, setProdAgentFilter] = useState('');
 
 
   const [isMigrating, setIsMigrating] = useState(false);
@@ -1606,6 +1613,43 @@ const Admin = () => {
                 <h3 style={{ display: 'flex', alignItems: 'center', gap: '0.8rem', marginBottom: '1.5rem', color: '#fff' }}>
                   <TrendingUp size={20} /> Relatório de Produtividade (Vendas por Agente)
                 </h3>
+
+                {/* FILTROS DE PRODUTIVIDADE */}
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '1rem', marginBottom: '2rem', padding: '1rem', background: 'rgba(255,255,255,0.03)', borderRadius: '8px', border: '1px solid var(--border-color)' }}>
+                  <div style={{ flex: 1, minWidth: '150px' }}>
+                    <label style={{ display: 'block', fontSize: '0.75rem', color: 'var(--text-muted)', marginBottom: '0.3rem' }}>De:</label>
+                    <input 
+                      type="date" 
+                      value={prodDateRange.start} 
+                      onChange={e => setProdDateRange({...prodDateRange, start: e.target.value})}
+                      style={{ width: '100%', padding: '0.5rem', background: 'var(--bg-color)', color: '#fff', border: '1px solid var(--border-color)', borderRadius: '4px', fontSize: '0.9rem' }}
+                    />
+                  </div>
+                  <div style={{ flex: 1, minWidth: '150px' }}>
+                    <label style={{ display: 'block', fontSize: '0.75rem', color: 'var(--text-muted)', marginBottom: '0.3rem' }}>Até:</label>
+                    <input 
+                      type="date" 
+                      value={prodDateRange.end} 
+                      onChange={e => setProdDateRange({...prodDateRange, end: e.target.value})}
+                      style={{ width: '100%', padding: '0.5rem', background: 'var(--bg-color)', color: '#fff', border: '1px solid var(--border-color)', borderRadius: '4px', fontSize: '0.9rem' }}
+                    />
+                  </div>
+                  <div style={{ flex: 2, minWidth: '200px' }}>
+                    <label style={{ display: 'block', fontSize: '0.75rem', color: 'var(--text-muted)', marginBottom: '0.3rem' }}>Filtrar Agente:</label>
+                    <select 
+                      value={prodAgentFilter} 
+                      onChange={e => setProdAgentFilter(e.target.value)}
+                      style={{ width: '100%', padding: '0.5rem', background: 'var(--bg-color)', color: '#fff', border: '1px solid var(--border-color)', borderRadius: '4px', fontSize: '0.9rem' }}
+                    >
+                      <option value="">Todos os Agentes</option>
+                      {/* Pegar nomes únicos dos agentes vinculados aos cupons */}
+                      {[...new Set(coupons.map(c => c.agent_id))].filter(Boolean).map(agent => (
+                        <option key={agent} value={agent}>{agent}</option>
+                      ))}
+                      <option value="Sem Indicação">Sem Indicação</option>
+                    </select>
+                  </div>
+                </div>
                 
                 <div className="table-responsive">
                   <table style={{ width: '100%', borderCollapse: 'collapse' }}>
@@ -1618,17 +1662,26 @@ const Admin = () => {
                       </tr>
                     </thead>
                     <tbody>
-                      {Object.entries(orders.reduce((acc, order) => {
-                        const rawRef = order.referrer || 'Sem Indicação';
-                        // Tentar mapear código do cupom para o nome do agente
-                        const coupon = coupons.find(c => c.code === rawRef.toUpperCase());
-                        const ref = coupon ? (coupon.agent_id || rawRef) : rawRef;
-                        
-                        if (!acc[ref]) acc[ref] = { count: 0, total: 0 };
-                        acc[ref].count += 1;
-                        acc[ref].total += Number(order.total_price || 0);
-                        return acc;
-                      }, {})).map(([agent, stats]) => (
+                      {Object.entries(orders
+                        .filter(order => {
+                          const orderDate = order.created_at.split('T')[0];
+                          const inDateRange = (!prodDateRange.start || orderDate >= prodDateRange.start) && 
+                                              (!prodDateRange.end || orderDate <= prodDateRange.end);
+                          return inDateRange;
+                        })
+                        .reduce((acc, order) => {
+                          const rawRef = order.referrer || 'Sem Indicação';
+                          const coupon = coupons.find(c => c.code === rawRef.toUpperCase());
+                          const ref = coupon ? (coupon.agent_id || rawRef) : rawRef;
+                          
+                          // Filtro de Agente
+                          if (prodAgentFilter && ref !== prodAgentFilter) return acc;
+
+                          if (!acc[ref]) acc[ref] = { count: 0, total: 0 };
+                          acc[ref].count += 1;
+                          acc[ref].total += Number(order.total_price || 0);
+                          return acc;
+                        }, {})).map(([agent, stats]) => (
                         <tr key={agent} style={{ borderBottom: '1px solid rgba(255,255,255,0.03)' }}>
                           <td style={{ padding: '1rem', fontWeight: 600 }}>{agent}</td>
                           <td style={{ padding: '1rem' }}>{stats.count}</td>
