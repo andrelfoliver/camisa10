@@ -434,6 +434,40 @@ const Admin = () => {
     }
   };
 
+  const handleSendAgentEmail = async (coupon) => {
+    try {
+      // Tentar encontrar o cliente pelo nome/id guardado no agent_id
+      const customer = customers.find(c => (c.full_name || c.email) === coupon.agent_id);
+      if (!customer) {
+        showAlert("Erro no Envio", "Não conseguimos localizar o e-mail deste colaborador na base de clientes.");
+        return;
+      }
+
+      setLoading(true);
+      const res = await fetch('/api/send-agent-email', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          agentName: customer.full_name || coupon.agent_id,
+          agentEmail: customer.email,
+          couponCode: coupon.code,
+          discountPercent: coupon.discount_percent
+        })
+      });
+
+      const result = await res.json();
+      if(result.success) {
+        showAlert("Sucesso!", `Convite enviado para ${customer.email} com sucesso.`);
+      } else {
+        throw new Error(result.error);
+      }
+    } catch (err) {
+      showAlert("Falha no Envio", err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const handleDeleteCoupon = async (id) => {
     showConfirm("Excluir Cupom", "Tem certeza que deseja remover este cupom?", async () => {
       const { error } = await supabase.from('coupons').delete().eq('id', id);
@@ -1504,8 +1538,9 @@ const Admin = () => {
                     <thead>
                       <tr style={{ textAlign: 'left', borderBottom: '1px solid var(--border-color)' }}>
                         <th style={{ padding: '1rem', color: 'var(--text-muted)' }}>CÓDIGO</th>
-                        <th style={{ padding: '1rem', color: 'var(--text-muted)' }}>AGENTE VINCULADO</th>
+                        <th style={{ padding: '1rem', color: 'var(--text-muted)' }}>AGENTE</th>
                         <th style={{ padding: '1rem', color: 'var(--text-muted)' }}>DESCONTO</th>
+                        <th style={{ padding: '1rem', color: 'var(--text-muted)' }}>LINK DE DIVULGAÇÃO</th>
                         <th style={{ padding: '1rem', color: 'var(--text-muted)', textAlign: 'right' }}>AÇÕES</th>
                       </tr>
                     </thead>
@@ -1515,10 +1550,23 @@ const Admin = () => {
                           <td style={{ padding: '1rem', fontWeight: 700, color: 'var(--accent-color)' }}>{c.code}</td>
                           <td style={{ padding: '1rem' }}>{c.agent_id || '-'}</td>
                           <td style={{ padding: '1rem' }}>{c.discount_percent}%</td>
+                          <td style={{ padding: '1rem' }}>
+                            <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', background: 'rgba(255,255,255,0.05)', padding: '0.4rem 0.8rem', borderRadius: '4px', display: 'inline-block' }}>
+                              ifooty.ca/?ref={c.code}
+                            </div>
+                          </td>
                           <td style={{ padding: '1rem', textAlign: 'right' }}>
-                            <button onClick={() => handleDeleteCoupon(c.id)} style={{ color: '#EF4444', background: 'none', border: 'none', cursor: 'pointer' }}>
-                              <Trash2 size={16} />
-                            </button>
+                            <div style={{ display: 'flex', gap: '1rem', justifyContent: 'flex-end' }}>
+                              <button 
+                                onClick={() => handleSendAgentEmail(c)} 
+                                style={{ color: 'var(--accent-color)', background: 'none', border: '1px solid var(--accent-color)', cursor: 'pointer', padding: '0.3rem 0.6rem', borderRadius: '4px', fontSize: '0.75rem', display: 'flex', alignItems: 'center', gap: '0.3rem' }}
+                              >
+                                <MessageSquare size={14} /> ENVIAR E-MAIL
+                              </button>
+                              <button onClick={() => handleDeleteCoupon(c.id)} style={{ color: '#EF4444', background: 'none', border: 'none', cursor: 'pointer' }}>
+                                <Trash2 size={16} />
+                              </button>
+                            </div>
                           </td>
                         </tr>
                       ))}
@@ -1550,7 +1598,11 @@ const Admin = () => {
                     </thead>
                     <tbody>
                       {Object.entries(orders.reduce((acc, order) => {
-                        const ref = order.referrer || 'Sem Indicação';
+                        const rawRef = order.referrer || 'Sem Indicação';
+                        // Tentar mapear código do cupom para o nome do agente
+                        const coupon = coupons.find(c => c.code === rawRef.toUpperCase());
+                        const ref = coupon ? (coupon.agent_id || rawRef) : rawRef;
+                        
                         if (!acc[ref]) acc[ref] = { count: 0, total: 0 };
                         acc[ref].count += 1;
                         acc[ref].total += Number(order.total_price || 0);
