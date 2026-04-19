@@ -147,9 +147,19 @@ export default async function handler(req, res) {
               </table>
             </div>
 
-            <div style="margin-bottom: 40px; padding: 25px; background: #f8fafc; border-radius: 12px; border: 2px dashed #cbd5e1;">
+            <div style="margin-bottom: 40px; padding: 25px; background: #f8fafc; border: 2px dashed #cbd5e1; border-radius: 12px;">
               <h2 style="color: #1e293b; font-size: 1.3rem; margin-top: 0; margin-bottom: 5px;">📦 RESUMO PARA O FORNECEDOR</h2>
-              <p style="color: #64748b; font-size: 0.85rem; margin-bottom: 20px;">(Ideal para printar e enviar)</p>
+              <p style="color: #64748b; font-size: 0.85rem; margin-bottom: 15px;">(Ideal para printar e enviar)</p>
+              
+              <div style="margin-bottom: 20px; padding: 15px; background: #ffffff; border-radius: 8px; border: 1px solid #e2e8f0;">
+                <p style="margin: 0; color: #64748b; font-size: 0.8rem; text-transform: uppercase; font-weight: 700;">Entregar em:</p>
+                <p style="margin: 5px 0 0 0; color: #1e293b; font-size: 1.1rem; font-weight: 800; line-height: 1.4;">
+                  ${order.shipping_address.street}${order.shipping_address.apartment ? ', Apt ' + order.shipping_address.apartment : ''}<br/>
+                  ${order.shipping_address.city}, ${order.shipping_address.province} - ${order.shipping_address.postalCode}
+                </p>
+                <p style="margin: 10px 0 0 0; color: #475569; font-size: 0.9rem;"><strong>Cliente:</strong> ${order.customer_name} | ${order.customer_phone}</p>
+              </div>
+
               ${supplierItemsHtml}
             </div>
 
@@ -159,8 +169,13 @@ export default async function handler(req, res) {
             </div>
             
             <div style="background: #f7fafc; padding: 25px; border-radius: 8px; margin-bottom: 30px;">
-              <table style="width: 100%;">
-                <tr><td style="font-size: 1.4rem; font-weight: 800; color: #1a202c;">TOTAL DO PEDIDO</td><td style="text-align: right; font-size: 1.4rem; font-weight: 900; color: #CCFF00; background: #000; padding: 10px 15px; border-radius: 6px;">$${order.total_price.toFixed(2)} CAD</td></tr>
+              <table style="width: 100%; font-size: 0.95rem; color: #4a5568;">
+                ${order.coupon_code ? `
+                <tr><td style="padding: 5px 0;">Subtotal:</td><td style="text-align: right; color: #1a202c;">$${(order.total_price + (order.coupon_discount || 0)).toFixed(2)} CAD</td></tr>
+                <tr><td style="padding: 5px 0; color: #10B981;">Cupom (${order.coupon_code}):</td><td style="text-align: right; color: #10B981;">-$${(order.coupon_discount || 0).toFixed(2)} CAD</td></tr>
+                ` : ''}
+                <tr><td colspan="2" style="border-top: 1px solid #edf2f7; padding-top: 15px; margin-top: 10px;"></td></tr>
+                <tr><td style="font-size: 1.4rem; font-weight: 800; color: #1a202c;">TOTAL FINAL</td><td style="text-align: right; font-size: 1.4rem; font-weight: 900; color: #CCFF00; background: #000; padding: 10px 15px; border-radius: 6px;">$${order.total_price.toFixed(2)} CAD</td></tr>
               </table>
             </div>
           </div>
