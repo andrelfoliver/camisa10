@@ -152,7 +152,6 @@ const Admin = () => {
   const [newCoupon, setNewCoupon] = useState({ code: '', agent_id: '', discount_percent: 5 });
   const [agentSearch, setAgentSearch] = useState('');
   const [showAgentResults, setShowAgentResults] = useState(false);
-  const [sentEmails, setSentEmails] = useState(new Set());
   const [showWelcomePopup, setShowWelcomePopup] = useState(false);
   const [welcomeTriggered, setWelcomeTriggered] = useState(false);
   const [expandedOrderId, setExpandedOrderId] = useState(null);
@@ -458,7 +457,12 @@ const Admin = () => {
 
       const result = await res.json();
       if(result.success) {
-        setSentEmails(prev => new Set([...prev, coupon.id]));
+        // Persistir no banco de dados para sempre
+        await supabase.from('coupons').update({ is_notified: true }).eq('id', coupon.id);
+        
+        // Atualizar interface localmente
+        setCoupons(prev => prev.map(c => c.id === coupon.id ? { ...c, is_notified: true } : c));
+        
         showAlert("Sucesso!", `Convite enviado para ${customer.email} com sucesso.`);
       } else {
         throw new Error(result.error);
@@ -1561,23 +1565,23 @@ const Admin = () => {
                             <div style={{ display: 'flex', gap: '1rem', justifyContent: 'flex-end' }}>
                               <button 
                                 onClick={() => handleSendAgentEmail(c)} 
-                                disabled={sentEmails.has(c.id)}
+                                disabled={c.is_notified}
                                 style={{ 
-                                  color: sentEmails.has(c.id) ? '#10B981' : 'var(--accent-color)', 
+                                  color: c.is_notified ? '#10B981' : 'var(--accent-color)', 
                                   background: 'none', 
-                                  border: `1px solid ${sentEmails.has(c.id) ? '#10B981' : 'var(--accent-color)'}`, 
-                                  cursor: sentEmails.has(c.id) ? 'default' : 'pointer', 
+                                  border: `1px solid ${c.is_notified ? '#10B981' : 'var(--accent-color)'}`, 
+                                  cursor: c.is_notified ? 'default' : 'pointer', 
                                   padding: '0.3rem 0.6rem', 
                                   borderRadius: '4px', 
                                   fontSize: '0.75rem', 
                                   display: 'flex', 
                                   alignItems: 'center', 
                                   gap: '0.3rem',
-                                  opacity: sentEmails.has(c.id) ? 0.8 : 1
+                                  opacity: c.is_notified ? 0.8 : 1
                                 }}
                               >
-                                {sentEmails.has(c.id) ? <Check size={14} /> : <MessageSquare size={14} />}
-                                {sentEmails.has(c.id) ? 'E-MAIL ENVIADO' : 'ENVIAR E-MAIL'}
+                                {c.is_notified ? <Check size={14} /> : <MessageSquare size={14} />}
+                                {c.is_notified ? 'E-MAIL ENVIADO' : 'ENVIAR E-MAIL'}
                               </button>
                               <button onClick={() => handleDeleteCoupon(c.id)} style={{ color: '#EF4444', background: 'none', border: 'none', cursor: 'pointer' }}>
                                 <Trash2 size={16} />
