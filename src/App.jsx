@@ -46,6 +46,13 @@ const AppLayout = () => {
       sessionStorage.setItem('ifooty_last_browsed_path', pathname + (window.location.search || ''));
     }
 
+    // Rastreamento de Agente/Referral
+    const params = new URLSearchParams(window.location.search);
+    const ref = params.get('ref') || params.get('agent');
+    if (ref) {
+      localStorage.setItem('ifooty_referrer', ref);
+    }
+
     // Auto-correção: se por algum motivo o path salvo for o checkout ou auth, resetar para home
     const saved = sessionStorage.getItem('ifooty_last_browsed_path');
     if (saved === '/checkout' || saved === '/auth') {
