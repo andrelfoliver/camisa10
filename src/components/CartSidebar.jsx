@@ -29,7 +29,7 @@ const CartSidebar = () => {
         style={{
           position: 'fixed', top: 0, left: 0, width: '100%', height: '100%',
           background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(4px)',
-          zIndex: 999
+          zIndex: 4999
         }}
         onClick={() => setIsCartOpen(false)}
       />
@@ -37,7 +37,7 @@ const CartSidebar = () => {
         className="glass-panel"
         style={{
           position: 'fixed', top: 0, right: 0, width: '100%', maxWidth: '400px', height: '100%',
-          background: 'var(--surface-color)', zIndex: 1000,
+          background: 'var(--surface-color)', zIndex: 5000,
           display: 'flex', flexDirection: 'column',
           boxShadow: '-10px 0 30px rgba(0,0,0,0.5)',
           animation: 'slideInRight 0.3s forwards'
