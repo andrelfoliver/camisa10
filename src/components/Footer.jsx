@@ -20,6 +20,8 @@ const Footer = () => {
           <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
             <li><a href="/" style={{ color: 'var(--text-muted)', transition: '0.2s' }}>{t('footer_catalog')}</a></li>
             <li><a href="/#faq" style={{ color: 'var(--text-muted)', transition: '0.2s' }}>{t('footer_how_to_buy')}</a></li>
+            <li><a href="https://wa.me/14039180805?text=Olá!%20Tenho%20interesse%20em%20me%20tornar%20um%20afiliado%20da%20iFooty." target="_blank" rel="noopener noreferrer" style={{ color: 'var(--text-muted)', transition: '0.2s' }}>{t('footer_affiliates')}</a></li>
+            <li><a href="https://wa.me/14039180805?text=Olá!%20Gostaria%20de%20tirar%20uma%20dúvida." target="_blank" rel="noopener noreferrer" style={{ color: 'var(--text-muted)', transition: '0.2s' }}>{t('footer_contact')}</a></li>
             <li><a href="/#about" style={{ color: 'var(--text-muted)', transition: '0.2s' }}>{t('footer_about_us')}</a></li>
           </ul>
         </div>
