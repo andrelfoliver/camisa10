@@ -325,14 +325,13 @@ const AffiliateProgram = () => {
                 <button onClick={() => setStatus('idle')} style={{ marginTop: '2rem', background: 'none', border: '1px solid var(--border-color)', color: '#fff', padding: '0.8rem 2rem', borderRadius: '100px', cursor: 'pointer' }}>Enviar outra candidatura</button>
               </div>
             ) : (
-            ) : (
               <form onSubmit={handleSubmit} style={{ 
                 display: 'grid', 
                 gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', 
                 gap: '1.5rem' 
               }}>
                 <div style={{ gridColumn: '1 / -1' }}>
-                  <p style={{ color: 'var(--text-muted)', fontSize: '0.95rem', marginBottom: '1.5rem' }}>Preencha os dados abaixo para iniciar sua jornada como embaixador iFooty. O Professor analisará seu perfil pessoalmente.</p>
+                  <p style={{ color: 'var(--text-muted)', fontSize: '0.95rem', marginBottom: '1.5rem' }}>Preencha os dados abaixo para iniciar sua jornada como jogador iFooty. O Professor analisará seu perfil pessoalmente.</p>
                 </div>
                 
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
