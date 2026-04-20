@@ -8,6 +8,7 @@ import { brasil2025Products } from '../data/brasil2025';
 import {
   ShieldCheck, Truck, Star, CheckCircle2, ChevronDown, ChevronUp, Quote
 } from 'lucide-react';
+import SizeGuideModal from '../components/SizeGuideModal';
 
 const FAQItem = ({ question, answer }) => {
   const [isOpen, setIsOpen] = useState(false);
@@ -30,6 +31,7 @@ const ProductPage = () => {
   const navigate = useNavigate();
   const { addToCart, pricingConfig } = useCart();
   const { t, language, translateProductDisplay } = useLanguage();
+  const [isSizeGuideOpen, setIsSizeGuideOpen] = useState(false);
 
 
   const [product, setProduct] = useState(null);
@@ -252,7 +254,10 @@ const ProductPage = () => {
                 <p style={{ fontWeight: 700, fontSize: '0.9rem', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
                   {t('product_size')}: <span style={{ color: 'var(--accent-color)' }}>{selectedSize}</span>
                 </p>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', color: 'var(--text-main)', fontSize: '0.8rem', cursor: 'pointer', borderBottom: '1px solid #666' }}>
+                <div 
+                  onClick={() => setIsSizeGuideOpen(true)}
+                  style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', color: 'var(--text-main)', fontSize: '0.8rem', cursor: 'pointer', borderBottom: '1px solid #666' }}
+                >
                    📏 {t('product_size_guide')}
                 </div>
               </div>
@@ -345,85 +350,16 @@ const ProductPage = () => {
               </button>
             </div>
 
-            {/* Price Table */}
-            <div className="desktop-only">
-              {pricingConfig?.discounts && pricingConfig.discounts.length > 0 && (
-                <div style={{ background: 'var(--surface-color)', border: '1px solid var(--border-color)', borderRadius: '8px', padding: '1rem', marginBottom: '2rem' }}>
-                  <p style={{ fontWeight: 800, color: 'var(--text-main)', marginBottom: '0.8rem', fontSize: '0.95rem' }}>{t('product_wholesale_table')}</p>
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', paddingBottom: '0.3rem', borderBottom: '1px dashed var(--border-color)', color: 'var(--text-muted)' }}>
-                      <span>1 {language === 'pt' ? 'peça' : 'jersey'}</span>
-                      <span style={{ fontWeight: 600 }}>${basePrice.toFixed(2)} {t('product_wholesale_unit')}</span>
-                    </div>
-                    {[...pricingConfig.discounts].sort((a, b) => a.qty - b.qty).map((d, index) => {
-                      const pricePerUnit = basePrice * (1 - (d.percent || 0) / 100);
-                      const qtyLabel = d.qty === 3 ? (language === 'pt' ? "3-4 peças" : "3-4 jerseys") : d.qty === 5 ? (language === 'pt' ? "5-9 peças" : "5-9 jerseys") : d.qty === 10 ? (language === 'pt' ? "10+ peças" : "10+ jerseys") : (language === 'pt' ? `${d.qty} peças` : `${d.qty} jerseys`);
-                      return (
-                        <div key={index} style={{ display: 'flex', justifyContent: 'space-between', paddingBottom: '0.3rem', borderBottom: index < pricingConfig.discounts.length - 1 ? '1px dashed var(--border-color)' : 'none', color: '#10B981', fontWeight: 600 }}>
-                          <span>{qtyLabel}</span>
-                          <span>${pricePerUnit.toFixed(2)} {t('product_wholesale_each')}</span>
-                        </div>
-                      );
-                    })}
-                  </div>
-                </div>
-              )}
-            </div>
 
-            {/* Medidas Table */}
-            <div style={{ background: 'var(--surface-color)', borderRadius: '8px', padding: '1.5rem', overflowX: 'auto', border: '1px solid var(--border-color)' }}>
-              <h3 style={{ marginBottom: '1.5rem', color: 'var(--text-main)', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>📏 {t('product_wholesale_header')}</h3>
-              <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'center', fontSize: '0.9rem' }}>
-                <thead>
-                  <tr>
-                    <th style={{ padding: '0.8rem', background: 'var(--surface-hover)', borderBottom: '2px solid var(--accent-color)' }}></th>
-                    <th style={{ padding: '0.8rem', background: 'var(--surface-hover)', borderBottom: '2px solid var(--accent-color)' }}>P (S)</th>
-                    <th style={{ padding: '0.8rem', background: 'var(--surface-hover)', borderBottom: '2px solid var(--accent-color)' }}>M</th>
-                    <th style={{ padding: '0.8rem', background: 'var(--surface-hover)', borderBottom: '2px solid var(--accent-color)' }}>G (L)</th>
-                    <th style={{ padding: '0.8rem', background: 'var(--surface-hover)', borderBottom: '2px solid var(--accent-color)' }}>GG (XL)</th>
-                    <th style={{ padding: '0.8rem', background: 'var(--surface-hover)', borderBottom: '2px solid var(--accent-color)' }}>XG (2XL)</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr>
-                    <td style={{ padding: '0.8rem', fontWeight: 600, borderBottom: '1px solid var(--border-color)' }}>{t('product_table_length')}</td>
-                    <td style={{ padding: '0.8rem', borderBottom: '1px solid var(--border-color)', color: 'var(--text-muted)' }}>69-71 cm</td>
-                    <td style={{ padding: '0.8rem', borderBottom: '1px solid var(--border-color)', color: 'var(--text-muted)' }}>71-73 cm</td>
-                    <td style={{ padding: '0.8rem', borderBottom: '1px solid var(--border-color)', color: 'var(--text-muted)' }}>73-78 cm</td>
-                    <td style={{ padding: '0.8rem', borderBottom: '1px solid var(--border-color)', color: 'var(--text-muted)' }}>75-78 cm</td>
-                    <td style={{ padding: '0.8rem', borderBottom: '1px solid var(--border-color)', color: 'var(--text-muted)' }}>78-81 cm</td>
-                  </tr>
-                  <tr>
-                    <td style={{ padding: '0.8rem', fontWeight: 600, borderBottom: '1px solid var(--border-color)' }}>{t('product_table_width')}</td>
-                    <td style={{ padding: '0.8rem', borderBottom: '1px solid var(--border-color)', color: 'var(--text-muted)' }}>53-55 cm</td>
-                    <td style={{ padding: '0.8rem', borderBottom: '1px solid var(--border-color)', color: 'var(--text-muted)' }}>55-57 cm</td>
-                    <td style={{ padding: '0.8rem', borderBottom: '1px solid var(--border-color)', color: 'var(--text-muted)' }}>57-58 cm</td>
-                    <td style={{ padding: '0.8rem', borderBottom: '1px solid var(--border-color)', color: 'var(--text-muted)' }}>58-60 cm</td>
-                    <td style={{ padding: '0.8rem', borderBottom: '1px solid var(--border-color)', color: 'var(--text-muted)' }}>60-62 cm</td>
-                  </tr>
-                  <tr>
-                    <td style={{ padding: '0.8rem', fontWeight: 600, borderBottom: '1px solid var(--border-color)' }}>{t('product_table_height')}</td>
-                    <td style={{ padding: '0.8rem', borderBottom: '1px solid var(--border-color)', color: 'var(--text-muted)' }}>162-170 cm</td>
-                    <td style={{ padding: '0.8rem', borderBottom: '1px solid var(--border-color)', color: 'var(--text-muted)' }}>170-176 cm</td>
-                    <td style={{ padding: '0.8rem', borderBottom: '1px solid var(--border-color)', color: 'var(--text-muted)' }}>176-182 cm</td>
-                    <td style={{ padding: '0.8rem', borderBottom: '1px solid var(--border-color)', color: 'var(--text-muted)' }}>182-190 cm</td>
-                    <td style={{ padding: '0.8rem', borderBottom: '1px solid var(--border-color)', color: 'var(--text-muted)' }}>190-195 cm</td>
-                  </tr>
-                  <tr>
-                    <td style={{ padding: '0.8rem', fontWeight: 600 }}>{t('product_table_weight')}</td>
-                    <td style={{ padding: '0.8rem', color: 'var(--text-muted)' }}>50-62 kg</td>
-                    <td style={{ padding: '0.8rem', color: 'var(--text-muted)' }}>62-78 kg</td>
-                    <td style={{ padding: '0.8rem', color: 'var(--text-muted)' }}>78-83 kg</td>
-                    <td style={{ padding: '0.8rem', color: 'var(--text-muted)' }}>83-90 kg</td>
-                    <td style={{ padding: '0.8rem', color: 'var(--text-muted)' }}>90-97 kg</td>
-                  </tr>
-                </tbody>
-              </table>
             </div>
 
           </div>
-        </div>
-      </section>
+        </section>
+
+      <SizeGuideModal 
+        isOpen={isSizeGuideOpen} 
+        onClose={() => setIsSizeGuideOpen(false)} 
+      />
 
       {/* 8. PROVA SOCIAL */}
       <section className="container" style={{ padding: '5rem 1.5rem', textAlign: 'center', borderTop: '1px solid var(--border-color)', marginTop: '3rem' }}>

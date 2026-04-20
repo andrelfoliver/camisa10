@@ -108,8 +108,8 @@ const AppLayout = () => {
       */}
       {!isAdminPage && <SalesPopup />}
 
-      {/* Exit Intent Feedback Popup - Disabled on process pages to avoid blocking navigation */}
-      {!isAdminPage && !isBlacklisted && <ExitIntentPopup />}
+      {/* Exit Intent Feedback Popup - Enabled on all pages except to avoid blocking navigation */}
+      {!isAdminPage && <ExitIntentPopup />}
     </div>
   );
 };
