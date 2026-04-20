@@ -77,19 +77,6 @@ const ProductCard = ({ product }) => {
             {t('section_new')}
           </div>
         )}
-        {product.version && (
-          <div className="badge" style={{ 
-            position: 'relative',
-            top: 0,
-            left: 0,
-            background: 'rgba(255,255,255,0.1)', 
-            color: 'var(--text-muted)',
-            fontSize: '0.65rem',
-            border: '1px solid rgba(255,255,255,0.1)'
-          }}>
-            {translateProductDisplay(product.version)}
-          </div>
-        )}
       </div>
 
       <div 
