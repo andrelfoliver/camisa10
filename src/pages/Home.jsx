@@ -47,6 +47,25 @@ const Home = () => {
     'Retrô': []
   });
 
+  const sortProductsList = (list) => {
+    return [...list].sort((a, b) => {
+      // 1. Mais Vendida (is_bestseller)
+      if (a.is_bestseller && !b.is_bestseller) return -1;
+      if (!a.is_bestseller && b.is_bestseller) return 1;
+
+      // 2. Pronta Entrega (Estoque Local)
+      const aStock = a.inventory && Object.values(a.inventory).some(v => v > 0);
+      const bStock = b.inventory && Object.values(b.inventory).some(v => v > 0);
+      if (aStock && !bStock) return -1;
+      if (!aStock && bStock) return 1;
+
+      // 3. Preço (Menor para Maior) - Fallback para preço padrão de 47.90
+      const aPrice = a.price || 47.90;
+      const bPrice = b.price || 47.90;
+      return aPrice - bPrice;
+    });
+  };
+
   useEffect(() => {
     async function fetchHomeData() {
       let qIds = [];
@@ -94,7 +113,10 @@ const Home = () => {
         }
 
         const sortedQ = qIds.map(id => supabaseData.find(d => String(d.id) === String(id))).filter(Boolean);
-        setQueridinhas(sortedQ);
+        
+        // Aplicar a nova ordenação solicitada pelo usuário mesmo na seleção manual
+        const prioritizedQ = sortProductsList(sortedQ);
+        setQueridinhas(prioritizedQ);
       }
 
       const { data: dbData } = await supabase.from('products').select('*').order('id', { ascending: false });
@@ -103,7 +125,7 @@ const Home = () => {
       // Fallback automático: Se não houver queridinhas manuais, usa as marcadas como is_bestseller
       if (qIds.length === 0) {
         const autoQueridinhas = allUnified.filter(p => p.is_bestseller).slice(0, 6);
-        setQueridinhas(autoQueridinhas);
+        setQueridinhas(sortProductsList(autoQueridinhas));
       }
 
       const { data: teamsData } = await supabase.from('teams').select('*').order('name');
@@ -144,13 +166,10 @@ const Home = () => {
         if (!added) mapCat['Lançamentos'].push(p); // Fallback
       });
 
-      // Ordenar cada categoria para colocar is_bestseller no topo
+      // Ordenar cada categoria seguindo a nova prioridade:
+      // 1. Mais Vendida | 2. Pronta Entrega | 3. Preço (Menor -> Maior)
       Object.keys(mapCat).forEach(key => {
-        mapCat[key].sort((a, b) => {
-          if (a.is_bestseller && !b.is_bestseller) return -1;
-          if (!a.is_bestseller && b.is_bestseller) return 1;
-          return 0;
-        });
+        mapCat[key] = sortProductsList(mapCat[key]);
       });
 
       setStoreSections(mapCat);
@@ -505,10 +524,9 @@ const Home = () => {
       <section id="faq" className="section-padding container" style={{ maxWidth: '800px', background: 'var(--surface-color)', borderRadius: 'var(--radius-lg)' }}>
         <h2 style={{ fontSize: '2.5rem', textAlign: 'center', marginBottom: '3rem' }}>{t('faq_title')}</h2>
         <div style={{ display: 'flex', flexDirection: 'column' }}>
-          <FAQItem question={t('faq_q1')} answer={t('faq_a1')} />
-          <FAQItem question={t('faq_q2')} answer={t('faq_a2')} />
-          <FAQItem question={t('faq_q3')} answer={t('faq_a3')} />
-          <FAQItem question={t('faq_q4')} answer={t('faq_a4')} />
+          {Array.isArray(t('faqs')) && t('faqs').map((item, index) => (
+            <FAQItem key={index} question={item.question} answer={item.answer} />
+          ))}
         </div>
       </section>
 

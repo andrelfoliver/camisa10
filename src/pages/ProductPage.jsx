@@ -397,9 +397,9 @@ const ProductPage = () => {
       <section className="container" style={{ padding: '3rem 1.5rem', maxWidth: '800px', margin: '0 auto', borderTop: '1px solid var(--border-color)' }}>
         <h2 style={{ fontSize: '2.5rem', textAlign: 'center', marginBottom: '3rem' }}>{t('product_faq_title')}</h2>
         <div style={{ display: 'flex', flexDirection: 'column', background: 'var(--surface-color)', padding: '2rem', borderRadius: '8px', border: '1px solid var(--border-color)' }}>
-          <FAQItem question={t('product_faq_q1')} answer={t('product_faq_a1')} />
-          <FAQItem question={t('product_faq_q2')} answer={t('product_faq_a2')} />
-          <FAQItem question={t('product_faq_q3')} answer={t('product_faq_a3')} />
+          {Array.isArray(t('faqs')) && t('faqs').map((item, index) => (
+            <FAQItem key={index} question={item.question} answer={item.answer} />
+          ))}
         </div>
       </section>
 

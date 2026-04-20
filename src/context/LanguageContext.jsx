@@ -70,15 +70,49 @@ export const translations = {
     social_proof_subtitle: 'Desde 2022, conectando brasileiros em todo o Canadá com seus mantos favoritos.',
     social_proof_client_since: 'Cliente desde',
     social_proof_swipe: 'Deslize lateralmente para ler mais →',
-    faq_title: 'Dúvidas Rápidas',
-    faq_q1: 'Vocês entregam em todo o Canadá?',
-    faq_a1: 'Sim, enviamos para todas as províncias e cidades do Canadá com rastreamento.',
-    faq_q2: 'Qual o prazo de entrega?',
-    faq_a2: 'Entre 10 e 20 dias úteis, dependendo de sua região.',
-    faq_q3: 'Como escolher o tamanho?',
-    faq_a3: 'Use seu tamanho normal ou peça para ver a tabela de medidas no WhatsApp. Para estilo largo (streetwear), escolha um número maior. Você também pode acessar o "Guia de Medidas" diretamente na página de cada produto, logo acima da seleção de tamanhos.',
-    faq_q4: 'O pagamento é seguro?',
-    faq_a4: '100% Seguro através de gateways blindados, ou aceitamos e-Transfer via Interac.',
+    faq_title: 'Dúvidas Frequentes',
+    faqs: [
+      {
+        question: 'As camisas da iFooty são originais?',
+        answer: 'Não. Somos transparentes: nossas camisas são réplicas premium tailandesas (Thai AAA), consideradas as melhores do mundo em qualidade de réplica. Usamos os mesmos tecidos dry-fit, costuras reforçadas e acabamentos dos modelos oficiais, por uma fração do preço.'
+      },
+      {
+        question: 'Por que o preço é menor que nas lojas oficiais?',
+        answer: 'As camisas oficiais Nike/Adidas custam CA$150-200 porque você paga pela licença da marca, logística oficial e margem da varejista. Nossas réplicas Thai AAA entregam 99% da qualidade visual e de material sem esses custos, ficando entre CA$47.90 e CA$74.90.'
+      },
+      {
+        question: 'Posso cancelar depois de personalizar?',
+        answer: 'Infelizmente não. Personalização é feita sob demanda e torna a camisa exclusiva sua — não conseguimos revender. Por isso, confira nome, número e tamanho antes de finalizar a compra. Pedidos personalizados não aceitam troca por arrependimento (apenas defeito de fábrica).'
+      },
+      {
+        question: 'Quais formas de pagamento vocês aceitam?',
+        answer: 'Aceitamos pagamento via PayPal (cartão de crédito, débito ou saldo PayPal) e atendimento direto via WhatsApp.'
+      },
+      {
+        question: 'É seguro comprar no iFooty?',
+        answer: 'Sim. Não processamos seus dados de cartão diretamente — todo pagamento passa por provedores certificados (PayPal) com criptografia SSL e proteção ao comprador. Seus dados ficam com eles, não conosco.'
+      },
+      {
+        question: 'Quanto tempo demora pra chegar?',
+        answer: '10 a 15 dias úteis em todo o Canadá após a confirmação do pagamento. Camisas personalizadas podem levar 1-2 dias a mais. Você recebe código de rastreio por email assim que o pedido é despachado.'
+      },
+      {
+        question: 'Entregam em toda província do Canadá?',
+        answer: "Sim — de Vancouver a St. John's. Prazos podem variar levemente pra regiões remotas (norte de Ontario, territórios, comunidades isoladas)."
+      },
+      {
+        question: 'Quanto custa o frete?',
+        answer: 'Gratis para todo o Canadá. Oferta por tempo limitado.'
+      },
+      {
+        question: 'Posso trocar se o tamanho não servir?',
+        answer: 'Sim, em até 7 dias após o recebimento, desde que a etiqueta esteja fixada e a camisa não tenha sido usada ou lavada. Por ser erro de escolha, os custos de frete (devolução e reenvio) são por conta do comprador. Por isso, confira sempre a tabela de medidas antes de comprar.'
+      },
+      {
+        question: 'E se o produto vier com defeito?',
+        answer: 'Entre em contato em até 7 dias após o recebimento com fotos do defeito. Após nossa análise, a iFooty arca com todos os custos e realiza o reembolso ou a troca sem custo adicional.'
+      }
+    ],
     cta_security: 'Site 100% Blindado',
     cta_title: 'Garanta sua camisa antes que acabe!',
     cta_btn: 'Ver Catálogo',
@@ -129,12 +163,6 @@ export const translations = {
     product_social_subtitle_part1: 'Já somos ',
     product_social_subtitle_part2: ' vestindo a paixão no Canadá! 🍁',
     product_faq_title: 'Perguntas Frequentes',
-    product_faq_q1: 'As camisas são originais?',
-    product_faq_a1: 'São camisas de alta qualidade estilo jogador, com acabamento premium idêntico.',
-    product_faq_q2: 'Vocês entregam em todo o Canadá?',
-    product_faq_a2: 'Sim, enviamos para todas as províncias e cidades do Canadá com rastreamento.',
-    product_faq_q3: 'O pagamento é seguro?',
-    product_faq_a3: '100% Seguro. Utilizamos gateways certificados e operamos preferencialmente e-Transfer para residentes canadenses.',
     product_cta_secure: 'Compra Segura',
     product_cta_guarantee: 'Garantimos a qualidade do produto e suporte completo ao cliente via WhatsApp.',
     // Success
@@ -311,15 +339,49 @@ export const translations = {
     social_proof_subtitle: 'Since 2022, connecting Brazilians across Canada with their favorite mantles.',
     social_proof_client_since: 'Customer since',
     social_proof_swipe: 'Swipe to read more →',
-    faq_title: 'Quick FAQ',
-    faq_q1: 'Do you deliver across Canada?',
-    faq_a1: 'Yes, we ship to all provinces and cities in Canada with tracking.',
-    faq_q2: 'What is the delivery time?',
-    faq_a2: 'Between 10 and 20 business days, depending on your region.',
-    faq_q3: 'How to choose the size?',
-    faq_a3: 'Use your normal size or ask to see the measurement table on WhatsApp. For a loose style (streetwear), choose one size up. You can also access the "Size Guide" directly on each product page, just above the size selection.',
-    faq_q4: 'Is the payment secure?',
-    faq_a4: '100% Secure through protected gateways, or we accept e-Transfer via Interac.',
+    faq_title: 'Common Questions',
+    faqs: [
+      {
+        question: 'Are iFooty jerseys original?',
+        answer: 'No. We are transparent: our jerseys are premium Thai replicas (Thai AAA), considered the best in the world in terms of replica quality. We use the same dry-fit fabrics, reinforced seams, and finishes as the official models, for a fraction of the price.'
+      },
+      {
+        question: 'Why is the price lower than in official stores?',
+        answer: 'Official Nike/Adidas jerseys cost CA$150-200 because you pay for brand licensing, official logistics, and retailer margins. Our Thai AAA replicas deliver 99% of the visual and material quality without these costs, ranging between CA$47.90 and CA$74.90.'
+      },
+      {
+        question: 'Can I cancel after customizing?',
+        answer: 'Unfortunately, no. Customization is done on demand and makes the jersey exclusively yours — we cannot resell it. Therefore, check the name, number, and size before finalizing the purchase. Customized orders do not accept returns for change of mind (only for factory defects).'
+      },
+      {
+        question: 'Which payment types do you accept?',
+        answer: 'We accept payments via PayPal (credit card, debit, or PayPal balance) and direct customer service via WhatsApp.'
+      },
+      {
+        question: 'Is it safe to buy from iFooty?',
+        answer: 'Yes. We do not process your card data directly — all payments go through certified providers (PayPal) with SSL encryption and buyer protection. Your data stays with them, not with us.'
+      },
+      {
+        question: 'How long does it take to arrive?',
+        answer: '10 to 15 business days across Canada after payment confirmation. Customized jerseys may take 1-2 days longer. You will receive a tracking code by email as soon as the order is shipped.'
+      },
+      {
+        question: 'Do you deliver to all provinces in Canada?',
+        answer: "Yes — from Vancouver to St. John's. Delivery times may vary slightly for remote regions (Northern Ontario, territories, isolated communities)."
+      },
+      {
+        question: 'How much is shipping?',
+        answer: 'Free for all of Canada. Limited time offer.'
+      },
+      {
+        question: 'Can I exchange it if the size doesn’t fit?',
+        answer: 'Yes, within 7 days of receipt, provided the tag is attached and the jersey has not been used or washed. As it is a choice error, shipping costs (return and resend) are the responsibility of the buyer. Therefore, always check the size guide before buying.'
+      },
+      {
+        question: 'What if the product comes with a defect?',
+        answer: 'Contact us within 7 days of receipt with photos of the defect. After our analysis, iFooty bears all costs and provides a refund or an exchange at no additional cost.'
+      }
+    ],
     cta_security: '100% Shielded Site',
     cta_title: 'Guarantee your jersey before it sells out!',
     cta_btn: 'View Catalog',
@@ -370,12 +432,6 @@ export const translations = {
     product_social_subtitle_part1: "We are already ",
     product_social_subtitle_part2: ' wearing the passion in Canada! 🍁',
     product_faq_title: 'Frequently Asked Questions',
-    product_faq_q1: 'Are the jerseys original?',
-    product_faq_a1: 'These are high-quality player-edition jerseys, with identical premium finish.',
-    product_faq_q2: 'Do you deliver across Canada?',
-    product_faq_a2: 'Yes, we ship to all provinces and cities in Canada with tracking.',
-    product_faq_q3: 'Is payment secure?',
-    product_faq_a3: '100% Secure. We use certified gateways and preferentially operate e-Transfer for Canadian residents.',
     product_cta_secure: 'Secure Purchase',
     product_cta_guarantee: 'We guarantee product quality and full customer support via WhatsApp.',
     // Success
