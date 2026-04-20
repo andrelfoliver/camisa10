@@ -16,6 +16,8 @@ const Admin = () => {
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   const OFFICIAL_CATEGORIES = ['Seleções', 'Brasileirão', 'Internacionais', 'Lançamentos', 'Retrô'];
+  const SIZES = ['S', 'M', 'L', 'XL', '2XL', '3XL', '4XL'];
+  const DEFAULT_INVENTORY = { 'S': 0, 'M': 0, 'L': 0, 'XL': 0, '2XL': 0, '3XL': 0, '4XL': 0 };
   const OFFICIAL_LEAGUES = [
     'Seleções',
     'Brasileirão',
@@ -77,7 +79,7 @@ const Admin = () => {
         team: rest.team,
         league: rest.league,
         version: rest.version,
-        inventory: Number(rest.inventory || 0),
+        inventory: rest.inventory || { ...DEFAULT_INVENTORY },
         description: rest.description,
         is_bestseller: !!rest.is_bestseller,
         is_new: !!rest.is_new
@@ -105,7 +107,7 @@ const Admin = () => {
 
 
   // Campo Categoria adicionado!
-  const [newProduct, setNewProduct] = useState({ name: '', price: '', image: '', category: '', league: '', team: '', version: '', is_bestseller: false, is_new: false });
+  const [newProduct, setNewProduct] = useState({ name: '', price: '', image: '', category: '', league: '', team: '', version: '', is_bestseller: false, is_new: false, inventory: { ...DEFAULT_INVENTORY } });
   const [imageFile, setImageFile] = useState(null);
   const [imagePreview, setImagePreview] = useState(null);
   const [galleryFiles, setGalleryFiles] = useState([]);
@@ -781,7 +783,8 @@ const Admin = () => {
         team: newProduct.team,
         league: newProduct.league,
         version: newProduct.version,
-        inventory: Number(newProduct.inventory || 0),
+        version: newProduct.version,
+        inventory: newProduct.inventory || { ...DEFAULT_INVENTORY },
         description: newProduct.description,
         is_bestseller: !!newProduct.is_bestseller,
         is_new: !!newProduct.is_new
@@ -2649,6 +2652,28 @@ const Admin = () => {
                 </label>
               </div>
 
+              {/* === ESTOQUE POR TAMANHO === */}
+              <div style={{ background: 'rgba(255,255,255,0.02)', padding: '1.2rem', borderRadius: 'var(--radius-sm)', border: '1px solid var(--border-color)' }}>
+                <h3 style={{ fontSize: '0.9rem', color: 'var(--accent-color)', marginBottom: '1rem', fontWeight: 800, textTransform: 'uppercase' }}>⚡ Estoque Pronta Entrega (Canada)</h3>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(60px, 1fr))', gap: '0.8rem' }}>
+                  {SIZES.map(size => (
+                    <div key={size}>
+                      <label style={{ display: 'block', fontSize: '0.75rem', color: 'var(--text-muted)', textAlign: 'center', marginBottom: '0.3rem' }}>{size}</label>
+                      <input 
+                        type="number" 
+                        min="0"
+                        value={newProduct.inventory?.[size] || 0} 
+                        onChange={e => setNewProduct({
+                          ...newProduct,
+                          inventory: { ...newProduct.inventory, [size]: parseInt(e.target.value) || 0 }
+                        })}
+                        style={{ width: '100%', padding: '0.5rem', background: 'var(--bg-color)', color: '#fff', border: '1px solid var(--border-color)', borderRadius: '4px', textAlign: 'center', fontSize: '0.9rem' }}
+                      />
+                    </div>
+                  ))}
+                </div>
+              </div>
+
               {/* === UPLOAD DE IMAGEM === */}
               <div>
                 <label style={{ display: 'block', marginBottom: '0.5rem', color: 'var(--text-muted)', fontSize: '0.9rem' }}>
@@ -2971,6 +2996,28 @@ const Admin = () => {
                   />
                   Novo ⭐
                 </label>
+              </div>
+
+              {/* === ESTOQUE POR TAMANHO (EDIÇÃO) === */}
+              <div style={{ background: 'rgba(255,255,255,0.02)', padding: '1.2rem', borderRadius: 'var(--radius-sm)', border: '1px solid var(--border-color)', marginTop: '0.5rem' }}>
+                <h3 style={{ fontSize: '0.9rem', color: 'var(--accent-color)', marginBottom: '1rem', fontWeight: 800, textTransform: 'uppercase' }}>⚡ Estoque Pronta Entrega (Canada)</h3>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(60px, 1fr))', gap: '0.8rem' }}>
+                  {SIZES.map(size => (
+                    <div key={size}>
+                      <label style={{ display: 'block', fontSize: '0.75rem', color: 'var(--text-muted)', textAlign: 'center', marginBottom: '0.3rem' }}>{size}</label>
+                      <input 
+                        type="number" 
+                        min="0"
+                        value={editingProduct.inventory?.[size] || 0} 
+                        onChange={e => setEditingProduct({
+                          ...editingProduct,
+                          inventory: { ...editingProduct.inventory, [size]: parseInt(e.target.value) || 0 }
+                        })}
+                        style={{ width: '100%', padding: '0.5rem', background: 'var(--bg-color)', color: '#fff', border: '1px solid var(--border-color)', borderRadius: '4px', textAlign: 'center', fontSize: '0.9rem' }}
+                      />
+                    </div>
+                  ))}
+                </div>
               </div>
 
               {/* === UPLOAD DE IMAGEM (EDIÇÃO) === */}

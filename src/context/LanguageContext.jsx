@@ -239,9 +239,10 @@ export const translations = {
     checkout_wa_footer: 'Aguardo as instruções para o Interac e-Transfer! 🇨🇦',
     payment_method_title: 'Forma de Pagamento',
     coming_soon: 'Em breve',
-    success_subtitle_paid: 'Seu pagamento foi confirmado!',
     success_message_paid: 'Recebemos seu pedido pago. Você receberá o código de rastreio em breve por e-mail.',
     success_support_wa_msg_paid: 'Olá! Acabei de fazer um pedido pago via PayPal e gostaria de acompanhar o envio. 😊',
+    product_ready_delivery: '⚡ Pronta Entrega - Envio em 24h',
+    product_stock_units: 'Restam apenas {count} unidades no Canadá',
   },
   en: {
     nav_home: 'Home',
@@ -482,7 +483,9 @@ export const translations = {
     coming_soon: 'Coming Soon',
     success_subtitle_paid: 'Your payment has been confirmed!',
     success_message_paid: 'We received your paid order. You will receive the tracking code shortly via email.',
-    success_support_wa_msg_paid: 'Hi! I just placed a paid order via PayPal and would like to track my shipment. 😊',
+    success_support_wa_msg_paid: 'Hi! I just placed a paid order via PayPal and I would like to track the shipment. 😊',
+    product_ready_delivery: '⚡ In Stock - 24h Shipping',
+    product_stock_units: 'Only {count} units left in Canada',
   }
 };
 

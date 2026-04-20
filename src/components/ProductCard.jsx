@@ -24,6 +24,8 @@ const ProductCard = ({ product }) => {
     navigate(`/produto/${product.id}`);
   };
 
+  const hasLocalStock = product.inventory && Object.values(product.inventory).some(qty => qty > 0);
+
   return (
     <div className="glass-panel" style={{ 
       position: 'relative',
@@ -47,6 +49,24 @@ const ProductCard = ({ product }) => {
         zIndex: 20,
         pointerEvents: 'none' 
       }}>
+        {hasLocalStock && (
+          <div className="badge ripple" style={{ 
+            position: 'relative', 
+            top: 0, 
+            left: 0, 
+            background: 'var(--accent-color)', 
+            color: '#000', 
+            fontWeight: 900,
+            fontSize: '0.7rem',
+            padding: '0.3rem 0.6rem',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '0.2rem',
+            boxShadow: '0 0 15px rgba(204, 255, 0, 0.4)'
+          }}>
+            ⚡ {language === 'pt' ? 'PRONTA ENTREGA' : 'IN STOCK'}
+          </div>
+        )}
         {product.is_bestseller && (
           <div className="badge" style={{ position: 'relative', top: 0, left: 0, background: '#EF4444', color: '#fff', boxShadow: '0 0 15px rgba(239, 68, 68, 0.4)', border: '1px solid rgba(255,255,255,0.2)' }}>
             {t('section_best_seller')}

@@ -209,6 +209,40 @@ const ProductPage = () => {
                 </div>
               </div>
             </div>
+            
+            {/* Stock Badge - Pronta Entrega */}
+            {product.inventory?.[selectedSize] > 0 && (
+              <div style={{ 
+                background: 'rgba(204, 255, 0, 0.05)', 
+                border: '1px solid rgba(204, 255, 0, 0.3)', 
+                borderRadius: '8px', 
+                padding: '1rem', 
+                marginBottom: '1.5rem', 
+                display: 'flex', 
+                alignItems: 'center', 
+                gap: '1rem',
+                animation: 'pulse 2s infinite'
+              }}>
+                <div style={{ 
+                  background: 'var(--accent-color)', 
+                  color: '#000', 
+                  width: '32px', 
+                  height: '32px', 
+                  borderRadius: '50%', 
+                  display: 'flex', 
+                  alignItems: 'center', 
+                  justifyContent: 'center', 
+                  fontSize: '1.2rem',
+                  flexShrink: 0
+                }}>⚡</div>
+                <div>
+                  <p style={{ margin: 0, fontWeight: 800, color: 'var(--accent-color)', fontSize: '0.95rem', textTransform: 'uppercase' }}>{t('product_ready_delivery')}</p>
+                  <p style={{ margin: 0, fontSize: '0.85rem', color: 'var(--text-main)', opacity: 0.8 }}>
+                    {t('product_stock_units').replace('{count}', product.inventory[selectedSize])}
+                  </p>
+                </div>
+              </div>
+            )}
 
             {/* Sizes Selection */}
             <div style={{ marginBottom: '2.5rem' }}>

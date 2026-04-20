@@ -264,6 +264,20 @@ const Checkout = () => {
       const { error: orderError } = await supabase.from('orders').insert([orderData]);
       if (orderError) throw orderError;
 
+      // 1.2. Decrementar estoque local (Pronta Entrega)
+      // Fazemos isso em background para não travar o fluxo se houver erro menor
+      cartItems.forEach(async (item) => {
+        try {
+          await supabase.rpc('decrement_product_stock', {
+            product_id_input: item.id,
+            size_input: item.size,
+            quantity_input: item.quantity
+          });
+        } catch (stockErr) {
+          console.warn(`❌ Erro ao atualizar estoque:`, stockErr);
+        }
+      });
+
       // 1.5. Notificar por E-mail
       try {
         await fetch('/api/send-order-email', {
