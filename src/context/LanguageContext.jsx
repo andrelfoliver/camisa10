@@ -237,6 +237,11 @@ export const translations = {
     checkout_wa_items: '*ITENS DO PEDIDO:*',
     checkout_wa_total: '*TOTAL:*',
     checkout_wa_footer: 'Aguardo as instruções para o Interac e-Transfer! 🇨🇦',
+    payment_method_title: 'Forma de Pagamento',
+    coming_soon: 'Em breve',
+    success_subtitle_paid: 'Seu pagamento foi confirmado!',
+    success_message_paid: 'Recebemos seu pedido pago. Você receberá o código de rastreio em breve por e-mail.',
+    success_support_wa_msg_paid: 'Olá! Acabei de fazer um pedido pago via PayPal e gostaria de acompanhar o envio. 😊',
   },
   en: {
     nav_home: 'Home',
@@ -473,6 +478,11 @@ export const translations = {
     checkout_wa_items: '*ORDER ITEMS:*',
     checkout_wa_total: '*TOTAL:*',
     checkout_wa_footer: 'I await the instructions for Interac e-Transfer! 🇨🇦',
+    payment_method_title: 'Payment Method',
+    coming_soon: 'Coming Soon',
+    success_subtitle_paid: 'Your payment has been confirmed!',
+    success_message_paid: 'We received your paid order. You will receive the tracking code shortly via email.',
+    success_support_wa_msg_paid: 'Hi! I just placed a paid order via PayPal and would like to track my shipment. 😊',
   }
 };
 
