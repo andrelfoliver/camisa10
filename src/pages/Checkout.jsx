@@ -13,7 +13,7 @@ const Checkout = () => {
   const { cartItems, cartTotal, subtotal, discount, clearCart, appliedShipping, pricingConfig } = useCart();
   const { user } = useAuth();
   const navigate = useNavigate();
-  
+
   const [formData, setFormData] = useState({
     name: user?.user_metadata?.full_name || '',
     phone: '',
@@ -27,12 +27,12 @@ const Checkout = () => {
   });
 
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [waNumber, setWaNumber] = useState('5584991847739');
+  const [waNumber, setWaNumber] = useState('17788061419');
   const [couponCode, setCouponCode] = useState('');
   const [appliedCoupon, setAppliedCoupon] = useState(null);
   const [isVerifyingCoupon, setIsVerifyingCoupon] = useState(false);
   const [couponError, setCouponError] = useState('');
-  
+
   // Custom Notification State
   const [notification, setNotification] = useState({ show: false, message: '', type: 'error' });
 
@@ -52,10 +52,10 @@ const Checkout = () => {
     const initAutocomplete = async () => {
       try {
         if (!window.google || !window.google.maps || !window.google.maps.importLibrary) return;
-        
+
         // Carrega a biblioteca 'places' dinamicamente
         const { Autocomplete } = await window.google.maps.importLibrary("places");
-        
+
         if (!addressInputRef.current) return;
 
         autocomplete = new Autocomplete(addressInputRef.current, {
@@ -108,7 +108,7 @@ const Checkout = () => {
             .from('profiles')
             .select('*')
             .eq('id', user.id);
-          
+
           if (data && data.length > 0) {
             const profile = data[0];
             setFormData(prev => ({
@@ -166,15 +166,15 @@ const Checkout = () => {
     message += `${formData.street}${formData.apartment ? ', Apt ' + formData.apartment : ''}\n`;
     message += `${formData.city}, ${formData.province}\n`;
     message += `${formData.postalCode}\n\n`;
-    
+
     message += `\n${t('cart_subtotal')}: $${subtotal.toFixed(2)}\n`;
     if (discount > 0) message += `Desconto Qtd: -$${discount.toFixed(2)}\n`;
     if (appliedCoupon) message += `Cupom ${appliedCoupon.code}: -${appliedCoupon.discount_percent}% OFF\n`;
     message += `Frete: ${appliedShipping === 0 ? 'GRÁTIS' : '$' + appliedShipping.toFixed(2)}\n`;
-    
+
     message += `\n${t('checkout_wa_total')} $${finalTotal.toFixed(2)} CAD\n`;
     message += `\n${t('checkout_wa_footer')}`;
-    
+
     return message;
   };
 
@@ -189,7 +189,7 @@ const Checkout = () => {
         .eq('code', couponCode.toUpperCase())
         .eq('is_active', true)
         .single();
-      
+
       if (error || !data) {
         setCouponError('Cupom inválido ou expirado');
         setAppliedCoupon(null);
@@ -206,7 +206,7 @@ const Checkout = () => {
     }
   };
 
-  const finalTotal = appliedCoupon 
+  const finalTotal = appliedCoupon
     ? (subtotal - discount) * (1 - appliedCoupon.discount_percent / 100) + (appliedShipping || 0)
     : cartTotal;
 
@@ -256,7 +256,7 @@ const Checkout = () => {
         const emailRes = await fetch('/api/send-order-email', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ 
+          body: JSON.stringify({
             language,
             order: {
               ...orderData,
@@ -300,7 +300,7 @@ const Checkout = () => {
 
       // 3. Redirecionar para Sucesso e WhatsApp (Ação final)
       handleFinalizeRedirect();
-      
+
     } catch (error) {
       console.error("📛 Erro crítico ao processar pedido:", error);
       // Exibir o erro real para facilitar o diagnóstico caso persista
@@ -314,20 +314,20 @@ const Checkout = () => {
   const handleFinalizeRedirect = () => {
     try {
       const message = generateWhatsAppMessage();
-      
+
       // 1. Tentar abrir o WhatsApp (encapsulado para não travar o fluxo se o browser bloquear)
       const encodedMessage = encodeURIComponent(message);
       const whatsappUrl = `https://wa.me/${String(waNumber).replace(/\D/g, '')}?text=${encodedMessage}`;
-      
+
       try {
         window.open(whatsappUrl, '_blank');
       } catch (e) {
         console.warn("⚠️ Popup do WhatsApp bloqueado pelo navegador.");
       }
-      
+
       // 2. Limpar carrinho
       clearCart();
-      
+
       // 3. Ir para página de sucesso (Isso é o que garante o fim do processo)
       navigate('/sucesso', { state: { orderMessage: message, waNumber } });
     } catch (finalErr) {
@@ -379,7 +379,7 @@ const Checkout = () => {
             </div>
             <h3 style={{ fontSize: '1.5rem', marginBottom: '1rem' }}>{t('checkout_attention')}</h3>
             <p style={{ color: 'var(--text-muted)', fontSize: '1.1rem', lineHeight: 1.6, marginBottom: '2rem' }}>
-               {notification.message}
+              {notification.message}
             </p>
             <button className="btn-primary" style={{ width: '100%', justifyContent: 'center', padding: '1rem' }} onClick={() => setNotification({ ...notification, show: false })}>
               {t('checkout_attention_btn')}
@@ -391,9 +391,9 @@ const Checkout = () => {
       <button onClick={() => navigate(returnPath)} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: 'var(--text-muted)', marginBottom: '2rem' }}>
         <ArrowLeft size={20} /> {t('checkout_back_btn')}
       </button>
-      
+
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '4rem' }}>
-        
+
         {/* Form */}
         <div>
           <h2 style={{ fontSize: '2rem', marginBottom: '2rem', display: 'flex', alignItems: 'center', gap: '0.8rem' }}>
@@ -403,29 +403,29 @@ const Checkout = () => {
             <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
               <div>
                 <label style={{ display: 'block', marginBottom: '0.5rem', color: 'var(--text-muted)' }}>{t('checkout_name')}</label>
-                <input 
-                  type="text" 
-                  value={formData.name} onChange={e => setFormData({...formData, name: e.target.value})}
-                  style={{ width: '100%', padding: '0.75rem', borderRadius: 'var(--radius-sm)', background: 'var(--bg-color)', border: '1px solid var(--border-color)', color: 'var(--text-main)', fontSize: '1rem' }} 
+                <input
+                  type="text"
+                  value={formData.name} onChange={e => setFormData({ ...formData, name: e.target.value })}
+                  style={{ width: '100%', padding: '0.75rem', borderRadius: 'var(--radius-sm)', background: 'var(--bg-color)', border: '1px solid var(--border-color)', color: 'var(--text-main)', fontSize: '1rem' }}
                 />
               </div>
 
               <div className="address-grid-row">
                 <div>
                   <label style={{ display: 'block', marginBottom: '0.5rem', color: 'var(--text-muted)' }}>{t('checkout_street')}</label>
-                  <input 
+                  <input
                     type="text" placeholder="Ex: 123 Bay St"
                     ref={addressInputRef}
-                    value={formData.street} onChange={e => setFormData({...formData, street: e.target.value})}
-                    style={{ width: '100%', padding: '0.75rem', borderRadius: 'var(--radius-sm)', background: 'var(--bg-color)', border: '1px solid var(--border-color)', color: 'var(--text-main)', fontSize: '1rem' }} 
+                    value={formData.street} onChange={e => setFormData({ ...formData, street: e.target.value })}
+                    style={{ width: '100%', padding: '0.75rem', borderRadius: 'var(--radius-sm)', background: 'var(--bg-color)', border: '1px solid var(--border-color)', color: 'var(--text-main)', fontSize: '1rem' }}
                   />
                 </div>
                 <div>
                   <label style={{ display: 'block', marginBottom: '0.5rem', color: 'var(--text-muted)' }}>{t('checkout_apt')}</label>
-                  <input 
+                  <input
                     type="text" placeholder="Ex: 402"
-                    value={formData.apartment} onChange={e => setFormData({...formData, apartment: e.target.value})}
-                    style={{ width: '100%', padding: '0.75rem', borderRadius: 'var(--radius-sm)', background: 'var(--bg-color)', border: '1px solid var(--border-color)', color: 'var(--text-main)', fontSize: '1rem' }} 
+                    value={formData.apartment} onChange={e => setFormData({ ...formData, apartment: e.target.value })}
+                    style={{ width: '100%', padding: '0.75rem', borderRadius: 'var(--radius-sm)', background: 'var(--bg-color)', border: '1px solid var(--border-color)', color: 'var(--text-main)', fontSize: '1rem' }}
                   />
                 </div>
               </div>
@@ -433,16 +433,16 @@ const Checkout = () => {
               <div className="address-grid-triple">
                 <div>
                   <label style={{ display: 'block', marginBottom: '0.5rem', color: 'var(--text-muted)' }}>{t('checkout_city')}</label>
-                  <input 
+                  <input
                     type="text" placeholder="Ex: Toronto"
-                    value={formData.city} onChange={e => setFormData({...formData, city: e.target.value})}
-                    style={{ width: '100%', padding: '0.75rem', borderRadius: 'var(--radius-sm)', background: 'var(--bg-color)', border: '1px solid var(--border-color)', color: 'var(--text-main)', fontSize: '1rem' }} 
+                    value={formData.city} onChange={e => setFormData({ ...formData, city: e.target.value })}
+                    style={{ width: '100%', padding: '0.75rem', borderRadius: 'var(--radius-sm)', background: 'var(--bg-color)', border: '1px solid var(--border-color)', color: 'var(--text-main)', fontSize: '1rem' }}
                   />
                 </div>
                 <div>
                   <label style={{ display: 'block', marginBottom: '0.5rem', color: 'var(--text-muted)' }}>{t('checkout_province')}</label>
-                  <select 
-                    value={formData.province} onChange={e => setFormData({...formData, province: e.target.value})}
+                  <select
+                    value={formData.province} onChange={e => setFormData({ ...formData, province: e.target.value })}
                     style={{ width: '100%', padding: '0.75rem', borderRadius: 'var(--radius-sm)', background: 'var(--bg-color)', border: '1px solid var(--border-color)', color: 'var(--text-main)', fontSize: '1rem' }}
                   >
                     <option value="">{t('checkout_select_province')}</option>
@@ -460,24 +460,24 @@ const Checkout = () => {
                 </div>
                 <div>
                   <label style={{ display: 'block', marginBottom: '0.5rem', color: 'var(--text-muted)' }}>{t('checkout_postal')}</label>
-                  <input 
+                  <input
                     type="text" placeholder="M5H 2N2"
-                    value={formData.postalCode} onChange={e => setFormData({...formData, postalCode: e.target.value.toUpperCase()})}
-                    style={{ width: '100%', padding: '0.75rem', borderRadius: 'var(--radius-sm)', background: 'var(--bg-color)', border: '1px solid var(--border-color)', color: 'var(--text-main)', fontSize: '1rem' }} 
+                    value={formData.postalCode} onChange={e => setFormData({ ...formData, postalCode: e.target.value.toUpperCase() })}
+                    style={{ width: '100%', padding: '0.75rem', borderRadius: 'var(--radius-sm)', background: 'var(--bg-color)', border: '1px solid var(--border-color)', color: 'var(--text-main)', fontSize: '1rem' }}
                   />
                 </div>
               </div>
 
               <div>
                 <label style={{ display: 'block', marginBottom: '0.5rem', color: 'var(--text-muted)' }}>{t('checkout_social')}</label>
-                <input 
+                <input
                   type="text" placeholder={t('checkout_social_placeholder')}
-                  value={formData.instagram} onChange={e => setFormData({...formData, instagram: e.target.value})}
-                  style={{ width: '100%', padding: '0.75rem', borderRadius: 'var(--radius-sm)', background: 'var(--bg-color)', border: '1px solid var(--border-color)', color: 'var(--text-main)', fontSize: '1rem' }} 
+                  value={formData.instagram} onChange={e => setFormData({ ...formData, instagram: e.target.value })}
+                  style={{ width: '100%', padding: '0.75rem', borderRadius: 'var(--radius-sm)', background: 'var(--bg-color)', border: '1px solid var(--border-color)', color: 'var(--text-main)', fontSize: '1rem' }}
                 />
               </div>
 
-              <div style={{ display: 'flex', alignItems: 'center', gap: '0.8rem', marginTop: '1rem', cursor: 'pointer' }} onClick={() => setFormData({...formData, saveAddress: !formData.saveAddress})}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.8rem', marginTop: '1rem', cursor: 'pointer' }} onClick={() => setFormData({ ...formData, saveAddress: !formData.saveAddress })}>
                 <div style={{ width: '24px', height: '24px', borderRadius: '6px', border: '2px solid var(--accent-color)', background: formData.saveAddress ? 'var(--accent-color)' : 'transparent', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'all 0.2s' }}>
                   {formData.saveAddress && <Save size={14} color="#000" />}
                 </div>
@@ -501,59 +501,59 @@ const Checkout = () => {
             </div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '0.8rem', borderBottom: '1px solid var(--border-color)', paddingBottom: '1.5rem', marginBottom: '1.5rem' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', color: 'var(--text-main)' }}>
-                 <span>{t('cart_subtotal')}</span>
-                 <span>${subtotal.toFixed(2)}</span>
+                <span>{t('cart_subtotal')}</span>
+                <span>${subtotal.toFixed(2)}</span>
               </div>
-              
+
               {/* CAMPO DE CUPOM */}
               <div style={{ marginTop: '0.5rem' }}>
-                 <div style={{ display: 'flex', gap: '0.5rem' }}>
-                    <input 
-                      type="text" 
-                      placeholder="Cupom de Desconto"
-                      value={couponCode}
-                      onChange={e => setCouponCode(e.target.value.toUpperCase())}
-                      disabled={appliedCoupon}
-                      style={{ flex: 1, padding: '0.6rem', borderRadius: 'var(--radius-sm)', background: 'rgba(255,255,255,0.05)', border: '1px solid var(--border-color)', color: '#fff', fontSize: '0.9rem' }}
-                    />
-                    {!appliedCoupon ? (
-                      <button 
-                        onClick={handleApplyCoupon}
-                        disabled={isVerifyingCoupon || !couponCode}
-                        style={{ padding: '0 1rem', borderRadius: 'var(--radius-sm)', background: 'var(--surface-hover)', color: 'var(--accent-color)', border: '1px solid var(--border-color)', fontSize: '0.85rem', fontWeight: 700, cursor: 'pointer' }}
-                      >
-                        {isVerifyingCoupon ? '...' : 'Aplicar'}
-                      </button>
-                    ) : (
-                      <button 
-                        onClick={() => { setAppliedCoupon(null); setCouponCode(''); }}
-                        style={{ padding: '0 1rem', borderRadius: 'var(--radius-sm)', background: 'rgba(239, 68, 68, 0.1)', color: '#EF4444', border: '1px solid rgba(239, 68, 68, 0.2)', fontSize: '0.85rem' }}
-                      >
-                        Remover
-                      </button>
-                    )}
-                 </div>
-                 {couponError && <p style={{ color: '#EF4444', fontSize: '0.75rem', marginTop: '0.4rem' }}>{couponError}</p>}
-                 {appliedCoupon && <p style={{ color: '#10B981', fontSize: '0.75rem', marginTop: '0.4rem' }}>Cupom <strong>{appliedCoupon.code}</strong> aplicado! ({appliedCoupon.discount_percent}% OFF)</p>}
+                <div style={{ display: 'flex', gap: '0.5rem' }}>
+                  <input
+                    type="text"
+                    placeholder="Cupom de Desconto"
+                    value={couponCode}
+                    onChange={e => setCouponCode(e.target.value.toUpperCase())}
+                    disabled={appliedCoupon}
+                    style={{ flex: 1, padding: '0.6rem', borderRadius: 'var(--radius-sm)', background: 'rgba(255,255,255,0.05)', border: '1px solid var(--border-color)', color: '#fff', fontSize: '0.9rem' }}
+                  />
+                  {!appliedCoupon ? (
+                    <button
+                      onClick={handleApplyCoupon}
+                      disabled={isVerifyingCoupon || !couponCode}
+                      style={{ padding: '0 1rem', borderRadius: 'var(--radius-sm)', background: 'var(--surface-hover)', color: 'var(--accent-color)', border: '1px solid var(--border-color)', fontSize: '0.85rem', fontWeight: 700, cursor: 'pointer' }}
+                    >
+                      {isVerifyingCoupon ? '...' : 'Aplicar'}
+                    </button>
+                  ) : (
+                    <button
+                      onClick={() => { setAppliedCoupon(null); setCouponCode(''); }}
+                      style={{ padding: '0 1rem', borderRadius: 'var(--radius-sm)', background: 'rgba(239, 68, 68, 0.1)', color: '#EF4444', border: '1px solid rgba(239, 68, 68, 0.2)', fontSize: '0.85rem' }}
+                    >
+                      Remover
+                    </button>
+                  )}
+                </div>
+                {couponError && <p style={{ color: '#EF4444', fontSize: '0.75rem', marginTop: '0.4rem' }}>{couponError}</p>}
+                {appliedCoupon && <p style={{ color: '#10B981', fontSize: '0.75rem', marginTop: '0.4rem' }}>Cupom <strong>{appliedCoupon.code}</strong> aplicado! ({appliedCoupon.discount_percent}% OFF)</p>}
               </div>
 
               {discount > 0 && (
                 <div style={{ display: 'flex', justifyContent: 'space-between', color: '#10B981', fontWeight: 600 }}>
-                   <span>{t('checkout_discount')}</span>
-                   <span>- ${discount.toFixed(2)}</span>
+                  <span>{t('checkout_discount')}</span>
+                  <span>- ${discount.toFixed(2)}</span>
                 </div>
               )}
-              
+
               {appliedCoupon && (
                 <div style={{ display: 'flex', justifyContent: 'space-between', color: '#10B981', fontWeight: 600 }}>
-                   <span>Desconto do Cupom</span>
-                   <span>- ${(cartTotal - finalTotal).toFixed(2)}</span>
+                  <span>Desconto do Cupom</span>
+                  <span>- ${(cartTotal - finalTotal).toFixed(2)}</span>
                 </div>
               )}
 
               <div style={{ display: 'flex', justifyContent: 'space-between', color: appliedShipping === 0 && pricingConfig.shippingCost > 0 ? '#10B981' : 'var(--text-main)', fontWeight: appliedShipping === 0 && pricingConfig.shippingCost > 0 ? 600 : 400 }}>
-                 <span>Frete / Shipping</span>
-                 <span>{appliedShipping === 0 && pricingConfig.shippingCost > 0 ? 'GRÁTIS' : `$${appliedShipping.toFixed(2)}`}</span>
+                <span>Frete / Shipping</span>
+                <span>{appliedShipping === 0 && pricingConfig.shippingCost > 0 ? 'GRÁTIS' : `$${appliedShipping.toFixed(2)}`}</span>
               </div>
             </div>
             <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '1.25rem', fontWeight: 'bold', marginBottom: '2rem' }}>
@@ -561,8 +561,8 @@ const Checkout = () => {
               <span style={{ color: 'var(--accent-color)' }}>${finalTotal.toFixed(2)}</span>
             </div>
 
-            <button 
-              className="btn-primary" 
+            <button
+              className="btn-primary"
               style={{ width: '100%', justifyContent: 'center', background: isSubmitting ? 'var(--border-color)' : '#25D366', color: '#fff', fontSize: '1.1rem', opacity: isSubmitting ? 0.7 : 1 }}
               onClick={handleSubmitOrder}
               disabled={isSubmitting}

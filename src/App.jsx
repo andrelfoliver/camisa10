@@ -33,13 +33,13 @@ const AppLayout = () => {
   const { pathname } = useLocation();
   const isAdminPage = pathname.startsWith('/admin');
   const isBlacklisted = ['/checkout', '/auth', '/admin', '/perfil', '/sucesso'].some(p => pathname.startsWith(p));
-  const [waNumber, setWaNumber] = useState('5584991847739');
+  const [waNumber, setWaNumber] = useState('17788061419');
 
   useEffect(() => {
     // Lista de caminhos que representam "navegação de compras" (listas de produtos)
     const shoppingPaths = ['/', '/busca'];
     const isCategoryPath = pathname.startsWith('/colecao/');
-    
+
     // Impedir que telas de processo ou admin sejam salvas como "último local de compra"
     const blacklist = ['/checkout', '/auth', '/admin', '/perfil', '/sucesso'];
     const isBlacklisted = blacklist.some(p => pathname.startsWith(p));
@@ -90,24 +90,24 @@ const AppLayout = () => {
         </Routes>
       </main>
       {!isAdminPage && <Footer />}
-      
+
       {/* Floating WhatsApp */}
-      <a 
-        href={`https://wa.me/${waNumber.replace(/\D/g, '')}`} 
-        target="_blank" 
+      <a
+        href={`https://wa.me/${waNumber.replace(/\D/g, '')}`}
+        target="_blank"
         rel="noopener noreferrer"
         className="whatsapp-float"
         title="Fale Conosco"
       >
         <WhatsAppIcon size={32} />
       </a>
-      
+
       {/* 
         Sales Popup Widget
         Only display on storefront pages, hide on Admin to reduce noise. 
       */}
       {!isAdminPage && <SalesPopup />}
-      
+
       {/* Exit Intent Feedback Popup - Disabled on process pages to avoid blocking navigation */}
       {!isAdminPage && !isBlacklisted && <ExitIntentPopup />}
     </div>
@@ -122,7 +122,7 @@ function App() {
       <AuthProvider>
         <CartProvider>
           <BrowserRouter>
-            <ScrollToTop/>
+            <ScrollToTop />
             <AppLayout />
           </BrowserRouter>
         </CartProvider>

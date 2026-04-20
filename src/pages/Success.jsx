@@ -17,32 +17,32 @@ const Success = () => {
   }, [clearCart]);
 
   const handleContactSupport = () => {
-    const number = (waNumber || '5584991847739').replace(/\D/g, '');
+    const number = (waNumber || '17788061419').replace(/\D/g, '');
     const message = encodeURIComponent(t('success_support_wa_msg') || 'Olá! Gostaria de tirar dúvidas sobre meu pedido.');
     window.open(`https://wa.me/${number}?text=${message}`, '_blank');
   };
 
   return (
-    <div className="container" style={{ 
-      minHeight: '80vh', 
-      display: 'flex', 
-      alignItems: 'center', 
-      justifyContent: 'center', 
-      padding: '4rem 1.5rem' 
+    <div className="container" style={{
+      minHeight: '80vh',
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      padding: '4rem 1.5rem'
     }}>
-      <div className="glass-panel animate-fade-in" style={{ 
-        maxWidth: '600px', 
-        width: '100%', 
-        padding: '3.5rem 2rem', 
+      <div className="glass-panel animate-fade-in" style={{
+        maxWidth: '600px',
+        width: '100%',
+        padding: '3.5rem 2rem',
         textAlign: 'center',
         borderRadius: 'var(--radius-lg)',
         border: '1px solid var(--accent-color)',
         boxShadow: '0 20px 50px rgba(0,0,0,0.3)'
       }}>
         <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '2rem' }}>
-          <div style={{ 
-            background: 'rgba(204, 255, 0, 0.1)', 
-            padding: '1.5rem', 
+          <div style={{
+            background: 'rgba(204, 255, 0, 0.1)',
+            padding: '1.5rem',
             borderRadius: '50%',
             animation: 'pulse 2s infinite'
           }}>
@@ -53,15 +53,15 @@ const Success = () => {
         <h1 style={{ fontSize: '2.5rem', fontWeight: 900, fontStyle: 'italic', marginBottom: '1rem', color: '#fff' }}>
           {t('success_title')}
         </h1>
-        
+
         <p style={{ fontSize: '1.2rem', color: 'var(--accent-color)', fontWeight: 600, marginBottom: '1.5rem' }}>
           {t('success_subtitle')}
         </p>
 
-        <div style={{ 
-          background: 'rgba(255,255,255,0.03)', 
-          padding: '1.5rem', 
-          borderRadius: '12px', 
+        <div style={{
+          background: 'rgba(255,255,255,0.03)',
+          padding: '1.5rem',
+          borderRadius: '12px',
           marginBottom: '2.5rem',
           border: '1px solid rgba(255,255,255,0.05)'
         }}>
@@ -73,13 +73,13 @@ const Success = () => {
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
           <div style={{ borderTop: '1px solid var(--border-color)', paddingTop: '2rem' }}>
-            <button 
+            <button
               onClick={handleContactSupport}
-              className="btn-primary" 
-              style={{ 
-                width: '100%', 
-                justifyContent: 'center', 
-                background: '#25D366', 
+              className="btn-primary"
+              style={{
+                width: '100%',
+                justifyContent: 'center',
+                background: '#25D366',
                 color: '#fff',
                 padding: '1.2rem',
                 fontSize: '1.1rem'
@@ -90,11 +90,11 @@ const Success = () => {
             </button>
           </div>
 
-          <a 
+          <a
             href="/"
-            className="btn-secondary" 
-            style={{ 
-              width: '100%', 
+            className="btn-secondary"
+            style={{
+              width: '100%',
               justifyContent: 'center',
               padding: '1rem',
               textDecoration: 'none',
