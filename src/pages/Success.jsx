@@ -9,7 +9,7 @@ const Success = () => {
   const { clearCart } = useCart();
   const location = useLocation();
   const navigate = useNavigate();
-  const { waNumber } = location.state || {};
+  const { waNumber, paid } = location.state || {};
 
   // Limpa o carrinho definitivamente ao chegar na página de sucesso
   React.useEffect(() => {
@@ -18,7 +18,7 @@ const Success = () => {
 
   const handleContactSupport = () => {
     const number = (waNumber || '17788061419').replace(/\D/g, '');
-    const message = encodeURIComponent(t('success_support_wa_msg') || 'Olá! Gostaria de tirar dúvidas sobre meu pedido.');
+    const message = encodeURIComponent(paid ? (t('success_support_wa_msg_paid') || 'Olá! Recebi meu pedido pago e gostaria de acompanhar o envio.') : (t('success_support_wa_msg') || 'Olá! Gostaria de tirar dúvidas sobre meu pedido.'));
     window.open(`https://wa.me/${number}?text=${message}`, '_blank');
   };
 
@@ -55,7 +55,7 @@ const Success = () => {
         </h1>
 
         <p style={{ fontSize: '1.2rem', color: 'var(--accent-color)', fontWeight: 600, marginBottom: '1.5rem' }}>
-          {t('success_subtitle')}
+          {paid ? (t('success_subtitle_paid') || 'Seu pagamento foi confirmado com sucesso!') : t('success_subtitle')}
         </p>
 
         <div style={{
@@ -67,7 +67,7 @@ const Success = () => {
         }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '10px', justifyContent: 'center', color: 'var(--text-muted)' }}>
             <Mail size={18} />
-            <p style={{ margin: 0 }}>{t('success_message')}</p>
+            <p style={{ margin: 0 }}>{paid ? (t('success_message_paid') || 'Você receberá os detalhes da confirmação no seu e-mail.') : t('success_message')}</p>
           </div>
         </div>
 

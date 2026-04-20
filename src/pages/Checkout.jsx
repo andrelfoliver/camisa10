@@ -3,7 +3,9 @@ import { useCart } from '../context/CartContext';
 import { useAuth } from '../context/AuthContext';
 import { ArrowLeft, LogIn, MapPin, Truck, Save, AlertCircle, X } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import { useRef } from 'react';
+import { useRef, useMemo } from 'react';
+import { PayPalScriptProvider, PayPalButtons } from "@paypal/react-paypal-js";
+import { CreditCard, MessageSquare } from 'lucide-react';
 import WhatsAppIcon from '../components/WhatsAppIcon';
 import { supabase } from '../services/supabase';
 import { useLanguage } from '../context/LanguageContext';
@@ -32,6 +34,7 @@ const Checkout = () => {
   const [appliedCoupon, setAppliedCoupon] = useState(null);
   const [isVerifyingCoupon, setIsVerifyingCoupon] = useState(false);
   const [couponError, setCouponError] = useState('');
+  const [paymentMethod, setPaymentMethod] = useState('whatsapp'); // 'whatsapp' | 'paypal'
 
   // Custom Notification State
   const [notification, setNotification] = useState({ show: false, message: '', type: 'error' });
@@ -210,14 +213,21 @@ const Checkout = () => {
     ? (subtotal - discount) * (1 - appliedCoupon.discount_percent / 100) + (appliedShipping || 0)
     : cartTotal;
 
-  const handleSubmitOrder = async () => {
+  // Memoize PayPal options to avoid re-rendering
+  const initialPayPalOptions = useMemo(() => ({
+    "client-id": import.meta.env.VITE_PAYPAL_CLIENT_ID,
+    currency: "CAD",
+    intent: "capture",
+  }), []);
+  const validateForm = () => {
     if (!formData.street || !formData.city || !formData.province || !formData.postalCode) {
       showPopup(t('checkout_validation_error'));
-      return;
+      return false;
     }
+    return true;
+  };
 
-    setIsSubmitting(true);
-
+  const saveOrderToDatabase = async (paymentDetails = null) => {
     try {
       // 1. Salvar o Pedido no Banco
       const orderData = {
@@ -242,7 +252,10 @@ const Checkout = () => {
           extras: item.extras || {}
         })),
         total_price: finalTotal,
-        status: 'pending',
+        status: paymentDetails ? 'paid' : 'pending',
+        payment_method: paymentDetails ? 'paypal' : 'whatsapp',
+        payment_id: paymentDetails?.id || null,
+        paid_at: paymentDetails ? new Date().toISOString() : null,
         referrer: localStorage.getItem('ifooty_referrer') || null,
         coupon_code: appliedCoupon?.code || null,
         coupon_discount: appliedCoupon ? (cartTotal - finalTotal) : 0
@@ -251,9 +264,9 @@ const Checkout = () => {
       const { error: orderError } = await supabase.from('orders').insert([orderData]);
       if (orderError) throw orderError;
 
-      // 1.5. Notificar por E-mail (aguarda o envio antes de redirecionar)
+      // 1.5. Notificar por E-mail
       try {
-        const emailRes = await fetch('/api/send-order-email', {
+        await fetch('/api/send-order-email', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
@@ -263,27 +276,15 @@ const Checkout = () => {
               customer_name: formData.name,
               customer_email: user.email,
               customer_phone: formData.phone,
-              shipping_address: {
-                street: formData.street,
-                apartment: formData.apartment,
-                city: formData.city,
-                province: formData.province,
-                postalCode: formData.postalCode
-              }
+              shipping_address: orderData.shipping_address
             }
           })
         });
-        const emailData = await emailRes.json();
-        if (!emailRes.ok || emailData.errors) {
-          console.warn('⚠️ Email enviado com erro:', emailData);
-        } else {
-          console.log('✅ Emails disparados com sucesso:', emailData);
-        }
       } catch (err) {
         console.error("Erro ao disparar notificação de e-mail:", err);
       }
 
-      // 2. Atualizar o Perfil se solicitado (isolado para não travar o sucesso do pedido)
+      // 2. Atualizar o Perfil se solicitado
       if (formData.saveAddress) {
         try {
           await supabase.from('profiles').update({
@@ -294,17 +295,26 @@ const Checkout = () => {
             postal_code: formData.postalCode
           }).eq('id', user.id);
         } catch (profileErr) {
-          console.warn("⚠️ Não foi possível salvar o endereço no perfil, mas o pedido segue:", profileErr);
+          console.warn("⚠️ Perfil não atualizado:", profileErr);
         }
       }
 
-      // 3. Redirecionar para Sucesso e WhatsApp (Ação final)
-      handleFinalizeRedirect();
-
+      return orderData;
     } catch (error) {
-      console.error("📛 Erro crítico ao processar pedido:", error);
-      // Exibir o erro real para facilitar o diagnóstico caso persista
-      showPopup(`Houve um erro técnico: ${error.message || 'Erro desconhecido'}. Por favor, verifique se o pedido chegou no seu e-mail ou fale conosco.`);
+      console.error("Error saving order:", error);
+      throw error;
+    }
+  };
+
+  const handleSubmitOrder = async () => {
+    if (!validateForm()) return;
+
+    setIsSubmitting(true);
+    try {
+      const orderData = await saveOrderToDatabase();
+      handleFinalizeRedirect();
+    } catch (error) {
+      showPopup(`Houve um erro: ${error.message}`);
     } finally {
       setIsSubmitting(false);
     }
@@ -367,7 +377,8 @@ const Checkout = () => {
   }
 
   return (
-    <div className="checkout-container" style={{ padding: '2rem 1rem' }}>
+    <PayPalScriptProvider options={initialPayPalOptions}>
+      <div className="checkout-container" style={{ padding: '2rem 1rem' }}>
       {/* Premium Notification Modal */}
       {notification.show && (
         <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.85)', backdropFilter: 'blur(10px)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 9999, padding: '1.5rem' }}>
@@ -561,15 +572,99 @@ const Checkout = () => {
               <span style={{ color: 'var(--accent-color)' }}>${finalTotal.toFixed(2)}</span>
             </div>
 
-            <button
-              className="btn-primary"
-              style={{ width: '100%', justifyContent: 'center', background: isSubmitting ? 'var(--border-color)' : '#25D366', color: '#fff', fontSize: '1.1rem', opacity: isSubmitting ? 0.7 : 1 }}
-              onClick={handleSubmitOrder}
-              disabled={isSubmitting}
-            >
-              <WhatsAppIcon size={24} />
-              {isSubmitting ? t('checkout_processing') : t('checkout_confirm_btn')}
-            </button>
+            {/* PAYMENT METHOD SELECTION */}
+            <div style={{ marginBottom: '2rem' }}>
+              <label style={{ display: 'block', marginBottom: '1rem', color: 'var(--text-muted)', fontSize: '0.9rem', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '1px' }}>
+                {t('payment_method_title') || 'Forma de Pagamento'}
+              </label>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+                <button
+                  onClick={() => setPaymentMethod('whatsapp')}
+                  style={{
+                    display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.8rem', padding: '1.2rem',
+                    borderRadius: 'var(--radius-md)', background: paymentMethod === 'whatsapp' ? 'rgba(37, 211, 102, 0.1)' : 'rgba(255,255,255,0.03)',
+                    border: `1px solid ${paymentMethod === 'whatsapp' ? '#25D366' : 'var(--border-color)'}`,
+                    transition: 'all 0.3s ease', cursor: 'pointer'
+                  }}
+                >
+                  <MessageSquare size={24} color={paymentMethod === 'whatsapp' ? '#25D366' : 'var(--text-muted)'} />
+                  <span style={{ fontSize: '0.9rem', fontWeight: 600, color: paymentMethod === 'whatsapp' ? '#fff' : 'var(--text-muted)' }}>WhatsApp</span>
+                </button>
+                <button
+                  onClick={() => setPaymentMethod('paypal')}
+                  style={{
+                    display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.8rem', padding: '1.2rem',
+                    borderRadius: 'var(--radius-md)', background: paymentMethod === 'paypal' ? 'rgba(0, 112, 186, 0.1)' : 'rgba(255,255,255,0.03)',
+                    border: `2px solid ${paymentMethod === 'paypal' ? '#0070ba' : 'var(--border-color)'}`,
+                    transition: 'all 0.3s ease', cursor: 'pointer'
+                  }}
+                >
+                  <CreditCard size={24} color={paymentMethod === 'paypal' ? '#0070ba' : 'var(--text-muted)'} />
+                  <span style={{ fontSize: '0.9rem', fontWeight: 600, color: paymentMethod === 'paypal' ? '#fff' : 'var(--text-muted)' }}>PayPal / Card</span>
+                </button>
+              </div>
+            </div>
+
+            {paymentMethod === 'whatsapp' ? (
+              <button
+                className="btn-primary"
+                style={{ width: '100%', justifyContent: 'center', background: isSubmitting ? 'var(--border-color)' : '#25D366', color: '#fff', fontSize: '1.1rem', opacity: isSubmitting ? 0.7 : 1 }}
+                onClick={handleSubmitOrder}
+                disabled={isSubmitting}
+              >
+                <WhatsAppIcon size={24} />
+                {isSubmitting ? t('checkout_processing') : t('checkout_confirm_btn')}
+              </button>
+            ) : (
+              <div style={{ position: 'relative', zIndex: 1 }}>
+                <PayPalButtons
+                  style={{ layout: "vertical", shape: "rect", label: "pay" }}
+                  createOrder={(data, actions) => {
+                    if (!validateForm()) {
+                      return actions.reject();
+                    }
+                    return actions.order.create({
+                      purchase_units: [{
+                        amount: {
+                          currency_code: "CAD",
+                          value: finalTotal.toFixed(2),
+                          breakdown: {
+                            item_total: {
+                              currency_code: "CAD",
+                              value: (subtotal - discount - (appliedCoupon ? (subtotal - discount) * (appliedCoupon.discount_percent / 100) : 0)).toFixed(2)
+                            },
+                            shipping: {
+                              currency_code: "CAD",
+                              value: appliedShipping.toFixed(2)
+                            }
+                          }
+                        },
+                        items: cartItems.map(item => ({
+                          name: `${item.name} (${item.size})`,
+                          quantity: item.quantity.toString(),
+                          unit_amount: {
+                            currency_code: "CAD",
+                            value: item.price.toFixed(2)
+                          }
+                        }))
+                      }]
+                    });
+                  }}
+                  onApprove={async (data, actions) => {
+                    const details = await actions.order.capture();
+                    setIsSubmitting(true);
+                    try {
+                      await saveOrderToDatabase(details);
+                      navigate('/sucesso', { state: { paid: true } });
+                    } catch (err) {
+                      showPopup("Erro ao salvar pedido pago. Por favor, fale conosco no WhatsApp.");
+                    } finally {
+                      setIsSubmitting(false);
+                    }
+                  }}
+                />
+              </div>
+            )}
             <p style={{ textAlign: 'center', marginTop: '1rem', fontSize: '0.85rem', color: 'var(--text-muted)' }}>
               {t('checkout_summary_footer_note')}
             </p>
@@ -609,6 +704,7 @@ const Checkout = () => {
         }
       `}</style>
     </div>
+    </PayPalScriptProvider>
   );
 };
 
