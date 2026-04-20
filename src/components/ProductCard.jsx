@@ -37,7 +37,7 @@ const ProductCard = ({ product }) => {
       flexDirection: 'column',
       gap: '1rem'
     }}>
-      {/* Badges Container - Evita a sobreposição fixando uma coluna no topo esquerdo */}
+      {/* Badge Container - Marketing (Top Left) */}
       <div style={{ 
         position: 'absolute', 
         top: '1rem', 
@@ -49,24 +49,6 @@ const ProductCard = ({ product }) => {
         zIndex: 20,
         pointerEvents: 'none' 
       }}>
-        {hasLocalStock && (
-          <div className="badge ripple" style={{ 
-            position: 'relative', 
-            top: 0, 
-            left: 0, 
-            background: 'var(--accent-color)', 
-            color: '#000', 
-            fontWeight: 900,
-            fontSize: '0.7rem',
-            padding: '0.3rem 0.6rem',
-            display: 'flex',
-            alignItems: 'center',
-            gap: '0.2rem',
-            boxShadow: '0 0 15px rgba(204, 255, 0, 0.4)'
-          }}>
-            ⚡ {language === 'pt' ? 'PRONTA ENTREGA' : 'IN STOCK'}
-          </div>
-        )}
         {product.is_bestseller && (
           <div className="badge" style={{ position: 'relative', top: 0, left: 0, background: '#EF4444', color: '#fff', boxShadow: '0 0 15px rgba(239, 68, 68, 0.4)', border: '1px solid rgba(255,255,255,0.2)' }}>
             {t('section_best_seller')}
@@ -98,6 +80,28 @@ const ProductCard = ({ product }) => {
           style={{ maxHeight: '100%', maxWidth: '100%', objectFit: 'contain', filter: 'drop-shadow(0 5px 10px rgba(0,0,0,0.4))' }} 
           onError={() => setImageError(true)}
         />
+        {hasLocalStock && (
+          <div 
+            className="pulse-soft"
+            style={{ 
+              position: 'absolute', 
+              bottom: '8px', 
+              left: '8px', 
+              background: 'var(--accent-color)', 
+              color: '#000', 
+              fontSize: '0.65rem', 
+              fontWeight: 900, 
+              padding: '2px 6px', 
+              borderRadius: '4px',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '2px',
+              zIndex: 30
+            }}
+          >
+            ⚡ {language === 'pt' ? 'PRONTA ENTREGA' : 'IN STOCK'}
+          </div>
+        )}
         {imageError && (
           <div style={{ position: 'absolute', top: '10px', left: '10px', right: '10px', background: 'rgba(239, 68, 68, 0.9)', color: '#fff', fontSize: '0.65rem', padding: '0.4rem', borderRadius: '4px', textAlign: 'center', fontWeight: 800, zIndex: 10 }}>
             {language === 'pt' ? '🖼️ LINK DA IMAGEM QUEBRADO' : '🖼️ BROKEN IMAGE LINK'}

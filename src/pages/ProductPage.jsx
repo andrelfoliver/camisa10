@@ -212,17 +212,19 @@ const ProductPage = () => {
             
             {/* Stock Badge - Pronta Entrega */}
             {product.inventory?.[selectedSize] > 0 && (
-              <div style={{ 
-                background: 'rgba(204, 255, 0, 0.05)', 
-                border: '1px solid rgba(204, 255, 0, 0.3)', 
-                borderRadius: '8px', 
-                padding: '1rem', 
-                marginBottom: '1.5rem', 
-                display: 'flex', 
-                alignItems: 'center', 
-                gap: '1rem',
-                animation: 'pulse 2s infinite'
-              }}>
+              <div 
+                className="pulse-soft"
+                style={{ 
+                  background: 'rgba(204, 255, 0, 0.05)', 
+                  border: '1px solid rgba(204, 255, 0, 0.3)', 
+                  borderRadius: '8px', 
+                  padding: '1rem', 
+                  marginBottom: '1.5rem', 
+                  display: 'flex', 
+                  alignItems: 'center', 
+                  gap: '1rem'
+                }}
+              >
                 <div style={{ 
                   background: 'var(--accent-color)', 
                   color: '#000', 
