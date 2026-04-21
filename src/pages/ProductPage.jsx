@@ -9,6 +9,7 @@ import {
   ShieldCheck, Truck, Star, CheckCircle2, ChevronDown, ChevronUp, Quote
 } from 'lucide-react';
 import SizeGuideModal from '../components/SizeGuideModal';
+import ProductMedia from '../components/ProductMedia';
 
 const FAQItem = ({ question, answer }) => {
   const [isOpen, setIsOpen] = useState(false);
@@ -129,7 +130,7 @@ const ProductPage = () => {
           <div className="gallery-layout" style={{ position: 'relative' }}>
             <div className="gallery-thumbs desktop-only">
               {product.gallery?.map((img, i) => (
-                <img
+                <ProductMedia
                   key={i}
                   src={img}
                   alt={`Gallery ${i}`}
@@ -156,7 +157,7 @@ const ProductPage = () => {
                 }}
               >
                 {product.gallery?.map((img, i) => (
-                  <img key={i} src={img} alt="" />
+                  <ProductMedia key={i} src={img} alt="" />
                 ))}
               </div>
               
@@ -167,7 +168,7 @@ const ProductPage = () => {
               </div>
 
               <div className="desktop-only" style={{ background: 'var(--surface-color)', border: '1px solid var(--border-color)', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', padding: '1rem' }}>
-                <img 
+                <ProductMedia 
                   src={activeImage} 
                   alt={product.name} 
                   style={{ width: '100%', maxHeight: '600px', objectFit: 'contain' }} 

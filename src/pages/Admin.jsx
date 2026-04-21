@@ -5,6 +5,7 @@ import { Save, Check, Crown, Heart, Database, HardDrive, Star, LogOut, Package, 
 import { migrateProductsToSupabase } from '../services/migration';
 import { migrateTeamsToSupabase } from '../services/migration_teams';
 import WhatsAppIcon from '../components/WhatsAppIcon';
+import ProductMedia from '../components/ProductMedia';
 import { Link, Navigate } from 'react-router-dom';
 
 const Admin = () => {
@@ -2431,7 +2432,7 @@ const Admin = () => {
                       {isBestSeller && <div style={{ position: 'absolute', top: '-10px', right: '-10px', background: '#FFB81C', color: '#000', padding: '0.3rem', borderRadius: '50%', zIndex: 10 }}><Crown size={16} /></div>}
 
                       <div style={{ padding: '1rem', background: 'rgba(255,255,255,0.02)', borderRadius: 'var(--radius-sm)', marginBottom: '1.2rem', height: '180px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                        <img src={product.image} alt={product.name} style={{ maxWidth: '100%', maxHeight: '100%', objectFit: 'contain', filter: 'drop-shadow(0 5px 10px rgba(0,0,0,0.3))' }} />
+                        <ProductMedia src={product.image} alt={product.name} style={{ maxWidth: '100%', maxHeight: '100%', objectFit: 'contain', filter: 'drop-shadow(0 5px 10px rgba(0,0,0,0.3))' }} />
                       </div>
                       <h4 style={{ fontSize: '0.95rem', marginBottom: '0.5rem', lineHeight: 1.3, height: '40px', overflow: 'hidden', color: '#fff' }}>{product.name}</h4>
                       <div style={{ display: 'flex', justifyContent: 'space-between', color: 'var(--text-muted)', fontSize: '0.8rem', marginBottom: '1.5rem', alignItems: 'center' }}>
@@ -2710,7 +2711,7 @@ const Admin = () => {
                   onDrop={(e) => {
                     e.preventDefault();
                     const file = e.dataTransfer.files[0];
-                    if (file && file.type.startsWith('image/')) {
+                    if (file && (file.type.startsWith('image/') || file.type === 'video/mp4')) {
                       setImageFile(file);
                       setImagePreview(URL.createObjectURL(file));
                       setNewProduct({ ...newProduct, image: '' });
@@ -2720,7 +2721,7 @@ const Admin = () => {
                   <input
                     id="image-upload-new"
                     type="file"
-                    accept="image/*"
+                    accept="image/*,video/mp4"
                     style={{ display: 'none' }}
                     onChange={(e) => {
                       const file = e.target.files[0];
@@ -2733,15 +2734,18 @@ const Admin = () => {
                   />
                   {imagePreview ? (
                     <div style={{ width: '100%', textAlign: 'center' }}>
-                      <img src={imagePreview} alt="Preview" style={{ maxHeight: '180px', maxWidth: '100%', objectFit: 'contain', borderRadius: '8px' }} />
-                      <p style={{ marginTop: '0.5rem', fontSize: '0.75rem', color: 'var(--accent-color)', fontWeight: 700 }}>✅ Imagem pronta para upload</p>
+                      <ProductMedia 
+                        src={imagePreview} 
+                        style={{ maxHeight: '180px', maxWidth: '100%', objectFit: 'contain', borderRadius: '8px' }} 
+                      />
+                      <p style={{ marginTop: '0.5rem', fontSize: '0.75rem', color: 'var(--accent-color)', fontWeight: 700 }}>✅ Mídia pronta para upload</p>
                       <p style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>{imageFile?.name}</p>
                     </div>
                   ) : (
                     <div style={{ textAlign: 'center', color: 'var(--text-muted)' }}>
                       <div style={{ fontSize: '2.5rem', marginBottom: '0.5rem' }}>📁</div>
-                      <p style={{ fontWeight: 600, fontSize: '0.9rem', color: '#fff' }}>Clique ou arraste uma imagem aqui</p>
-                      <p style={{ fontSize: '0.75rem', marginTop: '0.3rem' }}>PNG, JPG, WEBP — upload direto para o Supabase</p>
+                      <p style={{ fontWeight: 600, fontSize: '0.9rem', color: '#fff' }}>Clique ou arraste uma mídia aqui</p>
+                      <p style={{ fontSize: '0.75rem', marginTop: '0.3rem' }}>PNG, JPG, WEBP ou MP4 — upload direto para o Supabase</p>
                     </div>
                   )}
                 </label>
@@ -2783,7 +2787,7 @@ const Admin = () => {
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: '0.5rem', marginBottom: '1rem' }}>
                   {galleryPreviews.map((prev, idx) => (
                     <div key={idx} style={{ position: 'relative', width: '100%', aspectRatio: '1/1', background: 'var(--surface-color)', borderRadius: '4px', overflow: 'hidden', border: '1px solid var(--border-color)' }}>
-                      <img src={prev} style={{ width: '100%', height: '100%', objectFit: 'cover' }} alt="Gallery preview" />
+                      <ProductMedia src={prev} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                       <button
                         type="button"
                         onClick={() => {
@@ -2805,7 +2809,7 @@ const Admin = () => {
                       <input
                         type="file"
                         multiple
-                        accept="image/*"
+                        accept="image/*,video/mp4"
                         style={{ display: 'none' }}
                         onChange={(e) => {
                           const files = Array.from(e.target.files);
@@ -3044,7 +3048,7 @@ const Admin = () => {
                 {/* Preview da imagem atual */}
                 {editingProduct.image && !editImagePreview && (
                   <div style={{ marginBottom: '0.75rem', padding: '0.75rem', background: 'rgba(255,255,255,0.02)', borderRadius: '8px', border: '1px solid var(--border-color)', display: 'flex', alignItems: 'center', gap: '1rem' }}>
-                    <img
+                    <ProductMedia
                       src={editingProduct.image}
                       alt="Atual"
                       style={{ width: '60px', height: '60px', objectFit: 'contain', borderRadius: '4px', background: 'rgba(0,0,0,0.2)' }}
@@ -3072,7 +3076,7 @@ const Admin = () => {
                   onDrop={(e) => {
                     e.preventDefault();
                     const file = e.dataTransfer.files[0];
-                    if (file && file.type.startsWith('image/')) {
+                    if (file && (file.type.startsWith('image/') || file.type === 'video/mp4')) {
                       setEditImageFile(file);
                       setEditImagePreview(URL.createObjectURL(file));
                     }
@@ -3081,7 +3085,7 @@ const Admin = () => {
                   <input
                     id="image-upload-edit"
                     type="file"
-                    accept="image/*"
+                    accept="image/*,video/mp4"
                     style={{ display: 'none' }}
                     onChange={(e) => {
                       const file = e.target.files[0];
@@ -3093,14 +3097,14 @@ const Admin = () => {
                   />
                   {editImagePreview ? (
                     <div style={{ width: '100%', textAlign: 'center' }}>
-                      <img src={editImagePreview} alt="Preview" style={{ maxHeight: '140px', maxWidth: '100%', objectFit: 'contain', borderRadius: '8px' }} />
-                      <p style={{ marginTop: '0.5rem', fontSize: '0.75rem', color: 'var(--accent-color)', fontWeight: 700 }}>✅ Nova imagem pronta para upload</p>
+                      <ProductMedia src={editImagePreview} style={{ maxHeight: '140px', maxWidth: '100%', objectFit: 'contain', borderRadius: '8px' }} />
+                      <p style={{ marginTop: '0.5rem', fontSize: '0.75rem', color: 'var(--accent-color)', fontWeight: 700 }}>✅ Nova mídia pronta para upload</p>
                     </div>
                   ) : (
                     <div style={{ textAlign: 'center', color: 'var(--text-muted)' }}>
                       <div style={{ fontSize: '2rem', marginBottom: '0.3rem' }}>🔄</div>
-                      <p style={{ fontWeight: 600, fontSize: '0.85rem', color: '#fff' }}>Clique para substituir a imagem</p>
-                      <p style={{ fontSize: '0.72rem', marginTop: '0.2rem' }}>Upload direto para o Supabase Storage</p>
+                      <p style={{ fontWeight: 600, fontSize: '0.85rem', color: '#fff' }}>Clique para substituir a mídia</p>
+                      <p style={{ fontSize: '0.72rem', marginTop: '0.2rem' }}>Imagens ou Vídeos MP4</p>
                     </div>
                   )}
                 </label>
@@ -3138,7 +3142,7 @@ const Admin = () => {
                     {/* Imagens Reais do Banco */}
                     {(editingProduct.gallery || []).map((img, idx) => (
                       <div key={`real-${idx}`} style={{ position: 'relative', width: '100%', aspectRatio: '1/1', background: 'var(--surface-color)', borderRadius: '4px', overflow: 'hidden', border: '1px solid var(--accent-color)' }}>
-                        <img src={img} style={{ width: '100%', height: '100%', objectFit: 'cover' }} alt="Gallery" />
+                        <ProductMedia src={img} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                         <button
                           type="button"
                           onClick={() => {
@@ -3179,7 +3183,7 @@ const Admin = () => {
                         <input
                           type="file"
                           multiple
-                          accept="image/*"
+                          accept="image/*,video/mp4"
                           style={{ display: 'none' }}
                           onChange={(e) => {
                             const files = Array.from(e.target.files);

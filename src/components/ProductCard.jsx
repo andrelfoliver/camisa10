@@ -4,6 +4,7 @@ import { Plus, Eye } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
 import { useLanguage } from '../context/LanguageContext';
+import ProductMedia from './ProductMedia';
 
 const ProductCard = ({ product }) => {
   const { addToCart } = useCart();
@@ -74,7 +75,7 @@ const ProductCard = ({ product }) => {
         }}
         className="product-card-img-container hover-zoom"
       >
-        <img 
+        <ProductMedia
           src={imageError ? '/camisas/placeholder.png' : product.image} 
           alt={product.name} 
           style={{ maxHeight: '100%', maxWidth: '100%', objectFit: 'contain', filter: 'drop-shadow(0 5px 10px rgba(0,0,0,0.4))' }} 
