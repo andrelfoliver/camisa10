@@ -49,17 +49,21 @@ const Home = () => {
 
   const sortProductsList = (list) => {
     return [...list].sort((a, b) => {
-      // 1. Mais Vendida (is_bestseller)
+      // 1. Lançamento (is_new)
+      if (a.is_new && !b.is_new) return -1;
+      if (!a.is_new && b.is_new) return 1;
+
+      // 2. Mais Vendida (is_bestseller)
       if (a.is_bestseller && !b.is_bestseller) return -1;
       if (!a.is_bestseller && b.is_bestseller) return 1;
 
-      // 2. Pronta Entrega (Estoque Local)
+      // 3. Pronta Entrega (Estoque Local)
       const aStock = a.inventory && Object.values(a.inventory).some(v => v > 0);
       const bStock = b.inventory && Object.values(b.inventory).some(v => v > 0);
       if (aStock && !bStock) return -1;
       if (!aStock && bStock) return 1;
 
-      // 3. Preço (Menor para Maior) - Fallback para preço padrão de 47.90
+      // 4. Preço (Menor para Maior) - Fallback para preço padrão de 47.90
       const aPrice = a.price || 47.90;
       const bPrice = b.price || 47.90;
       return aPrice - bPrice;

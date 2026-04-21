@@ -799,9 +799,24 @@ const Admin = () => {
       if (data) {
         setProducts([data[0], ...products]);
         setShowAddForm(false);
-        setNewProduct({ name: '', price: '', image: '', category: '', league: '', team: '', version: '', is_bestseller: false, is_new: false });
+        // Reset ALL states for new product
+        setNewProduct({ 
+          name: '', 
+          price: '', 
+          image: '', 
+          category: '', 
+          league: '', 
+          team: '', 
+          version: '', 
+          is_bestseller: false, 
+          is_new: false, 
+          description: '', 
+          inventory: { ...DEFAULT_INVENTORY } 
+        });
         setImageFile(null);
         setImagePreview(null);
+        setGalleryFiles([]);
+        setGalleryPreviews([]);
         setSaved(true);
         setTimeout(() => setSaved(false), 3000);
       }
