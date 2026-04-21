@@ -3,6 +3,38 @@ import { useLanguage } from '../context/LanguageContext';
 import { supabase } from '../services/supabase';
 import { X, MessageSquare, Mail, Award, CheckCircle2, AlertCircle, TrendingUp, DollarSign, FileText } from 'lucide-react';
 
+const InfoModal = ({ title, onClose, children }) => (
+  <div style={{ 
+    position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, 
+    zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center', 
+    padding: '1rem', background: 'rgba(0,0,0,0.8)', backdropFilter: 'blur(8px)'
+  }}>
+    <div 
+      className="glass-panel" 
+      style={{ 
+        width: '100%', maxWidth: '600px', maxHeight: '90vh', overflowY: 'auto', 
+        position: 'relative', padding: '2.5rem', borderRadius: '24px',
+        border: '1px solid rgba(255,255,255,0.1)', animation: 'modalFadeUp 0.3s ease-out'
+      }}
+    >
+      <button 
+        onClick={onClose}
+        style={{ position: 'absolute', top: '1.5rem', right: '1.5rem', background: 'none', border: 'none', color: '#fff', cursor: 'pointer', opacity: 0.6 }}
+      >
+        <X size={24} />
+      </button>
+      <h2 style={{ fontSize: '1.8rem', color: '#fff', marginBottom: '1.5rem', fontWeight: 800 }}>{title}</h2>
+      {children}
+    </div>
+    <style>{`
+      @keyframes modalFadeUp {
+        from { opacity: 0; transform: translateY(20px); }
+        to { opacity: 1; transform: translateY(0); }
+      }
+    `}</style>
+  </div>
+);
+
 const Footer = () => {
   const { t } = useLanguage();
   const [activeModal, setActiveModal] = useState(null);
@@ -43,38 +75,6 @@ const Footer = () => {
       setContactStatus('error');
     }
   };
-
-  const InfoModal = ({ title, onClose, children }) => (
-    <div style={{ 
-      position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, 
-      zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center', 
-      padding: '1rem', background: 'rgba(0,0,0,0.8)', backdropFilter: 'blur(8px)'
-    }}>
-      <div 
-        className="glass-panel" 
-        style={{ 
-          width: '100%', maxWidth: '600px', maxHeight: '90vh', overflowY: 'auto', 
-          position: 'relative', padding: '2.5rem', borderRadius: '24px',
-          border: '1px solid rgba(255,255,255,0.1)', animation: 'modalFadeUp 0.3s ease-out'
-        }}
-      >
-        <button 
-          onClick={onClose}
-          style={{ position: 'absolute', top: '1.5rem', right: '1.5rem', background: 'none', border: 'none', color: '#fff', cursor: 'pointer', opacity: 0.6 }}
-        >
-          <X size={24} />
-        </button>
-        <h2 style={{ fontSize: '1.8rem', color: '#fff', marginBottom: '1.5rem', fontWeight: 800 }}>{title}</h2>
-        {children}
-      </div>
-      <style>{`
-        @keyframes modalFadeUp {
-          from { opacity: 0; transform: translateY(20px); }
-          to { opacity: 1; transform: translateY(0); }
-        }
-      `}</style>
-    </div>
-  );
 
   return (
     <footer style={{ borderTop: '1px solid var(--border-color)', paddingTop: '4rem', paddingBottom: '2rem', marginTop: '4rem', background: '#050507' }}>
