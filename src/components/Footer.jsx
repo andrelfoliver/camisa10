@@ -7,6 +7,8 @@ const Footer = () => {
   const { t } = useLanguage();
   const [activeModal, setActiveModal] = useState(null);
   const [waNumber, setWaNumber] = useState('');
+  const [contactData, setContactData] = useState({ name: '', email: '', subject: '', message: '' });
+  const [contactStatus, setContactStatus] = useState('idle'); // idle, submitting, success, error
 
   useEffect(() => {
     async function loadConfig() {
@@ -15,6 +17,32 @@ const Footer = () => {
     }
     loadConfig();
   }, []);
+
+  const handleContactSubmit = async (e) => {
+    e.preventDefault();
+    setContactStatus('submitting');
+    try {
+      const { error } = await supabase
+        .from('contact_messages')
+        .insert([
+          { 
+            name: contactData.name, 
+            email: contactData.email, 
+            subject: contactData.subject || 'Contato via Site', 
+            message: contactData.message 
+          }
+        ]);
+
+      if (error) throw error;
+      
+      setContactStatus('success');
+      setContactData({ name: '', email: '', subject: '', message: '' });
+      setTimeout(() => setContactStatus('idle'), 5000);
+    } catch (err) {
+      console.error('Erro ao enviar contato:', err);
+      setContactStatus('error');
+    }
+  };
 
   const InfoModal = ({ title, onClose, children }) => (
     <div style={{ 
@@ -210,24 +238,69 @@ const Footer = () => {
                 </div>
               </a>
 
-              <a 
-                href="mailto:contato@ifooty.ca" 
-                style={{ 
-                  display: 'flex', alignItems: 'center', gap: '1rem', padding: '1.5rem', 
-                  background: 'rgba(255,255,255,0.05)', borderRadius: '16px', textDecoration: 'none',
-                  border: '1px solid rgba(255,255,255,0.1)', transition: 'all 0.2s'
-                }}
-                onMouseEnter={e => e.currentTarget.style.background = 'rgba(255,255,255,0.1)'}
-                onMouseLeave={e => e.currentTarget.style.background = 'rgba(255,255,255,0.05)'}
-              >
-                <div style={{ width: '48px', height: '48px', borderRadius: '12px', background: 'var(--accent-color)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#000' }}>
-                  <Mail size={24} />
-                </div>
-                <div>
-                  <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginBottom: '0.2rem' }}>E-mail de Suporte</div>
-                  <div style={{ color: '#fff', fontWeight: 700, fontSize: '1.1rem' }}>contato@ifooty.ca</div>
-                </div>
-              </a>
+              <div style={{ marginTop: '1.5rem', paddingTop: '1.5rem', borderTop: '1px solid rgba(255,255,255,0.05)' }}>
+                <h4 style={{ color: '#fff', fontSize: '1rem', marginBottom: '1.2rem', display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
+                  <Mail size={18} color="var(--accent-color)" /> Envie uma mensagem
+                </h4>
+
+                {contactStatus === 'success' ? (
+                  <div style={{ background: 'rgba(74, 222, 128, 0.1)', color: '#4ADE80', padding: '1.5rem', borderRadius: '12px', textAlign: 'center', border: '1px solid rgba(74, 222, 128, 0.2)' }}>
+                    <CheckCircle2 size={32} style={{ marginBottom: '0.8rem' }} />
+                    <div style={{ fontWeight: 700, fontSize: '1.1rem' }}>Mensagem enviada!</div>
+                    <div style={{ fontSize: '0.85rem', opacity: 0.8, marginTop: '0.4rem' }}>O Professor entrará em contato em breve.</div>
+                  </div>
+                ) : (
+                  <form onSubmit={handleContactSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+                      <input 
+                        required
+                        type="text" 
+                        placeholder="Nome"
+                        value={contactData.name}
+                        onChange={e => setContactData({...contactData, name: e.target.value})}
+                        style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '8px', padding: '0.8rem', color: '#fff', fontSize: '0.9rem', outline: 'none' }}
+                      />
+                      <input 
+                        required
+                        type="email" 
+                        placeholder="E-mail"
+                        value={contactData.email}
+                        onChange={e => setContactData({...contactData, email: e.target.value})}
+                        style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '8px', padding: '0.8rem', color: '#fff', fontSize: '0.9rem', outline: 'none' }}
+                      />
+                    </div>
+                    <input 
+                      type="text" 
+                      placeholder="Assunto (Opcional)"
+                      value={contactData.subject}
+                      onChange={e => setContactData({...contactData, subject: e.target.value})}
+                      style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '8px', padding: '0.8rem', color: '#fff', fontSize: '0.9rem', outline: 'none' }}
+                    />
+                    <textarea 
+                      required
+                      placeholder="Sua mensagem..."
+                      value={contactData.message}
+                      onChange={e => setContactData({...contactData, message: e.target.value})}
+                      style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '8px', padding: '0.8rem', color: '#fff', fontSize: '0.9rem', outline: 'none', minHeight: '100px', resize: 'vertical' }}
+                    />
+                    
+                    {contactStatus === 'error' && (
+                      <div style={{ color: '#F87171', fontSize: '0.8rem', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                        <AlertCircle size={14} /> Erro ao enviar. Tente novamente mais tarde.
+                      </div>
+                    )}
+
+                    <button 
+                      type="submit"
+                      disabled={contactStatus === 'submitting'}
+                      className="btn-primary"
+                      style={{ padding: '1rem', border: 'none', cursor: 'pointer', fontWeight: 800, fontSize: '1rem', width: '100%', opacity: contactStatus === 'submitting' ? 0.7 : 1 }}
+                    >
+                      {contactStatus === 'submitting' ? 'ENVIANDO...' : 'ENVIAR MENSAGEM'}
+                    </button>
+                  </form>
+                )}
+              </div>
             </div>
 
             <div style={{ marginTop: '2.5rem', padding: '1.5rem', background: 'rgba(255,255,255,0.03)', borderRadius: '12px', textAlign: 'center' }}>
