@@ -211,7 +211,7 @@ const Footer = () => {
               </a>
 
               <a 
-                href="mailto:camisadez085@gmail.com" 
+                href="mailto:contato@ifooty.ca" 
                 style={{ 
                   display: 'flex', alignItems: 'center', gap: '1rem', padding: '1.5rem', 
                   background: 'rgba(255,255,255,0.05)', borderRadius: '16px', textDecoration: 'none',

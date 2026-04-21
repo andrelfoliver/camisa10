@@ -476,7 +476,9 @@ const AffiliateProgram = () => {
             <FileText size={22} /> PREENCHER FORMULÁRIO DE INSCRIÇÃO
           </button>
           <div style={{ marginTop: '3rem', fontSize: '0.9rem', fontWeight: 700, opacity: 0.6, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '1.5rem' }}>
-            <span style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}><Mail size={16} /> contato@ifooty.ca</span>
+            <a href="mailto:contato@ifooty.ca" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: 'inherit', textDecoration: 'none' }}>
+              <Mail size={16} /> contato@ifooty.ca
+            </a>
             <span style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}><Globe size={16} /> iFooty.ca</span>
           </div>
         </div>
