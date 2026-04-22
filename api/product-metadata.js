@@ -61,10 +61,16 @@ export default async function handler(req, res) {
     const description = `${product.category || 'Catálogo'} - ${product.description || 'Qualidade premium e envio rápido para todo o Canadá.'}`;
     let imageUrl = product.image;
 
+    // Check if the primary image is actually a video
+    const isVideo = imageUrl && imageUrl.toLowerCase().endsWith('.mp4');
+    
     // Ensure absolute image URL
     if (imageUrl && !imageUrl.startsWith('http')) {
       imageUrl = `${baseUrl}${imageUrl.startsWith('/') ? '' : '/'}${imageUrl}`;
     }
+
+    // Fallback image if it's a video (WhatsApp doesn't preview mp4 links with images well)
+    const previewImage = isVideo ? `${baseUrl}/og-image-full.png` : imageUrl;
 
     // Return minimal HTML with meta tags
     res.setHeader('Content-Type', 'text/html');
@@ -81,22 +87,26 @@ export default async function handler(req, res) {
           <meta property="og:url" content="${baseUrl}/produto/${id}">
           <meta property="og:title" content="${title}">
           <meta property="og:description" content="${description}">
-          <meta property="og:image" content="${imageUrl}">
+          <meta property="og:image" content="${previewImage}">
+          <meta property="og:image:secure_url" content="${previewImage}">
+          <meta property="og:image:width" content="1200">
+          <meta property="og:image:height" content="630">
+          <meta property="og:image:type" content="image/jpeg">
 
           <!-- Twitter -->
           <meta property="twitter:card" content="summary_large_image">
           <meta property="twitter:url" content="${baseUrl}/produto/${id}">
           <meta property="twitter:title" content="${title}">
           <meta property="twitter:description" content="${description}">
-          <meta property="twitter:image" content="${imageUrl}">
+          <meta property="twitter:image" content="${previewImage}">
 
-          <!-- Redirect for non-bots (optional, but vercel.json handles this better) -->
+          <!-- Redirect for humans -->
           <meta http-equiv="refresh" content="0;url=${baseUrl}/produto/${id}">
         </head>
         <body>
           <h1>${product.name}</h1>
           <p>${description}</p>
-          <img src="${imageUrl}" alt="${product.name}">
+          <img src="${previewImage}" alt="${product.name}">
           <script>window.location.href = "${baseUrl}/produto/${id}";</script>
         </body>
       </html>
