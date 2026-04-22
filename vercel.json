@@ -1,5 +1,16 @@
 {
   "rewrites": [
+    {
+      "source": "/produto/:id",
+      "has": [
+        {
+          "type": "header",
+          "key": "User-Agent",
+          "value": "(?i).*whatsapp.*|.*facebookexternalhit.*|.*twitterbot.*|.*linkedinbot.*|.*telegrambot.*|.*slackbot.*"
+        }
+      ],
+      "destination": "/api/product-metadata?id=:id"
+    },
     { "source": "/api/(.*)", "destination": "/api/$1" },
     { "source": "/((?!api).*)", "destination": "/index.html" }
   ]
