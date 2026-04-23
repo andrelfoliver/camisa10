@@ -1734,8 +1734,10 @@ const Admin = () => {
                       <tr style={{ textAlign: 'left', borderBottom: '1px solid var(--border-color)' }}>
                         <th style={{ padding: '1rem', color: 'var(--text-muted)' }}>AGENTE / ORIGEM</th>
                         <th style={{ padding: '1rem', color: 'var(--text-muted)' }}>PEDIDOS</th>
-                        <th style={{ padding: '1rem', color: 'var(--text-muted)' }}>TOTAL VENDIDO</th>
-                        <th style={{ padding: '1rem', color: 'var(--text-muted)' }}>COMISSÃO ({commissionRate}%)</th>
+                        <th style={{ padding: '1rem', color: 'var(--text-muted)' }}>NÍVEL</th>
+                        <th style={{ padding: '1rem', color: 'var(--text-muted)' }}>COMISSÃO BASE</th>
+                        <th style={{ padding: '1rem', color: 'var(--text-muted)' }}>BÔNUS META</th>
+                        <th style={{ padding: '1rem', color: 'var(--text-muted)' }}>TOTAL A PAGAR</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -1751,23 +1753,55 @@ const Admin = () => {
                           const coupon = coupons.find(c => c.code === rawRef.toUpperCase());
                           const ref = coupon ? (coupon.agent_id || rawRef) : rawRef;
 
-                          // Filtro de Agente
                           if (prodAgentFilter && ref !== prodAgentFilter) return acc;
 
-                          if (!acc[ref]) acc[ref] = { count: 0, total: 0 };
+                          const orderDateStr = order.created_at.split('T')[0];
+                          
+                          // VERIFICAÇÃO DE BÔNUS COPA (11 JUN A 19 JUL 2026)
+                          const isCopaPeriod = orderDateStr >= '2026-06-11' && orderDateStr <= '2026-07-19';
+
+                          if (!acc[ref]) acc[ref] = { count: 0, total: 0, seasonalBonus: 0 };
                           acc[ref].count += 1;
                           acc[ref].total += Number(order.total_price || 0);
+
+                          if (isCopaPeriod) {
+                            acc[ref].seasonalBonus += Number(order.total_price || 0) * 0.05;
+                          }
+
                           return acc;
-                        }, {})).map(([agent, stats]) => (
-                          <tr key={agent} style={{ borderBottom: '1px solid rgba(255,255,255,0.03)' }}>
-                            <td style={{ padding: '1rem', fontWeight: 600 }}>{agent}</td>
-                            <td style={{ padding: '1rem' }}>{stats.count}</td>
-                            <td style={{ padding: '1rem' }}>${stats.total.toFixed(2)} CAD</td>
-                            <td style={{ padding: '1rem', color: 'var(--accent-color)', fontWeight: 700 }}>
-                              ${(stats.total * (commissionRate / 100)).toFixed(2)} CAD
-                            </td>
-                          </tr>
-                        ))}
+                        }, {})).map(([agent, stats]) => {
+                          // LÓGICA DE NÍVEIS CONFORME DEFINIDO
+                          let rate = 0.08;
+                          let level = "🥉 Bronze";
+                          if (stats.count >= 51) { rate = 0.15; level = "💎 Diamante"; }
+                          else if (stats.count >= 26) { rate = 0.12; level = "🥇 Ouro"; }
+                          else if (stats.count >= 11) { rate = 0.10; level = "🥈 Prata"; }
+
+                          // BÔNUS DE PERFORMANCE (FIXOS)
+                          let perfBonus = 0;
+                          if (stats.count >= 1) perfBonus += 5;   // 1ª venda
+                          if (stats.count >= 5) perfBonus += 10;  // total 15
+                          if (stats.count >= 10) perfBonus += 15; // total 30
+
+                          const commissionBase = stats.total * rate;
+                          const totalPayout = commissionBase + perfBonus + stats.seasonalBonus;
+
+                          return (
+                            <tr key={agent} style={{ borderBottom: '1px solid rgba(255,255,255,0.03)' }}>
+                              <td style={{ padding: '1rem', fontWeight: 600 }}>{agent}</td>
+                              <td style={{ padding: '1rem' }}>{stats.count} pedidos</td>
+                              <td style={{ padding: '1rem', fontSize: '0.8rem' }}>{level}</td>
+                              <td style={{ padding: '1rem' }}>${commissionBase.toFixed(2)} <span style={{fontSize: '0.7rem', color: 'var(--text-muted)' }}>({(rate * 100)}%)</span></td>
+                              <td style={{ padding: '1rem' }}>
+                                ${(perfBonus + stats.seasonalBonus).toFixed(2)}
+                                {(stats.seasonalBonus > 0) && <div style={{ fontSize: '0.65rem', color: 'var(--accent-color)' }}>incl. Bônus Copa</div>}
+                              </td>
+                              <td style={{ padding: '1rem', color: 'var(--accent-color)', fontWeight: 800 }}>
+                                ${totalPayout.toFixed(2)} CAD
+                              </td>
+                            </tr>
+                          );
+                        })}
                     </tbody>
                   </table>
                 </div>
