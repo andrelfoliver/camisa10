@@ -165,10 +165,9 @@ const Footer = () => {
 
             <h4 style={{ color: '#fff', display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '1rem', marginTop: '2rem' }}><Award size={18} color="var(--accent-color)" /> Bônus Especiais</h4>
             <ul style={{ paddingLeft: '1.2rem', color: 'var(--text-muted)', fontSize: '0.9rem', lineHeight: 1.6 }}>
-              <li>Primeiro cliente novo: <strong>+CA$ 25</strong></li>
-              <li>Black Friday / Cyber Monday: <strong>+5% extra</strong></li>
-              <li>Copa do Mundo: <strong>+10% em camisas de seleção</strong></li>
-              <li>Indicação de novo afiliado ativo: <strong>+CA$ 50/mês</strong></li>
+              <li>Primeiro gol (1ª venda): <strong>+CA$ 10</strong></li>
+              <li>Cada novo cliente: <strong>+CA$ 2</strong></li>
+              <li>Indicação de novo jogador ativo: <strong>+CA$ 25</strong></li>
             </ul>
 
             <div style={{ marginTop: '2rem', padding: '1.5rem', background: 'rgba(204, 255, 0, 0.05)', borderRadius: '12px', border: '1px solid rgba(204, 255, 0, 0.2)' }}>

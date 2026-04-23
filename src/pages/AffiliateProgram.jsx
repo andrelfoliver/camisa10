@@ -214,16 +214,16 @@ const AffiliateProgram = () => {
               </div>
               <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: '0.8rem' }}>
                 <li style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.9rem' }}>
-                  <span style={{ color: 'var(--text-muted)' }}>Primeira venda</span> <span style={{ fontWeight: 700 }}>+CA$ 25</span>
+                  <span style={{ color: 'var(--text-muted)' }}>Primeiro gol (1ª venda)</span> <span style={{ fontWeight: 700 }}>+CA$ 10</span>
                 </li>
                 <li style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.9rem' }}>
-                  <span style={{ color: 'var(--text-muted)' }}>5 Primeiras vendas</span> <span style={{ fontWeight: 700 }}>+CA$ 50 total</span>
+                  <span style={{ color: 'var(--text-muted)' }}>5 Primeiras vendas</span> <span style={{ fontWeight: 700 }}>+CA$ 20 total</span>
                 </li>
                 <li style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.9rem' }}>
-                  <span style={{ color: 'var(--text-muted)' }}>10 Primeiras vendas</span> <span style={{ fontWeight: 700 }}>+CA$ 100 total</span>
+                  <span style={{ color: 'var(--text-muted)' }}>10 Primeiras vendas</span> <span style={{ fontWeight: 700 }}>+CA$ 50 total</span>
                 </li>
                 <li style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.9rem' }}>
-                  <span style={{ color: 'var(--text-muted)' }}>Cada novo cliente</span> <span style={{ fontWeight: 700 }}>+CA$ 5 fixo</span>
+                  <span style={{ color: 'var(--text-muted)' }}>Cada novo cliente</span> <span style={{ fontWeight: 700 }}>+CA$ 2 fixo</span>
                 </li>
               </ul>
             </div>
