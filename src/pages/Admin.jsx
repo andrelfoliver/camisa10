@@ -163,7 +163,7 @@ const Admin = () => {
   const [showWelcomePopup, setShowWelcomePopup] = useState(false);
   const [welcomeTriggered, setWelcomeTriggered] = useState(false);
   const [expandedOrderId, setExpandedOrderId] = useState(null);
-  const [expandedCustomerId, setExpandedCustomerId] = useState(null);
+  const [expandedAgentId, setExpandedAgentId] = useState(null);
 
   // Filtros do Relatório de Produtividade
   const [prodDateRange, setProdDateRange] = useState({
@@ -1756,13 +1756,12 @@ const Admin = () => {
                           if (prodAgentFilter && ref !== prodAgentFilter) return acc;
 
                           const orderDateStr = order.created_at.split('T')[0];
-                          
-                          // VERIFICAÇÃO DE BÔNUS COPA (11 JUN A 19 JUL 2026)
                           const isCopaPeriod = orderDateStr >= '2026-06-11' && orderDateStr <= '2026-07-19';
 
-                          if (!acc[ref]) acc[ref] = { count: 0, total: 0, seasonalBonus: 0 };
+                          if (!acc[ref]) acc[ref] = { count: 0, total: 0, seasonalBonus: 0, orderList: [] };
                           acc[ref].count += 1;
                           acc[ref].total += Number(order.total_price || 0);
+                          acc[ref].orderList.push(order);
 
                           if (isCopaPeriod) {
                             acc[ref].seasonalBonus += Number(order.total_price || 0) * 0.05;
@@ -1770,36 +1769,85 @@ const Admin = () => {
 
                           return acc;
                         }, {})).map(([agent, stats]) => {
-                          // LÓGICA DE NÍVEIS CONFORME DEFINIDO
+                          // LÓGICA DE NÍVEIS
                           let rate = 0.08;
                           let level = "🥉 Bronze";
                           if (stats.count >= 51) { rate = 0.15; level = "💎 Diamante"; }
                           else if (stats.count >= 26) { rate = 0.12; level = "🥇 Ouro"; }
                           else if (stats.count >= 11) { rate = 0.10; level = "🥈 Prata"; }
 
-                          // BÔNUS DE PERFORMANCE (FIXOS)
                           let perfBonus = 0;
-                          if (stats.count >= 1) perfBonus += 5;   // 1ª venda
-                          if (stats.count >= 5) perfBonus += 10;  // total 15
-                          if (stats.count >= 10) perfBonus += 15; // total 30
+                          if (stats.count >= 1) perfBonus += 5;
+                          if (stats.count >= 5) perfBonus += 10;
+                          if (stats.count >= 10) perfBonus += 15;
 
                           const commissionBase = stats.total * rate;
                           const totalPayout = commissionBase + perfBonus + stats.seasonalBonus;
+                          const isExpanded = expandedAgentId === agent;
 
                           return (
-                            <tr key={agent} style={{ borderBottom: '1px solid rgba(255,255,255,0.03)' }}>
-                              <td style={{ padding: '1rem', fontWeight: 600 }}>{agent}</td>
-                              <td style={{ padding: '1rem' }}>{stats.count} pedidos</td>
-                              <td style={{ padding: '1rem', fontSize: '0.8rem' }}>{level}</td>
-                              <td style={{ padding: '1rem' }}>${commissionBase.toFixed(2)} <span style={{fontSize: '0.7rem', color: 'var(--text-muted)' }}>({(rate * 100)}%)</span></td>
-                              <td style={{ padding: '1rem' }}>
-                                ${(perfBonus + stats.seasonalBonus).toFixed(2)}
-                                {(stats.seasonalBonus > 0) && <div style={{ fontSize: '0.65rem', color: 'var(--accent-color)' }}>incl. Bônus Copa</div>}
-                              </td>
-                              <td style={{ padding: '1rem', color: 'var(--accent-color)', fontWeight: 800 }}>
-                                ${totalPayout.toFixed(2)} CAD
-                              </td>
-                            </tr>
+                            <React.Fragment key={agent}>
+                              <tr style={{ borderBottom: '1px solid rgba(255,255,255,0.03)', cursor: 'pointer' }} onClick={() => setExpandedAgentId(isExpanded ? null : agent)}>
+                                <td style={{ padding: '1rem', fontWeight: 600 }}>{agent}</td>
+                                <td style={{ padding: '1rem' }}>
+                                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: 'var(--accent-color)' }}>
+                                    {stats.count} pedidos {isExpanded ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
+                                  </div>
+                                </td>
+                                <td style={{ padding: '1rem', fontSize: '0.8rem' }}>{level}</td>
+                                <td style={{ padding: '1rem' }}>${commissionBase.toFixed(2)} CAD <span style={{fontSize: '0.7rem', color: 'var(--text-muted)' }}>({(rate * 100)}%)</span></td>
+                                <td style={{ padding: '1rem' }}>
+                                  ${(perfBonus + stats.seasonalBonus).toFixed(2)}
+                                  {(stats.seasonalBonus > 0) && <div style={{ fontSize: '0.65rem', color: 'var(--accent-color)' }}>incl. Bônus Copa</div>}
+                                </td>
+                                <td style={{ padding: '1rem', color: 'var(--accent-color)', fontWeight: 800 }}>
+                                  ${totalPayout.toFixed(2)} CAD
+                                </td>
+                              </tr>
+                              {isExpanded && (
+                                <tr>
+                                  <td colSpan="6" style={{ padding: '0 1rem 1.5rem 1rem', background: 'rgba(255,255,255,0.02)' }}>
+                                    <div style={{ padding: '1rem', border: '1px solid var(--border-color)', borderRadius: '8px', marginTop: '0.5rem' }}>
+                                      <h4 style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                                        <Package size={14} /> Detalhamento das Vendas de {agent}
+                                      </h4>
+                                      <table style={{ width: '100%', fontSize: '0.85rem' }}>
+                                        <thead>
+                                          <tr style={{ textAlign: 'left', color: 'var(--text-muted)' }}>
+                                            <th style={{ padding: '0.5rem' }}>Pedido</th>
+                                            <th style={{ padding: '0.5rem' }}>Data</th>
+                                            <th style={{ padding: '0.5rem' }}>Cliente</th>
+                                            <th style={{ padding: '0.5rem' }}>Valor</th>
+                                            <th style={{ padding: '0.5rem' }}>Status</th>
+                                          </tr>
+                                        </thead>
+                                        <tbody>
+                                          {stats.orderList.map(o => (
+                                            <tr key={o.id} style={{ borderBottom: '1px dotted rgba(255,255,255,0.05)' }}>
+                                              <td style={{ padding: '0.5rem', fontWeight: 600 }}>#{o.id.slice(0,8)}</td>
+                                              <td style={{ padding: '0.5rem' }}>{new Date(o.created_at).toLocaleDateString('pt-BR')}</td>
+                                              <td style={{ padding: '0.5rem' }}>{o.customer_name}</td>
+                                              <td style={{ padding: '0.5rem' }}>${Number(o.total_price).toFixed(2)}</td>
+                                              <td style={{ padding: '0.5rem' }}>
+                                                <span style={{ 
+                                                  padding: '2px 8px', 
+                                                  borderRadius: '100px', 
+                                                  fontSize: '0.7rem',
+                                                  background: o.status === 'completed' ? 'rgba(34, 197, 94, 0.2)' : 'rgba(245, 158, 11, 0.2)',
+                                                  color: o.status === 'completed' ? '#22c55e' : '#f59e0b'
+                                                }}>
+                                                  {o.status}
+                                                </span>
+                                              </td>
+                                            </tr>
+                                          ))}
+                                        </tbody>
+                                      </table>
+                                    </div>
+                                  </td>
+                                </tr>
+                              )}
+                            </React.Fragment>
                           );
                         })}
                     </tbody>
