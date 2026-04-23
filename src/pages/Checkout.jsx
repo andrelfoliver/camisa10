@@ -335,7 +335,7 @@ const Checkout = () => {
   };
 
   // Redirecionamento e limpeza após salvar
-  const handleFinalizeRedirect = () => {
+  const handleFinalizeRedirect = async () => {
     try {
       const message = generateWhatsAppMessage();
 
