@@ -152,31 +152,31 @@ const AffiliateProgram = () => {
                 <tr style={{ borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
                   <td style={{ padding: '1.5rem', fontWeight: 700 }}>🥉 Bronze</td>
                   <td style={{ padding: '1.5rem' }}>1 - 10</td>
-                  <td style={{ padding: '1.5rem', color: 'var(--accent-color)', fontWeight: 800 }}>10%</td>
-                  <td style={{ padding: '1.5rem' }}>CA$ 80 - 800</td>
+                  <td style={{ padding: '1.5rem', color: 'var(--accent-color)', fontWeight: 800 }}>8%</td>
+                  <td style={{ padding: '1.5rem' }}>CA$ 4,80 - 48,00</td>
                 </tr>
                 <tr style={{ borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
                   <td style={{ padding: '1.5rem', fontWeight: 700 }}>🥈 Prata</td>
                   <td style={{ padding: '1.5rem' }}>11 - 25</td>
-                  <td style={{ padding: '1.5rem', color: 'var(--accent-color)', fontWeight: 800 }}>12%</td>
-                  <td style={{ padding: '1.5rem' }}>CA$ 1.056 - 2.400</td>
+                  <td style={{ padding: '1.5rem', color: 'var(--accent-color)', fontWeight: 800 }}>10%</td>
+                  <td style={{ padding: '1.5rem' }}>CA$ 66,00 - 150,00</td>
                 </tr>
                 <tr style={{ borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
                   <td style={{ padding: '1.5rem', fontWeight: 700 }}>🥇 Ouro</td>
                   <td style={{ padding: '1.5rem' }}>26 - 50</td>
-                  <td style={{ padding: '1.5rem', color: 'var(--accent-color)', fontWeight: 800 }}>15%</td>
-                  <td style={{ padding: '1.5rem' }}>CA$ 3.120 - 6.000</td>
+                  <td style={{ padding: '1.5rem', color: 'var(--accent-color)', fontWeight: 800 }}>12%</td>
+                  <td style={{ padding: '1.5rem' }}>CA$ 187,00 - 360,00</td>
                 </tr>
                 <tr>
                   <td style={{ padding: '1.5rem', fontWeight: 700 }}>💎 Diamante</td>
                   <td style={{ padding: '1.5rem' }}>51+</td>
-                  <td style={{ padding: '1.5rem', color: 'var(--accent-color)', fontWeight: 800 }}>20%</td>
-                  <td style={{ padding: '1.5rem' }}>CA$ 8.160+</td>
+                  <td style={{ padding: '1.5rem', color: 'var(--accent-color)', fontWeight: 800 }}>15%</td>
+                  <td style={{ padding: '1.5rem' }}>CA$ 459,00+</td>
                 </tr>
               </tbody>
             </table>
             <div style={{ padding: '1rem', background: 'rgba(255,255,255,0.03)', fontSize: '0.8rem', color: 'var(--text-muted)' }}>
-              *Cálculo baseado em um ticket médio de CA$ 80 por pedido.
+              *Cálculo baseado em um ticket médio de CA$ 60 por pedido.
             </div>
           </div>
         </Section>
@@ -214,16 +214,13 @@ const AffiliateProgram = () => {
               </div>
               <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: '0.8rem' }}>
                 <li style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.9rem' }}>
-                  <span style={{ color: 'var(--text-muted)' }}>Primeiro gol (1ª venda)</span> <span style={{ fontWeight: 700 }}>+CA$ 10</span>
+                  <span style={{ color: 'var(--text-muted)' }}>Primeiro gol (1ª venda)</span> <span style={{ fontWeight: 700 }}>+CA$ 5</span>
                 </li>
                 <li style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.9rem' }}>
-                  <span style={{ color: 'var(--text-muted)' }}>5 Primeiras vendas</span> <span style={{ fontWeight: 700 }}>+CA$ 20 total</span>
+                  <span style={{ color: 'var(--text-muted)' }}>5 Primeiras vendas</span> <span style={{ fontWeight: 700 }}>+CA$ 15 total</span>
                 </li>
                 <li style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.9rem' }}>
-                  <span style={{ color: 'var(--text-muted)' }}>10 Primeiras vendas</span> <span style={{ fontWeight: 700 }}>+CA$ 50 total</span>
-                </li>
-                <li style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.9rem' }}>
-                  <span style={{ color: 'var(--text-muted)' }}>Cada novo cliente</span> <span style={{ fontWeight: 700 }}>+CA$ 2 fixo</span>
+                  <span style={{ color: 'var(--text-muted)' }}>10 Primeiras vendas</span> <span style={{ fontWeight: 700 }}>+CA$ 30 total</span>
                 </li>
               </ul>
             </div>
@@ -237,7 +234,7 @@ const AffiliateProgram = () => {
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1.5rem' }}>
                 <div style={{ padding: '1rem', borderRight: '1px solid rgba(255,255,255,0.05)' }}>
                   <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)', display: 'block' }}>Copa do Mundo</span>
-                  <span style={{ fontWeight: 800, color: 'var(--accent-color)', fontSize: '1.2rem' }}>+10%</span> <span style={{ fontSize: '0.7rem' }}>nas camisas de seleção</span>
+                  <span style={{ fontWeight: 800, color: 'var(--accent-color)', fontSize: '1.2rem' }}>+5%</span> <span style={{ fontSize: '0.7rem' }}>nas camisas de seleção</span>
                 </div>
                 <div style={{ padding: '1rem', borderRight: '1px solid rgba(255,255,255,0.05)' }}>
                   <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)', display: 'block' }}>Black Friday / Cyber</span>
@@ -302,11 +299,11 @@ const AffiliateProgram = () => {
                 <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>Foco no Instagram + WhatsApp</div>
               </div>
               <div style={{ textAlign: 'right' }}>
-                <div style={{ color: 'var(--accent-color)', fontWeight: 800, fontSize: '1.4rem' }}>CA$ 1.779,00</div>
+                <div style={{ color: 'var(--accent-color)', fontWeight: 800, fontSize: '1.4rem' }}>CA$ 1.010,00</div>
                 <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>Mês de Copa do Mundo</div>
               </div>
             </div>
-            <p style={{ fontSize: '0.9rem', color: 'var(--text-muted)', lineHeight: 1.6 }}>Nível Diamante (20%) com 67 vendas no mês. Foram CA$ 1.072 de comissão base + CA$ 500 de bônus meta + bônus sazonal Copa.</p>
+            <p style={{ fontSize: '0.9rem', color: 'var(--text-muted)', lineHeight: 1.6 }}>Nível Diamante (15%) com 67 vendas no mês. Foram CA$ 603 de comissão base + CA$ 250 de bônus meta + CA$ 157 de bônus sazonal Copa.</p>
           </div>
         </Section>
 
