@@ -168,8 +168,7 @@ export const CartProvider = ({ children }) => {
   const clearCart = () => {
     setCartItems([]);
     try { 
-      localStorage.removeItem(getCartKey()); 
-      // Limpa também o guest por segurança se houver login
+      localStorage.removeItem(getCartKey(user)); 
       localStorage.removeItem(GUEST_KEY);
     } catch {}
   };

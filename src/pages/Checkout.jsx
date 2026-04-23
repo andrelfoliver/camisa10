@@ -672,6 +672,7 @@ const Checkout = () => {
                     setIsSubmitting(true);
                     try {
                       await saveOrderToDatabase(details);
+                      clearCart(); // ADICIONADO: Limpar carrinho após pagamento aprovado
                       navigate('/sucesso', { state: { paid: true } });
                     } catch (err) {
                       showPopup("Erro ao salvar pedido pago. Por favor, fale conosco no WhatsApp.");
