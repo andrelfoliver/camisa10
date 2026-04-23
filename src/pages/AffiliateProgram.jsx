@@ -79,13 +79,13 @@ const AffiliateProgram = () => {
       }}>
         <div className="container" style={{ maxWidth: '900px' }}>
           <div style={{ display: 'inline-flex', alignItems: 'center', gap: '0.5rem', padding: '0.5rem 1.2rem', background: 'rgba(204, 255, 0, 0.1)', borderRadius: '100px', color: 'var(--accent-color)', fontWeight: 700, fontSize: '0.85rem', marginBottom: '1.5rem', border: '1px solid rgba(204, 255, 0, 0.2)' }}>
-            <Award size={16} /> PROGRAMA DE EMBAIXADORES 2026/2027
+            <Award size={16} /> CONVOCAÇÃO PARA O TIME <span style={{ marginLeft: '4px', color: '#fff' }}><span style={{ color: 'var(--accent-color)' }}>i</span>Footy</span> 2026/2027
           </div>
           <h1 style={{ fontSize: 'clamp(2.5rem, 8vw, 4rem)', fontWeight: 900, color: '#fff', marginBottom: '1.5rem', lineHeight: 1.1, letterSpacing: '-0.03em' }}>
             VISTA AS CORES DO TIME E <span style={{ color: 'var(--accent-color)' }}>LUCRE COM A PAIXÃO</span>
           </h1>
           <p style={{ fontSize: '1.2rem', color: 'var(--text-muted)', maxWidth: '700px', margin: '0 auto 3rem', lineHeight: 1.6 }}>
-            Ganhe comissões agressivas promovendo camisas de futebol premium para a maior comunidade brasileira no Canadá. Seja o rosto da iFooty na sua cidade.
+            Ganhe comissões agressivas promovendo camisas de futebol premium para a maior comunidade brasileira no Canadá. Jogue no nosso time e seja o craque da iFooty na sua cidade.
           </p>
           <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'center', gap: '1rem' }}>
             <button onClick={scrollToForm} className="btn-primary" style={{ padding: '1rem 2.5rem', fontSize: '1.1rem', fontWeight: 800, border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.8rem' }}>
@@ -109,7 +109,7 @@ const AffiliateProgram = () => {
       }}>
         
         {/* VISÃO GERAL */}
-        <Section icon={Terminal} title="Visão Geral do Programa" id="geral">
+        <Section icon={Terminal} title="Visão Geral da Convocação" id="geral">
           <div className="glass-panel" style={{ 
             padding: window.innerWidth < 500 ? '1.5rem' : '2rem', 
             display: 'grid', 
@@ -311,18 +311,18 @@ const AffiliateProgram = () => {
         </Section>
 
         {/* FORMULÁRIO DE CADASTRO */}
-        <Section icon={FileText} title="Formulário de Candidatura" id="cadastro">
+        <Section icon={FileText} title="Ficha de Inscrição para o Elenco" id="cadastro">
           <div className="glass-panel" style={{ padding: '2.5rem' }}>
             {status === 'success' ? (
               <div style={{ textAlign: 'center', padding: '3rem 1rem' }}>
                 <div style={{ width: '64px', height: '64px', borderRadius: '100px', background: 'rgba(74, 222, 128, 0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#4ADE80', margin: '0 auto 1.5rem' }}>
                   <CheckCircle2 size={32} />
                 </div>
-                <h3 style={{ color: '#fff', fontSize: '1.5rem', marginBottom: '1rem' }}>Candidatura Enviada!</h3>
+                <h3 style={{ color: '#fff', fontSize: '1.5rem', marginBottom: '1rem' }}>Sua ficha foi recebida!</h3>
                 <p style={{ color: 'var(--text-muted)', lineHeight: 1.6 }}>
-                  Recebemos seu interesse! Analisaremos suas informações e entraremos em contato via WhatsApp ou e-mail em até <strong>24 horas</strong>.
+                  Recebemos seu interesse em entrar no time! Analisaremos sua ficha e entraremos em contato via WhatsApp ou e-mail em até <strong>24 horas</strong>.
                 </p>
-                <button onClick={() => setStatus('idle')} style={{ marginTop: '2rem', background: 'none', border: '1px solid var(--border-color)', color: '#fff', padding: '0.8rem 2rem', borderRadius: '100px', cursor: 'pointer' }}>Enviar outra candidatura</button>
+                <button onClick={() => setStatus('idle')} style={{ marginTop: '2rem', background: 'none', border: '1px solid var(--border-color)', color: '#fff', padding: '0.8rem 2rem', borderRadius: '100px', cursor: 'pointer' }}>Nova Inscrição</button>
               </div>
             ) : (
               <form onSubmit={handleSubmit} style={{ 
@@ -458,7 +458,7 @@ const AffiliateProgram = () => {
                     className="btn-primary" 
                     style={{ width: '100%', padding: '1.2rem', fontSize: '1.2rem', fontWeight: 800, border: 'none', cursor: status === 'submitting' ? 'wait' : 'pointer', opacity: status === 'submitting' ? 0.7 : 1 }}
                   >
-                    {status === 'submitting' ? 'ENVIANDO...' : 'ENVIAR MINHA CANDIDATURA'}
+                    {status === 'submitting' ? 'PROCESSANDO...' : 'ENVIAR MINHA INSCRIÇÃO PARA O TIME'}
                   </button>
                 </div>
               </form>
@@ -468,12 +468,12 @@ const AffiliateProgram = () => {
 
         {/* CTA FINAL ALTERADO PARA ROLAR */}
         <div style={{ padding: '5rem 2rem', background: 'var(--accent-color)', borderRadius: '32px', textAlign: 'center', color: '#000' }}>
-          <h2 style={{ fontSize: 'clamp(2rem, 5vw, 3rem)', fontWeight: 900, marginBottom: '1rem', letterSpacing: '-0.02em' }}>PRONTO PARA JOGAR NO TIME DO iFOOTY?</h2>
+          <h2 style={{ fontSize: 'clamp(2rem, 5vw, 3rem)', fontWeight: 900, marginBottom: '1rem', letterSpacing: '-0.02em' }}>PRONTO PARA JOGAR NO TIME DO <span style={{ color: '#000' }}>i</span><span style={{ color: '#fff' }}>Footy</span>?</h2>
           <p style={{ fontSize: '1.2rem', fontWeight: 600, maxWidth: '600px', margin: '0 auto 3rem', opacity: 0.8 }}>
             O Professor analisa todas as inscrições pessoalmente em até 24h. O seu sucesso é o nosso sucesso.
           </p>
           <button onClick={scrollToForm} className="btn-primary" style={{ background: '#000', color: '#fff', padding: '1.2rem 3rem', fontSize: '1.2rem', fontWeight: 800, textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: '1rem', border: 'none', cursor: 'pointer' }}>
-            <FileText size={22} /> PREENCHER FORMULÁRIO DE INSCRIÇÃO
+            <FileText size={22} /> PREENCHER FICHA DE INSCRIÇÃO NO TIME
           </button>
           <div style={{ marginTop: '3rem', fontSize: '0.9rem', fontWeight: 700, opacity: 0.6, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '1.5rem' }}>
             <a href="mailto:contato@ifooty.ca" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: 'inherit', textDecoration: 'none' }}>
