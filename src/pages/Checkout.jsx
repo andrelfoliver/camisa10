@@ -339,20 +339,20 @@ const Checkout = () => {
     try {
       const message = generateWhatsAppMessage();
 
-      // 1. Tentar abrir o WhatsApp (encapsulado para não travar o fluxo se o browser bloquear)
+      // 1. Limpar carrinho IMEDIATAMENTE (e aguardar confirmação do banco)
+      await clearCart();
+
+      // 2. Tentar abrir o WhatsApp
       const encodedMessage = encodeURIComponent(message);
       const whatsappUrl = `https://wa.me/${String(waNumber).replace(/\D/g, '')}?text=${encodedMessage}`;
 
       try {
         window.open(whatsappUrl, '_blank');
       } catch (e) {
-        console.warn("⚠️ Popup do WhatsApp bloqueado pelo navegador.");
+        console.warn("⚠️ Popup do WhatsApp bloqueado.");
       }
 
-      // 2. Limpar carrinho
-      clearCart();
-
-      // 3. Ir para página de sucesso (Isso é o que garante o fim do processo)
+      // 3. Ir para página de sucesso
       navigate('/sucesso', { state: { orderMessage: message, waNumber } });
     } catch (finalErr) {
       console.error("Erro no redirecionamento final:", finalErr);
@@ -672,7 +672,7 @@ const Checkout = () => {
                     setIsSubmitting(true);
                     try {
                       await saveOrderToDatabase(details);
-                      clearCart(); // ADICIONADO: Limpar carrinho após pagamento aprovado
+                      await clearCart(); // Aguarda limpeza real
                       navigate('/sucesso', { state: { paid: true } });
                     } catch (err) {
                       showPopup("Erro ao salvar pedido pago. Por favor, fale conosco no WhatsApp.");

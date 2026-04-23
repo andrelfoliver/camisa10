@@ -165,12 +165,24 @@ export const CartProvider = ({ children }) => {
     setCartItems(prev => prev.filter(item => item.cartId !== cartId));
   };
 
-  const clearCart = () => {
+  const clearCart = async () => {
     setCartItems([]);
     try { 
-      localStorage.removeItem(getCartKey(user)); 
-      localStorage.removeItem(GUEST_KEY);
-    } catch {}
+      const key = getCartKey(user);
+      localStorage.setItem(key, '[]'); 
+      localStorage.setItem(GUEST_KEY, '[]');
+      
+      // Sincronização IMEDIATA com o banco se houver usuário
+      if (user) {
+        if (dbSyncTimeout.current) clearTimeout(dbSyncTimeout.current);
+        await supabase
+          .from('profiles')
+          .update({ cart: [] })
+          .eq('id', user.id);
+      }
+    } catch (err) {
+      console.error("Erro ao limpar carrinho:", err);
+    }
   };
 
   const updateQuantity = (cartId, quantity) => {
