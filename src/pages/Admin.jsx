@@ -2253,8 +2253,38 @@ const Admin = () => {
             });
 
             const totalRevenue = filteredOrders.reduce((acc, o) => acc + Number(o.total_price || 0), 0);
-            const totalCost = filteredOrders.reduce((acc, order) => acc + calculateOrderCost(order), 0);
-            const totalProfit = totalRevenue - totalCost;
+            
+            // Cálculo detalhado para separar USD e CAD
+            const { totalCostCAD, totalCostUSD } = filteredOrders.reduce((acc, order) => {
+              const rate = order.usd_cad_rate || pricing.exchangeRateFallback || 1.38;
+              
+              const itemsCostUSD = order.items?.reduce((sum, item) => {
+                const base = calculateItemBaseCostUSD(item);
+                let addons = 0;
+                const size = item.size || 'M';
+                if (size === '2XL') addons += (pricing.costAdd2XL || 1);
+                if (['3XL', '4XL'].includes(size)) addons += (pricing.costAdd3XL4XL || 2);
+                if (item.extras?.nameNumber) addons += (pricing.costAddCustom || 3);
+                if (item.extras?.patch) addons += (pricing.costAddPatch || 1);
+                return sum + ((base + addons) * (item.quantity || 1));
+              }, 0) || 0;
+
+              const totalItems = order.items?.reduce((s, i) => s + (i.quantity || 1), 0) || 0;
+              let surchargeUSD = 0;
+              if (totalItems === 1) surchargeUSD = pricing.surcharge1Item || 5;
+              else if (totalItems === 2) surchargeUSD = pricing.surcharge2Items || 4;
+              else if (totalItems === 3) surchargeUSD = pricing.surcharge3Items || 3;
+
+              const orderUSD = itemsCostUSD + surchargeUSD;
+              const orderCAD = orderUSD * rate;
+
+              return {
+                totalCostUSD: acc.totalCostUSD + orderUSD,
+                totalCostCAD: acc.totalCostCAD + orderCAD
+              };
+            }, { totalCostCAD: 0, totalCostUSD: 0 });
+
+            const totalProfit = totalRevenue - totalCostCAD;
 
             return (
               <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem', maxWidth: '1200px' }}>
@@ -2272,8 +2302,8 @@ const Admin = () => {
                   <button onClick={() => { setDateRange({ start: '', end: '' }); setStatusFilter('all'); setOrderFilter(null); }} style={{ padding: '0.5rem 1rem', background: 'rgba(255,255,255,0.1)', color: '#fff', border: '1px solid rgba(255,255,255,0.2)', borderRadius: '6px', cursor: 'pointer', fontWeight: 700, fontSize: '0.8rem' }}>Limpar Filtros</button>
                 </div>
 
-                {/* STATS SUMMARY BAR */}
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(130px, 1fr))', gap: '1rem' }}>
+                {/* STATS SUMMARY BAR - 4 items por linha */}
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '1rem' }}>
                   <div
                     onClick={() => setStatusFilter('all')}
                     className="glass-panel"
@@ -2306,16 +2336,22 @@ const Admin = () => {
                     <p style={{ fontSize: '0.6rem', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: 800 }}>Concluídos</p>
                     <h3 style={{ fontSize: '1.2rem', color: '#fff', margin: 0 }}>{filteredOrders.filter(o => ['shipped', 'completed'].includes(o.status)).length}</h3>
                   </div>
+
+                  {/* Segunda Linha */}
                   <div className="glass-panel" style={{ padding: '0.8rem', borderRadius: '12px', borderLeft: '4px solid var(--accent-color)' }}>
-                    <p style={{ fontSize: '0.6rem', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: 800 }}>Receita</p>
+                    <p style={{ fontSize: '0.6rem', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: 800 }}>Receita (CAD)</p>
                     <h3 style={{ fontSize: '1.2rem', color: 'var(--accent-color)', margin: 0 }}>${totalRevenue.toFixed(2)}</h3>
                   </div>
+                  <div className="glass-panel" style={{ padding: '0.8rem', borderRadius: '12px', borderLeft: '4px solid #f87171' }}>
+                    <p style={{ fontSize: '0.6rem', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: 800 }}>Custo (USD)</p>
+                    <h3 style={{ fontSize: '1.2rem', color: '#fff', margin: 0 }}>${totalCostUSD.toFixed(2)}</h3>
+                  </div>
                   <div className="glass-panel" style={{ padding: '0.8rem', borderRadius: '12px', borderLeft: '4px solid #64748b' }}>
-                    <p style={{ fontSize: '0.6rem', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: 800 }}>Custo</p>
-                    <h3 style={{ fontSize: '1.2rem', color: '#fff', margin: 0 }}>${totalCost.toFixed(2)}</h3>
+                    <p style={{ fontSize: '0.6rem', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: 800 }}>Custo (CAD)</p>
+                    <h3 style={{ fontSize: '1.2rem', color: '#fff', margin: 0 }}>${totalCostCAD.toFixed(2)}</h3>
                   </div>
                   <div className="glass-panel" style={{ padding: '0.8rem', borderRadius: '12px', borderLeft: '4px solid #22c55e' }}>
-                    <p style={{ fontSize: '0.6rem', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: 800 }}>Lucro</p>
+                    <p style={{ fontSize: '0.6rem', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: 800 }}>Lucro (CAD)</p>
                     <h3 style={{ fontSize: '1.2rem', color: '#22c55e', margin: 0 }}>${totalProfit.toFixed(2)}</h3>
                   </div>
                 </div>
