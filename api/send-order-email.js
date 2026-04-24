@@ -148,16 +148,27 @@ export default async function handler(req, res) {
             </div>
 
             <div style="margin-bottom: 40px; padding: 25px; background: #f8fafc; border: 2px dashed #cbd5e1; border-radius: 12px;">
-              <h2 style="color: #1e293b; font-size: 1.3rem; margin-top: 0; margin-bottom: 5px;">📦 RESUMO PARA O FORNECEDOR</h2>
-              <p style="color: #64748b; font-size: 0.85rem; margin-bottom: 15px;">(Ideal para printar e enviar)</p>
+              <h2 style="color: #1e293b; font-size: 1.3rem; margin-top: 0; margin-bottom: 5px;">📦 DADOS PARA O FORNECEDOR</h2>
+              <p style="color: #64748b; font-size: 0.85rem; margin-bottom: 15px;">(Copie ou Printe o bloco abaixo)</p>
               
-              <div style="margin-bottom: 20px; padding: 15px; background: #ffffff; border-radius: 8px; border: 1px solid #e2e8f0;">
-                <p style="margin: 0; color: #64748b; font-size: 0.8rem; text-transform: uppercase; font-weight: 700;">Entregar em:</p>
-                <p style="margin: 5px 0 0 0; color: #1e293b; font-size: 1.1rem; font-weight: 800; line-height: 1.4;">
-                  ${order.shipping_address.street}${order.shipping_address.apartment ? ', Apt ' + order.shipping_address.apartment : ''}<br/>
-                  ${order.shipping_address.city}, ${order.shipping_address.province} - ${order.shipping_address.postalCode}
-                </p>
-                <p style="margin: 10px 0 0 0; color: #475569; font-size: 0.9rem;"><strong>Cliente:</strong> ${order.customer_name} | ${order.customer_phone}</p>
+              <div style="margin-bottom: 20px; padding: 20px; background: #ffffff; border-radius: 8px; border: 1px solid #e2e8f0; font-family: monospace; line-height: 1.6; color: #000;">
+                ${order.shipping_address.method === 'pickup' ? `
+                  <div style="background: #FFF9C4; padding: 10px; border-radius: 4px; border: 1px solid #FBC02D; text-align: center; margin-bottom: 15px;">
+                    <strong>📍 ATENÇÃO: RETIRADA EM LOJA</strong><br/>
+                    Fazer o pedido no nome da iFooty (Wolf Willow).
+                  </div>
+                ` : `
+                  <strong>Full name:</strong> ${order.customer_name}<br/>
+                  <strong>Zip code:</strong> ${order.shipping_address.postalCode}<br/>
+                  <strong>Country:</strong> ${order.shipping_address.country || 'Canada'}<br/>
+                  <strong>Province:</strong> ${order.shipping_address.province}<br/>
+                  <strong>City:</strong> ${order.shipping_address.city}<br/>
+                  <strong>District:</strong> ${order.shipping_address.district || 'N/A'}<br/>
+                  <strong>Address:</strong> ${order.shipping_address.street}${order.shipping_address.apartment ? ' (Apt ' + order.shipping_address.apartment + ')' : ''}<br/>
+                  <strong>Address number:</strong> ${order.shipping_address.number}<br/>
+                  <strong>Phone:</strong> ${order.customer_phone}<br/>
+                  <strong>Sin Number (Tax ID):</strong> ${order.shipping_address.sin || 'N/A'}
+                `}
               </div>
 
               ${supplierItemsHtml}
