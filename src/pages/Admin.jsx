@@ -182,6 +182,7 @@ const Admin = () => {
   const [welcomeTriggered, setWelcomeTriggered] = useState(false);
   const [expandedOrderId, setExpandedOrderId] = useState(null);
   const [expandedAgentId, setExpandedAgentId] = useState(null);
+  const [expandedCustomerId, setExpandedCustomerId] = useState(null);
 
   // Filtros do Relatório de Produtividade
   const [prodDateRange, setProdDateRange] = useState({
