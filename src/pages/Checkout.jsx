@@ -78,6 +78,7 @@ const Checkout = () => {
 
           let streetNumber = '';
           let route = '';
+          let district = '';
           let city = '';
           let province = '';
           let postalCode = '';
@@ -86,6 +87,7 @@ const Checkout = () => {
             const types = component.types;
             if (types.includes('street_number')) streetNumber = component.long_name;
             if (types.includes('route')) route = component.long_name;
+            if (types.includes('sublocality_level_1') || types.includes('neighborhood')) district = component.long_name;
             if (types.includes('locality')) city = component.long_name;
             if (types.includes('administrative_area_level_1')) province = component.short_name;
             if (types.includes('postal_code')) postalCode = component.long_name;
@@ -93,7 +95,9 @@ const Checkout = () => {
 
           setFormData(prev => ({
             ...prev,
-            street: `${streetNumber} ${route}`.trim(),
+            street: route || prev.street,
+            addressNumber: streetNumber || prev.addressNumber,
+            district: district || prev.district,
             city: city || prev.city,
             province: province || prev.province,
             postalCode: postalCode || prev.postalCode
