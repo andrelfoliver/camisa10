@@ -95,12 +95,12 @@ const Checkout = () => {
 
           setFormData(prev => ({
             ...prev,
-            street: route || prev.street,
-            addressNumber: streetNumber || prev.addressNumber,
-            district: district || prev.district,
-            city: city || prev.city,
-            province: province || prev.province,
-            postalCode: postalCode || prev.postalCode
+            street: route,
+            addressNumber: streetNumber,
+            district: district,
+            city: city,
+            province: province,
+            postalCode: postalCode
           }));
         });
       } catch (err) {
@@ -557,13 +557,16 @@ const Checkout = () => {
 
                   <div className="address-grid-row">
                     <div>
-                      <label style={{ display: 'block', marginBottom: '0.5rem', color: 'var(--text-muted)' }}>Endereço (Rua/Street)</label>
+                      <label style={{ display: 'block', marginBottom: '0.5rem', color: 'var(--text-muted)' }}>Comece pelo Nº e Rua (Autocomplete)</label>
                       <input
-                        type="text" placeholder="Ex: Bay Street"
+                        type="text" placeholder="Ex: 123 Bay Street"
                         ref={addressInputRef}
                         value={formData.street} onChange={e => setFormData({ ...formData, street: e.target.value })}
-                        style={{ width: '100%', padding: '0.75rem', borderRadius: 'var(--radius-sm)', background: 'var(--bg-color)', border: '1px solid var(--border-color)', color: 'var(--text-main)', fontSize: '1rem' }}
+                        style={{ width: '100%', padding: '0.75rem', borderRadius: 'var(--radius-sm)', background: 'var(--bg-color)', border: '1px solid var(--accent-color)', color: 'var(--text-main)', fontSize: '1rem' }}
                       />
+                      <p style={{ fontSize: '0.7rem', color: 'var(--accent-color)', marginTop: '0.4rem', opacity: 0.8 }}>
+                        💡 Digite o <strong>número</strong> primeiro para preencher o resto automaticamente.
+                      </p>
                     </div>
                     <div>
                       <label style={{ display: 'block', marginBottom: '0.5rem', color: 'var(--text-muted)' }}>Número</label>
