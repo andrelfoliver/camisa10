@@ -485,7 +485,7 @@ const Checkout = () => {
         {/* Form */}
         <div>
           <h2 style={{ fontSize: '2rem', marginBottom: '2rem', display: 'flex', alignItems: 'center', gap: '0.8rem' }}>
-            <Truck color="var(--accent-color)" /> Entrega ou Retirada
+            <Truck color="var(--accent-color)" /> {t('checkout_title')}
           </h2>
 
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginBottom: '2rem' }}>
@@ -497,8 +497,8 @@ const Checkout = () => {
               }}
             >
               <div style={{ color: formData.deliveryMethod === 'shipping' ? 'var(--accent-color)' : 'var(--text-muted)', marginBottom: '0.5rem' }}><Truck size={24} /></div>
-              <div style={{ fontWeight: 700, color: '#fff' }}>Receber em Casa</div>
-              <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Via Correios</div>
+              <div style={{ fontWeight: 700, color: '#fff' }}>{t('checkout_home_delivery')}</div>
+              <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{t('checkout_home_delivery_desc')}</div>
             </button>
             <button
               onClick={() => setFormData({ ...formData, deliveryMethod: 'pickup' })}
@@ -508,8 +508,8 @@ const Checkout = () => {
               }}
             >
               <div style={{ color: formData.deliveryMethod === 'pickup' ? 'var(--accent-color)' : 'var(--text-muted)', marginBottom: '0.5rem' }}><MapPin size={24} /></div>
-              <div style={{ fontWeight: 700, color: '#fff' }}>Retirar em Wolf Willow</div>
-              <div style={{ fontSize: '0.75rem', color: 'var(--accent-color)' }}>Frete Grátis</div>
+              <div style={{ fontWeight: 700, color: '#fff' }}>{t('checkout_pickup_delivery')}</div>
+              <div style={{ fontSize: '0.75rem', color: 'var(--accent-color)' }}>{t('checkout_pickup_delivery_desc')}</div>
             </button>
           </div>
 
@@ -517,7 +517,7 @@ const Checkout = () => {
             <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
               <div style={{ display: 'grid', gridTemplateColumns: '1.5fr 1fr', gap: '1rem' }}>
                 <div>
-                  <label style={{ display: 'block', marginBottom: '0.5rem', color: 'var(--text-muted)' }}>Nome Completo</label>
+                  <label style={{ display: 'block', marginBottom: '0.5rem', color: 'var(--text-muted)' }}>{t('checkout_name')}</label>
                   <input
                     type="text"
                     value={formData.name} onChange={e => setFormData({ ...formData, name: e.target.value })}
@@ -526,7 +526,7 @@ const Checkout = () => {
                   />
                 </div>
                 <div>
-                  <label style={{ display: 'block', marginBottom: '0.5rem', color: 'var(--text-muted)' }}>Telefone</label>
+                  <label style={{ display: 'block', marginBottom: '0.5rem', color: 'var(--text-muted)' }}>{t('checkout_phone')}</label>
                   <input
                     type="tel"
                     value={formData.phone} onChange={e => setFormData({ ...formData, phone: e.target.value.replace(/\D/g, '').substring(0, 14) })}
@@ -540,7 +540,7 @@ const Checkout = () => {
                 <>
                   <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '1rem' }}>
                     <div>
-                      <label style={{ display: 'block', marginBottom: '0.5rem', color: 'var(--text-muted)' }}>Postal Code</label>
+                      <label style={{ display: 'block', marginBottom: '0.5rem', color: 'var(--text-muted)' }}>{t('checkout_postal')}</label>
                       <input
                         type="text" placeholder="Ex: T2X 0V1"
                         value={formData.postalCode} onChange={e => setFormData({ ...formData, postalCode: e.target.value.toUpperCase() })}
@@ -551,7 +551,7 @@ const Checkout = () => {
 
                   <div className="address-grid-row">
                     <div>
-                      <label style={{ display: 'block', marginBottom: '0.5rem', color: 'var(--text-muted)' }}>Comece pelo Nº e Rua (Autocomplete)</label>
+                      <label style={{ display: 'block', marginBottom: '0.5rem', color: 'var(--text-muted)' }}>{t('checkout_autocomplete_label')}</label>
                       <input
                         type="text" placeholder="Ex: 123 Bay Street"
                         ref={addressInputRef}
@@ -559,11 +559,11 @@ const Checkout = () => {
                         style={{ width: '100%', padding: '0.75rem', borderRadius: 'var(--radius-sm)', background: 'var(--bg-color)', border: '1px solid var(--accent-color)', color: 'var(--text-main)', fontSize: '1rem' }}
                       />
                       <p style={{ fontSize: '0.7rem', color: 'var(--accent-color)', marginTop: '0.4rem', opacity: 0.8 }}>
-                        💡 Digite o <strong>número</strong> primeiro para preencher o resto automaticamente.
+                        {t('checkout_autocomplete_hint')}
                       </p>
                     </div>
                     <div>
-                      <label style={{ display: 'block', marginBottom: '0.5rem', color: 'var(--text-muted)' }}>Número</label>
+                      <label style={{ display: 'block', marginBottom: '0.5rem', color: 'var(--text-muted)' }}>{t('checkout_address_number')}</label>
                       <input
                         type="text" placeholder="Ex: 123"
                         value={formData.addressNumber} onChange={e => setFormData({ ...formData, addressNumber: e.target.value })}
@@ -574,7 +574,7 @@ const Checkout = () => {
 
                   <div className="address-grid-triple">
                     <div>
-                      <label style={{ display: 'block', marginBottom: '0.5rem', color: 'var(--text-muted)' }}>Bairro (District)</label>
+                      <label style={{ display: 'block', marginBottom: '0.5rem', color: 'var(--text-muted)' }}>{t('checkout_district')}</label>
                       <input
                         type="text" placeholder="Ex: Wolf Willow"
                         value={formData.district} onChange={e => setFormData({ ...formData, district: e.target.value })}
@@ -582,7 +582,7 @@ const Checkout = () => {
                       />
                     </div>
                     <div>
-                      <label style={{ display: 'block', marginBottom: '0.5rem', color: 'var(--text-muted)' }}>Unit (Apto)</label>
+                      <label style={{ display: 'block', marginBottom: '0.5rem', color: 'var(--text-muted)' }}>{t('checkout_unit')}</label>
                       <input
                         type="text" placeholder="Ex: 402"
                         value={formData.apartment} onChange={e => setFormData({ ...formData, apartment: e.target.value })}
@@ -590,7 +590,7 @@ const Checkout = () => {
                       />
                     </div>
                     <div>
-                      <label style={{ display: 'block', marginBottom: '0.5rem', color: 'var(--text-muted)' }}>Cidade</label>
+                      <label style={{ display: 'block', marginBottom: '0.5rem', color: 'var(--text-muted)' }}>{t('checkout_city_label')}</label>
                       <input
                         type="text"
                         value={formData.city} onChange={e => setFormData({ ...formData, city: e.target.value })}
@@ -601,14 +601,14 @@ const Checkout = () => {
 
                   <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
                     <div>
-                      <label style={{ display: 'block', marginBottom: '0.5rem', color: 'var(--text-muted)' }}>Estado/Província</label>
+                      <label style={{ display: 'block', marginBottom: '0.5rem', color: 'var(--text-muted)' }}>{t('checkout_province_label')}</label>
                       <input
                         type="text" value={formData.province} onChange={e => setFormData({ ...formData, province: e.target.value })}
                         style={{ width: '100%', padding: '0.75rem', borderRadius: 'var(--radius-sm)', background: 'var(--bg-color)', border: '1px solid var(--border-color)', color: 'var(--text-main)', fontSize: '1rem' }}
                       />
                     </div>
                     <div>
-                      <label style={{ display: 'block', marginBottom: '0.5rem', color: 'var(--text-muted)' }}>País</label>
+                      <label style={{ display: 'block', marginBottom: '0.5rem', color: 'var(--text-muted)' }}>{t('checkout_country_label')}</label>
                       <input
                         type="text" value={formData.country} readOnly
                         style={{ width: '100%', padding: '0.75rem', borderRadius: 'var(--radius-sm)', background: 'rgba(0,0,0,0.2)', border: '1px solid var(--border-color)', color: 'var(--text-muted)', fontSize: '1rem', cursor: 'not-allowed' }}
@@ -622,7 +622,7 @@ const Checkout = () => {
                 <div style={{ background: 'rgba(204, 255, 0, 0.05)', padding: '1.5rem', borderRadius: '8px', border: '1px solid rgba(204, 255, 0, 0.2)' }}>
                   <p style={{ display: 'flex', gap: '0.8rem', color: 'var(--accent-color)', fontSize: '0.9rem', lineHeight: 1.5 }}>
                     <AlertCircle size={18} style={{ flexShrink: 0 }} />
-                    Você escolheu <strong>Retirada em Wolf Willow (Sul de Calgary)</strong>. O endereço completo será enviado após a aprovação do pedido.
+                    {t('checkout_pickup_alert')}
                   </p>
                 </div>
               )}
