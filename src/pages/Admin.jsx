@@ -728,16 +728,17 @@ const Admin = () => {
     
     if (!agentRef || agentRef === 'Sem Indicação') return 0;
 
-    // Calcular o total de pedidos deste agente para determinar o nível (Bronze, Prata, Ouro, Diamante)
-    // Sincronizado com a lógica do Relatório de Produtividade
-    const agentOrdersCount = orders.filter(o => {
+    // Todas as ordens deste agente para cálculo de nível e bônus meta
+    const agentOrders = orders.filter(o => {
       const oRef = o.referrer || 'Sem Indicação';
       const oCoupon = coupons.find(c => c.code === oRef.toUpperCase());
       const oAgent = oCoupon ? (oCoupon.agent_id || oRef) : oRef;
       return oAgent === agentRef;
-    }).length;
+    });
 
-    // LÓGICA DE NÍVEIS
+    const agentOrdersCount = agentOrders.length;
+
+    // LÓGICA DE NÍVEIS (Sincronizada com o Relatório de Produtividade)
     let rate = 0.08;
     if (agentOrdersCount >= 51) rate = 0.15;
     else if (agentOrdersCount >= 26) rate = 0.12;
@@ -750,7 +751,16 @@ const Admin = () => {
     const isCopaPeriod = orderDateStr >= '2026-06-11' && orderDateStr <= '2026-07-19';
     const seasonalBonus = isCopaPeriod ? Number(order.total_price || 0) * 0.05 : 0;
 
-    return commissionBase + seasonalBonus;
+    // BÔNUS META (Baseado no Rank do Pedido para este agente)
+    const sortedAgentOrders = [...agentOrders].sort((a, b) => new Date(a.created_at) - new Date(b.created_at));
+    const orderRank = sortedAgentOrders.findIndex(o => o.id === order.id) + 1;
+    
+    let perfBonus = 0;
+    if (orderRank === 1) perfBonus = 5;
+    if (orderRank === 5) perfBonus = 10;
+    if (orderRank === 10) perfBonus = 15;
+
+    return commissionBase + seasonalBonus + perfBonus;
   };
 
   const calculateItemCost = (item) => {
