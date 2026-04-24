@@ -2428,10 +2428,29 @@ const Admin = () => {
                               </div>
 
                               <p style={{ fontSize: '0.7rem', color: 'var(--text-muted)', fontWeight: 800, textTransform: 'uppercase', marginBottom: '0.5rem' }}>Endereço de Entrega</p>
-                              <div style={{ fontSize: '0.85rem', color: '#fff' }}>
+                              <div style={{ fontSize: '0.85rem', color: '#fff', marginBottom: '1.5rem' }}>
                                 <p>{order.shipping_address?.street}{order.shipping_address?.apartment ? `, Apt ${order.shipping_address.apartment}` : ''}</p>
                                 <p>{order.shipping_address?.city}, {order.shipping_address?.province} {order.shipping_address?.postalCode}</p>
                                 <p style={{ color: 'var(--text-muted)', marginTop: '0.2rem' }}><MapPin size={12} /> {order.customer_phone}</p>
+                              </div>
+
+                              <div style={{ padding: '1rem', background: 'rgba(255,255,255,0.03)', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.05)' }}>
+                                <p style={{ fontSize: '0.65rem', color: 'var(--text-muted)', fontWeight: 800, textTransform: 'uppercase', marginBottom: '0.5rem' }}>DRE do Pedido (CAD)</p>
+                                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.85rem', marginBottom: '0.3rem' }}>
+                                  <span>Receita Bruta:</span>
+                                  <span style={{ color: 'var(--accent-color)', fontWeight: 700 }}>${Number(order.total_price).toFixed(2)}</span>
+                                </div>
+                                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.85rem', marginBottom: '0.3rem' }}>
+                                  <span>Custo Estimado:</span>
+                                  <span style={{ color: '#ef4444' }}>-${calculateOrderCost(order).toFixed(2)}</span>
+                                </div>
+                                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.9rem', fontWeight: 800, borderTop: '1px solid rgba(255,255,255,0.1)', paddingTop: '0.3rem', marginTop: '0.3rem' }}>
+                                  <span>Lucro Líquido:</span>
+                                  <span style={{ color: '#22c55e' }}>${(Number(order.total_price) - calculateOrderCost(order)).toFixed(2)}</span>
+                                </div>
+                                <p style={{ fontSize: '0.6rem', color: 'var(--text-muted)', marginTop: '0.5rem' }}>
+                                  * Baseado em {order.usd_cad_rate ? `câmbio histórico (${order.usd_cad_rate})` : `câmbio atual/fallback (${pricing.exchangeRateFallback || 1.38})`}.
+                                </p>
                               </div>
                             </div>
 
