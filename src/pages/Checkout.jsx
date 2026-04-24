@@ -20,11 +20,16 @@ const Checkout = () => {
     name: user?.user_metadata?.full_name || '',
     phone: '',
     instagram: '',
+    deliveryMethod: 'shipping', // 'shipping' | 'pickup'
     street: '',
+    addressNumber: '',
+    district: '',
     apartment: '',
     city: '',
     province: '',
     postalCode: '',
+    country: 'Canada',
+    sinNumber: '',
     saveAddress: true
   });
 
@@ -163,17 +168,27 @@ const Checkout = () => {
   };
 
   const generateWhatsAppMessage = () => {
+    const isPickup = formData.deliveryMethod === 'pickup';
     let message = `${t('checkout_wa_order_title')}\n\n`;
     message += `${t('checkout_wa_customer')} ${formData.name}\n`;
-    message += `${t('checkout_wa_shipping')}\n`;
-    message += `${formData.street}${formData.apartment ? ', Apt ' + formData.apartment : ''}\n`;
-    message += `${formData.city}, ${formData.province}\n`;
-    message += `${formData.postalCode}\n\n`;
+    message += `Telefone: ${formData.phone}\n`;
+    
+    if (isPickup) {
+      message += `MÉTODO: 📍 RETIRADA (Wolf Willow, Calgary)\n\n`;
+    } else {
+      message += `MÉTODO: 🚚 ENTREGA VIA CORREIOS\n`;
+      message += `Endereço: ${formData.street}, ${formData.addressNumber}${formData.apartment ? ', Apt ' + formData.apartment : ''}\n`;
+      message += `Bairro: ${formData.district}\n`;
+      message += `Cidade: ${formData.city}, ${formData.province}\n`;
+      message += `Postal Code: ${formData.postalCode}\n`;
+      message += `País: ${formData.country}\n`;
+      message += `SIN Number: ${formData.sinNumber}\n\n`;
+    }
 
     message += `\n${t('cart_subtotal')}: $${subtotal.toFixed(2)}\n`;
     if (discount > 0) message += `Desconto Qtd: -$${discount.toFixed(2)}\n`;
     if (appliedCoupon) message += `Cupom ${appliedCoupon.code}: -${appliedCoupon.discount_percent}% OFF\n`;
-    message += `Frete: ${appliedShipping === 0 ? 'GRÁTIS' : '$' + appliedShipping.toFixed(2)}\n`;
+    message += `Frete: ${currentShipping === 0 ? 'GRÁTIS' : '$' + currentShipping.toFixed(2)}\n`;
 
     message += `\n${t('checkout_wa_total')} $${finalTotal.toFixed(2)} CAD\n`;
     message += `\n${t('checkout_wa_footer')}`;
@@ -209,9 +224,12 @@ const Checkout = () => {
     }
   };
 
+  // CÁLCULO DO TOTAL COM FRETE DINÂMICO
+  const currentShipping = formData.deliveryMethod === 'pickup' ? 0 : appliedShipping;
+  
   const finalTotal = appliedCoupon
-    ? (subtotal - discount) * (1 - appliedCoupon.discount_percent / 100) + (appliedShipping || 0)
-    : cartTotal;
+    ? (subtotal - discount) * (1 - appliedCoupon.discount_percent / 100) + (currentShipping || 0)
+    : (subtotal - discount + (currentShipping || 0));
 
   // Memoize PayPal options to avoid re-rendering
   const initialPayPalOptions = useMemo(() => ({
@@ -220,10 +238,44 @@ const Checkout = () => {
     intent: "capture",
   }), []);
   const validateForm = () => {
-    if (!formData.street || !formData.city || !formData.province || !formData.postalCode) {
-      showPopup(t('checkout_validation_error'));
+    // 1. Validações Básicas Comuns
+    if (formData.name.trim().length < 3) {
+      showPopup("Por favor, insira o seu nome completo real.");
       return false;
     }
+    const phoneDigits = formData.phone.replace(/\D/g, '');
+    if (phoneDigits.length < 10) {
+      showPopup("Por favor, insira um telefone válido com 10 dígitos (DDD + Número).");
+      return false;
+    }
+
+    // 2. Validações Específicas para Entrega
+    if (formData.deliveryMethod === 'shipping') {
+      if (!formData.street || !formData.addressNumber || !formData.city || !formData.province) {
+        showPopup("Para entrega em casa, todos os campos de endereço são obrigatórios.");
+        return false;
+      }
+
+      // Validação Postal Code (Canadá: A1B 2C3)
+      const pcRegex = /^[A-Z]\d[A-Z] ?\d[A-Z]\d$/i;
+      if (!pcRegex.test(formData.postalCode)) {
+        showPopup("Formato de Postal Code inválido. Exemplo correto: T2X 0V1");
+        return false;
+      }
+
+      // Validação SIN Number (9 dígitos)
+      const sinDigits = formData.sinNumber.replace(/\D/g, '');
+      if (sinDigits.length !== 9) {
+        showPopup("O SIN Number (Tax ID) é obrigatório para envios internacionais e deve ter exatamente 9 dígitos.");
+        return false;
+      }
+      
+      if (formData.district.trim().length < 2) {
+        showPopup("Por favor, informe seu bairro.");
+        return false;
+      }
+    }
+
     return true;
   };
 
@@ -236,11 +288,16 @@ const Checkout = () => {
         customer_email: user.email,
         customer_phone: formData.phone,
         shipping_address: {
-          street: formData.street,
+          method: formData.deliveryMethod,
+          street: formData.deliveryMethod === 'pickup' ? 'Wolf Willow (Pickup)' : formData.street,
+          number: formData.addressNumber,
+          district: formData.district,
           apartment: formData.apartment,
-          city: formData.city,
-          province: formData.province,
-          postalCode: formData.postalCode
+          city: formData.deliveryMethod === 'pickup' ? 'Calgary' : formData.city,
+          province: formData.deliveryMethod === 'pickup' ? 'AB' : formData.province,
+          postalCode: formData.postalCode,
+          country: formData.country,
+          sin: formData.sinNumber
         },
         items: cartItems.map(item => ({
           id: item.id,
@@ -422,76 +479,152 @@ const Checkout = () => {
         {/* Form */}
         <div>
           <h2 style={{ fontSize: '2rem', marginBottom: '2rem', display: 'flex', alignItems: 'center', gap: '0.8rem' }}>
-            <MapPin color="var(--accent-color)" /> {t('checkout_delivery_title')}
+            <Truck color="var(--accent-color)" /> Entrega ou Retirada
           </h2>
+
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginBottom: '2rem' }}>
+            <button
+              onClick={() => setFormData({ ...formData, deliveryMethod: 'shipping' })}
+              style={{
+                padding: '1.5rem', borderRadius: 'var(--radius-md)', border: `2px solid ${formData.deliveryMethod === 'shipping' ? 'var(--accent-color)' : 'var(--border-color)'}`,
+                background: formData.deliveryMethod === 'shipping' ? 'rgba(204, 255, 0, 0.05)' : 'transparent', textAlign: 'center', cursor: 'pointer', transition: 'all 0.3s'
+              }}
+            >
+              <div style={{ color: formData.deliveryMethod === 'shipping' ? 'var(--accent-color)' : 'var(--text-muted)', marginBottom: '0.5rem' }}><Truck size={24} /></div>
+              <div style={{ fontWeight: 700, color: '#fff' }}>Receber em Casa</div>
+              <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Via Correios</div>
+            </button>
+            <button
+              onClick={() => setFormData({ ...formData, deliveryMethod: 'pickup' })}
+              style={{
+                padding: '1.5rem', borderRadius: 'var(--radius-md)', border: `2px solid ${formData.deliveryMethod === 'pickup' ? 'var(--accent-color)' : 'var(--border-color)'}`,
+                background: formData.deliveryMethod === 'pickup' ? 'rgba(204, 255, 0, 0.05)' : 'transparent', textAlign: 'center', cursor: 'pointer', transition: 'all 0.3s'
+              }}
+            >
+              <div style={{ color: formData.deliveryMethod === 'pickup' ? 'var(--accent-color)' : 'var(--text-muted)', marginBottom: '0.5rem' }}><MapPin size={24} /></div>
+              <div style={{ fontWeight: 700, color: '#fff' }}>Retirar em Wolf Willow</div>
+              <div style={{ fontSize: '0.75rem', color: 'var(--accent-color)' }}>Frete Grátis</div>
+            </button>
+          </div>
+
           <div className="glass-panel checkout-form-panel" style={{ padding: '1.5rem', borderRadius: 'var(--radius-md)' }}>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
-              <div>
-                <label style={{ display: 'block', marginBottom: '0.5rem', color: 'var(--text-muted)' }}>{t('checkout_name')}</label>
-                <input
-                  type="text"
-                  value={formData.name} onChange={e => setFormData({ ...formData, name: e.target.value })}
-                  style={{ width: '100%', padding: '0.75rem', borderRadius: 'var(--radius-sm)', background: 'var(--bg-color)', border: '1px solid var(--border-color)', color: 'var(--text-main)', fontSize: '1rem' }}
-                />
-              </div>
-
-              <div className="address-grid-row">
+              <div style={{ display: 'grid', gridTemplateColumns: '1.5fr 1fr', gap: '1rem' }}>
                 <div>
-                  <label style={{ display: 'block', marginBottom: '0.5rem', color: 'var(--text-muted)' }}>{t('checkout_street')}</label>
+                  <label style={{ display: 'block', marginBottom: '0.5rem', color: 'var(--text-muted)' }}>Nome Completo</label>
                   <input
-                    type="text" placeholder="Ex: 123 Bay St"
-                    ref={addressInputRef}
-                    value={formData.street} onChange={e => setFormData({ ...formData, street: e.target.value })}
+                    type="text"
+                    value={formData.name} onChange={e => setFormData({ ...formData, name: e.target.value })}
+                    placeholder="Como no passaporte/ID"
                     style={{ width: '100%', padding: '0.75rem', borderRadius: 'var(--radius-sm)', background: 'var(--bg-color)', border: '1px solid var(--border-color)', color: 'var(--text-main)', fontSize: '1rem' }}
                   />
                 </div>
                 <div>
-                  <label style={{ display: 'block', marginBottom: '0.5rem', color: 'var(--text-muted)' }}>{t('checkout_apt')}</label>
+                  <label style={{ display: 'block', marginBottom: '0.5rem', color: 'var(--text-muted)' }}>Telefone</label>
                   <input
-                    type="text" placeholder="Ex: 402"
-                    value={formData.apartment} onChange={e => setFormData({ ...formData, apartment: e.target.value })}
+                    type="tel"
+                    value={formData.phone} onChange={e => setFormData({ ...formData, phone: e.target.value })}
+                    placeholder="(000) 000-0000"
                     style={{ width: '100%', padding: '0.75rem', borderRadius: 'var(--radius-sm)', background: 'var(--bg-color)', border: '1px solid var(--border-color)', color: 'var(--text-main)', fontSize: '1rem' }}
                   />
                 </div>
               </div>
 
-              <div className="address-grid-triple">
-                <div>
-                  <label style={{ display: 'block', marginBottom: '0.5rem', color: 'var(--text-muted)' }}>{t('checkout_city')}</label>
-                  <input
-                    type="text" placeholder="Ex: Toronto"
-                    value={formData.city} onChange={e => setFormData({ ...formData, city: e.target.value })}
-                    style={{ width: '100%', padding: '0.75rem', borderRadius: 'var(--radius-sm)', background: 'var(--bg-color)', border: '1px solid var(--border-color)', color: 'var(--text-main)', fontSize: '1rem' }}
-                  />
+              {formData.deliveryMethod === 'shipping' && (
+                <>
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+                    <div>
+                      <label style={{ display: 'block', marginBottom: '0.5rem', color: 'var(--text-muted)' }}>Postal Code</label>
+                      <input
+                        type="text" placeholder="Ex: T2X 0V1"
+                        value={formData.postalCode} onChange={e => setFormData({ ...formData, postalCode: e.target.value.toUpperCase() })}
+                        style={{ width: '100%', padding: '0.75rem', borderRadius: 'var(--radius-sm)', background: 'var(--bg-color)', border: '1px solid var(--border-color)', color: 'var(--text-main)', fontSize: '1rem' }}
+                      />
+                    </div>
+                    <div>
+                      <label style={{ display: 'block', marginBottom: '0.5rem', color: 'var(--text-muted)' }}>SIN Number (Tax ID)</label>
+                      <input
+                        type="password" placeholder="9 dígitos"
+                        value={formData.sinNumber} onChange={e => setFormData({ ...formData, sinNumber: e.target.value })}
+                        style={{ width: '100%', padding: '0.75rem', borderRadius: 'var(--radius-sm)', background: 'var(--bg-color)', border: '1px solid var(--border-color)', color: 'var(--text-main)', fontSize: '1rem' }}
+                      />
+                    </div>
+                  </div>
+
+                  <div className="address-grid-row">
+                    <div>
+                      <label style={{ display: 'block', marginBottom: '0.5rem', color: 'var(--text-muted)' }}>Endereço (Rua/Street)</label>
+                      <input
+                        type="text" placeholder="Ex: Bay Street"
+                        ref={addressInputRef}
+                        value={formData.street} onChange={e => setFormData({ ...formData, street: e.target.value })}
+                        style={{ width: '100%', padding: '0.75rem', borderRadius: 'var(--radius-sm)', background: 'var(--bg-color)', border: '1px solid var(--border-color)', color: 'var(--text-main)', fontSize: '1rem' }}
+                      />
+                    </div>
+                    <div>
+                      <label style={{ display: 'block', marginBottom: '0.5rem', color: 'var(--text-muted)' }}>Número</label>
+                      <input
+                        type="text" placeholder="Ex: 123"
+                        value={formData.addressNumber} onChange={e => setFormData({ ...formData, addressNumber: e.target.value })}
+                        style={{ width: '100%', padding: '0.75rem', borderRadius: 'var(--radius-sm)', background: 'var(--bg-color)', border: '1px solid var(--border-color)', color: 'var(--text-main)', fontSize: '1rem' }}
+                      />
+                    </div>
+                  </div>
+
+                  <div className="address-grid-triple">
+                    <div>
+                      <label style={{ display: 'block', marginBottom: '0.5rem', color: 'var(--text-muted)' }}>Bairro (District)</label>
+                      <input
+                        type="text" placeholder="Ex: Wolf Willow"
+                        value={formData.district} onChange={e => setFormData({ ...formData, district: e.target.value })}
+                        style={{ width: '100%', padding: '0.75rem', borderRadius: 'var(--radius-sm)', background: 'var(--bg-color)', border: '1px solid var(--border-color)', color: 'var(--text-main)', fontSize: '1rem' }}
+                      />
+                    </div>
+                    <div>
+                      <label style={{ display: 'block', marginBottom: '0.5rem', color: 'var(--text-muted)' }}>Apartamento/Apt</label>
+                      <input
+                        type="text" placeholder="Ex: 402"
+                        value={formData.apartment} onChange={e => setFormData({ ...formData, apartment: e.target.value })}
+                        style={{ width: '100%', padding: '0.75rem', borderRadius: 'var(--radius-sm)', background: 'var(--bg-color)', border: '1px solid var(--border-color)', color: 'var(--text-main)', fontSize: '1rem' }}
+                      />
+                    </div>
+                    <div>
+                      <label style={{ display: 'block', marginBottom: '0.5rem', color: 'var(--text-muted)' }}>Cidade</label>
+                      <input
+                        type="text"
+                        value={formData.city} onChange={e => setFormData({ ...formData, city: e.target.value })}
+                        style={{ width: '100%', padding: '0.75rem', borderRadius: 'var(--radius-sm)', background: 'var(--bg-color)', border: '1px solid var(--border-color)', color: 'var(--text-main)', fontSize: '1rem' }}
+                      />
+                    </div>
+                  </div>
+
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+                    <div>
+                      <label style={{ display: 'block', marginBottom: '0.5rem', color: 'var(--text-muted)' }}>Estado/Província</label>
+                      <input
+                        type="text" value={formData.province} onChange={e => setFormData({ ...formData, province: e.target.value })}
+                        style={{ width: '100%', padding: '0.75rem', borderRadius: 'var(--radius-sm)', background: 'var(--bg-color)', border: '1px solid var(--border-color)', color: 'var(--text-main)', fontSize: '1rem' }}
+                      />
+                    </div>
+                    <div>
+                      <label style={{ display: 'block', marginBottom: '0.5rem', color: 'var(--text-muted)' }}>País</label>
+                      <input
+                        type="text" value={formData.country} readOnly
+                        style={{ width: '100%', padding: '0.75rem', borderRadius: 'var(--radius-sm)', background: 'rgba(0,0,0,0.2)', border: '1px solid var(--border-color)', color: 'var(--text-muted)', fontSize: '1rem', cursor: 'not-allowed' }}
+                      />
+                    </div>
+                  </div>
+                </>
+              )}
+
+              {formData.deliveryMethod === 'pickup' && (
+                <div style={{ background: 'rgba(204, 255, 0, 0.05)', padding: '1.5rem', borderRadius: '8px', border: '1px solid rgba(204, 255, 0, 0.2)' }}>
+                  <p style={{ display: 'flex', gap: '0.8rem', color: 'var(--accent-color)', fontSize: '0.9rem', lineHeight: 1.5 }}>
+                    <AlertCircle size={18} style={{ flexShrink: 0 }} />
+                    Você escolheu <strong>Retirada em Wolf Willow (Sul de Calgary)</strong>. O endereço completo será enviado após a aprovação do pedido.
+                  </p>
                 </div>
-                <div>
-                  <label style={{ display: 'block', marginBottom: '0.5rem', color: 'var(--text-muted)' }}>{t('checkout_province')}</label>
-                  <select
-                    value={formData.province} onChange={e => setFormData({ ...formData, province: e.target.value })}
-                    style={{ width: '100%', padding: '0.75rem', borderRadius: 'var(--radius-sm)', background: 'var(--bg-color)', border: '1px solid var(--border-color)', color: 'var(--text-main)', fontSize: '1rem' }}
-                  >
-                    <option value="">{t('checkout_select_province')}</option>
-                    <option value="ON">Ontario (ON)</option>
-                    <option value="BC">British Columbia (BC)</option>
-                    <option value="QC">Quebec (QC)</option>
-                    <option value="AB">Alberta (AB)</option>
-                    <option value="MB">Manitoba (MB)</option>
-                    <option value="SK">Saskatchewan (SK)</option>
-                    <option value="NS">Nova Scotia (NS)</option>
-                    <option value="NB">New Brunswick (NB)</option>
-                    <option value="PE">Prince Edward Island (PE)</option>
-                    <option value="NL">Newfoundland and Labrador (NL)</option>
-                  </select>
-                </div>
-                <div>
-                  <label style={{ display: 'block', marginBottom: '0.5rem', color: 'var(--text-muted)' }}>{t('checkout_postal')}</label>
-                  <input
-                    type="text" placeholder="M5H 2N2"
-                    value={formData.postalCode} onChange={e => setFormData({ ...formData, postalCode: e.target.value.toUpperCase() })}
-                    style={{ width: '100%', padding: '0.75rem', borderRadius: 'var(--radius-sm)', background: 'var(--bg-color)', border: '1px solid var(--border-color)', color: 'var(--text-main)', fontSize: '1rem' }}
-                  />
-                </div>
-              </div>
+              )}
 
               <div>
                 <label style={{ display: 'block', marginBottom: '0.5rem', color: 'var(--text-muted)' }}>{t('checkout_social')}</label>
