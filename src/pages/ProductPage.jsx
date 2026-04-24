@@ -108,8 +108,18 @@ const ProductPage = () => {
 
 
   const handleAdd = (buyNow = false) => {
+    // Busca a primeira imagem que NÃO seja vídeo para usar como thumbnail na sacola
+    const isVideo = (url) => url?.toLowerCase().endsWith('.mp4');
+    let displayImage = product.image;
+    
+    if (isVideo(displayImage)) {
+      displayImage = product.gallery?.find(img => !isVideo(img)) || '/placeholder.jpg';
+    }
+
+    const productWithFix = { ...product, image: displayImage };
+
     for (let i = 0; i < quantity; i++) {
-      addToCart(product, selectedSize, { nameNumber: isCustomized, customName, customNumber });
+      addToCart(productWithFix, selectedSize, { nameNumber: isCustomized, customName, customNumber });
     }
     if (buyNow) navigate('/checkout');
   };
