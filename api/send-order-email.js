@@ -174,8 +174,7 @@ export default async function handler(req, res) {
                   <strong>District:</strong> ${order.shipping_address.district || 'N/A'}<br/>
                   <strong>Address:</strong> ${order.shipping_address.street}${order.shipping_address.apartment ? ' (Unit ' + order.shipping_address.apartment + ')' : ''}<br/>
                   <strong>Address number:</strong> ${order.shipping_address.number}<br/>
-                  <strong>Phone:</strong> ${order.customer_phone}<br/>
-                  <strong>Sin Number (Tax ID):</strong> ${order.shipping_address.sin || 'N/A'}
+                  <strong>Phone:</strong> ${order.customer_phone}
                 `}
               </div>
 

@@ -29,7 +29,6 @@ const Checkout = () => {
     province: '',
     postalCode: '',
     country: 'Canada',
-    sinNumber: '',
     saveAddress: true
   });
 
@@ -185,8 +184,7 @@ const Checkout = () => {
       message += `Bairro: ${formData.district}\n`;
       message += `Cidade: ${formData.city}, ${formData.province}\n`;
       message += `Postal Code: ${formData.postalCode}\n`;
-      message += `País: ${formData.country}\n`;
-      message += `SIN Number: ${formData.sinNumber}\n\n`;
+      message += `País: ${formData.country}\n\n`;
     }
 
     message += `\n${t('cart_subtotal')}: $${subtotal.toFixed(2)}\n`;
@@ -267,13 +265,6 @@ const Checkout = () => {
         return false;
       }
 
-      // Validação SIN Number (9 dígitos)
-      const sinDigits = formData.sinNumber.replace(/\D/g, '');
-      if (sinDigits.length !== 9) {
-        showPopup("O SIN Number (Tax ID) é obrigatório para envios internacionais e deve ter exatamente 9 dígitos.");
-        return false;
-      }
-      
       if (formData.district.trim().length < 2) {
         showPopup("Por favor, informe seu bairro.");
         return false;
@@ -311,8 +302,7 @@ const Checkout = () => {
           city: formData.deliveryMethod === 'pickup' ? 'Calgary' : formData.city,
           province: formData.deliveryMethod === 'pickup' ? 'AB' : formData.province,
           postalCode: formData.postalCode,
-          country: formData.country,
-          sin: formData.sinNumber
+          country: formData.country
         },
         usd_cad_rate: currentExchangeRate,
         items: cartItems.map(item => ({
@@ -548,20 +538,12 @@ const Checkout = () => {
 
               {formData.deliveryMethod === 'shipping' && (
                 <>
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '1rem' }}>
                     <div>
                       <label style={{ display: 'block', marginBottom: '0.5rem', color: 'var(--text-muted)' }}>Postal Code</label>
                       <input
                         type="text" placeholder="Ex: T2X 0V1"
                         value={formData.postalCode} onChange={e => setFormData({ ...formData, postalCode: e.target.value.toUpperCase() })}
-                        style={{ width: '100%', padding: '0.75rem', borderRadius: 'var(--radius-sm)', background: 'var(--bg-color)', border: '1px solid var(--border-color)', color: 'var(--text-main)', fontSize: '1rem' }}
-                      />
-                    </div>
-                    <div>
-                      <label style={{ display: 'block', marginBottom: '0.5rem', color: 'var(--text-muted)' }}>SIN Number (Tax ID)</label>
-                      <input
-                        type="text" placeholder="9 dígitos"
-                        value={formData.sinNumber} onChange={e => setFormData({ ...formData, sinNumber: e.target.value.replace(/\D/g, '').substring(0, 9) })}
                         style={{ width: '100%', padding: '0.75rem', borderRadius: 'var(--radius-sm)', background: 'var(--bg-color)', border: '1px solid var(--border-color)', color: 'var(--text-main)', fontSize: '1rem' }}
                       />
                     </div>
