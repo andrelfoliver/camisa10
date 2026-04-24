@@ -138,8 +138,8 @@ const Footer = () => {
 
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginBottom: '2rem' }}>
               <div style={{ background: 'rgba(255,255,255,0.05)', padding: '1rem', borderRadius: '12px' }}>
-                <div style={{ color: 'var(--accent-color)', fontWeight: 800, fontSize: '1.5rem' }}>10%</div>
-                <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>Comissão Base</div>
+                <div style={{ color: 'var(--accent-color)', fontWeight: 800, fontSize: '1.5rem' }}>8% a 15%</div>
+                <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>Plano de Carreira</div>
               </div>
               <div style={{ background: 'rgba(255,255,255,0.05)', padding: '1rem', borderRadius: '12px' }}>
                 <div style={{ color: 'var(--accent-color)', fontWeight: 800, fontSize: '1.5rem' }}>30 Dias</div>
@@ -147,27 +147,40 @@ const Footer = () => {
               </div>
             </div>
 
-            <h4 style={{ color: '#fff', display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '1rem' }}><TrendingUp size={18} color="var(--accent-color)" /> Bônus por Volume Mensal</h4>
-            <div style={{ marginBlock: '1rem', fontSize: '0.9rem' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', padding: '0.5rem 0', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
-                <span>Até CA$ 2.000</span> <span style={{ fontWeight: 600 }}>10% Base</span>
+            <h4 style={{ color: '#fff', display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '1rem' }}><TrendingUp size={18} color="var(--accent-color)" /> Comissões Progressivas</h4>
+            <div style={{ marginBlock: '1rem', fontSize: '0.85rem' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', padding: '0.4rem 0', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
+                <span>🥉 Bronze (1-10 vendas)</span> <span style={{ fontWeight: 600 }}>8%</span>
               </div>
-              <div style={{ display: 'flex', justifyContent: 'space-between', padding: '0.5rem 0', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
-                <span>CA$ 2.001 - 4.000</span> <span style={{ fontWeight: 600, color: 'var(--accent-color)' }}>12% + CA$ 50 Bônus</span>
+              <div style={{ display: 'flex', justifyContent: 'space-between', padding: '0.4rem 0', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
+                <span>🥈 Prata (11-25 vendas)</span> <span style={{ fontWeight: 600, color: 'var(--accent-color)' }}>10%</span>
               </div>
-              <div style={{ display: 'flex', justifyContent: 'space-between', padding: '0.5rem 0', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
-                <span>CA$ 4.001 - 8.000</span> <span style={{ fontWeight: 600, color: 'var(--accent-color)' }}>15% + CA$ 200 Bônus</span>
+              <div style={{ display: 'flex', justifyContent: 'space-between', padding: '0.4rem 0', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
+                <span>🥇 Ouro (26-50 vendas)</span> <span style={{ fontWeight: 600, color: 'var(--accent-color)' }}>12%</span>
               </div>
-              <div style={{ display: 'flex', justifyContent: 'space-between', padding: '0.5rem 0' }}>
-                <span>Mais de CA$ 8.001</span> <span style={{ fontWeight: 600, color: 'var(--accent-color)' }}>20% + CA$ 500 Bônus</span>
+              <div style={{ display: 'flex', justifyContent: 'space-between', padding: '0.4rem 0' }}>
+                <span>💎 Diamante (51+ vendas)</span> <span style={{ fontWeight: 600, color: 'var(--accent-color)' }}>15%</span>
               </div>
             </div>
 
-            <h4 style={{ color: '#fff', display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '1rem', marginTop: '2rem' }}><Award size={18} color="var(--accent-color)" /> Bônus Especiais</h4>
-            <ul style={{ paddingLeft: '1.2rem', color: 'var(--text-muted)', fontSize: '0.9rem', lineHeight: 1.6 }}>
+            <h4 style={{ color: '#fff', display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '1rem', marginTop: '1.5rem' }}><Award size={18} color="var(--accent-color)" /> Bônus por Volume Mensal</h4>
+            <div style={{ marginBlock: '1rem', fontSize: '0.85rem' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', padding: '0.4rem 0', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
+                <span>CA$ 2.000 em vendas</span> <span style={{ fontWeight: 600 }}>+CA$ 100</span>
+              </div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', padding: '0.4rem 0', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
+                <span>CA$ 4.000 em vendas</span> <span style={{ fontWeight: 600 }}>+CA$ 250</span>
+              </div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', padding: '0.4rem 0' }}>
+                <span>CA$ 6.000 em vendas</span> <span style={{ fontWeight: 600 }}>+CA$ 500</span>
+              </div>
+            </div>
+
+            <h4 style={{ color: '#fff', display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '1rem', marginTop: '1.5rem' }}><Gift size={18} color="var(--accent-color)" /> Incentivos Extras</h4>
+            <ul style={{ paddingLeft: '1.2rem', color: 'var(--text-muted)', fontSize: '0.85rem', lineHeight: 1.6 }}>
               <li>Primeiro gol (1ª venda): <strong>+CA$ 5</strong></li>
-              <li>Plano de Carreira: <strong>8% a 15%</strong></li>
-              <li>Indicação de novo jogador ativo: <strong>+CA$ 25</strong></li>
+              <li>5 primeiras vendas: <strong>+CA$ 15 total</strong></li>
+              <li>10 primeiras vendas: <strong>+CA$ 30 total</strong></li>
             </ul>
 
             <div style={{ marginTop: '2rem', padding: '1.5rem', background: 'rgba(204, 255, 0, 0.05)', borderRadius: '12px', border: '1px solid rgba(204, 255, 0, 0.2)' }}>
