@@ -19,8 +19,8 @@ export default async function handler(req, res) {
   const totalFollowers = (Number(followers_insta || 0) + Number(followers_tiktok || 0) + Number(followers_x || 0) + Number(followers_facebook || 0)).toLocaleString();
 
   try {
-    // 1. Enviar E-mail para o Administrador (Admin)
-    const adminEmail = await resend.emails.send({
+    // 1. Definição do E-mail para o Administrador (Admin)
+    const adminEmailPromise = resend.emails.send({
       from: 'Sistema iFooty <afiliado@ifooty.ca>',
       to: ['camisadez085@gmail.com'],
       replyTo: email,
@@ -51,8 +51,8 @@ export default async function handler(req, res) {
       `,
     });
 
-    // 2. Enviar E-mail de Confirmação para o Candidato
-    const candidateEmail = await resend.emails.send({
+    // 2. Definição do E-mail de Confirmação para o Candidato
+    const candidateEmailPromise = resend.emails.send({
       from: 'iFooty Parceiros <afiliado@ifooty.ca>',
       to: [email],
       replyTo: 'camisadez085@gmail.com',
@@ -88,12 +88,19 @@ export default async function handler(req, res) {
       `,
     });
 
-    if (adminEmail.error || candidateEmail.error) {
-      return res.status(500).json({ error: adminEmail.error || candidateEmail.error });
+    // Enviar ambos em paralelo para evitar timeout e garantir entrega
+    const [adminRes, candidateRes] = await Promise.all([adminEmailPromise, candidateEmailPromise]);
+
+    if (adminRes.error) console.error('❌ Resend Admin Error:', adminRes.error);
+    if (candidateRes.error) console.error('❌ Resend Candidate Error:', candidateRes.error);
+
+    if (adminRes.error && candidateRes.error) {
+      return res.status(500).json({ error: 'Erro ao enviar e-mails de notificação.' });
     }
 
     res.status(200).json({ success: true });
   } catch (err) {
+    console.error('❌ Affiliate Registration API Crash:', err);
     res.status(500).json({ error: err.message });
   }
 }

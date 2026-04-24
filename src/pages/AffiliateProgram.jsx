@@ -2,8 +2,10 @@ import React, { useState, useEffect } from 'react';
 import { supabase } from '../services/supabase';
 import { 
   TrendingUp, DollarSign, Gift, Calendar, Award, Globe, Rocket, Terminal, CheckCircle2, 
-  AlertCircle, MessageSquare, BarChart3, Shield, ChevronRight, Mail, X, FileText
+  AlertCircle, MessageSquare, BarChart3, Shield, ChevronRight, Mail, X, FileText, Lock, LogIn
 } from 'lucide-react';
+import { useAuth } from '../context/AuthContext';
+import { useNavigate } from 'react-router-dom';
 
 const Section = ({ icon: Icon, title, children, id }) => (
   <section id={id} style={{ marginBottom: '4rem' }}>
@@ -16,8 +18,10 @@ const Section = ({ icon: Icon, title, children, id }) => (
     {children}
   </section>
 );
-
 const AffiliateProgram = () => {
+  const { user } = useAuth();
+  const navigate = useNavigate();
+
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -31,8 +35,25 @@ const AffiliateProgram = () => {
   });
   const [status, setStatus] = useState('idle'); // idle, submitting, success, error
 
+  // Pre-fill user data if logged in
   useEffect(() => {
-    window.scrollTo(0, 0);
+    if (user) {
+      setFormData(prev => ({
+        ...prev,
+        name: user.user_metadata?.full_name || '',
+        email: user.email || ''
+      }));
+    }
+  }, [user]);
+
+  useEffect(() => {
+    if (window.location.hash === '#cadastro') {
+      setTimeout(() => {
+        scrollToForm();
+      }, 500);
+    } else {
+      window.scrollTo(0, 0);
+    }
   }, []);
 
   const scrollToForm = () => {
@@ -318,8 +339,30 @@ const AffiliateProgram = () => {
                 <h3 style={{ color: '#fff', fontSize: '1.5rem', marginBottom: '1rem' }}>Sua ficha foi recebida!</h3>
                 <p style={{ color: 'var(--text-muted)', lineHeight: 1.6 }}>
                   Recebemos seu interesse em entrar no time! Analisaremos sua ficha e entraremos em contato via WhatsApp ou e-mail em até <strong>24 horas</strong>.
+                  <br/><br/>
+                  <span style={{ fontSize: '0.85rem', opacity: 0.8 }}>* Verifique sua caixa de entrada e também a pasta de <strong>Spam</strong> para o e-mail de confirmação.</span>
                 </p>
                 <button onClick={() => setStatus('idle')} style={{ marginTop: '2rem', background: 'none', border: '1px solid var(--border-color)', color: '#fff', padding: '0.8rem 2rem', borderRadius: '100px', cursor: 'pointer' }}>Nova Inscrição</button>
+              </div>
+            ) : !user ? (
+              <div style={{ textAlign: 'center', padding: '4rem 1rem' }}>
+                <div style={{ width: '64px', height: '64px', borderRadius: '100px', background: 'rgba(255, 255, 255, 0.05)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--accent-color)', margin: '0 auto 1.5rem' }}>
+                  <Lock size={32} />
+                </div>
+                <h3 style={{ color: '#fff', fontSize: '1.5rem', marginBottom: '1rem' }}>Login Obrigatório</h3>
+                <p style={{ color: 'var(--text-muted)', lineHeight: 1.6, maxWidth: '400px', margin: '0 auto 2rem' }}>
+                  Para se candidatar ao programa de afiliados e garantir que seus ganhos sejam registrados corretamente, você precisa estar logado com sua conta Google.
+                </p>
+                <button 
+                  onClick={() => {
+                    sessionStorage.setItem('ifooty_redirect_after_login', '/afiliado#cadastro');
+                    navigate('/auth');
+                  }} 
+                  className="btn-primary" 
+                  style={{ padding: '1rem 2.5rem', fontSize: '1.1rem', fontWeight: 800, display: 'inline-flex', alignItems: 'center', gap: '0.8rem' }}
+                >
+                  <LogIn size={20} /> FAZER LOGIN PARA CONTINUAR
+                </button>
               </div>
             ) : (
               <form onSubmit={handleSubmit} style={{ 
