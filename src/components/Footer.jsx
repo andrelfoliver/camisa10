@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useLanguage } from '../context/LanguageContext';
 import { supabase } from '../services/supabase';
-import { X, MessageSquare, Mail, Award, CheckCircle2, AlertCircle, TrendingUp, DollarSign, FileText, Instagram } from 'lucide-react';
+import { X, MessageSquare, Mail, Award, CheckCircle2, AlertCircle, TrendingUp, DollarSign, FileText, Instagram, Gift } from 'lucide-react';
 
 const InfoModal = ({ title, onClose, children }) => (
   <div style={{
