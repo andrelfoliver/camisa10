@@ -6,26 +6,32 @@ import StatCounter from './StatCounter';
 
 const HeroSection = () => {
   const { t } = useLanguage();
+  const DEFAULT_HEROES = [
+    'https://images.unsplash.com/photo-1574629810360-7efbbe195018?q=80&w=2036&auto=format&fit=crop', // Estádio épico
+    'https://images.unsplash.com/photo-1551958219-acbc608c6377?q=80&w=2070&auto=format&fit=crop', // Bola e campo
+    'https://images.unsplash.com/photo-1508098682722-e99c43a406b2?q=80&w=2070&auto=format&fit=crop'  // Emoção no estádio
+  ];
+
   const [currentIndex, setCurrentIndex] = useState(0);
-  const [heroImages, setHeroImages] = useState([]);
+  const [heroImages, setHeroImages] = useState(DEFAULT_HEROES);
 
   useEffect(() => {
     async function loadHeroSlides() {
-      const { data, error } = await supabase
-        .from('store_settings')
-        .select('value')
-        .eq('key', 'hero_slides')
-        .single();
-      
-      if (data && data.value) {
-        try {
+      try {
+        const { data } = await supabase
+          .from('store_settings')
+          .select('value')
+          .eq('key', 'hero_slides')
+          .single();
+        
+        if (data && data.value) {
           const parsed = JSON.parse(data.value);
           if (Array.isArray(parsed) && parsed.length > 0) {
             setHeroImages(parsed);
           }
-        } catch (e) {
-          console.error("Erro ao processar hero_slides:", e);
         }
+      } catch (e) {
+        console.warn("⚠️ Usando imagens padrão para o Hero (Banco offline ou vazio).");
       }
     }
     loadHeroSlides();
