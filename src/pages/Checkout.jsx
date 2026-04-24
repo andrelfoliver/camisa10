@@ -181,7 +181,7 @@ const Checkout = () => {
       message += `MÉTODO: 📍 RETIRADA (Wolf Willow, Calgary)\n\n`;
     } else {
       message += `MÉTODO: 🚚 ENTREGA VIA CORREIOS\n`;
-      message += `Endereço: ${formData.street}, ${formData.addressNumber}${formData.apartment ? ', Apt ' + formData.apartment : ''}\n`;
+      message += `Endereço: ${formData.street}, ${formData.addressNumber}${formData.apartment ? ', Unit ' + formData.apartment : ''}\n`;
       message += `Bairro: ${formData.district}\n`;
       message += `Cidade: ${formData.city}, ${formData.province}\n`;
       message += `Postal Code: ${formData.postalCode}\n`;
@@ -548,8 +548,8 @@ const Checkout = () => {
                     <div>
                       <label style={{ display: 'block', marginBottom: '0.5rem', color: 'var(--text-muted)' }}>SIN Number (Tax ID)</label>
                       <input
-                        type="password" placeholder="9 dígitos"
-                        value={formData.sinNumber} onChange={e => setFormData({ ...formData, sinNumber: e.target.value })}
+                        type="text" placeholder="9 dígitos"
+                        value={formData.sinNumber} onChange={e => setFormData({ ...formData, sinNumber: e.target.value.replace(/\D/g, '').substring(0, 9) })}
                         style={{ width: '100%', padding: '0.75rem', borderRadius: 'var(--radius-sm)', background: 'var(--bg-color)', border: '1px solid var(--border-color)', color: 'var(--text-main)', fontSize: '1rem' }}
                       />
                     </div>
@@ -588,7 +588,7 @@ const Checkout = () => {
                       />
                     </div>
                     <div>
-                      <label style={{ display: 'block', marginBottom: '0.5rem', color: 'var(--text-muted)' }}>Apartamento/Apt</label>
+                      <label style={{ display: 'block', marginBottom: '0.5rem', color: 'var(--text-muted)' }}>Unit (Apto)</label>
                       <input
                         type="text" placeholder="Ex: 402"
                         value={formData.apartment} onChange={e => setFormData({ ...formData, apartment: e.target.value })}

@@ -50,7 +50,15 @@ export default async function handler(req, res) {
 
   // Helper para garantir que as URLs das imagens sejam absolutas (e-mail não aceita caminhos relativos)
   const normalizeImgUrl = (url) => {
-    if (!url) return 'https://ifooty.ca/placeholder.jpg';
+    const placeholder = 'https://nshatpbtpoyrphlvpghq.supabase.co/storage/v1/object/public/products/placeholder_shirt.jpg';
+    
+    if (!url) return placeholder;
+    
+    // Se for um vídeo, não podemos usar na tag <img> do e-mail
+    if (url.toLowerCase().endsWith('.mp4')) {
+      return placeholder;
+    }
+
     if (url.startsWith('http')) return url;
     
     // Se for um caminho relativo do Supabase (comum em novos uploads)
@@ -164,7 +172,7 @@ export default async function handler(req, res) {
                   <strong>Province:</strong> ${order.shipping_address.province}<br/>
                   <strong>City:</strong> ${order.shipping_address.city}<br/>
                   <strong>District:</strong> ${order.shipping_address.district || 'N/A'}<br/>
-                  <strong>Address:</strong> ${order.shipping_address.street}${order.shipping_address.apartment ? ' (Apt ' + order.shipping_address.apartment + ')' : ''}<br/>
+                  <strong>Address:</strong> ${order.shipping_address.street}${order.shipping_address.apartment ? ' (Unit ' + order.shipping_address.apartment + ')' : ''}<br/>
                   <strong>Address number:</strong> ${order.shipping_address.number}<br/>
                   <strong>Phone:</strong> ${order.customer_phone}<br/>
                   <strong>Sin Number (Tax ID):</strong> ${order.shipping_address.sin || 'N/A'}
