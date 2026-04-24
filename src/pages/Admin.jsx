@@ -1949,18 +1949,18 @@ const Admin = () => {
                           </div>
                           <div style={{ flex: 1 }}>
                             <span style={{ fontSize: '0.65rem' }}>2 un.</span>
-                            <input type="number" step="0.5" value={pricing.surcharge2Items} onChange={e => setPricing({ ...pricing, surcharge2Items: parseFloat(e.target.value) })} style={{ width: '100%', padding: '0.5rem', background: '#000', border: '1px solid #444', color: '#fff' }} />
+                            <input autoComplete="off" min="0" type="number" step="0.5" value={pricing.surcharge2Items || 0} onChange={e => setPricing({ ...pricing, surcharge2Items: parseFloat(e.target.value) || 0 })} style={{ width: '100%', padding: '0.5rem', background: '#000', border: '1px solid #444', color: '#fff' }} />
                           </div>
                           <div style={{ flex: 1 }}>
                             <span style={{ fontSize: '0.65rem' }}>3 un.</span>
-                            <input type="number" step="0.5" value={pricing.surcharge3Items} onChange={e => setPricing({ ...pricing, surcharge3Items: parseFloat(e.target.value) })} style={{ width: '100%', padding: '0.5rem', background: '#000', border: '1px solid #444', color: '#fff' }} />
+                            <input autoComplete="off" min="0" type="number" step="0.5" value={pricing.surcharge3Items || 0} onChange={e => setPricing({ ...pricing, surcharge3Items: parseFloat(e.target.value) || 0 })} style={{ width: '100%', padding: '0.5rem', background: '#000', border: '1px solid #444', color: '#fff' }} />
                           </div>
                         </div>
                       </div>
                     </div>
 
                     {/* Grade de Custos por Tipo */}
-                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: '1rem', marginBottom: '2rem' }}>
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(150px, 1fr))', gap: '1rem', marginBottom: '2rem' }}>
                       {[
                         { label: 'Fan Lisa', key: 'costFan' },
                         { label: 'Player', key: 'costPlayer' },
@@ -1975,7 +1975,15 @@ const Admin = () => {
                       ].map(item => (
                         <div key={item.key}>
                           <label style={{ display: 'block', marginBottom: '0.4rem', color: 'var(--text-muted)', fontSize: '0.75rem' }}>{item.label} ($)</label>
-                          <input type="number" step="0.1" value={pricing[item.key]} onChange={e => setPricing({ ...pricing, [item.key]: parseFloat(e.target.value) })} style={{ width: '100%', padding: '0.6rem', background: 'rgba(255,255,255,0.02)', border: '1px solid var(--border-color)', borderRadius: '4px', color: '#fff', fontSize: '0.9rem' }} />
+                          <input 
+                            type="number" 
+                            step="0.1" 
+                            min="0"
+                            autoComplete="off"
+                            value={pricing[item.key] || 0} 
+                            onChange={e => setPricing({ ...pricing, [item.key]: parseFloat(e.target.value) || 0 })} 
+                            style={{ width: '100%', padding: '0.6rem', background: 'rgba(255,255,255,0.02)', border: '1px solid var(--border-color)', borderRadius: '4px', color: '#fff', fontSize: '0.9rem' }} 
+                          />
                         </div>
                       ))}
                     </div>
@@ -2007,21 +2015,21 @@ const Admin = () => {
                   <div style={{ display: 'flex', gap: '1rem' }}>
                     <div style={{ flex: 1 }}>
                       <label style={{ display: 'block', marginBottom: '0.5rem', color: 'var(--text-muted)', fontWeight: 600 }}>Nome + Número Personalizado</label>
-                      <input required type="number" step="0.01" value={pricing.nameNumber} onChange={e => setPricing({ ...pricing, nameNumber: parseFloat(e.target.value) })} style={{ width: '100%', padding: '1rem', background: 'rgba(255,255,255,0.05)', color: '#fff', border: '1px solid var(--border-color)', borderRadius: 'var(--radius-md)' }} />
+                      <input autoComplete="off" min="0" required type="number" step="0.01" value={pricing.nameNumber || 0} onChange={e => setPricing({ ...pricing, nameNumber: parseFloat(e.target.value) || 0 })} style={{ width: '100%', padding: '1rem', background: 'rgba(255,255,255,0.05)', color: '#fff', border: '1px solid var(--border-color)', borderRadius: 'var(--radius-md)' }} />
                     </div>
                     <div style={{ flex: 1 }}>
                       <label style={{ display: 'block', marginBottom: '0.5rem', color: 'var(--text-muted)', fontWeight: 600 }}>Custo do Patch</label>
-                      <input required type="number" step="0.01" value={pricing.patch} onChange={e => setPricing({ ...pricing, patch: parseFloat(e.target.value) })} style={{ width: '100%', padding: '1rem', background: 'rgba(255,255,255,0.05)', color: '#fff', border: '1px solid var(--border-color)', borderRadius: 'var(--radius-md)' }} />
+                      <input autoComplete="off" min="0" required type="number" step="0.01" value={pricing.patch || 0} onChange={e => setPricing({ ...pricing, patch: parseFloat(e.target.value) || 0 })} style={{ width: '100%', padding: '1rem', background: 'rgba(255,255,255,0.05)', color: '#fff', border: '1px solid var(--border-color)', borderRadius: 'var(--radius-md)' }} />
                     </div>
                   </div>
                   <div style={{ display: 'flex', gap: '1rem' }}>
                     <div style={{ flex: 1 }}>
                       <label style={{ display: 'block', marginBottom: '0.5rem', color: 'var(--text-muted)', fontWeight: 600 }}>Tamanho Plussize (2XL - 3XL)</label>
-                      <input required type="number" step="0.01" value={pricing.size2XL3XL} onChange={e => setPricing({ ...pricing, size2XL3XL: parseFloat(e.target.value) })} style={{ width: '100%', padding: '1rem', background: 'rgba(255,255,255,0.05)', color: '#fff', border: '1px solid var(--border-color)', borderRadius: 'var(--radius-md)' }} />
+                      <input autoComplete="off" min="0" required type="number" step="0.01" value={pricing.size2XL3XL || 0} onChange={e => setPricing({ ...pricing, size2XL3XL: parseFloat(e.target.value) || 0 })} style={{ width: '100%', padding: '1rem', background: 'rgba(255,255,255,0.05)', color: '#fff', border: '1px solid var(--border-color)', borderRadius: 'var(--radius-md)' }} />
                     </div>
                     <div style={{ flex: 1 }}>
                       <label style={{ display: 'block', marginBottom: '0.5rem', color: 'var(--text-muted)', fontWeight: 600 }}>Tamanho Máximo (4XL)</label>
-                      <input required type="number" step="0.01" value={pricing.size4XL} onChange={e => setPricing({ ...pricing, size4XL: parseFloat(e.target.value) })} style={{ width: '100%', padding: '1rem', background: 'rgba(255,255,255,0.05)', color: '#fff', border: '1px solid var(--border-color)', borderRadius: 'var(--radius-md)' }} />
+                      <input autoComplete="off" min="0" required type="number" step="0.01" value={pricing.size4XL || 0} onChange={e => setPricing({ ...pricing, size4XL: parseFloat(e.target.value) || 0 })} style={{ width: '100%', padding: '1rem', background: 'rgba(255,255,255,0.05)', color: '#fff', border: '1px solid var(--border-color)', borderRadius: 'var(--radius-md)' }} />
                     </div>
                   </div>
 
@@ -2447,12 +2455,6 @@ const Admin = () => {
                                 <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.9rem', fontWeight: 800, borderTop: '1px solid rgba(255,255,255,0.1)', paddingTop: '0.3rem', marginTop: '0.3rem' }}>
                                   <span>Lucro Líquido:</span>
                                   <span style={{ color: '#22c55e' }}>${(Number(order.total_price) - calculateOrderCost(order)).toFixed(2)}</span>
-                                </div>
-                                <div style={{ marginTop: '0.8rem', padding: '0.5rem', background: 'rgba(0,0,0,0.3)', borderRadius: '4px', fontSize: '0.65rem', color: '#94a3b8', border: '1px dashed #334155' }}>
-                                  <p style={{ margin: 0, fontWeight: 700, color: '#fff' }}>DEBUG DE CUSTOS (USD):</p>
-                                  <p style={{ margin: 0 }}>• Base Item: ${calculateItemBaseCostUSD(order.items?.[0] || {}).toFixed(2)}</p>
-                                  <p style={{ margin: 0 }}>• Sobretaxa Frete: ${ (pricing.surcharge1Item && order.items?.length === 1) ? pricing.surcharge1Item : (order.items?.length === 1 ? 5 : 0) }</p>
-                                  <p style={{ margin: 0 }}>• Câmbio Aplicado: {order.usd_cad_rate || pricing.exchangeRateFallback || 1.38}</p>
                                 </div>
                                 <p style={{ fontSize: '0.6rem', color: 'var(--text-muted)', marginTop: '0.5rem' }}>
                                   * Baseado em {order.usd_cad_rate ? `câmbio histórico (${order.usd_cad_rate})` : `câmbio atual/fallback (${pricing.exchangeRateFallback || 1.38})`}.
