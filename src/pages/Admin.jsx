@@ -2913,7 +2913,7 @@ const Admin = () => {
                   }} style={{ width: '100%', padding: '0.8rem 1rem', background: 'rgba(255,255,255,0.05)', color: '#10B981', border: '1px solid var(--border-color)', borderRadius: 'var(--radius-sm)' }}>
                     <option value="">-- Autopreencher Preço --</option>
                     <optgroup label="Camisas">
-                      <option value="44.90">Fã Lisa (CA$ 44.90)</option>
+                      <option value="47.90">Fã Lisa (CA$ 47.90)</option>
                       <option value="69.90">Jogador Adidas (CA$ 69.90)</option>
                       <option value="74.90">Jogador Nike (CA$ 74.90)</option>
                       <option value="74.90">Retrô (CA$ 74.90)</option>
@@ -2925,7 +2925,7 @@ const Admin = () => {
                       <option value="69.90">Kit Adulto (CA$ 69.90)</option>
                     </optgroup>
                     <optgroup label="Outros">
-                      <option value="44.90">Shorts Fã (CA$ 44.90)</option>
+                      <option value="47.90">Shorts Fã (CA$ 47.90)</option>
                       <option value="69.90">Shorts Jogador (CA$ 69.90)</option>
                       <option value="159.90">Corta Vento (CA$ 159.90)</option>
                     </optgroup>
@@ -3262,7 +3262,7 @@ const Admin = () => {
                   }} style={{ width: '100%', padding: '0.8rem 1rem', background: 'rgba(255,255,255,0.05)', color: '#3B82F6', border: '1px solid var(--border-color)', borderRadius: 'var(--radius-sm)' }}>
                     <option value="">-- Autopreencher Preço --</option>
                     <optgroup label="Camisas">
-                      <option value="44.90">Fã Lisa (CA$ 44.90)</option>
+                      <option value="47.90">Fã Lisa (CA$ 47.90)</option>
                       <option value="69.90">Jogador Adidas (CA$ 69.90)</option>
                       <option value="74.90">Jogador Nike (CA$ 74.90)</option>
                       <option value="74.90">Retrô (CA$ 74.90)</option>
@@ -3274,7 +3274,7 @@ const Admin = () => {
                       <option value="69.90">Kit Adulto (CA$ 69.90)</option>
                     </optgroup>
                     <optgroup label="Outros">
-                      <option value="44.90">Shorts Fã (CA$ 44.90)</option>
+                      <option value="47.90">Shorts Fã (CA$ 47.90)</option>
                       <option value="69.90">Shorts Jogador (CA$ 69.90)</option>
                       <option value="159.90">Corta Vento (CA$ 159.90)</option>
                     </optgroup>
