@@ -145,7 +145,10 @@ const Admin = () => {
     ],
     shippingCost: 0,
     freeShippingThreshold: 0,
-    promoBasePrice: 47.90
+    promoBasePrice: 47.90,
+    supplierCostBaseUSD: 9.00,
+    supplierSurchargeUSD: 5.00,
+    exchangeRateFallback: 1.38
   };
   const [pricing, setPricing] = useState(defaultPricing);
   const [bulkAdjustmentValue, setBulkAdjustmentValue] = useState(5.00);
@@ -733,7 +736,22 @@ const Admin = () => {
   };
 
   const calculateOrderCost = (order) => {
-    return (order.items || []).reduce((acc, item) => acc + calculateItemCost(item), 0);
+    if (!order || !order.items) return 0;
+    
+    // Contar total de itens para aplicar a regra de sobretaxa (1 unidade)
+    const totalItems = order.items.reduce((sum, item) => sum + (item.quantity || 1), 0);
+    
+    // Pegar câmbio: prioridade para o gravado no pedido, fallback para a config do admin
+    const rate = order.usd_cad_rate || pricing.exchangeRateFallback || 1.38;
+    
+    // Custo base definido pelo usuário no Admin
+    const baseCostUSD = pricing.supplierCostBaseUSD || 9.00;
+    const surchargeUSD = totalItems === 1 ? (pricing.supplierSurchargeUSD || 5.00) : 0;
+    
+    // Cálculo: (Custo Total em USD) * Taxa de Câmbio
+    const totalCostUSD = (baseCostUSD * totalItems) + surchargeUSD;
+    
+    return totalCostUSD * rate;
   };
 
   const uploadImageToSupabase = async (file) => {
@@ -1899,7 +1917,30 @@ const Admin = () => {
               {/* VALORES FIXOS E FRETE */}
               <div className="glass-panel" style={{ padding: '2.5rem', borderRadius: 'var(--radius-lg)' }}>
                 <h2 style={{ display: 'flex', alignItems: 'center', gap: '0.8rem', marginBottom: '1.5rem', fontSize: '1.5rem', color: '#FCD34D' }}>
-                  <DollarSign color="#FCD34D" /> Valores Adicionais Fixos
+                  <DollarSign color="#FCD34D" /> Gestão de Custos (Fornecedor)
+                </h2>
+                <div style={{ padding: '1.5rem', background: 'rgba(34, 197, 94, 0.05)', borderRadius: '12px', border: '1px solid rgba(34, 197, 94, 0.2)', marginBottom: '2rem' }}>
+                  <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap' }}>
+                    <div style={{ flex: 1, minWidth: '200px' }}>
+                      <label style={{ display: 'block', marginBottom: '0.4rem', color: 'var(--text-muted)', fontSize: '0.8rem' }}>🇺🇸 Custo Base / Camisa (USD)</label>
+                      <input type="number" step="0.01" value={pricing.supplierCostBaseUSD} onChange={e => setPricing({ ...pricing, supplierCostBaseUSD: parseFloat(e.target.value) })} style={{ width: '100%', padding: '0.8rem', background: '#000', border: '1px solid var(--border-color)', borderRadius: '6px', color: '#fff' }} />
+                    </div>
+                    <div style={{ flex: 1, minWidth: '200px' }}>
+                      <label style={{ display: 'block', marginBottom: '0.4rem', color: 'var(--text-muted)', fontSize: '0.8rem' }}>🇺🇸 Frete Unidade Única (USD)</label>
+                      <input type="number" step="0.01" value={pricing.supplierSurchargeUSD} onChange={e => setPricing({ ...pricing, supplierSurchargeUSD: parseFloat(e.target.value) })} style={{ width: '100%', padding: '0.8rem', background: '#000', border: '1px solid var(--border-color)', borderRadius: '6px', color: '#fff' }} />
+                    </div>
+                    <div style={{ flex: 1, minWidth: '200px' }}>
+                      <label style={{ display: 'block', marginBottom: '0.4rem', color: '#60A5FA', fontSize: '0.8rem', fontWeight: 700 }}>🇨🇦 Câmbio Fallback (USD/CAD)</label>
+                      <input type="number" step="0.001" value={pricing.exchangeRateFallback} onChange={e => setPricing({ ...pricing, exchangeRateFallback: parseFloat(e.target.value) })} style={{ width: '100%', padding: '0.8rem', background: 'rgba(96, 165, 250, 0.05)', border: '1px solid #60A5FA', borderRadius: '6px', color: '#fff' }} />
+                    </div>
+                  </div>
+                  <p style={{ marginTop: '0.8rem', fontSize: '0.75rem', color: 'var(--text-muted)' }}>
+                    Dica: O sistema captura o câmbio real automaticamente no checkout. O valor acima só será usado em pedidos antigos ou se a API de câmbio falhar.
+                  </p>
+                </div>
+
+                <h2 style={{ display: 'flex', alignItems: 'center', gap: '0.8rem', marginBottom: '1.5rem', fontSize: '1.5rem', color: '#FCD34D' }}>
+                  <DollarSign color="#FCD34D" /> Valores Adicionais Fixos (Venda)
                 </h2>
                 <form onSubmit={handleSavePricing} style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
                   <div style={{ display: 'flex', gap: '1rem' }}>

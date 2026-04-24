@@ -285,7 +285,18 @@ const Checkout = () => {
 
   const saveOrderToDatabase = async (paymentDetails = null) => {
     try {
-      // 1. Salvar o Pedido no Banco
+      // Buscar câmbio real USD -> CAD para registro no pedido
+      let currentExchangeRate = 1.38; // Fallback de segurança
+      try {
+        const rateRes = await fetch('https://open.er-api.com/v6/latest/USD');
+        const rateData = await rateRes.json();
+        if (rateData && rateData.rates && rateData.rates.CAD) {
+          currentExchangeRate = rateData.rates.CAD;
+        }
+      } catch (errRate) {
+        console.warn("⚠️ Não foi possível obter câmbio real em tempo real, usando fallback.");
+      }
+
       const orderData = {
         user_id: user.id,
         customer_name: formData.name,
@@ -303,6 +314,7 @@ const Checkout = () => {
           country: formData.country,
           sin: formData.sinNumber
         },
+        usd_cad_rate: currentExchangeRate,
         items: cartItems.map(item => ({
           id: item.id,
           name: item.name,
