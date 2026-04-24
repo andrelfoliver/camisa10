@@ -146,9 +146,24 @@ const Admin = () => {
     shippingCost: 0,
     freeShippingThreshold: 0,
     promoBasePrice: 47.90,
-    supplierCostBaseUSD: 9.00,
-    supplierSurchargeUSD: 5.00,
-    exchangeRateFallback: 1.38
+    exchangeRateFallback: 1.38,
+    costFan: 9.00,
+    costPlayer: 15.00,
+    costRetro: 15.00,
+    costLongSleeve: 12.00,
+    costKids: 11.00,
+    costBaby: 8.00,
+    costTraining: 17.00,
+    costShorts: 8.00,
+    costNBA: 17.00,
+    costNFL: 23.00,
+    costAdd2XL: 1.00,
+    costAdd3XL4XL: 2.00,
+    costAddPatch: 1.00,
+    costAddCustom: 3.00,
+    surcharge1Item: 5.00,
+    surcharge2Items: 4.00,
+    surcharge3Items: 3.00
   };
   const [pricing, setPricing] = useState(defaultPricing);
   const [bulkAdjustmentValue, setBulkAdjustmentValue] = useState(5.00);
@@ -703,55 +718,65 @@ const Admin = () => {
     SIZE_UP_4XL: 4.11
   };
 
+  const calculateItemBaseCostUSD = (item) => {
+    const name = (item.name || '').toLowerCase();
+    const c = pricing;
+
+    if (name.includes('nba')) return c.costNBA || 17;
+    if (name.includes('nfl')) return c.costNFL || 23;
+    if (name.includes('jogador') || name.includes('player')) return c.costPlayer || 15;
+    if (name.includes('retrô') || name.includes('retro')) return c.costRetro || 15;
+    if (name.includes('manga longa') || name.includes('long sleeve')) return c.costLongSleeve || 12;
+    if (name.includes('kit infantil') || name.includes('kids')) return c.costKids || 11;
+    if (name.includes('baby') || name.includes('body')) return c.costBaby || 8;
+    if (name.includes('treino') || name.includes('training')) return c.costTraining || 17;
+    if (name.includes('short') || name.includes('bermuda')) return c.costShorts || 8;
+
+    return c.costFan || 9; // Fallback para Fan
+  };
+
   const calculateItemCost = (item) => {
-    let cost = CALCULATED_COSTS.FAN;
-    const name = item.name?.toLowerCase() || '';
-    const size = item.size || '';
+    const baseUSD = calculateItemBaseCostUSD(item);
+    let addonsUSD = 0;
 
-    if (name.includes('corta vento')) cost = CALCULATED_COSTS.CORTA_VENTO;
-    else if (name.includes('manga longa')) cost = CALCULATED_COSTS.MANGA_LONGA;
-    else if (name.includes('retrô') || name.includes('retro')) cost = CALCULATED_COSTS.RETRO;
-    else if (name.includes('jogador')) {
-      if (name.includes('nike')) cost = CALCULATED_COSTS.PLAYER_NIKE;
-      else if (name.includes('adidas')) cost = CALCULATED_COSTS.PLAYER_ADIDAS;
-      else cost = 19.86; // Média para jogadores sem marca especificada
-    } else if (name.includes('kit infantil')) {
-      const sizeVal = parseInt(size);
-      if (sizeVal >= 16 && sizeVal <= 22) cost = CALCULATED_COSTS.KIT_INF_SM;
-      else cost = CALCULATED_COSTS.KIT_INF_LG;
-    } else if (name.includes('kit adulto')) cost = CALCULATED_COSTS.KIT_ADULT;
-    else if (name.includes('shorts')) {
-      if (name.includes('jogador')) cost = CALCULATED_COSTS.SHORTS_PLAYER;
-      else cost = CALCULATED_COSTS.SHORTS_FAN;
-    }
+    const size = item.size || 'M';
+    if (size === '2XL') addonsUSD += (pricing.costAdd2XL || 1);
+    if (['3XL', '4XL'].includes(size)) addonsUSD += (pricing.costAdd3XL4XL || 2);
 
-    // Adicionais unitários
-    let unitAddons = 0;
-    if (item.extras?.nameNumber) unitAddons += CALCULATED_COSTS.PERSONALIZA;
-    if (item.extras?.patch) unitAddons += CALCULATED_COSTS.PATCH;
-    if (['2XL', '3XL'].includes(size)) unitAddons += CALCULATED_COSTS.SIZE_UP_2XL;
-    if (size === '4XL') unitAddons += CALCULATED_COSTS.SIZE_UP_4XL;
+    if (item.extras?.nameNumber) addonsUSD += (pricing.costAddCustom || 3);
+    if (item.extras?.patch) addonsUSD += (pricing.costAddPatch || 1);
 
-    return (cost + unitAddons) * (item.quantity || 1);
+    const totalItemUSD = (baseUSD + addonsUSD);
+    const rate = pricing.exchangeRateFallback || 1.38;
+
+    return totalItemUSD * (item.quantity || 1) * rate;
   };
 
   const calculateOrderCost = (order) => {
     if (!order || !order.items) return 0;
-    
-    // Contar total de itens para aplicar a regra de sobretaxa (1 unidade)
-    const totalItems = order.items.reduce((sum, item) => sum + (item.quantity || 1), 0);
-    
-    // Pegar câmbio: prioridade para o gravado no pedido, fallback para a config do admin
     const rate = order.usd_cad_rate || pricing.exchangeRateFallback || 1.38;
     
-    // Custo base definido pelo usuário no Admin
-    const baseCostUSD = pricing.supplierCostBaseUSD || 9.00;
-    const surchargeUSD = totalItems === 1 ? (pricing.supplierSurchargeUSD || 5.00) : 0;
+    // 1. Calcular o custo individual de cada item (em USD)
+    const itemsCostUSD = order.items.reduce((acc, item) => {
+      const baseUSD = calculateItemBaseCostUSD(item);
+      let addonsUSD = 0;
+      const size = item.size || 'M';
+      if (size === '2XL') addonsUSD += (pricing.costAdd2XL || 1);
+      if (['3XL', '4XL'].includes(size)) addonsUSD += (pricing.costAdd3XL4XL || 2);
+      if (item.extras?.nameNumber) addonsUSD += (pricing.costAddCustom || 3);
+      if (item.extras?.patch) addonsUSD += (pricing.costAddPatch || 1);
+      
+      return acc + ((baseUSD + addonsUSD) * (item.quantity || 1));
+    }, 0);
+
+    // 2. Aplicar sobretaxa progressiva de frete (USD)
+    const totalItems = order.items.reduce((sum, item) => sum + (item.quantity || 1), 0);
+    let surchargeUSD = 0;
+    if (totalItems === 1) surchargeUSD = pricing.surcharge1Item || 5;
+    else if (totalItems === 2) surchargeUSD = pricing.surcharge2Items || 4;
+    else if (totalItems === 3) surchargeUSD = pricing.surcharge3Items || 3;
     
-    // Cálculo: (Custo Total em USD) * Taxa de Câmbio
-    const totalCostUSD = (baseCostUSD * totalItems) + surchargeUSD;
-    
-    return totalCostUSD * rate;
+    return (itemsCostUSD + surchargeUSD) * rate;
   };
 
   const uploadImageToSupabase = async (file) => {
@@ -1917,30 +1942,87 @@ const Admin = () => {
               {/* VALORES FIXOS E FRETE */}
               <div className="glass-panel" style={{ padding: '2.5rem', borderRadius: 'var(--radius-lg)' }}>
                 <h2 style={{ display: 'flex', alignItems: 'center', gap: '0.8rem', marginBottom: '1.5rem', fontSize: '1.5rem', color: '#FCD34D' }}>
-                  <DollarSign color="#FCD34D" /> Gestão de Custos (Fornecedor)
+                  <DollarSign color="#FCD34D" /> Gestão de Custos (USD Fornecedor)
                 </h2>
                 <div style={{ padding: '1.5rem', background: 'rgba(34, 197, 94, 0.05)', borderRadius: '12px', border: '1px solid rgba(34, 197, 94, 0.2)', marginBottom: '2rem' }}>
-                  <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap' }}>
-                    <div style={{ flex: 1, minWidth: '200px' }}>
-                      <label style={{ display: 'block', marginBottom: '0.4rem', color: 'var(--text-muted)', fontSize: '0.8rem' }}>🇺🇸 Custo Base / Camisa (USD)</label>
-                      <input type="number" step="0.01" value={pricing.supplierCostBaseUSD} onChange={e => setPricing({ ...pricing, supplierCostBaseUSD: parseFloat(e.target.value) })} style={{ width: '100%', padding: '0.8rem', background: '#000', border: '1px solid var(--border-color)', borderRadius: '6px', color: '#fff' }} />
-                    </div>
-                    <div style={{ flex: 1, minWidth: '200px' }}>
-                      <label style={{ display: 'block', marginBottom: '0.4rem', color: 'var(--text-muted)', fontSize: '0.8rem' }}>🇺🇸 Frete Unidade Única (USD)</label>
-                      <input type="number" step="0.01" value={pricing.supplierSurchargeUSD} onChange={e => setPricing({ ...pricing, supplierSurchargeUSD: parseFloat(e.target.value) })} style={{ width: '100%', padding: '0.8rem', background: '#000', border: '1px solid var(--border-color)', borderRadius: '6px', color: '#fff' }} />
-                    </div>
+                  
+                  {/* Câmbio e Taxas de Volume */}
+                  <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap', marginBottom: '2rem', borderBottom: '1px solid rgba(255,255,255,0.1)', paddingBottom: '1.5rem' }}>
                     <div style={{ flex: 1, minWidth: '200px' }}>
                       <label style={{ display: 'block', marginBottom: '0.4rem', color: '#60A5FA', fontSize: '0.8rem', fontWeight: 700 }}>🇨🇦 Câmbio Fallback (USD/CAD)</label>
                       <input type="number" step="0.001" value={pricing.exchangeRateFallback} onChange={e => setPricing({ ...pricing, exchangeRateFallback: parseFloat(e.target.value) })} style={{ width: '100%', padding: '0.8rem', background: 'rgba(96, 165, 250, 0.05)', border: '1px solid #60A5FA', borderRadius: '6px', color: '#fff' }} />
                     </div>
+                    <div style={{ flex: 1.5, minWidth: '250px' }}>
+                      <label style={{ display: 'block', marginBottom: '0.4rem', color: 'var(--text-muted)', fontSize: '0.8rem' }}>🇺🇸 Sobretaxas de Frete (USD)</label>
+                      <div style={{ display: 'flex', gap: '0.5rem' }}>
+                        <div style={{ flex: 1 }}>
+                          <span style={{ fontSize: '0.65rem' }}>1 un.</span>
+                          <input type="number" step="0.5" value={pricing.surcharge1Item} onChange={e => setPricing({ ...pricing, surcharge1Item: parseFloat(e.target.value) })} style={{ width: '100%', padding: '0.5rem', background: '#000', border: '1px solid #444', color: '#fff' }} />
+                        </div>
+                        <div style={{ flex: 1 }}>
+                          <span style={{ fontSize: '0.65rem' }}>2 un.</span>
+                          <input type="number" step="0.5" value={pricing.surcharge2Items} onChange={e => setPricing({ ...pricing, surcharge2Items: parseFloat(e.target.value) })} style={{ width: '100%', padding: '0.5rem', background: '#000', border: '1px solid #444', color: '#fff' }} />
+                        </div>
+                        <div style={{ flex: 1 }}>
+                          <span style={{ fontSize: '0.65rem' }}>3 un.</span>
+                          <input type="number" step="0.5" value={pricing.surcharge3Items} onChange={e => setPricing({ ...pricing, surcharge3Items: parseFloat(e.target.value) })} style={{ width: '100%', padding: '0.5rem', background: '#000', border: '1px solid #444', color: '#fff' }} />
+                        </div>
+                        <div style={{ flex: 1, textAlign: 'center', opacity: 0.5 }}>
+                          <span style={{ fontSize: '0.65rem' }}>4+ un.</span>
+                          <div style={{ padding: '0.5rem' }}>$0</div>
+                        </div>
+                      </div>
+                    </div>
                   </div>
-                  <p style={{ marginTop: '0.8rem', fontSize: '0.75rem', color: 'var(--text-muted)' }}>
-                    Dica: O sistema captura o câmbio real automaticamente no checkout. O valor acima só será usado em pedidos antigos ou se a API de câmbio falhar.
+
+                  {/* Grade de Custos por Tipo */}
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: '1rem', marginBottom: '2rem' }}>
+                    {[
+                      { label: 'Fan Lisa', key: 'costFan' },
+                      { label: 'Player', key: 'costPlayer' },
+                      { label: 'Retro', key: 'costRetro' },
+                      { label: 'Manga Longa', key: 'costLongSleeve' },
+                      { label: 'Kids', key: 'costKids' },
+                      { label: 'Baby Body', key: 'costBaby' },
+                      { label: 'NBA', key: 'costNBA' },
+                      { label: 'NFL', key: 'costNFL' },
+                      { label: 'Treino', key: 'costTraining' },
+                      { label: 'Shorts', key: 'costShorts' },
+                    ].map(item => (
+                      <div key={item.key}>
+                        <label style={{ display: 'block', marginBottom: '0.4rem', color: 'var(--text-muted)', fontSize: '0.75rem' }}>{item.label} ($)</label>
+                        <input type="number" step="0.1" value={pricing[item.key]} onChange={e => setPricing({ ...pricing, [item.key]: parseFloat(e.target.value) })} style={{ width: '100%', padding: '0.6rem', background: 'rgba(255,255,255,0.02)', border: '1px solid var(--border-color)', borderRadius: '4px', color: '#fff', fontSize: '0.9rem' }} />
+                      </div>
+                    ))}
+                  </div>
+
+                  {/* Adicionais de Custo */}
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(130px, 1fr))', gap: '1rem', padding: '1rem', background: 'rgba(0,0,0,0.2)', borderRadius: '8px' }}>
+                    <div style={{ textAlign: 'center' }}>
+                      <label style={{ display: 'block', marginBottom: '0.4rem', color: '#94a3b8', fontSize: '0.7rem' }}>+ 2XL ($)</label>
+                      <input type="number" step="0.5" value={pricing.costAdd2XL} onChange={e => setPricing({ ...pricing, costAdd2XL: parseFloat(e.target.value) })} style={{ width: '60px', textAlign: 'center', background: 'transparent', border: '1px solid #334155', color: '#fff' }} />
+                    </div>
+                    <div style={{ textAlign: 'center' }}>
+                      <label style={{ display: 'block', marginBottom: '0.4rem', color: '#94a3b8', fontSize: '0.7rem' }}>+ 3/4XL ($)</label>
+                      <input type="number" step="0.5" value={pricing.costAdd3XL4XL} onChange={e => setPricing({ ...pricing, costAdd3XL4XL: parseFloat(e.target.value) })} style={{ width: '60px', textAlign: 'center', background: 'transparent', border: '1px solid #334155', color: '#fff' }} />
+                    </div>
+                    <div style={{ textAlign: 'center' }}>
+                      <label style={{ display: 'block', marginBottom: '0.4rem', color: '#94a3b8', fontSize: '0.7rem' }}>+ Patch ($)</label>
+                      <input type="number" step="0.5" value={pricing.costAddPatch} onChange={e => setPricing({ ...pricing, costAddPatch: parseFloat(e.target.value) })} style={{ width: '60px', textAlign: 'center', background: 'transparent', border: '1px solid #334155', color: '#fff' }} />
+                    </div>
+                    <div style={{ textAlign: 'center' }}>
+                      <label style={{ display: 'block', marginBottom: '0.4rem', color: '#94a3b8', fontSize: '0.7rem' }}>+ Custom ($)</label>
+                      <input type="number" step="0.5" value={pricing.costAddCustom} onChange={e => setPricing({ ...pricing, costAddCustom: parseFloat(e.target.value) })} style={{ width: '60px', textAlign: 'center', background: 'transparent', border: '1px solid #334155', color: '#fff' }} />
+                    </div>
+                  </div>
+
+                  <p style={{ marginTop: '1rem', fontSize: '0.75rem', color: 'var(--text-muted)', fontStyle: 'italic' }}>
+                    O sistema identifica o tipo de camisa palavras-chave no nome do produto (ex: "nba", "jogador", "retrô").
                   </p>
                 </div>
 
                 <h2 style={{ display: 'flex', alignItems: 'center', gap: '0.8rem', marginBottom: '1.5rem', fontSize: '1.5rem', color: '#FCD34D' }}>
-                  <DollarSign color="#FCD34D" /> Valores Adicionais Fixos (Venda)
+                  <DollarSign color="#FCD34D" /> Valores Adicionais Fixos (Venda em CAD)
                 </h2>
                 <form onSubmit={handleSavePricing} style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
                   <div style={{ display: 'flex', gap: '1rem' }}>
