@@ -527,7 +527,7 @@ const Checkout = () => {
                   <label style={{ display: 'block', marginBottom: '0.5rem', color: 'var(--text-muted)' }}>Telefone</label>
                   <input
                     type="tel"
-                    value={formData.phone} onChange={e => setFormData({ ...formData, phone: e.target.value })}
+                    value={formData.phone} onChange={e => setFormData({ ...formData, phone: e.target.value.replace(/\D/g, '').substring(0, 14) })}
                     placeholder="(000) 000-0000"
                     style={{ width: '100%', padding: '0.75rem', borderRadius: 'var(--radius-sm)', background: 'var(--bg-color)', border: '1px solid var(--border-color)', color: 'var(--text-main)', fontSize: '1rem' }}
                   />

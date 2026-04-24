@@ -13,7 +13,7 @@ const HeroSection = () => {
   ];
 
   const [currentIndex, setCurrentIndex] = useState(0);
-  const [heroImages, setHeroImages] = useState(DEFAULT_HEROES);
+  const [heroImages, setHeroImages] = useState([]); // Inicia vazio para evitar flash
 
   useEffect(() => {
     async function loadHeroSlides() {
@@ -28,10 +28,13 @@ const HeroSection = () => {
           const parsed = JSON.parse(data.value);
           if (Array.isArray(parsed) && parsed.length > 0) {
             setHeroImages(parsed);
+            return;
           }
         }
+        // Se chegar aqui, o banco retornou vazio, usamos o fallback
+        setHeroImages(DEFAULT_HEROES);
       } catch (e) {
-        console.warn("⚠️ Usando imagens padrão para o Hero (Banco offline ou vazio).");
+        setHeroImages(DEFAULT_HEROES);
       }
     }
     loadHeroSlides();
