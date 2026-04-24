@@ -1924,90 +1924,86 @@ const Admin = () => {
 
               {/* VALORES FIXOS E FRETE */}
               <div className="glass-panel" style={{ padding: '2.5rem', borderRadius: 'var(--radius-lg)' }}>
-                <h2 style={{ display: 'flex', alignItems: 'center', gap: '0.8rem', marginBottom: '1.5rem', fontSize: '1.5rem', color: '#FCD34D' }}>
-                  <DollarSign color="#FCD34D" /> Gestão de Custos (USD Fornecedor)
-                </h2>
-                <div style={{ padding: '1.5rem', background: 'rgba(34, 197, 94, 0.05)', borderRadius: '12px', border: '1px solid rgba(34, 197, 94, 0.2)', marginBottom: '2rem' }}>
-                  
-                  {/* Câmbio e Taxas de Volume */}
-                  <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap', marginBottom: '2rem', borderBottom: '1px solid rgba(255,255,255,0.1)', paddingBottom: '1.5rem' }}>
-                    <div style={{ flex: 1, minWidth: '200px' }}>
-                      <label style={{ display: 'block', marginBottom: '0.4rem', color: '#60A5FA', fontSize: '0.8rem', fontWeight: 700 }}>🇨🇦 Câmbio Fallback (USD/CAD)</label>
-                      <input type="number" step="0.001" value={pricing.exchangeRateFallback} onChange={e => setPricing({ ...pricing, exchangeRateFallback: parseFloat(e.target.value) })} style={{ width: '100%', padding: '0.8rem', background: 'rgba(96, 165, 250, 0.05)', border: '1px solid #60A5FA', borderRadius: '6px', color: '#fff' }} />
-                    </div>
-                    <div style={{ flex: 1.5, minWidth: '250px' }}>
-                      <label style={{ display: 'block', marginBottom: '0.4rem', color: 'var(--text-muted)', fontSize: '0.8rem' }}>🇺🇸 Sobretaxas de Frete (USD)</label>
-                      <div style={{ display: 'flex', gap: '0.5rem' }}>
-                        <div style={{ flex: 1 }}>
-                          <span style={{ fontSize: '0.65rem' }}>1 un.</span>
-                          <input type="number" step="0.5" value={pricing.surcharge1Item} onChange={e => setPricing({ ...pricing, surcharge1Item: parseFloat(e.target.value) })} style={{ width: '100%', padding: '0.5rem', background: '#000', border: '1px solid #444', color: '#fff' }} />
-                        </div>
-                        <div style={{ flex: 1 }}>
-                          <span style={{ fontSize: '0.65rem' }}>2 un.</span>
-                          <input type="number" step="0.5" value={pricing.surcharge2Items} onChange={e => setPricing({ ...pricing, surcharge2Items: parseFloat(e.target.value) })} style={{ width: '100%', padding: '0.5rem', background: '#000', border: '1px solid #444', color: '#fff' }} />
-                        </div>
-                        <div style={{ flex: 1 }}>
-                          <span style={{ fontSize: '0.65rem' }}>3 un.</span>
-                          <input type="number" step="0.5" value={pricing.surcharge3Items} onChange={e => setPricing({ ...pricing, surcharge3Items: parseFloat(e.target.value) })} style={{ width: '100%', padding: '0.5rem', background: '#000', border: '1px solid #444', color: '#fff' }} />
-                        </div>
-                        <div style={{ flex: 1, textAlign: 'center', opacity: 0.5 }}>
-                          <span style={{ fontSize: '0.65rem' }}>4+ un.</span>
-                          <div style={{ padding: '0.5rem' }}>$0</div>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Grade de Custos por Tipo */}
-                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: '1rem', marginBottom: '2rem' }}>
-                    {[
-                      { label: 'Fan Lisa', key: 'costFan' },
-                      { label: 'Player', key: 'costPlayer' },
-                      { label: 'Retro', key: 'costRetro' },
-                      { label: 'Manga Longa', key: 'costLongSleeve' },
-                      { label: 'Kids', key: 'costKids' },
-                      { label: 'Baby Body', key: 'costBaby' },
-                      { label: 'NBA', key: 'costNBA' },
-                      { label: 'NFL', key: 'costNFL' },
-                      { label: 'Treino', key: 'costTraining' },
-                      { label: 'Shorts', key: 'costShorts' },
-                    ].map(item => (
-                      <div key={item.key}>
-                        <label style={{ display: 'block', marginBottom: '0.4rem', color: 'var(--text-muted)', fontSize: '0.75rem' }}>{item.label} ($)</label>
-                        <input type="number" step="0.1" value={pricing[item.key]} onChange={e => setPricing({ ...pricing, [item.key]: parseFloat(e.target.value) })} style={{ width: '100%', padding: '0.6rem', background: 'rgba(255,255,255,0.02)', border: '1px solid var(--border-color)', borderRadius: '4px', color: '#fff', fontSize: '0.9rem' }} />
-                      </div>
-                    ))}
-                  </div>
-
-                  {/* Adicionais de Custo */}
-                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(130px, 1fr))', gap: '1rem', padding: '1rem', background: 'rgba(0,0,0,0.2)', borderRadius: '8px' }}>
-                    <div style={{ textAlign: 'center' }}>
-                      <label style={{ display: 'block', marginBottom: '0.4rem', color: '#94a3b8', fontSize: '0.7rem' }}>+ 2XL ($)</label>
-                      <input type="number" step="0.5" value={pricing.costAdd2XL} onChange={e => setPricing({ ...pricing, costAdd2XL: parseFloat(e.target.value) })} style={{ width: '60px', textAlign: 'center', background: 'transparent', border: '1px solid #334155', color: '#fff' }} />
-                    </div>
-                    <div style={{ textAlign: 'center' }}>
-                      <label style={{ display: 'block', marginBottom: '0.4rem', color: '#94a3b8', fontSize: '0.7rem' }}>+ 3/4XL ($)</label>
-                      <input type="number" step="0.5" value={pricing.costAdd3XL4XL} onChange={e => setPricing({ ...pricing, costAdd3XL4XL: parseFloat(e.target.value) })} style={{ width: '60px', textAlign: 'center', background: 'transparent', border: '1px solid #334155', color: '#fff' }} />
-                    </div>
-                    <div style={{ textAlign: 'center' }}>
-                      <label style={{ display: 'block', marginBottom: '0.4rem', color: '#94a3b8', fontSize: '0.7rem' }}>+ Patch ($)</label>
-                      <input type="number" step="0.5" value={pricing.costAddPatch} onChange={e => setPricing({ ...pricing, costAddPatch: parseFloat(e.target.value) })} style={{ width: '60px', textAlign: 'center', background: 'transparent', border: '1px solid #334155', color: '#fff' }} />
-                    </div>
-                    <div style={{ textAlign: 'center' }}>
-                      <label style={{ display: 'block', marginBottom: '0.4rem', color: '#94a3b8', fontSize: '0.7rem' }}>+ Custom ($)</label>
-                      <input type="number" step="0.5" value={pricing.costAddCustom} onChange={e => setPricing({ ...pricing, costAddCustom: parseFloat(e.target.value) })} style={{ width: '60px', textAlign: 'center', background: 'transparent', border: '1px solid #334155', color: '#fff' }} />
-                    </div>
-                  </div>
-
-                  <p style={{ marginTop: '1rem', fontSize: '0.75rem', color: 'var(--text-muted)', fontStyle: 'italic' }}>
-                    O sistema identifica o tipo de camisa palavras-chave no nome do produto (ex: "nba", "jogador", "retrô").
-                  </p>
-                </div>
-
-                <h2 style={{ display: 'flex', alignItems: 'center', gap: '0.8rem', marginBottom: '1.5rem', fontSize: '1.5rem', color: '#FCD34D' }}>
-                  <DollarSign color="#FCD34D" /> Valores Adicionais Fixos (Venda em CAD)
-                </h2>
                 <form onSubmit={handleSavePricing} style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
+                    <h2 style={{ display: 'flex', alignItems: 'center', gap: '0.8rem', fontSize: '1.5rem', color: '#FCD34D', margin: 0 }}>
+                      <DollarSign color="#FCD34D" /> Gestão de Custos (USD Fornecedor)
+                    </h2>
+                    {saved && <div style={{ background: '#10B981', color: '#fff', padding: '0.5rem 1rem', borderRadius: '8px', fontWeight: 'bold', animation: 'fadeIn 0.3s' }}>✓ Configurações Salvas!</div>}
+                  </div>
+
+                  <div style={{ padding: '1.5rem', background: 'rgba(34, 197, 94, 0.05)', borderRadius: '12px', border: '1px solid rgba(34, 197, 94, 0.2)', marginBottom: '1rem' }}>
+                    
+                    {/* Câmbio e Taxas de Volume */}
+                    <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap', marginBottom: '2rem', borderBottom: '1px solid rgba(255,255,255,0.1)', paddingBottom: '1.5rem' }}>
+                      <div style={{ flex: 1, minWidth: '200px' }}>
+                        <label style={{ display: 'block', marginBottom: '0.4rem', color: '#60A5FA', fontSize: '0.8rem', fontWeight: 700 }}>🇨🇦 Câmbio Fallback (USD/CAD)</label>
+                        <input type="number" step="0.001" value={pricing.exchangeRateFallback} onChange={e => setPricing({ ...pricing, exchangeRateFallback: parseFloat(e.target.value) })} style={{ width: '100%', padding: '0.8rem', background: 'rgba(96, 165, 250, 0.05)', border: '1px solid #60A5FA', borderRadius: '6px', color: '#fff' }} />
+                      </div>
+                      <div style={{ flex: 1.5, minWidth: '250px' }}>
+                        <label style={{ display: 'block', marginBottom: '0.4rem', color: 'var(--text-muted)', fontSize: '0.8rem' }}>🇺🇸 Sobretaxas de Frete (USD)</label>
+                        <div style={{ display: 'flex', gap: '0.5rem' }}>
+                          <div style={{ flex: 1 }}>
+                            <span style={{ fontSize: '0.65rem' }}>1 un.</span>
+                            <input type="number" step="0.5" value={pricing.surcharge1Item} onChange={e => setPricing({ ...pricing, surcharge1Item: parseFloat(e.target.value) })} style={{ width: '100%', padding: '0.5rem', background: '#000', border: '1px solid #444', color: '#fff' }} />
+                          </div>
+                          <div style={{ flex: 1 }}>
+                            <span style={{ fontSize: '0.65rem' }}>2 un.</span>
+                            <input type="number" step="0.5" value={pricing.surcharge2Items} onChange={e => setPricing({ ...pricing, surcharge2Items: parseFloat(e.target.value) })} style={{ width: '100%', padding: '0.5rem', background: '#000', border: '1px solid #444', color: '#fff' }} />
+                          </div>
+                          <div style={{ flex: 1 }}>
+                            <span style={{ fontSize: '0.65rem' }}>3 un.</span>
+                            <input type="number" step="0.5" value={pricing.surcharge3Items} onChange={e => setPricing({ ...pricing, surcharge3Items: parseFloat(e.target.value) })} style={{ width: '100%', padding: '0.5rem', background: '#000', border: '1px solid #444', color: '#fff' }} />
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Grade de Custos por Tipo */}
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: '1rem', marginBottom: '2rem' }}>
+                      {[
+                        { label: 'Fan Lisa', key: 'costFan' },
+                        { label: 'Player', key: 'costPlayer' },
+                        { label: 'Retro', key: 'costRetro' },
+                        { label: 'Manga Longa', key: 'costLongSleeve' },
+                        { label: 'Kids', key: 'costKids' },
+                        { label: 'Baby Body', key: 'costBaby' },
+                        { label: 'NBA', key: 'costNBA' },
+                        { label: 'NFL', key: 'costNFL' },
+                        { label: 'Treino', key: 'costTraining' },
+                        { label: 'Shorts', key: 'costShorts' },
+                      ].map(item => (
+                        <div key={item.key}>
+                          <label style={{ display: 'block', marginBottom: '0.4rem', color: 'var(--text-muted)', fontSize: '0.75rem' }}>{item.label} ($)</label>
+                          <input type="number" step="0.1" value={pricing[item.key]} onChange={e => setPricing({ ...pricing, [item.key]: parseFloat(e.target.value) })} style={{ width: '100%', padding: '0.6rem', background: 'rgba(255,255,255,0.02)', border: '1px solid var(--border-color)', borderRadius: '4px', color: '#fff', fontSize: '0.9rem' }} />
+                        </div>
+                      ))}
+                    </div>
+
+                    {/* Adicionais de Custo */}
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(130px, 1fr))', gap: '1rem', padding: '1rem', background: 'rgba(0,0,0,0.2)', borderRadius: '8px' }}>
+                      <div style={{ textAlign: 'center' }}>
+                        <span style={{ display: 'block', marginBottom: '0.4rem', color: '#94a3b8', fontSize: '0.7rem' }}>+ 2XL ($)</span>
+                        <input type="number" step="0.5" value={pricing.costAdd2XL} onChange={e => setPricing({ ...pricing, costAdd2XL: parseFloat(e.target.value) })} style={{ width: '60px', textAlign: 'center', background: 'transparent', border: '1px solid #334155', color: '#fff' }} />
+                      </div>
+                      <div style={{ textAlign: 'center' }}>
+                        <span style={{ display: 'block', marginBottom: '0.4rem', color: '#94a3b8', fontSize: '0.7rem' }}>+ 3/4XL ($)</span>
+                        <input type="number" step="0.5" value={pricing.costAdd3XL4XL} onChange={e => setPricing({ ...pricing, costAdd3XL4XL: parseFloat(e.target.value) })} style={{ width: '60px', textAlign: 'center', background: 'transparent', border: '1px solid #334155', color: '#fff' }} />
+                      </div>
+                      <div style={{ textAlign: 'center' }}>
+                        <span style={{ display: 'block', marginBottom: '0.4rem', color: '#94a3b8', fontSize: '0.7rem' }}>+ Patch ($)</span>
+                        <input type="number" step="0.5" value={pricing.costAddPatch} onChange={e => setPricing({ ...pricing, costAddPatch: parseFloat(e.target.value) })} style={{ width: '60px', textAlign: 'center', background: 'transparent', border: '1px solid #334155', color: '#fff' }} />
+                      </div>
+                      <div style={{ textAlign: 'center' }}>
+                        <span style={{ display: 'block', marginBottom: '0.4rem', color: '#94a3b8', fontSize: '0.7rem' }}>+ Custom ($)</span>
+                        <input type="number" step="0.5" value={pricing.costAddCustom} onChange={e => setPricing({ ...pricing, costAddCustom: parseFloat(e.target.value) })} style={{ width: '60px', textAlign: 'center', background: 'transparent', border: '1px solid #334155', color: '#fff' }} />
+                      </div>
+                    </div>
+                  </div>
+
+                  <h2 style={{ display: 'flex', alignItems: 'center', gap: '0.8rem', marginBottom: '1.5rem', fontSize: '1.5rem', color: '#FCD34D' }}>
+                    <DollarSign color="#FCD34D" /> Valores Adicionais Fixos (Venda em CAD)
+                  </h2>
                   <div style={{ display: 'flex', gap: '1rem' }}>
                     <div style={{ flex: 1 }}>
                       <label style={{ display: 'block', marginBottom: '0.5rem', color: 'var(--text-muted)', fontWeight: 600 }}>Nome + Número Personalizado</label>
@@ -2047,7 +2043,6 @@ const Admin = () => {
                         <input type="number" step="0.01" value={pricing.promoBasePrice} onChange={e => setPricing({ ...pricing, promoBasePrice: parseFloat(e.target.value) })} style={{ width: '100%', padding: '0.8rem', background: 'rgba(219, 254, 135, 0.05)', color: '#fff', border: '1px solid var(--accent-color)', borderRadius: '6px' }} />
                       </div>
                     </div>
-                    <p style={{ marginTop: '0.8rem', fontSize: '0.75rem', color: 'var(--text-muted)' }}>Deixe 0 no limite para cobrar frete em todos os pedidos. Deixe 0 no custo para oferecer frete grátis sempre.</p>
                   </div>
 
                   <div style={{ marginTop: '2rem', borderTop: '1px solid var(--border-color)', paddingTop: '2rem' }}>
@@ -2078,11 +2073,13 @@ const Admin = () => {
                     ))}
                   </div>
 
-                  <button type="submit" className="btn-primary" style={{ background: '#3B82F6', color: '#fff', padding: '1rem', fontSize: '1.1rem', marginTop: '1rem' }}>Salvar Configurações de Preço</button>
+                  <button type="submit" className="btn-primary" style={{ background: '#3B82F6', color: '#fff', padding: '1rem', fontSize: '1.1rem', marginTop: '1rem', position: 'sticky', bottom: '0', zIndex: 10, boxShadow: '0 -5px 20px rgba(0,0,0,0.3)' }}>
+                    {saved ? '✓ Configurações Salvas!' : 'Salvar Todas as Configurações de Preço'}
+                  </button>
                 </form>
+                </div>
               </div>
-            </div>
-          ) : supplierTab === 'TESTIMONIALS' ? (
+            ) : supplierTab === 'TESTIMONIALS' ? (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem', maxWidth: '1000px' }}>
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(450px, 1fr))', gap: '1.5rem' }}>
                 {testimonials.map(t => (
