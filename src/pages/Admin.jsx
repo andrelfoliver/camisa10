@@ -32,7 +32,7 @@ const Admin = () => {
     'MLS',
     'Outras Ligas / Outros'
   ];
-  const [supplierTab, setSupplierTab] = useState('CAT_Lançamentos');
+  const [supplierTab, setSupplierTab] = useState('PEDIDOS');
   const [showAddForm, setShowAddForm] = useState(false);
 
   const [productToDelete, setProductToDelete] = useState(null);
@@ -718,49 +718,62 @@ const Admin = () => {
     return c.costFan || 9; // Fallback para Fan
   };
 
-  const calculateOrderCommission = (order) => {
-    if (!order || !order.referrer) return 0;
+  const getOrderCommissionBreakdown = (order) => {
+    if (!order || !order.referrer) return null;
     
     // Identificar o agente (código do cupom ou agent_id)
     const rawRef = order.referrer || 'Sem Indicação';
     const coupon = coupons.find(c => c.code === rawRef.toUpperCase());
-    const agentRef = coupon ? (coupon.agent_id || rawRef) : rawRef;
+    const agentName = coupon ? (coupon.agent_id || rawRef) : rawRef;
     
-    if (!agentRef || agentRef === 'Sem Indicação') return 0;
+    if (!agentName || agentName === 'Sem Indicação') return null;
 
     // Todas as ordens deste agente para cálculo de nível e bônus meta
     const agentOrders = orders.filter(o => {
       const oRef = o.referrer || 'Sem Indicação';
       const oCoupon = coupons.find(c => c.code === oRef.toUpperCase());
       const oAgent = oCoupon ? (oCoupon.agent_id || oRef) : oRef;
-      return oAgent === agentRef;
+      return oAgent === agentName;
     });
 
     const agentOrdersCount = agentOrders.length;
 
-    // LÓGICA DE NÍVEIS (Sincronizada com o Relatório de Produtividade)
+    // LÓGICA DE NÍVEIS
     let rate = 0.08;
     if (agentOrdersCount >= 51) rate = 0.15;
     else if (agentOrdersCount >= 26) rate = 0.12;
     else if (agentOrdersCount >= 11) rate = 0.10;
 
-    const commissionBase = Number(order.total_price || 0) * rate;
+    const base = Number(order.total_price || 0) * rate;
 
-    // Bônus Sazonal (Ex: Copa do Mundo)
+    // Bônus Sazonal
     const orderDateStr = order.created_at?.split('T')[0] || '';
     const isCopaPeriod = orderDateStr >= '2026-06-11' && orderDateStr <= '2026-07-19';
-    const seasonalBonus = isCopaPeriod ? Number(order.total_price || 0) * 0.05 : 0;
+    const seasonal = isCopaPeriod ? Number(order.total_price || 0) * 0.05 : 0;
 
-    // BÔNUS META (Baseado no Rank do Pedido para este agente)
+    // BÔNUS META
     const sortedAgentOrders = [...agentOrders].sort((a, b) => new Date(a.created_at) - new Date(b.created_at));
     const orderRank = sortedAgentOrders.findIndex(o => o.id === order.id) + 1;
     
-    let perfBonus = 0;
-    if (orderRank === 1) perfBonus = 5;
-    if (orderRank === 5) perfBonus = 10;
-    if (orderRank === 10) perfBonus = 15;
+    let performance = 0;
+    if (orderRank === 1) performance = 5;
+    if (orderRank === 5) performance = 10;
+    if (orderRank === 10) performance = 15;
 
-    return commissionBase + seasonalBonus + perfBonus;
+    return {
+      agentName,
+      base,
+      seasonal,
+      performance,
+      total: base + seasonal + performance,
+      rate: rate * 100,
+      rank: orderRank
+    };
+  };
+
+  const calculateOrderCommission = (order) => {
+    const breakdown = getOrderCommissionBreakdown(order);
+    return breakdown ? breakdown.total : 0;
   };
 
   const calculateItemCost = (item) => {
@@ -2538,12 +2551,37 @@ const Admin = () => {
                                   <span>Custo Fornecedor:</span>
                                   <span style={{ color: '#ef4444' }}>-${(calculateOrderCost(order) - calculateOrderCommission(order)).toFixed(2)}</span>
                                 </div>
-                                {order.referrer && (
-                                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.85rem', marginBottom: '0.3rem' }}>
-                                    <span>Comissão Afiliado:</span>
-                                    <span style={{ color: '#ef4444' }}>-${calculateOrderCommission(order).toFixed(2)}</span>
-                                  </div>
-                                )}
+                                {(() => {
+                                  const breakdown = getOrderCommissionBreakdown(order);
+                                  if (!breakdown) return null;
+                                  return (
+                                    <div style={{ marginTop: '0.8rem', borderTop: '1px dashed rgba(255,255,255,0.05)', paddingTop: '0.8rem' }}>
+                                      <p style={{ fontSize: '0.65rem', color: 'var(--accent-color)', fontWeight: 800, textTransform: 'uppercase', marginBottom: '0.4rem' }}>
+                                        Detalhamento Afiliado: {breakdown.agentName}
+                                      </p>
+                                      <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.8rem', marginBottom: '0.2rem' }}>
+                                        <span style={{ color: 'var(--text-muted)' }}>- Comissão Base ({breakdown.rate}%):</span>
+                                        <span style={{ color: '#ef4444' }}>-${breakdown.base.toFixed(2)}</span>
+                                      </div>
+                                      {breakdown.performance > 0 && (
+                                        <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.8rem', marginBottom: '0.2rem' }}>
+                                          <span style={{ color: 'var(--text-muted)' }}>- Bônus Meta (Venda #{breakdown.rank}):</span>
+                                          <span style={{ color: '#ef4444' }}>-${breakdown.performance.toFixed(2)}</span>
+                                        </div>
+                                      )}
+                                      {breakdown.seasonal > 0 && (
+                                        <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.8rem', marginBottom: '0.2rem' }}>
+                                          <span style={{ color: 'var(--text-muted)' }}>- Bônus Sazonal:</span>
+                                          <span style={{ color: '#ef4444' }}>-${breakdown.seasonal.toFixed(2)}</span>
+                                        </div>
+                                      )}
+                                      <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.85rem', fontWeight: 700, marginTop: '0.3rem', color: '#fff' }}>
+                                        <span>Total Comissão:</span>
+                                        <span>-${breakdown.total.toFixed(2)}</span>
+                                      </div>
+                                    </div>
+                                  );
+                                })()}
                                 <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.9rem', fontWeight: 800, borderTop: '1px solid rgba(255,255,255,0.1)', paddingTop: '0.3rem', marginTop: '0.3rem' }}>
                                   <span>Lucro Líquido:</span>
                                   <span style={{ color: '#22c55e' }}>${(Number(order.total_price) - calculateOrderCost(order)).toFixed(2)}</span>
