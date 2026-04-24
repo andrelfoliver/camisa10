@@ -700,23 +700,6 @@ const Admin = () => {
     }
   };
 
-  const CALCULATED_COSTS = {
-    FAN: 12.33,
-    PLAYER_ADIDAS: 19.18,
-    PLAYER_NIKE: 20.55,
-    RETRO: 20.55,
-    KIT_INF_SM: 13.70,
-    KIT_INF_LG: 15.07,
-    KIT_ADULT: 19.18,
-    SHORTS_FAN: 12.33,
-    SHORTS_PLAYER: 19.18,
-    MANGA_LONGA: 16.44,
-    CORTA_VENTO: 42.47,
-    PERSONALIZA: 4.11,
-    PATCH: 1.37,
-    SIZE_UP_2XL: 2.74,
-    SIZE_UP_4XL: 4.11
-  };
 
   const calculateItemBaseCostUSD = (item) => {
     const name = (item.name || '').toLowerCase();
