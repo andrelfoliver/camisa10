@@ -718,6 +718,41 @@ const Admin = () => {
     return c.costFan || 9; // Fallback para Fan
   };
 
+  const calculateOrderCommission = (order) => {
+    if (!order || !order.referrer) return 0;
+    
+    // Identificar o agente (código do cupom ou agent_id)
+    const rawRef = order.referrer || 'Sem Indicação';
+    const coupon = coupons.find(c => c.code === rawRef.toUpperCase());
+    const agentRef = coupon ? (coupon.agent_id || rawRef) : rawRef;
+    
+    if (!agentRef || agentRef === 'Sem Indicação') return 0;
+
+    // Calcular o total de pedidos deste agente para determinar o nível (Bronze, Prata, Ouro, Diamante)
+    // Sincronizado com a lógica do Relatório de Produtividade
+    const agentOrdersCount = orders.filter(o => {
+      const oRef = o.referrer || 'Sem Indicação';
+      const oCoupon = coupons.find(c => c.code === oRef.toUpperCase());
+      const oAgent = oCoupon ? (oCoupon.agent_id || oRef) : oRef;
+      return oAgent === agentRef;
+    }).length;
+
+    // LÓGICA DE NÍVEIS
+    let rate = 0.08;
+    if (agentOrdersCount >= 51) rate = 0.15;
+    else if (agentOrdersCount >= 26) rate = 0.12;
+    else if (agentOrdersCount >= 11) rate = 0.10;
+
+    const commissionBase = Number(order.total_price || 0) * rate;
+
+    // Bônus Sazonal (Ex: Copa do Mundo)
+    const orderDateStr = order.created_at?.split('T')[0] || '';
+    const isCopaPeriod = orderDateStr >= '2026-06-11' && orderDateStr <= '2026-07-19';
+    const seasonalBonus = isCopaPeriod ? Number(order.total_price || 0) * 0.05 : 0;
+
+    return commissionBase + seasonalBonus;
+  };
+
   const calculateItemCost = (item) => {
     const baseUSD = calculateItemBaseCostUSD(item);
     let addonsUSD = 0;
@@ -759,7 +794,12 @@ const Admin = () => {
     else if (totalItems === 2) surchargeUSD = pricing.surcharge2Items || 4;
     else if (totalItems === 3) surchargeUSD = pricing.surcharge3Items || 3;
     
-    return (itemsCostUSD + surchargeUSD) * rate;
+    const baseCostCAD = (itemsCostUSD + surchargeUSD) * rate;
+
+    // 3. Incluir comissão do afiliado (Se houver)
+    const commissionCAD = calculateOrderCommission(order);
+    
+    return baseCostCAD + commissionCAD;
   };
 
   const uploadImageToSupabase = async (file) => {
@@ -2256,8 +2296,9 @@ const Admin = () => {
             
             // Cálculo detalhado para separar USD e CAD
             const { totalCostCAD, totalCostUSD } = filteredOrders.reduce((acc, order) => {
-              const rate = order.usd_cad_rate || pricing.exchangeRateFallback || 1.38;
+              const orderCostCAD = calculateOrderCost(order);
               
+              // Extrair USD (apenas para exibição no dashboard, sem comissão que é em CAD)
               const itemsCostUSD = order.items?.reduce((sum, item) => {
                 const base = calculateItemBaseCostUSD(item);
                 let addons = 0;
@@ -2269,18 +2310,17 @@ const Admin = () => {
                 return sum + ((base + addons) * (item.quantity || 1));
               }, 0) || 0;
 
-              const totalItems = order.items?.reduce((s, i) => s + (i.quantity || 1), 0) || 0;
+              const totalItemsCount = order.items?.reduce((s, i) => s + (i.quantity || 1), 0) || 0;
               let surchargeUSD = 0;
-              if (totalItems === 1) surchargeUSD = pricing.surcharge1Item || 5;
-              else if (totalItems === 2) surchargeUSD = pricing.surcharge2Items || 4;
-              else if (totalItems === 3) surchargeUSD = pricing.surcharge3Items || 3;
+              if (totalItemsCount === 1) surchargeUSD = pricing.surcharge1Item || 5;
+              else if (totalItemsCount === 2) surchargeUSD = pricing.surcharge2Items || 4;
+              else if (totalItemsCount === 3) surchargeUSD = pricing.surcharge3Items || 3;
 
               const orderUSD = itemsCostUSD + surchargeUSD;
-              const orderCAD = orderUSD * rate;
 
               return {
                 totalCostUSD: acc.totalCostUSD + orderUSD,
-                totalCostCAD: acc.totalCostCAD + orderCAD
+                totalCostCAD: acc.totalCostCAD + orderCostCAD
               };
             }, { totalCostCAD: 0, totalCostUSD: 0 });
 
@@ -2485,9 +2525,15 @@ const Admin = () => {
                                   <span style={{ color: 'var(--accent-color)', fontWeight: 700 }}>${Number(order.total_price).toFixed(2)}</span>
                                 </div>
                                 <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.85rem', marginBottom: '0.3rem' }}>
-                                  <span>Custo Estimado:</span>
-                                  <span style={{ color: '#ef4444' }}>-${calculateOrderCost(order).toFixed(2)}</span>
+                                  <span>Custo Fornecedor:</span>
+                                  <span style={{ color: '#ef4444' }}>-${(calculateOrderCost(order) - calculateOrderCommission(order)).toFixed(2)}</span>
                                 </div>
+                                {order.referrer && (
+                                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.85rem', marginBottom: '0.3rem' }}>
+                                    <span>Comissão Afiliado:</span>
+                                    <span style={{ color: '#ef4444' }}>-${calculateOrderCommission(order).toFixed(2)}</span>
+                                  </div>
+                                )}
                                 <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.9rem', fontWeight: 800, borderTop: '1px solid rgba(255,255,255,0.1)', paddingTop: '0.3rem', marginTop: '0.3rem' }}>
                                   <span>Lucro Líquido:</span>
                                   <span style={{ color: '#22c55e' }}>${(Number(order.total_price) - calculateOrderCost(order)).toFixed(2)}</span>
