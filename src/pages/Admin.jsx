@@ -2448,6 +2448,12 @@ const Admin = () => {
                                   <span>Lucro Líquido:</span>
                                   <span style={{ color: '#22c55e' }}>${(Number(order.total_price) - calculateOrderCost(order)).toFixed(2)}</span>
                                 </div>
+                                <div style={{ marginTop: '0.8rem', padding: '0.5rem', background: 'rgba(0,0,0,0.3)', borderRadius: '4px', fontSize: '0.65rem', color: '#94a3b8', border: '1px dashed #334155' }}>
+                                  <p style={{ margin: 0, fontWeight: 700, color: '#fff' }}>DEBUG DE CUSTOS (USD):</p>
+                                  <p style={{ margin: 0 }}>• Base Item: ${calculateItemBaseCostUSD(order.items?.[0] || {}).toFixed(2)}</p>
+                                  <p style={{ margin: 0 }}>• Sobretaxa Frete: ${ (pricing.surcharge1Item && order.items?.length === 1) ? pricing.surcharge1Item : (order.items?.length === 1 ? 5 : 0) }</p>
+                                  <p style={{ margin: 0 }}>• Câmbio Aplicado: {order.usd_cad_rate || pricing.exchangeRateFallback || 1.38}</p>
+                                </div>
                                 <p style={{ fontSize: '0.6rem', color: 'var(--text-muted)', marginTop: '0.5rem' }}>
                                   * Baseado em {order.usd_cad_rate ? `câmbio histórico (${order.usd_cad_rate})` : `câmbio atual/fallback (${pricing.exchangeRateFallback || 1.38})`}.
                                 </p>
