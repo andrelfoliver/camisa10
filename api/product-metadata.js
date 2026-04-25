@@ -64,16 +64,23 @@ export default async function handler(req, res) {
     // Check if the primary image is actually a video
     const isVideo = imageUrl && imageUrl.toLowerCase().endsWith('.mp4');
     
-    // Ensure absolute image URL
+    // Ensure absolute image URL and handle special characters
     if (imageUrl && !imageUrl.startsWith('http')) {
       imageUrl = `${baseUrl}${imageUrl.startsWith('/') ? '' : '/'}${imageUrl}`;
     }
 
-    // Fallback image if it's a video (WhatsApp doesn't preview mp4 links with images well)
+    // Fallback image if it's a video
     const previewImage = isVideo ? `${baseUrl}/og-image-full.png` : imageUrl;
+    
+    // Attempt to detect image type or use a safer default
+    const imageType = imageUrl.toLowerCase().endsWith('.png') ? 'image/png' : 
+                      imageUrl.toLowerCase().endsWith('.webp') ? 'image/webp' : 
+                      'image/jpeg';
 
-    // Return minimal HTML with meta tags
+    // Set headers for caching (helps scrapers refresh)
     res.setHeader('Content-Type', 'text/html');
+    res.setHeader('Cache-Control', 'public, s-maxage=300, stale-while-revalidate=600');
+
     return res.status(200).send(`
       <!DOCTYPE html>
       <html lang="pt-BR">
@@ -89,9 +96,9 @@ export default async function handler(req, res) {
           <meta property="og:description" content="${description}">
           <meta property="og:image" content="${previewImage}">
           <meta property="og:image:secure_url" content="${previewImage}">
+          <meta property="og:image:type" content="${imageType}">
           <meta property="og:image:width" content="1200">
           <meta property="og:image:height" content="630">
-          <meta property="og:image:type" content="image/jpeg">
 
           <!-- Twitter -->
           <meta property="twitter:card" content="summary_large_image">
