@@ -6,11 +6,17 @@ const supabase = createClient(supabaseUrl, supabaseKey);
 
 export default async function handler(req, res) {
   const { id } = req.query;
-  const baseUrl = 'https://www.ifooty.ca';
+  // Detect domain automatically to avoid mismatch issues
+  const host = req.headers.host || 'ifooty.ca';
+  const protocol = req.headers['x-forwarded-proto'] || 'https';
+  const baseUrl = `${protocol}://${host}`;
+  const defaultImage = `${baseUrl}/og-image-full.png`;
 
   let product = null;
 
   try {
+    if (!id) throw new Error('No ID provided');
+
     if (id.startsWith('q')) {
       const p = {
         q1: { name: 'Brasil Titular 25/26 (Torcedor)', image: '/catalog/shirt_188.jpg', category: 'Seleção Brasileira' },
@@ -27,10 +33,12 @@ export default async function handler(req, res) {
         category: 'Catálogo'
       };
     } else {
+      // Clean ID for numeric search
+      const numericId = parseInt(id);
       const { data, error } = await supabase
         .from('products')
         .select('name, image, category, description')
-        .eq('id', id)
+        .eq('id', isNaN(numericId) ? id : numericId)
         .single();
       
       if (!error && data) {
@@ -38,82 +46,83 @@ export default async function handler(req, res) {
       }
     }
 
+    // FALLBACK: If product not found, serve site default meta
     if (!product) {
-      // Fallback to default metadata
       return res.status(200).send(`
         <!DOCTYPE html>
         <html>
           <head>
             <meta property="og:title" content="iFooty | Especialistas em Camisas de Futebol">
             <meta property="og:description" content="A sua loja de camisas de futebol brasileiras, europeias e retrô no Canadá.">
-            <meta property="og:image" content="${baseUrl}/og-image-full.png">
+            <meta property="og:image" content="${defaultImage}">
             <meta property="og:url" content="${baseUrl}/produto/${id}">
             <meta http-equiv="refresh" content="0;url=${baseUrl}/produto/${id}">
           </head>
-          <body>
-            Redirecting to product page...
-          </body>
+          <body>Redirecting...</body>
         </html>
       `);
     }
 
-    const title = `${product.name} | iFooty`;
-    const description = `${product.category || 'Catálogo'} - ${product.description || 'Qualidade premium e envio rápido para todo o Canadá.'}`;
+    const title = `${product.name} | iFooty`.replace(/"/g, '&quot;');
+    const description = `${product.category || 'Catálogo'} - ${product.description || 'Qualidade premium e envio rápido para todo o Canadá.'}`.replace(/"/g, '&quot;');
     let imageUrl = product.image;
 
-    // Check if the primary image is actually a video
+    // Check for video
     const isVideo = imageUrl && imageUrl.toLowerCase().endsWith('.mp4');
     
-    // Ensure absolute image URL and handle special characters
+    // Ensure absolute image URL
     if (imageUrl && !imageUrl.startsWith('http')) {
       imageUrl = `${baseUrl}${imageUrl.startsWith('/') ? '' : '/'}${imageUrl}`;
     }
 
-    // Fallback image if it's a video
-    const previewImage = isVideo ? `${baseUrl}/og-image-full.png` : imageUrl;
+    // FINAL IMAGE FALLBACK
+    let previewImage = (isVideo || !imageUrl) ? defaultImage : imageUrl;
     
-    // Attempt to detect image type or use a safer default
-    const imageType = imageUrl.toLowerCase().endsWith('.png') ? 'image/png' : 
-                      imageUrl.toLowerCase().endsWith('.webp') ? 'image/webp' : 
+    // URL Encoding for WhatsApp (CRITICAL: WhatsApp fails on spaces or special chars)
+    try {
+      const urlObj = new URL(previewImage);
+      previewImage = urlObj.toString();
+    } catch (e) {
+      // fallback if URL is weird
+    }
+    
+    const imageType = previewImage.toLowerCase().endsWith('.png') ? 'image/png' : 
+                      previewImage.toLowerCase().endsWith('.webp') ? 'image/webp' : 
                       'image/jpeg';
 
-    // Set headers for caching (helps scrapers refresh)
     res.setHeader('Content-Type', 'text/html');
     res.setHeader('Cache-Control', 'public, s-maxage=300, stale-while-revalidate=600');
+
+    // Diagnostic comment to check if product was found
+    const debugInfo = `<!-- ID: ${id} | Found: ${!!product} | Image: ${!!imageUrl} -->`;
 
     return res.status(200).send(`
       <!DOCTYPE html>
       <html lang="pt-BR">
         <head>
           <meta charset="UTF-8">
-          <title>${title}</title>
-          <meta name="description" content="${description}">
-          
-          <!-- Open Graph / Facebook / WhatsApp -->
-          <meta property="og:type" content="website">
-          <meta property="og:url" content="${baseUrl}/produto/${id}">
+          ${debugInfo}
+          <!-- Priority Meta Tags for Scrapers -->
           <meta property="og:title" content="${title}">
-          <meta property="og:description" content="${description}">
           <meta property="og:image" content="${previewImage}">
           <meta property="og:image:secure_url" content="${previewImage}">
           <meta property="og:image:type" content="${imageType}">
           <meta property="og:image:width" content="1200">
           <meta property="og:image:height" content="630">
+          
+          <meta property="og:type" content="website">
+          <meta property="og:url" content="${baseUrl}/produto/${id}">
+          <meta property="og:description" content="${description}">
 
-          <!-- Twitter -->
           <meta property="twitter:card" content="summary_large_image">
-          <meta property="twitter:url" content="${baseUrl}/produto/${id}">
+          <meta property="twitter:image" content="${previewImage}">
           <meta property="twitter:title" content="${title}">
           <meta property="twitter:description" content="${description}">
-          <meta property="twitter:image" content="${previewImage}">
 
-          <!-- Redirect for humans -->
+          <title>${title}</title>
           <meta http-equiv="refresh" content="0;url=${baseUrl}/produto/${id}">
         </head>
         <body>
-          <h1>${product.name}</h1>
-          <p>${description}</p>
-          <img src="${previewImage}" alt="${product.name}">
           <script>window.location.href = "${baseUrl}/produto/${id}";</script>
         </body>
       </html>
