@@ -41,6 +41,7 @@ const Admin = () => {
   const [teams, setTeams] = useState([]);
   const [editingTeam, setEditingTeam] = useState(null);
   const [editingTestimonial, setEditingTestimonial] = useState(null);
+  const [searchTerm, setSearchTerm] = useState('');
 
 
   const handleUpdateProduct = async (e) => {
@@ -2793,6 +2794,84 @@ const Admin = () => {
                     })}
                   </div>
                 )}
+              </div>
+            ) : supplierTab === 'ESTOQUE' ? (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'rgba(255,255,255,0.03)', padding: '1rem', borderRadius: '12px', border: '1px solid var(--border-color)' }}>
+                   <div style={{ position: 'relative', flex: 1, maxWidth: '400px' }}>
+                      <input 
+                        type="text" 
+                        placeholder="Filtrar por time ou nome..." 
+                        onChange={(e) => setSearchTerm(e.target.value)}
+                        style={{ width: '100%', padding: '0.8rem 1rem 0.8rem 2.5rem', background: '#000', border: '1px solid var(--border-color)', borderRadius: '8px', color: '#fff' }}
+                      />
+                      <TrendingUp size={16} style={{ position: 'absolute', left: '1rem', top: '50%', transform: 'translateY(-50%)', opacity: 0.5 }} />
+                   </div>
+                   <div style={{ display: 'flex', gap: '1rem', fontSize: '0.8rem', color: 'var(--text-muted)' }}>
+                      <span style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}><div style={{ width: '10px', height: '10px', background: 'var(--accent-color)', borderRadius: '2px' }}></div> Em Estoque</span>
+                      <span style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}><div style={{ width: '10px', height: '10px', background: 'rgba(255,255,255,0.1)', borderRadius: '2px' }}></div> Esgotado</span>
+                   </div>
+                </div>
+
+                <div className="table-responsive" style={{ background: 'var(--surface-color)', borderRadius: '12px', border: '1px solid var(--border-color)', overflowX: 'auto' }}>
+                  <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.85rem' }}>
+                    <thead>
+                      <tr style={{ textAlign: 'left', background: 'rgba(255,255,255,0.02)', borderBottom: '1px solid var(--border-color)' }}>
+                        <th style={{ padding: '1.2rem', color: 'var(--text-muted)', fontWeight: 800, minWidth: '200px' }}>PRODUTO</th>
+                        {['S', 'M', 'L', 'XL', '2XL', '3XL', '4XL', '16', '18', '20', '22', '24', '26', '28'].map(s => (
+                          <th key={s} style={{ padding: '1.2rem 0.5rem', color: 'var(--text-muted)', fontWeight: 800, textAlign: 'center' }}>{s}</th>
+                        ))}
+                        <th style={{ padding: '1.2rem', textAlign: 'right' }}></th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {products
+                        .filter(p => !searchTerm || p.name.toLowerCase().includes(searchTerm.toLowerCase()) || p.team?.toLowerCase().includes(searchTerm.toLowerCase()))
+                        .map(p => (
+                        <tr key={p.id} style={{ borderBottom: '1px solid rgba(255,255,255,0.03)', transition: 'background 0.2s' }} onMouseEnter={e => e.currentTarget.style.background = 'rgba(255,255,255,0.02)'} onMouseLeave={e => e.currentTarget.style.background = 'transparent'}>
+                          <td style={{ padding: '1rem 1.2rem' }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                              <img src={p.image} alt="" style={{ width: '35px', height: '35px', borderRadius: '4px', objectFit: 'cover', background: '#000' }} />
+                              <div>
+                                <div style={{ fontWeight: 700, color: '#fff', fontSize: '0.85rem' }}>{p.name}</div>
+                                <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>{p.category}</div>
+                              </div>
+                            </div>
+                          </td>
+                          {['S', 'M', 'L', 'XL', '2XL', '3XL', '4XL', '16', '18', '20', '22', '24', '26', '28'].map(s => {
+                            const count = p.inventory?.[s] || 0;
+                            return (
+                              <td key={s} style={{ padding: '1rem 0.5rem', textAlign: 'center' }}>
+                                <div style={{ 
+                                  display: 'inline-flex', 
+                                  minWidth: '28px', 
+                                  height: '28px', 
+                                  alignItems: 'center', 
+                                  justifyContent: 'center', 
+                                  borderRadius: '4px',
+                                  background: count > 0 ? 'rgba(164, 210, 51, 0.15)' : 'rgba(255,255,255,0.03)',
+                                  color: count > 0 ? 'var(--accent-color)' : 'rgba(255,255,255,0.2)',
+                                  fontWeight: count > 0 ? 900 : 400,
+                                  border: count > 0 ? '1px solid rgba(164, 210, 51, 0.3)' : '1px solid rgba(255,255,255,0.05)'
+                                }}>
+                                  {count}
+                                </div>
+                              </td>
+                            );
+                          })}
+                          <td style={{ padding: '1rem 1.2rem', textAlign: 'right' }}>
+                            <button 
+                              onClick={() => setEditingProduct(p)}
+                              style={{ background: 'rgba(255,255,255,0.05)', color: '#fff', border: '1px solid var(--border-color)', padding: '0.4rem 0.8rem', borderRadius: '4px', cursor: 'pointer', fontSize: '0.75rem', fontWeight: 600 }}
+                            >
+                              Editar
+                            </button>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
               </div>
             ) : loading && supplierTab.startsWith('CLOUD_') ? (
               <div style={{ textAlign: 'center', padding: '5rem', color: 'var(--text-muted)' }}>
