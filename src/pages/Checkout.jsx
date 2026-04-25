@@ -328,18 +328,17 @@ const Checkout = () => {
       if (orderError) throw orderError;
 
       // 1.2. Decrementar estoque local (Pronta Entrega)
-      // Fazemos isso em background para não travar o fluxo se houver erro menor
-      cartItems.forEach(async (item) => {
-        try {
-          await supabase.rpc('decrement_product_stock', {
+      try {
+        await Promise.all(cartItems.map(item => 
+          supabase.rpc('decrement_product_stock', {
             product_id_input: item.id,
             size_input: item.size,
             quantity_input: item.quantity
-          });
-        } catch (stockErr) {
-          console.warn(`❌ Erro ao atualizar estoque:`, stockErr);
-        }
-      });
+          })
+        ));
+      } catch (stockErr) {
+        console.warn("⚠️ Erro ao atualizar estoque (alguns itens podem não ser pronta entrega):", stockErr);
+      }
 
       // 1.5. Notificar por E-mail
       try {
