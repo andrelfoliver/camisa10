@@ -1222,6 +1222,13 @@ const Admin = () => {
           </button>
 
           <button
+            onClick={() => setSupplierTab('ESTOQUE')}
+            style={{ padding: '0.8rem 1.5rem', background: supplierTab === 'ESTOQUE' ? 'var(--accent-color)' : 'transparent', color: supplierTab === 'ESTOQUE' ? '#000' : 'var(--text-muted)', border: 'none', borderRadius: '4px', cursor: 'pointer', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '0.5rem' }}
+          >
+            <HardDrive size={18} /> ESTOQUE
+          </button>
+
+          <button
             onClick={() => setSupplierTab('CLIENTES')}
             style={{ padding: '0.8rem 1.5rem', background: supplierTab === 'CLIENTES' ? 'var(--accent-color)' : 'transparent', color: supplierTab === 'CLIENTES' ? '#000' : 'var(--text-muted)', border: 'none', borderRadius: '4px', cursor: 'pointer', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '0.5rem' }}
           >
