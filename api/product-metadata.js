@@ -102,27 +102,40 @@ export default async function handler(req, res) {
         <head>
           <meta charset="UTF-8">
           ${debugInfo}
-          <!-- Priority Meta Tags for Scrapers -->
+          <title>${title}</title>
+          <meta name="description" content="${description}">
+
+          <!-- Schema.org for Google+ -->
+          <meta itemprop="name" content="${title}">
+          <meta itemprop="description" content="${description}">
+          <meta itemprop="image" content="${previewImage}">
+
+          <!-- Open Graph / Facebook / WhatsApp -->
+          <meta property="og:type" content="website">
+          <meta property="og:url" content="${baseUrl}/produto/${id}">
           <meta property="og:title" content="${title}">
+          <meta property="og:description" content="${description}">
           <meta property="og:image" content="${previewImage}">
           <meta property="og:image:secure_url" content="${previewImage}">
           <meta property="og:image:type" content="${imageType}">
           <meta property="og:image:width" content="1200">
           <meta property="og:image:height" content="630">
           
-          <meta property="og:type" content="website">
-          <meta property="og:url" content="${baseUrl}/produto/${id}">
-          <meta property="og:description" content="${description}">
+          <!-- Twitter -->
+          <meta name="twitter:card" content="summary_large_image">
+          <meta name="twitter:title" content="${title}">
+          <meta name="twitter:description" content="${description}">
+          <meta name="twitter:image" content="${previewImage}">
 
-          <meta property="twitter:card" content="summary_large_image">
-          <meta property="twitter:image" content="${previewImage}">
-          <meta property="twitter:title" content="${title}">
-          <meta property="twitter:description" content="${description}">
+          <!-- Legacy / Fallback -->
+          <link rel="image_src" href="${previewImage}">
 
-          <title>${title}</title>
           <meta http-equiv="refresh" content="0;url=${baseUrl}/produto/${id}">
         </head>
         <body>
+          <h1>${title}</h1>
+          <p>${description}</p>
+          <img src="${previewImage}" alt="${title}" style="width: 300px;">
           <script>window.location.href = "${baseUrl}/produto/${id}";</script>
         </body>
       </html>
