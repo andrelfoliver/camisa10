@@ -828,38 +828,42 @@ const Admin = () => {
 
   const compressImage = (file) => {
     return new Promise((resolve, reject) => {
-      if (file.type === 'video/mp4') return resolve(file); // Don't compress videos
+      if (!file || file.type === 'video/mp4') return resolve(file);
       
       const reader = new FileReader();
-      reader.readAsDataURL(file);
-      reader.onload = (event) => {
-        const img = new Image();
-        img.src = event.target.result;
+      reader.onload = (e) => {
+        const img = document.createElement('img');
         img.onload = () => {
-          const canvas = document.createElement('canvas');
-          let width = img.width;
-          let height = img.height;
+          try {
+            const canvas = document.createElement('canvas');
+            let width = img.width;
+            let height = img.height;
+            const MAX_WIDTH = 1200;
 
-          // Redimensionar para um tamanho amigável ao WhatsApp (Max 1200px)
-          const MAX_WIDTH = 1200;
-          if (width > MAX_WIDTH) {
-            height = Math.round((height * MAX_WIDTH) / width);
-            width = MAX_WIDTH;
+            if (width > MAX_WIDTH) {
+              height = Math.round((height * MAX_WIDTH) / width);
+              width = MAX_WIDTH;
+            }
+
+            canvas.width = width;
+            canvas.height = height;
+            const ctx = canvas.getContext('2d');
+            ctx.drawImage(img, 0, 0, width, height);
+            
+            canvas.toBlob((blob) => {
+              if (blob) resolve(blob);
+              else resolve(file); // Se falhar a conversão, usa o original
+            }, 'image/webp', 0.8);
+          } catch (err) {
+            console.error('Erro na compressão:', err);
+            resolve(file); // Fallback para o original em caso de erro
           }
-
-          canvas.width = width;
-          canvas.height = height;
-          const ctx = canvas.getContext('2d');
-          ctx.drawImage(img, 0, 0, width, height);
-          
-          canvas.toBlob((blob) => {
-            if (blob) resolve(blob);
-            else reject(new Error('Falha na conversão para WebP'));
-          }, 'image/webp', 0.8); // 80% de qualidade é o ponto ideal entre peso e nitidez
         };
-        img.onerror = reject;
+        img.onerror = () => resolve(file);
+        img.src = e.target.result;
       };
-      reader.onerror = reject;
+      reader.onerror = () => resolve(file);
+      reader.readAsDataURL(file);
     });
   };
 
