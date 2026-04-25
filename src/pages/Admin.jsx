@@ -2960,9 +2960,9 @@ const Admin = () => {
                 <div style={{ flex: 1 }}>
                   <label style={{ display: 'block', marginBottom: '0.5rem', color: 'var(--text-muted)', fontSize: '0.9rem' }}>Carregar Tabela</label>
                   <select 
-                    value={newProduct.price}
+                    value={Number(newProduct.price).toFixed(2)}
                     onChange={(e) => {
-                      if (e.target.value) setNewProduct({ ...newProduct, price: e.target.value });
+                      if (e.target.value) setNewProduct({ ...newProduct, price: parseFloat(e.target.value) });
                     }} 
                     style={{ width: '100%', padding: '0.8rem 1rem', background: 'rgba(255,255,255,0.05)', color: '#10B981', border: '1px solid var(--border-color)', borderRadius: 'var(--radius-sm)' }}
                   >
@@ -3313,9 +3313,9 @@ const Admin = () => {
                 <div style={{ flex: 1 }}>
                   <label style={{ display: 'block', marginBottom: '0.5rem', color: 'var(--text-muted)', fontSize: '0.9rem' }}>Carregar Tabela</label>
                   <select 
-                    value={editingProduct.price}
+                    value={Number(editingProduct.price).toFixed(2)}
                     onChange={(e) => {
-                      if (e.target.value) setEditingProduct({ ...editingProduct, price: e.target.value });
+                      if (e.target.value) setEditingProduct({ ...editingProduct, price: parseFloat(e.target.value) });
                     }} 
                     style={{ width: '100%', padding: '0.8rem 1rem', background: 'rgba(255,255,255,0.05)', color: '#3B82F6', border: '1px solid var(--border-color)', borderRadius: 'var(--radius-sm)' }}
                   >
