@@ -46,7 +46,9 @@ const ProductPage = () => {
   const [selectedSize, setSelectedSize] = useState('M');
   
   // Lógica dinâmica para definir quais tamanhos exibir
-  const isKids = product?.category?.toLowerCase() === 'infantil' || product?.name?.toLowerCase().includes('infantil');
+  const isKids = product?.category?.toLowerCase().includes('infantil') || 
+                 product?.name?.toLowerCase().includes('infantil') || 
+                 product?.name?.toLowerCase().includes('kids');
   const sizes = isKids 
     ? ['16', '18', '20', '22', '24', '26', '28'] 
     : ['S', 'M', 'L', 'XL', '2XL', '3XL', '4XL'];
