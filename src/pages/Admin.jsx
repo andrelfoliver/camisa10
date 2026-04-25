@@ -826,12 +826,59 @@ const Admin = () => {
     return baseCostCAD + commissionCAD;
   };
 
+  const compressImage = (file) => {
+    return new Promise((resolve, reject) => {
+      if (file.type === 'video/mp4') return resolve(file); // Don't compress videos
+      
+      const reader = new FileReader();
+      reader.readAsDataURL(file);
+      reader.onload = (event) => {
+        const img = new Image();
+        img.src = event.target.result;
+        img.onload = () => {
+          const canvas = document.createElement('canvas');
+          let width = img.width;
+          let height = img.height;
+
+          // Redimensionar para um tamanho amigável ao WhatsApp (Max 1200px)
+          const MAX_WIDTH = 1200;
+          if (width > MAX_WIDTH) {
+            height = Math.round((height * MAX_WIDTH) / width);
+            width = MAX_WIDTH;
+          }
+
+          canvas.width = width;
+          canvas.height = height;
+          const ctx = canvas.getContext('2d');
+          ctx.drawImage(img, 0, 0, width, height);
+          
+          canvas.toBlob((blob) => {
+            if (blob) resolve(blob);
+            else reject(new Error('Falha na conversão para WebP'));
+          }, 'image/webp', 0.8); // 80% de qualidade é o ponto ideal entre peso e nitidez
+        };
+        img.onerror = reject;
+      };
+      reader.onerror = reject;
+    });
+  };
+
   const uploadImageToSupabase = async (file) => {
-    const ext = (file.name.split('.').pop() || 'jpg').toLowerCase();
+    // 1. Comprime e converte para WebP (Se for imagem)
+    const processedFile = await compressImage(file);
+    const isWebP = processedFile.type === 'image/webp';
+    const ext = isWebP ? 'webp' : (file.name.split('.').pop() || 'jpg').toLowerCase();
+    
     const filename = `${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
+    
     const { data: uploadData, error: uploadError } = await supabase.storage
       .from('product-images')
-      .upload(filename, file, { cacheControl: '3600', upsert: true });
+      .upload(filename, processedFile, { 
+        cacheControl: '3600', 
+        upsert: true,
+        contentType: isWebP ? 'image/webp' : undefined
+      });
+      
     if (uploadError) throw new Error(`Upload falhou: ${uploadError.message}`);
     const { data: urlData } = supabase.storage.from('product-images').getPublicUrl(filename);
     if (!urlData?.publicUrl) throw new Error('Não foi possível obter a URL pública da imagem.');
