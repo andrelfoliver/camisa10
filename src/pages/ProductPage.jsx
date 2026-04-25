@@ -275,17 +275,64 @@ const ProductPage = () => {
               
               <div className="size-box-grid">
                 {sizes.map(s => {
+                  const stock = product.inventory?.[s] || 0;
                   return (
                     <button
                       key={s}
                       onClick={() => setSelectedSize(s)}
                       className={`size-box ${selectedSize === s ? 'selected' : ''}`}
+                      style={{ position: 'relative' }}
                     >
                       {s}
+                      {stock > 0 && (
+                        <span style={{ 
+                          position: 'absolute', 
+                          top: '-4px', 
+                          right: '-4px', 
+                          background: 'var(--accent-color)', 
+                          color: '#000', 
+                          borderRadius: '50%', 
+                          width: '18px', 
+                          height: '18px', 
+                          fontSize: '0.65rem', 
+                          display: 'flex', 
+                          alignItems: 'center', 
+                          justifyContent: 'center',
+                          fontWeight: 900,
+                          boxShadow: '0 2px 5px rgba(0,0,0,0.3)'
+                        }}>⚡</span>
+                      )}
                     </button>
                   );
                 })}
               </div>
+
+              {/* Stock Summary */}
+              {Object.values(product.inventory || {}).some(v => v > 0) && (
+                <div style={{ marginTop: '1.5rem', background: 'rgba(255,255,255,0.02)', padding: '1rem', borderRadius: '8px', border: '1px solid var(--border-color)' }}>
+                  <div style={{ marginBottom: '0.8rem' }}>
+                    <p style={{ margin: 0, fontSize: '0.8rem', fontWeight: 800, color: 'var(--accent-color)', textTransform: 'uppercase', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                      <CheckCircle2 size={14} /> {t('product_stock_sizes_available')}
+                    </p>
+                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem', marginTop: '0.4rem' }}>
+                      {sizes.filter(s => product.inventory?.[s] > 0).map(s => (
+                        <span key={s} style={{ background: 'var(--accent-color)', color: '#000', padding: '0.2rem 0.6rem', borderRadius: '4px', fontSize: '0.75rem', fontWeight: 700 }}>
+                          {s} ({product.inventory[s]})
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                  <div>
+                    <p style={{ margin: 0, fontSize: '0.75rem', fontWeight: 600, color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                      <Truck size={12} /> {t('product_stock_preorder')}
+                    </p>
+                    <p style={{ margin: '0.3rem 0 0 1.2rem', fontSize: '0.75rem', color: 'var(--text-muted)', opacity: 0.8 }}>
+                      {sizes.filter(s => !(product.inventory?.[s] > 0)).join(', ')}
+                    </p>
+                  </div>
+                </div>
+              )}
+
               {['2XL', '3XL', '4XL'].includes(selectedSize) && (
                  <p style={{ fontSize: '0.75rem', color: 'var(--accent-color)', marginTop: '0.5rem', fontWeight: 600 }}>
                    {t('product_plus_size_alert')}
