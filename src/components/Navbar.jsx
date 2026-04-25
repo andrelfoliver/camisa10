@@ -20,9 +20,15 @@ const Navbar = () => {
 
   React.useEffect(() => {
     const handleScroll = () => {
-      setScrolled(window.scrollY > 50);
+      const currentScroll = window.scrollY;
+      // Implementa histerese: encolhe aos 80px, mas só expande se subir acima de 20px
+      if (currentScroll > 80) {
+        setScrolled(true);
+      } else if (currentScroll < 20) {
+        setScrolled(false);
+      }
     };
-    window.addEventListener('scroll', handleScroll);
+    window.addEventListener('scroll', handleScroll, { passive: true });
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
