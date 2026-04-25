@@ -44,7 +44,19 @@ const ProductPage = () => {
 
   // Form Customization Options
   const [selectedSize, setSelectedSize] = useState('M');
-  const sizes = ['S', 'M', 'L', 'XL', '2XL', '3XL', '4XL'];
+  
+  // Lógica dinâmica para definir quais tamanhos exibir
+  const isKids = product?.category?.toLowerCase() === 'infantil' || product?.name?.toLowerCase().includes('infantil');
+  const sizes = isKids 
+    ? ['16', '18', '20', '22', '24', '26', '28'] 
+    : ['S', 'M', 'L', 'XL', '2XL', '3XL', '4XL'];
+
+  // Ajusta o tamanho selecionado inicial se for infantil
+  useEffect(() => {
+    if (isKids && !['16', '18', '20', '22', '24', '26', '28'].includes(selectedSize)) {
+      setSelectedSize('20'); // Sugere o tamanho 20 como padrão inicial para infantil
+    }
+  }, [isKids]);
 
   const [isCustomized, setIsCustomized] = useState(false);
   const [customName, setCustomName] = useState('');

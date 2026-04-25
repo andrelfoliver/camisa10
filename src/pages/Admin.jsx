@@ -17,8 +17,8 @@ const Admin = () => {
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   const OFFICIAL_CATEGORIES = ['Seleções', 'Brasileirão', 'Internacionais', 'Lançamentos', 'Retrô'];
-  const SIZES = ['S', 'M', 'L', 'XL', '2XL', '3XL', '4XL'];
-  const DEFAULT_INVENTORY = { 'S': 0, 'M': 0, 'L': 0, 'XL': 0, '2XL': 0, '3XL': 0, '4XL': 0 };
+  const SIZES = ['S', 'M', 'L', 'XL', '2XL', '3XL', '4XL', '16', '18', '20', '22', '24', '26', '28'];
+  const DEFAULT_INVENTORY = { 'S': 0, 'M': 0, 'L': 0, 'XL': 0, '2XL': 0, '3XL': 0, '4XL': 0, '16': 0, '18': 0, '20': 0, '22': 0, '24': 0, '26': 0, '28': 0 };
   const OFFICIAL_LEAGUES = [
     'Seleções',
     'Brasileirão',
@@ -2959,9 +2959,13 @@ const Admin = () => {
               <div style={{ display: 'flex', gap: '1rem' }}>
                 <div style={{ flex: 1 }}>
                   <label style={{ display: 'block', marginBottom: '0.5rem', color: 'var(--text-muted)', fontSize: '0.9rem' }}>Carregar Tabela</label>
-                  <select onChange={(e) => {
-                    if (e.target.value) setNewProduct({ ...newProduct, price: e.target.value });
-                  }} style={{ width: '100%', padding: '0.8rem 1rem', background: 'rgba(255,255,255,0.05)', color: '#10B981', border: '1px solid var(--border-color)', borderRadius: 'var(--radius-sm)' }}>
+                  <select 
+                    value={newProduct.price}
+                    onChange={(e) => {
+                      if (e.target.value) setNewProduct({ ...newProduct, price: e.target.value });
+                    }} 
+                    style={{ width: '100%', padding: '0.8rem 1rem', background: 'rgba(255,255,255,0.05)', color: '#10B981', border: '1px solid var(--border-color)', borderRadius: 'var(--radius-sm)' }}
+                  >
                     <option value="">-- Autopreencher Preço --</option>
                     <optgroup label="Camisas">
                       <option value="47.90">Fã Lisa (CA$ 47.90)</option>
@@ -3308,9 +3312,13 @@ const Admin = () => {
               <div style={{ display: 'flex', gap: '1rem' }}>
                 <div style={{ flex: 1 }}>
                   <label style={{ display: 'block', marginBottom: '0.5rem', color: 'var(--text-muted)', fontSize: '0.9rem' }}>Carregar Tabela</label>
-                  <select onChange={(e) => {
-                    if (e.target.value) setEditingProduct({ ...editingProduct, price: e.target.value });
-                  }} style={{ width: '100%', padding: '0.8rem 1rem', background: 'rgba(255,255,255,0.05)', color: '#3B82F6', border: '1px solid var(--border-color)', borderRadius: 'var(--radius-sm)' }}>
+                  <select 
+                    value={editingProduct.price}
+                    onChange={(e) => {
+                      if (e.target.value) setEditingProduct({ ...editingProduct, price: e.target.value });
+                    }} 
+                    style={{ width: '100%', padding: '0.8rem 1rem', background: 'rgba(255,255,255,0.05)', color: '#3B82F6', border: '1px solid var(--border-color)', borderRadius: 'var(--radius-sm)' }}
+                  >
                     <option value="">-- Autopreencher Preço --</option>
                     <optgroup label="Camisas">
                       <option value="47.90">Fã Lisa (CA$ 47.90)</option>
