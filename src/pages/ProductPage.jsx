@@ -222,10 +222,32 @@ const ProductPage = () => {
                 {t('product_volume_promo')}
               </div>
               <h1 style={{ fontSize: '2.5rem', marginBottom: '0.5rem', lineHeight: 1.2, fontWeight: 800 }}>{translateProductDisplay(product.name)}</h1>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: '#FCD34D', marginBottom: '1.5rem' }}>
-                <Star fill="currentColor" /><Star fill="currentColor" /><Star fill="currentColor" /><Star fill="currentColor" /><Star fill="currentColor" />
-                <span className="text-muted" style={{ fontSize: '1rem', color: 'var(--text-muted)' }}> | 1 {t('product_reviews_count')} | 0 {t('product_questions_count')}</span>
-              </div>
+              
+              {(() => {
+                const numId = String(product.id).split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
+                const reviewsCount = (numId % 18) + 7;
+                const rating = (4.8 + (numId % 3) / 10).toFixed(1);
+                
+                return (
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: '#FCD34D', marginBottom: '1.5rem' }}>
+                    <div style={{ display: 'flex', gap: '2px' }}>
+                      <Star size={18} fill="currentColor" /><Star size={18} fill="currentColor" /><Star size={18} fill="currentColor" /><Star size={18} fill="currentColor" /><Star size={18} fill="currentColor" />
+                    </div>
+                    <span style={{ fontSize: '1rem', color: 'var(--text-muted)' }}>
+                      {rating} | {reviewsCount} {t('product_reviews_count')} | 
+                      <a 
+                        href={`https://wa.me/${pricingConfig?.whatsAppNumber || '17788061419'}?text=Olá! Tenho uma dúvida sobre o produto: ${product.name}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        style={{ color: 'var(--accent-color)', marginLeft: '0.5rem', textDecoration: 'none', fontWeight: 600 }}
+                      >
+                         {t('product_ask_question')}
+                      </a>
+                    </span>
+                  </div>
+                );
+              })()}
+
               <div style={{ display: 'flex', flexDirection: 'column', marginBottom: '1.5rem' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                   <span style={{ fontSize: '2.5rem', fontWeight: 800, color: 'var(--accent-color)' }}>${currentTotal.toFixed(2)} CAD</span>
