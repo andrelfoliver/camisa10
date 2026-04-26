@@ -481,7 +481,7 @@ const Profile = () => {
                       items: [
                         { label: "1️⃣ Abordagem Inicial (Receptivo)", text: "Fala! Tudo bem? Fico feliz pelo interesse. As camisas são realmente diferenciadas, padrão oficial mesmo. Você já tem algum time ou seleção em mente ou quer dar uma olhada no catálogo geral?" },
                         { label: "2️⃣ Apresentando o Catálogo", text: "Dá uma olhada aqui no nosso site oficial: [LINK] - Lá você consegue ver todas as fotos reais, detalhes e os tamanhos disponíveis. Qual desses modelos mais te chamou atenção?" },
-                        { label: "3️⃣ Matando Objeções (Por que a iFooty?)", text: "O diferencial da iFooty é que o estoque já está aqui no Canadá. Você não corre risco de taxa e o envio é via Canada Post, super rápido. A qualidade é Tailandesa 1.1, a melhor do mercado mundial hoje." },
+                        { label: "3️⃣ Matando Objeções (Por que a iFooty?)", text: "O diferencial da iFooty é que o estoque já está aqui no Canadá. Você não corre risco de taxa e o envio é via Canada Post, super rápido. A qualidade é Tailandesa 1.1, a melhor do mercado mundial hoje. Nem todas as camisas temos em estoque, se não tivermos o prazo é de 10 a 15 dias corridos para todo o Canadá." },
                         { label: "4️⃣ Fechamento (O Empurrãozinho)", text: "Conseguiu escolher? Vou te dar um presente: usa meu cupom [CUPOM] no checkout pra ganhar um desconto extra. Se precisar de ajuda pra finalizar o pedido via Interac me avisa aqui!" },
                         { label: "5️⃣ Pós-Venda (Fidelização)", text: "E aí, o que achou da camisa? Quando puder, posta uma foto e me marca! Sua satisfação é nossa prioridade. Precisando de mais alguma, já sabe onde encontrar o melhor preço." }
                       ]
@@ -501,7 +501,7 @@ const Profile = () => {
                         { label: "🎁 Promoção de Combos", text: "Dica: se você pegar 2 ou mais camisas, o site aplica um desconto progressivo automático. Vale a pena juntar com um amigo pra economizar no frete e no valor unitário!" },
                         { label: "🛡️ Garantia de Satisfação", text: "Pode ficar tranquilo quanto à qualidade. Se a camisa chegar com qualquer defeito de fábrica ou não for o que você esperava, a iFooty resolve na hora. O foco deles é a satisfação da comunidade brasileira aqui." },
                         { label: "✍️ Personalização (Nome/Número)", text: "O mais legal é que dá pra colocar seu nome e número com a fonte oficial do time. Fica igualzinho à que os jogadores usam. É só selecionar a opção 'Com Personalização' na hora de escolher o tamanho." },
-                        { label: "💳 Pagamento Seguro (Interac)", text: "O pagamento é via Interac e-Transfer, o sistema mais seguro do Canadá. Você só paga depois que o pedido é validado, e o iFooty é super transparente em todo o processo." }
+                        { label: "💳 Pagamento Seguro (Interac)", text: "O pagamento é via Interac e-Transfer, o sistema mais seguro do Canadá. Você só paga depois que o pedido é validado, e o iFooty é super transparente em todo o processo. Em breve teremos também a opção de PayPal!" }
                       ]
                     }
                   ].map((cat, catIdx) => (
