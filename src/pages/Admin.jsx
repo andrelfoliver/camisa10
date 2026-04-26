@@ -1276,20 +1276,69 @@ const Admin = () => {
           .admin-top-bar {
             padding: 1rem !important;
           }
-          /* Grid de Cards */
-          div[style*="gridTemplateColumns"] {
-            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)) !important;
-            gap: 0.8rem !important;
-          }
-          /* Filtros */
-          div[style*="display: flex"][style*="gap: 2rem"] {
-            flex-direction: column !important;
+          /* Grid de Cards de Estatísticas */
+          .admin-stats-grid {
+            display: grid !important;
+            grid-template-columns: repeat(4, 1fr) !important;
             gap: 1rem !important;
           }
-          /* Pedidos/Tabelas */
-          .order-item-grid {
-            grid-template-columns: 1fr !important;
-            gap: 0.5rem !important;
+          @media (max-width: 992px) {
+            .admin-stats-grid {
+              grid-template-columns: repeat(2, 1fr) !important;
+              gap: 0.5rem !important;
+            }
+          }
+          /* Tabela de Pedidos Responsiva */
+          .admin-table-header {
+            display: grid;
+            grid-template-columns: 80px 1.5fr 1fr 100px 150px 40px;
+          }
+          .admin-order-row {
+            display: grid;
+            grid-template-columns: 80px 1.5fr 1fr 100px 150px 40px;
+          }
+          @media (max-width: 992px) {
+            .admin-table-header {
+              display: none !important;
+            }
+            .admin-order-row {
+              grid-template-columns: 1fr !important;
+              gap: 0.5rem !important;
+              padding: 1rem !important;
+              position: relative;
+            }
+            .admin-order-row span {
+              display: block;
+              width: 100%;
+            }
+            .admin-order-row span:nth-child(1) { font-weight: 800; color: var(--accent-color); }
+            .admin-order-row span:nth-child(2) { font-size: 1.1rem; }
+            .admin-order-row span:nth-child(4) { font-weight: 800; color: #fff; font-size: 1.2rem; margin: 0.5rem 0; }
+          }
+          /* Detalhes do Pedido Expandido */
+          .admin-order-detail-grid {
+            display: grid;
+            grid-template-columns: 1.5fr 1fr;
+            gap: 2rem;
+          }
+          @media (max-width: 992px) {
+            .admin-order-detail-grid {
+              grid-template-columns: 1fr !important;
+              gap: 1.5rem !important;
+              padding: 1.5rem 1rem !important;
+            }
+          }
+          /* Filtros */
+          .admin-filters-bar {
+            display: flex;
+            gap: 1rem;
+            align-items: flex-end;
+          }
+          @media (max-width: 992px) {
+            .admin-filters-bar {
+              flex-direction: column !important;
+              align-items: stretch !important;
+            }
           }
         }
       `}</style>
@@ -2544,7 +2593,7 @@ const Admin = () => {
               <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem', maxWidth: '1200px' }}>
 
                 {/* DATE FILTER CONTROLS */}
-                <div style={{ display: 'flex', gap: '1rem', alignItems: 'flex-end', background: 'rgba(255,255,255,0.03)', padding: '1rem', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.05)' }}>
+                <div className="admin-filters-bar" style={{ background: 'rgba(255,255,255,0.03)', padding: '1rem', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.05)' }}>
                   <div style={{ flex: 1 }}>
                     <label style={{ display: 'block', fontSize: '0.7rem', color: 'var(--text-muted)', marginBottom: '0.4rem', fontWeight: 800, textTransform: 'uppercase' }}>De:</label>
                     <input type="date" value={dateRange.start} onChange={(e) => setDateRange({ ...dateRange, start: e.target.value })} style={{ width: '100%', padding: '0.5rem', background: '#000', border: '1px solid var(--border-color)', borderRadius: '6px', color: '#fff' }} />
@@ -2556,8 +2605,8 @@ const Admin = () => {
                   <button onClick={() => { setDateRange({ start: '', end: '' }); setStatusFilter('all'); setOrderFilter(null); }} style={{ padding: '0.5rem 1rem', background: 'rgba(255,255,255,0.1)', color: '#fff', border: '1px solid rgba(255,255,255,0.2)', borderRadius: '6px', cursor: 'pointer', fontWeight: 700, fontSize: '0.8rem' }}>Limpar Filtros</button>
                 </div>
 
-                {/* STATS SUMMARY BAR - 4 items por linha */}
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '1rem' }}>
+                {/* STATS SUMMARY BAR - 4 items por linha no desktop, 2 no mobile */}
+                <div className="admin-stats-grid">
                   <div
                     onClick={() => setStatusFilter('all')}
                     className="glass-panel"
@@ -2622,7 +2671,7 @@ const Admin = () => {
                 {/* TABLE LIST VIEW */}
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
                   {/* TABLE HEADER */}
-                  <div style={{ display: 'grid', gridTemplateColumns: '80px 1.5fr 1fr 100px 150px 40px', padding: '0.8rem 1.5rem', color: 'var(--text-muted)', fontSize: '0.7rem', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '1px' }}>
+                  <div className="admin-table-header" style={{ padding: '0.8rem 1.5rem', color: 'var(--text-muted)', fontSize: '0.7rem', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '1px' }}>
                     <span>REF</span>
                     <span>CLIENTE</span>
                     <span>DATA</span>
@@ -2653,10 +2702,8 @@ const Admin = () => {
                         {/* SUMMARY ROW */}
                         <div
                           onClick={() => setExpandedOrderId(isExpanded ? null : order.id)}
+                          className="admin-order-row"
                           style={{
-                            display: 'grid',
-                            gridTemplateColumns: '80px 1.5fr 1fr 100px 150px 40px',
-                            padding: '1.2rem 1.5rem',
                             background: isExpanded ? 'rgba(255,255,255,0.05)' : 'var(--surface-color)',
                             borderRadius: '8px',
                             alignItems: 'center',
@@ -2694,17 +2741,17 @@ const Admin = () => {
 
                         {/* EXPANDED CONTENT */}
                         {isExpanded && (
-                          <div style={{
-                            background: 'rgba(0,0,0,0.2)',
-                            padding: '2rem 1.5rem',
-                            borderRadius: '0 0 8px 8px',
-                            border: '1px solid var(--accent-color)',
-                            borderTop: 'none',
-                            display: 'grid',
-                            gridTemplateColumns: '1.5fr 1fr',
-                            gap: '2rem',
-                            animation: 'slideDown 0.3s ease-out'
-                          }}>
+                          <div 
+                            className="admin-order-detail-grid"
+                            style={{
+                              background: 'rgba(0,0,0,0.2)',
+                              padding: '2rem 1.5rem',
+                              borderRadius: '0 0 8px 8px',
+                              border: '1px solid var(--accent-color)',
+                              borderTop: 'none',
+                              animation: 'slideDown 0.3s ease-out'
+                            }}
+                          >
                             {/* LEFT: ITEMS & ADDRESS */}
                             <div>
                               <p style={{ fontSize: '0.7rem', color: 'var(--text-muted)', fontWeight: 800, textTransform: 'uppercase', marginBottom: '1rem' }}>Itens do Pedido</p>
