@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useLanguage } from '../context/LanguageContext';
-import { LogOut, Package, Star, Calendar, MessageSquare, CheckCircle2, Clock, MapPin, TrendingUp, Copy, Share2, Menu, X as CloseIcon, Shield, PenTool, Zap, Lock } from 'lucide-react';
+import { LogOut, Package, Star, Calendar, MessageSquare, CheckCircle2, Clock, MapPin, TrendingUp, Copy, Share2, Menu, X as CloseIcon, Shield, PenTool, Zap, Lock, ChevronDown, ChevronUp } from 'lucide-react';
 import { Navigate, useNavigate } from 'react-router-dom';
 import { supabase } from '../services/supabase';
 
@@ -24,6 +24,7 @@ const Profile = () => {
   const [affiliateStats, setAffiliateStats] = useState({ totalSales: 0, totalRevenue: 0, baseCommission: 0, bonusMeta: 0, totalPayable: 0, rate: 8, level: 'Bronze' });
   const [copySuccess, setCopySuccess] = useState(null); // id do que foi copiado
   const [affiliateDriveLink, setAffiliateDriveLink] = useState('');
+  const [expandedScript, setExpandedScript] = useState(null);
 
   useEffect(() => {
     if (user) loadUserData();
@@ -466,62 +467,91 @@ const Profile = () => {
                 </div>
               </div>
 
-              {/* Scripts Expandidos */}
+              {/* Scripts & Copies Expandidos */}
               <section>
-                <h3 style={{ marginBottom: '1.5rem', fontSize: '1.2rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                  <MessageSquare size={20} className="accent-text" /> Scripts de Alta Conversão
-                </h3>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '1.2rem' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.8rem', marginBottom: '1.5rem' }}>
+                   <div style={{ background: 'var(--accent-color)', width: '4px', height: '24px', borderRadius: '2px' }}></div>
+                   <h3 style={{ fontSize: '1.2rem', margin: 0 }}>Materiais de Apoio</h3>
+                </div>
+
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.8rem' }}>
                   {[
                     {
-                      label: "🚀 Story / Status (Criar Curiosidade)",
-                      text: "Galera, muita gente perguntando onde pego minhas camisas aqui no Canadá. Descobri a iFooty! Qualidade absurda, envio rápido de dentro do país e preço justo. Quem quiser o link e meu cupom de desconto me chama aqui!"
+                      category: "🚀 FUNIL DE VENDAS (PASSO A PASSO)",
+                      items: [
+                        { label: "1️⃣ Abordagem Inicial (Receptivo)", text: "Fala! Tudo bem? Fico feliz pelo interesse. As camisas são realmente diferenciadas, padrão oficial mesmo. Você já tem algum time ou seleção em mente ou quer dar uma olhada no catálogo geral?" },
+                        { label: "2️⃣ Apresentando o Catálogo", text: "Dá uma olhada aqui no nosso site oficial: [LINK] - Lá você consegue ver todas as fotos reais, detalhes e os tamanhos disponíveis. Qual desses modelos mais te chamou atenção?" },
+                        { label: "3️⃣ Matando Objeções (Por que a iFooty?)", text: "O diferencial da iFooty é que o estoque já está aqui no Canadá. Você não corre risco de taxa e o envio é via Canada Post, super rápido. A qualidade é Tailandesa 1.1, a melhor do mercado mundial hoje." },
+                        { label: "4️⃣ Fechamento (O Empurrãozinho)", text: "Conseguiu escolher? Vou te dar um presente: usa meu cupom [CUPOM] no checkout pra ganhar um desconto extra. Se precisar de ajuda pra finalizar o pedido via Interac me avisa aqui!" },
+                        { label: "5️⃣ Pós-Venda (Fidelização)", text: "E aí, o que achou da camisa? Quando puder, posta uma foto e me marca! Sua satisfação é nossa prioridade. Precisando de mais alguma, já sabe onde encontrar o melhor preço." }
+                      ]
                     },
                     {
-                      label: "📦 Sobre o Prazo de Entrega",
-                      text: "O melhor é que o envio é feito por Canada Post. Geralmente chega em 10-15 dias, dependendo de onde você está. Pra Calgary é ainda mais rápido! E o melhor: zero risco de taxa alfandegária."
+                      category: "📱 LEGENDAS & COPIES",
+                      items: [
+                        { label: "🚀 Story / Status (Criar Curiosidade)", text: "Galera, muita gente perguntando onde pego minhas camisas aqui no Canadá. Descobri a iFooty! Qualidade absurda, envio rápido de dentro do país e preço justo. Quem quiser o link e meu cupom de desconto me chama aqui!" },
+                        { label: "💎 Foco em Qualidade (Premium)", text: "Não confunda com camisa de camelô. Essa é qualidade Tailandesa 1.1, o tecido é o mesmo que os jogadores usam em campo. Os detalhes, costura e bordados são perfeitos. Vale cada centavo pela durabilidade. 🇨🇦" },
+                        { label: "🔥 Escassez (Estoque Limitado)", text: "Cara, as camisas desse time estão voando! O estoque no Canadá é limitado e se acabar demora pra chegar reposição. Se eu fosse você garantia a sua hoje pra não ficar sem." }
+                      ]
                     },
                     {
-                      label: "💎 Sobre a Qualidade (Objeção de Preço)",
-                      text: "Não confunda com camisa de camelô. Essa é qualidade Tailandesa 1.1, o tecido é o mesmo que os jogadores usam em campo. Os detalhes, costura e bordados são perfeitos. Vale cada centavo pela durabilidade."
-                    },
-                    {
-                      label: "🎁 Promoção de Combos",
-                      text: "Dica: se você pegar 2 ou mais camisas, o site aplica um desconto progressivo automático. Vale a pena juntar com um amigo pra economizar no frete e no valor unitário!"
-                    },
-                    {
-                      label: "🛡️ Garantia de Satisfação",
-                      text: "Pode ficar tranquilo quanto à qualidade. Se a camisa chegar com qualquer defeito de fábrica ou não for o que você esperava, a iFooty resolve na hora. O foco deles é a satisfação da comunidade brasileira aqui."
-                    },
-                    {
-                      label: "✍️ Personalização (Nome e Número)",
-                      text: "O mais legal é que dá pra colocar seu nome e número com a fonte oficial do time. Fica igualzinho à que os jogadores usam. É só selecionar a opção 'Com Personalização' na hora de escolher o tamanho."
-                    },
-                    {
-                      label: "🔥 Estoque Limitado (Urgência)",
-                      text: "Cara, as camisas desse time estão voando! O estoque no Canadá é limitado e se acabar demora pra chegar reposição. Se eu fosse você garantia a sua hoje pra não ficar sem."
-                    },
-                    {
-                      label: "💳 Segurança no Pagamento (Interac)",
-                      text: "O pagamento é via Interac e-Transfer, o sistema mais seguro do Canadá. Você só paga depois que o pedido é validado, e o iFooty é super transparente em todo o processo."
+                      category: "💬 SCRIPTS DE CONVERSA",
+                      items: [
+                        { label: "📦 Sobre o Prazo de Entrega", text: "O melhor é que o envio é feito por Canada Post. Geralmente chega em 10-15 dias, dependendo de onde você está. Pra Calgary é ainda mais rápido! E o melhor: zero risco de taxa alfandegária." },
+                        { label: "🎁 Promoção de Combos", text: "Dica: se você pegar 2 ou mais camisas, o site aplica um desconto progressivo automático. Vale a pena juntar com um amigo pra economizar no frete e no valor unitário!" },
+                        { label: "🛡️ Garantia de Satisfação", text: "Pode ficar tranquilo quanto à qualidade. Se a camisa chegar com qualquer defeito de fábrica ou não for o que você esperava, a iFooty resolve na hora. O foco deles é a satisfação da comunidade brasileira aqui." },
+                        { label: "✍️ Personalização (Nome/Número)", text: "O mais legal é que dá pra colocar seu nome e número com a fonte oficial do time. Fica igualzinho à que os jogadores usam. É só selecionar a opção 'Com Personalização' na hora de escolher o tamanho." },
+                        { label: "💳 Pagamento Seguro (Interac)", text: "O pagamento é via Interac e-Transfer, o sistema mais seguro do Canadá. Você só paga depois que o pedido é validado, e o iFooty é super transparente em todo o processo." }
+                      ]
                     }
-                  ].map((item, i) => (
-                    <div key={i} style={{ background: '#111', padding: '1.2rem', borderRadius: '12px', border: '1px solid #222' }}>
-                      <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.8rem' }}>
-                        <span style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--accent-color)' }}>{item.label}</span>
-                        <button 
-                          onClick={() => { 
-                            navigator.clipboard.writeText(item.text); 
-                            setCopySuccess(i);
-                            setTimeout(() => setCopySuccess(null), 2000);
-                          }}
-                          style={{ background: 'transparent', border: 'none', color: copySuccess === i ? '#4ADE80' : 'var(--accent-color)', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.4rem', transition: 'all 0.2s' }}
-                        >
-                          <span style={{ fontSize: '0.7rem', fontWeight: 800 }}>{copySuccess === i ? 'COPIADO!' : 'COPIAR'}</span>
-                          {copySuccess === i ? <CheckCircle2 size={14} /> : <Copy size={14} />}
-                        </button>
+                  ].map((cat, catIdx) => (
+                    <div key={catIdx} style={{ marginBottom: '0.5rem' }}>
+                      <p style={{ fontSize: '0.7rem', fontWeight: 800, color: 'var(--text-muted)', marginBottom: '0.8rem', letterSpacing: '1px' }}>{cat.category}</p>
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                        {cat.items.map((item, i) => {
+                          const id = `${catIdx}-${i}`;
+                          const isExpanded = expandedScript === id;
+                          return (
+                            <div key={i} style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid var(--border-color)', borderRadius: '12px', overflow: 'hidden', transition: 'all 0.3s' }}>
+                              <button 
+                                onClick={() => setExpandedScript(isExpanded ? null : id)}
+                                style={{ width: '100%', padding: '1rem 1.2rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'none', border: 'none', cursor: 'pointer', textAlign: 'left' }}
+                              >
+                                <span style={{ fontSize: '0.85rem', fontWeight: 700, color: isExpanded ? 'var(--accent-color)' : '#fff' }}>{item.label}</span>
+                                {isExpanded ? <ChevronUp size={16} color="var(--accent-color)" /> : <ChevronDown size={16} color="var(--text-muted)" />}
+                              </button>
+                              
+                              {isExpanded && (
+                                <div style={{ padding: '0 1.2rem 1.2rem 1.2rem', animation: 'slideDown 0.2s ease-out' }}>
+                                  <div style={{ background: '#000', padding: '1rem', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.05)', position: 'relative' }}>
+                                    <p style={{ fontSize: '0.85rem', color: '#ccc', lineHeight: 1.6, margin: 0, paddingRight: '2rem' }}>
+                                      {item.text
+                                        .replace('[CUPOM]', affiliateCoupon?.code || 'SEUCUPOM')
+                                        .replace('[LINK]', `https://ifooty.ca/?ref=${affiliateCoupon?.agent_id?.split(' ')[0]?.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "") || 'vendedor'}`)
+                                      }
+                                    </p>
+                                    <button 
+                                      onClick={() => {
+                                        const finalLink = `https://ifooty.ca/?ref=${affiliateCoupon?.agent_id?.split(' ')[0]?.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "") || 'vendedor'}`;
+                                        const finalMsg = item.text
+                                          .replace('[CUPOM]', affiliateCoupon?.code || 'SEUCUPOM')
+                                          .replace('[LINK]', finalLink);
+                                          
+                                        navigator.clipboard.writeText(finalMsg);
+                                        setCopySuccess(id);
+                                        setTimeout(() => setCopySuccess(null), 2000);
+                                      }}
+                                      style={{ position: 'absolute', top: '0.8rem', right: '0.8rem', background: 'none', border: 'none', color: copySuccess === id ? '#4ADE80' : 'var(--text-muted)', cursor: 'pointer' }}
+                                    >
+                                      {copySuccess === id ? <CheckCircle2 size={16} /> : <Copy size={16} />}
+                                    </button>
+                                  </div>
+                                </div>
+                              )}
+                            </div>
+                          );
+                        })}
                       </div>
-                      <p style={{ fontStyle: 'italic', color: '#ccc', fontSize: '0.9rem', lineHeight: 1.5 }}>"{item.text}"</p>
                     </div>
                   ))}
                 </div>
