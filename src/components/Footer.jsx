@@ -206,18 +206,6 @@ const Footer = () => {
             >
               <FileText size={20} /> QUERO JOGAR NESTE TIME
             </button>
-
-            <button
-              onClick={() => { setActiveModal(null); window.location.href = '/afiliados/guia'; }}
-              style={{
-                display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem',
-                marginTop: '1.5rem', width: '100%', background: 'none', border: 'none',
-                color: 'var(--text-muted)', cursor: 'pointer', fontSize: '0.9rem', fontWeight: 600,
-                textDecoration: 'underline'
-              }}
-            >
-              <FileText size={16} /> JÁ É AFILIADO? ACESSE O GUIA DE VENDAS
-            </button>
           </div>
         </InfoModal>
       )}

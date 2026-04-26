@@ -355,7 +355,7 @@ const AffiliateProgram = () => {
                 </p>
                 <button 
                   onClick={() => {
-                    sessionStorage.setItem('ifooty_redirect_after_login', '/afiliado#cadastro');
+                    sessionStorage.setItem('ifooty_redirect_after_login', '/afiliados#cadastro');
                     navigate('/auth');
                   }} 
                   className="btn-primary" 
