@@ -22,6 +22,7 @@ const Profile = () => {
   const [isAffiliate, setIsAffiliate] = useState(false);
   const [affiliateCoupon, setAffiliateCoupon] = useState(null);
   const [affiliateStats, setAffiliateStats] = useState({ totalSales: 0, totalRevenue: 0, baseCommission: 0, bonusMeta: 0, totalPayable: 0, rate: 8, level: 'Bronze' });
+  const [attributedOrders, setAttributedOrders] = useState([]);
   const [copySuccess, setCopySuccess] = useState(null); // id do que foi copiado
   const [affiliateDriveLink, setAffiliateDriveLink] = useState('');
   const [expandedScript, setExpandedScript] = useState(null);
@@ -45,7 +46,7 @@ const Profile = () => {
       setAffiliateCoupon(coupon);
 
       // Calcular Financeiro do Afiliado
-      const { data: allOrders } = await supabase.from('orders').select('*');
+      const { data: allOrders } = await supabase.from('orders').select('*').order('created_at', { ascending: false });
       if (allOrders) {
         const mySales = allOrders.filter(o => {
           const oRef = o.referrer?.toLowerCase();
@@ -58,6 +59,8 @@ const Profile = () => {
 
           return oRef === agentId || oRef === slug || oRef === agentCode || oCoupon === agentCode;
         });
+
+        setAttributedOrders(mySales);
 
         const revenue = mySales.reduce((acc, o) => acc + (Number(o.total_price) || 0), 0);
         const count = mySales.length;
@@ -436,6 +439,49 @@ const Profile = () => {
                 <div style={{ background: 'rgba(204, 255, 0, 0.1)', padding: '1.2rem 0.5rem', borderRadius: '16px', border: '1px solid var(--accent-color)', textAlign: 'center' }}>
                   <div style={{ color: 'var(--accent-color)', fontSize: '0.65rem', textTransform: 'uppercase', marginBottom: '0.4rem', fontWeight: 700 }}>A Receber</div>
                   <div style={{ fontSize: '1.5rem', fontWeight: 900, color: 'var(--accent-color)' }}>${affiliateStats.totalPayable.toFixed(2)}</div>
+                </div>
+              </div>
+
+              {/* Minhas Vendas - Nova Seção */}
+              <div style={{ background: 'rgba(255,255,255,0.02)', borderRadius: '16px', border: '1px solid var(--border-color)', overflow: 'hidden' }}>
+                <div style={{ padding: '1.2rem', borderBottom: '1px solid var(--border-color)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <h3 style={{ fontSize: '1.1rem', margin: 0, color: '#fff', display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
+                    <TrendingUp size={18} color="var(--accent-color)" /> Minhas Vendas (Últimas)
+                  </h3>
+                  <span style={{ fontSize: '0.75rem', background: 'rgba(255,255,255,0.05)', padding: '0.3rem 0.7rem', borderRadius: '100px', color: 'var(--text-muted)' }}>
+                    {attributedOrders.length} vendas localizadas
+                  </span>
+                </div>
+                
+                <div className="custom-scrollbar" style={{ maxHeight: '400px', overflowY: 'auto' }}>
+                  {attributedOrders.length === 0 ? (
+                    <div style={{ padding: '3rem', textAlign: 'center', color: 'var(--text-muted)' }}>
+                      Nenhuma venda registrada ainda. Divulgue seu link para começar! ⚽
+                    </div>
+                  ) : (
+                    <div className="table-responsive">
+                      <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.85rem' }}>
+                        <thead>
+                          <tr style={{ background: 'rgba(255,255,255,0.02)', textAlign: 'left', color: 'var(--text-muted)' }}>
+                            <th style={{ padding: '1rem' }}>REF</th>
+                            <th style={{ padding: '1rem' }}>CLIENTE</th>
+                            <th style={{ padding: '1rem' }}>DATA</th>
+                            <th style={{ padding: '1rem', textAlign: 'right' }}>VALOR</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {attributedOrders.map((ord, idx) => (
+                            <tr key={idx} style={{ borderBottom: '1px solid rgba(255,255,255,0.03)' }}>
+                              <td style={{ padding: '1rem', fontWeight: 700, color: '#fff' }}>#{ord.id.toString().slice(-4).toUpperCase()}</td>
+                              <td style={{ padding: '1rem' }}>{ord.customer_name?.split(' ')[0]}</td>
+                              <td style={{ padding: '1rem', color: 'var(--text-muted)' }}>{new Date(ord.created_at).toLocaleDateString()}</td>
+                              <td style={{ padding: '1rem', textAlign: 'right', fontWeight: 800, color: 'var(--accent-color)' }}>${ord.total_price.toFixed(2)}</td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  )}
                 </div>
               </div>
 
