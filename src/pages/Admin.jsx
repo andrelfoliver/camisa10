@@ -1229,16 +1229,19 @@ const Admin = () => {
           .admin-sidebar > div:first-child, .admin-sidebar hr, .admin-sidebar p {
             display: none !important;
           }
-          .admin-logout-btn {
+          /* Botão Sair com Destaque Máximo */
+          .admin-sidebar .admin-logout-btn {
             margin-top: 0 !important;
             padding: 0.6rem 1.2rem !important;
             border-radius: 20px !important;
             width: auto !important;
             font-size: 0.8rem !important;
-            background: #EF4444 !important;
+            background: #FF4444 !important; /* Vermelho Sólido */
             color: #fff !important;
-            box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3) !important;
+            box-shadow: 0 4px 15px rgba(255, 68, 68, 0.4) !important;
             border: none !important;
+            font-weight: 800 !important;
+            opacity: 1 !important;
           }
           .admin-nav {
             flex-direction: row !important;
