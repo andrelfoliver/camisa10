@@ -208,7 +208,7 @@ const Footer = () => {
             </button>
 
             <button
-              onClick={() => { setActiveModal(null); window.location.href = '/afiliados'; }}
+              onClick={() => { setActiveModal(null); window.location.href = '/afiliados/guia'; }}
               style={{
                 display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem',
                 marginTop: '1.5rem', width: '100%', background: 'none', border: 'none',
@@ -216,7 +216,7 @@ const Footer = () => {
                 textDecoration: 'underline'
               }}
             >
-              <FileText size={16} /> VER GUIA COMPLETO DO PROGRAMA
+              <FileText size={16} /> JÁ É AFILIADO? ACESSE O GUIA DE VENDAS
             </button>
           </div>
         </InfoModal>

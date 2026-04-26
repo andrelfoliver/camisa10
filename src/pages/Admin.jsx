@@ -1182,8 +1182,87 @@ const Admin = () => {
 
   return (
     <div className="admin-layout" style={{ display: 'flex', minHeight: '100vh', background: 'var(--bg-color)', color: 'var(--text-main)' }}>
+      <style>{`
+        .admin-sidebar {
+          width: 280px;
+          border-right: 1px solid var(--border-color);
+          background: var(--surface-color);
+          padding: 2rem 1.5rem;
+          display: flex;
+          flex-direction: column;
+          position: sticky;
+          top: 85px;
+          height: calc(100vh - 85px);
+          overflow-y: auto;
+        }
+        .admin-nav {
+          display: flex;
+          flex-direction: column;
+          gap: 0.5rem;
+          flex: 1;
+        }
+
+        @media (max-width: 992px) {
+          .admin-sidebar {
+            display: flex !important;
+            flex-direction: row !important;
+            overflow-x: auto !important;
+            width: 100% !important;
+            height: auto !important;
+            padding: 0.5rem !important;
+            gap: 0.5rem !important;
+            position: sticky !important;
+            top: 60px !important;
+            z-index: 100 !important;
+            background: #0a0a0c !important;
+            border-bottom: 1px solid var(--border-color) !important;
+            border-right: none !important;
+            scrollbar-width: none;
+            margin: 0 !important;
+          }
+          .admin-sidebar::-webkit-scrollbar {
+            display: none;
+          }
+          .admin-sidebar > div:first-child, .admin-sidebar hr, .admin-sidebar p, .admin-sidebar > div:last-child {
+            display: none !important;
+          }
+          .admin-nav {
+            flex-direction: row !important;
+            gap: 0.5rem !important;
+          }
+          .admin-sidebar button {
+            white-space: nowrap;
+            padding: 0.5rem 1rem !important;
+            border-radius: 20px !important;
+            font-size: 0.8rem !important;
+            background: rgba(255,255,255,0.05) !important;
+            color: var(--text-muted) !important;
+            width: auto !important;
+          }
+          .admin-sidebar button.active-tab {
+            background: var(--accent-color) !important;
+            color: #000 !important;
+          }
+          .admin-main {
+            padding-top: 0 !important;
+          }
+          .admin-top-bar {
+            padding: 1rem !important;
+            position: sticky !important;
+            top: 0;
+            z-index: 101;
+          }
+          .admin-header-title {
+            font-size: 1.1rem !important;
+          }
+          .hide-mobile {
+            display: none !important;
+          }
+        }
+      `}</style>
+
       {/* SIDEBAR COMPLETA */}
-      <aside style={{ width: '280px', borderRight: '1px solid var(--border-color)', background: 'var(--surface-color)', padding: '2rem 1.5rem', display: 'flex', flexDirection: 'column', position: 'sticky', top: '85px', height: 'calc(100vh - 85px)', overflowY: 'auto' }}>
+      <aside className="admin-sidebar">
         <div style={{ marginBottom: '2.5rem' }}>
           <div style={{ fontSize: '0.85rem', color: 'var(--text-muted)', background: 'rgba(255,255,255,0.05)', padding: '0.8rem 1rem', borderRadius: '4px', wordBreak: 'break-all', borderLeft: '3px solid var(--accent-color)' }}>
             <span style={{ display: 'block', fontWeight: 800, color: '#fff', marginBottom: '0.2rem' }}>ADMINISTRADOR</span>
@@ -1191,12 +1270,13 @@ const Admin = () => {
           </div>
         </div>
 
-        <nav style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', flex: 1 }}>
+        <nav className="admin-nav">
           {/* NOSSOS CATÁLOGOS */}
           <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '0.5rem', fontWeight: 800 }}>Nossos Catálogos</p>
           <button
             onClick={() => setSupplierTab('CLOUD_ALL')}
-            style={{ padding: '0.8rem 1rem', borderRadius: 'var(--radius-md)', display: 'flex', alignItems: 'center', gap: '0.8rem', width: '100%', textAlign: 'left', background: supplierTab === 'CLOUD_ALL' ? 'var(--accent-color)' : 'transparent', color: supplierTab === 'CLOUD_ALL' ? '#000' : 'var(--text-main)', fontWeight: supplierTab === 'CLOUD_ALL' ? 700 : 500, transition: 'all 0.2s', border: '1px solid transparent' }}
+            className={supplierTab === 'CLOUD_ALL' ? 'active-tab' : ''}
+            style={{ padding: '0.8rem 1rem', borderRadius: 'var(--radius-md)', display: 'flex', alignItems: 'center', gap: '0.8rem', width: '100%', textAlign: 'left', background: supplierTab === 'CLOUD_ALL' ? 'var(--accent-color)' : 'transparent', color: supplierTab === 'CLOUD_ALL' ? '#000' : 'var(--text-main)', fontWeight: supplierTab === 'CLOUD_ALL' ? 700 : 500, transition: 'all 0.2s', border: 'none', cursor: 'pointer' }}
           >
             <Database size={18} /> Todo o Banco
           </button>
@@ -1207,7 +1287,8 @@ const Admin = () => {
               <button
                 key={cat}
                 onClick={() => setSupplierTab(`CAT_${cat}`)}
-                style={{ padding: '0.5rem 1rem', paddingLeft: '2.5rem', borderRadius: 'var(--radius-md)', display: 'flex', alignItems: 'center', gap: '0.5rem', width: '100%', textAlign: 'left', background: isActive ? 'var(--surface-hover)' : 'transparent', color: isActive ? 'var(--accent-color)' : 'var(--text-muted)', fontWeight: isActive ? 700 : 500, transition: 'all 0.2s', border: isActive ? '1px solid var(--border-color)' : '1px solid transparent', fontSize: '0.9rem' }}
+                className={isActive ? 'active-tab' : ''}
+                style={{ padding: '0.5rem 1rem', paddingLeft: '2.5rem', borderRadius: 'var(--radius-md)', display: 'flex', alignItems: 'center', gap: '0.5rem', width: '100%', textAlign: 'left', background: isActive ? 'var(--surface-hover)' : 'transparent', color: isActive ? 'var(--accent-color)' : 'var(--text-muted)', fontWeight: isActive ? 700 : 500, transition: 'all 0.2s', border: isActive ? '1px solid var(--border-color)' : '1px solid transparent', fontSize: '0.9rem', cursor: 'pointer' }}
               >
                 <Package size={14} /> {cat}
               </button>
@@ -1217,6 +1298,7 @@ const Admin = () => {
           <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '1px', marginTop: '1.5rem', marginBottom: '0.5rem', fontWeight: 800 }}>Gestão & Integrações</p>
           <button
             onClick={() => setSupplierTab('PEDIDOS')}
+            className={supplierTab === 'PEDIDOS' ? 'active-tab' : ''}
             style={{ padding: '0.8rem 1.5rem', background: supplierTab === 'PEDIDOS' ? 'var(--accent-color)' : 'transparent', color: supplierTab === 'PEDIDOS' ? '#000' : 'var(--text-muted)', border: 'none', borderRadius: '4px', cursor: 'pointer', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '0.5rem' }}
           >
             <Package size={18} /> PEDIDOS
@@ -1224,6 +1306,7 @@ const Admin = () => {
 
           <button
             onClick={() => setSupplierTab('ESTOQUE')}
+            className={supplierTab === 'ESTOQUE' ? 'active-tab' : ''}
             style={{ padding: '0.8rem 1.5rem', background: supplierTab === 'ESTOQUE' ? 'var(--accent-color)' : 'transparent', color: supplierTab === 'ESTOQUE' ? '#000' : 'var(--text-muted)', border: 'none', borderRadius: '4px', cursor: 'pointer', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '0.5rem' }}
           >
             <HardDrive size={18} /> ESTOQUE
@@ -1231,6 +1314,7 @@ const Admin = () => {
 
           <button
             onClick={() => setSupplierTab('CLIENTES')}
+            className={supplierTab === 'CLIENTES' ? 'active-tab' : ''}
             style={{ padding: '0.8rem 1.5rem', background: supplierTab === 'CLIENTES' ? 'var(--accent-color)' : 'transparent', color: supplierTab === 'CLIENTES' ? '#000' : 'var(--text-muted)', border: 'none', borderRadius: '4px', cursor: 'pointer', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '0.5rem' }}
           >
             <Users size={18} /> CLIENTES
@@ -1238,31 +1322,36 @@ const Admin = () => {
 
           <button
             onClick={() => setSupplierTab('CONFIG')}
-            style={{ padding: '0.8rem 1rem', borderRadius: 'var(--radius-md)', display: 'flex', alignItems: 'center', gap: '0.8rem', width: '100%', textAlign: 'left', background: supplierTab === 'CONFIG' ? '#3B82F6' : 'transparent', color: supplierTab === 'CONFIG' ? '#fff' : 'var(--text-main)', fontWeight: supplierTab === 'CONFIG' ? 700 : 500, transition: 'all 0.2s' }}
+            className={supplierTab === 'CONFIG' ? 'active-tab' : ''}
+            style={{ padding: '0.8rem 1rem', borderRadius: 'var(--radius-md)', display: 'flex', alignItems: 'center', gap: '0.8rem', width: '100%', textAlign: 'left', background: supplierTab === 'CONFIG' ? '#3B82F6' : 'transparent', color: supplierTab === 'CONFIG' ? '#fff' : 'var(--text-main)', fontWeight: supplierTab === 'CONFIG' ? 700 : 500, transition: 'all 0.2s', border: 'none', cursor: 'pointer' }}
           >
             <Image size={18} /> Visual & Banners
           </button>
           <button
             onClick={() => setSupplierTab('PRICING')}
-            style={{ padding: '0.8rem 1rem', borderRadius: 'var(--radius-md)', display: 'flex', alignItems: 'center', gap: '0.8rem', width: '100%', textAlign: 'left', background: supplierTab === 'PRICING' ? '#F59E0B' : 'transparent', color: supplierTab === 'PRICING' ? '#fff' : 'var(--text-main)', fontWeight: supplierTab === 'PRICING' ? 700 : 500, transition: 'all 0.2s' }}
+            className={supplierTab === 'PRICING' ? 'active-tab' : ''}
+            style={{ padding: '0.8rem 1rem', borderRadius: 'var(--radius-md)', display: 'flex', alignItems: 'center', gap: '0.8rem', width: '100%', textAlign: 'left', background: supplierTab === 'PRICING' ? '#F59E0B' : 'transparent', color: supplierTab === 'PRICING' ? '#fff' : 'var(--text-main)', fontWeight: supplierTab === 'PRICING' ? 700 : 500, transition: 'all 0.2s', border: 'none', cursor: 'pointer' }}
           >
             <DollarSign size={18} /> Tabela de Preços
           </button>
           <button
             onClick={() => setSupplierTab('TESTIMONIALS')}
-            style={{ padding: '0.8rem 1rem', borderRadius: 'var(--radius-md)', display: 'flex', alignItems: 'center', gap: '0.8rem', width: '100%', textAlign: 'left', background: supplierTab === 'TESTIMONIALS' ? '#A855F7' : 'transparent', color: supplierTab === 'TESTIMONIALS' ? '#fff' : 'var(--text-main)', fontWeight: supplierTab === 'TESTIMONIALS' ? 700 : 500, transition: 'all 0.2s' }}
+            className={supplierTab === 'TESTIMONIALS' ? 'active-tab' : ''}
+            style={{ padding: '0.8rem 1rem', borderRadius: 'var(--radius-md)', display: 'flex', alignItems: 'center', gap: '0.8rem', width: '100%', textAlign: 'left', background: supplierTab === 'TESTIMONIALS' ? '#A855F7' : 'transparent', color: supplierTab === 'TESTIMONIALS' ? '#fff' : 'var(--text-main)', fontWeight: supplierTab === 'TESTIMONIALS' ? 700 : 500, transition: 'all 0.2s', border: 'none', cursor: 'pointer' }}
           >
             <Star size={18} /> Depoimentos
           </button>
           <button
             onClick={() => setSupplierTab('TEAMS')}
-            style={{ padding: '0.8rem 1rem', borderRadius: 'var(--radius-md)', display: 'flex', alignItems: 'center', gap: '0.8rem', width: '100%', textAlign: 'left', background: supplierTab === 'TEAMS' ? '#10B981' : 'transparent', color: supplierTab === 'TEAMS' ? '#fff' : 'var(--text-main)', fontWeight: supplierTab === 'TEAMS' ? 700 : 500, transition: 'all 0.2s' }}
+            className={supplierTab === 'TEAMS' ? 'active-tab' : ''}
+            style={{ padding: '0.8rem 1rem', borderRadius: 'var(--radius-md)', display: 'flex', alignItems: 'center', gap: '0.8rem', width: '100%', textAlign: 'left', background: supplierTab === 'TEAMS' ? '#10B981' : 'transparent', color: supplierTab === 'TEAMS' ? '#fff' : 'var(--text-main)', fontWeight: supplierTab === 'TEAMS' ? 700 : 500, transition: 'all 0.2s', border: 'none', cursor: 'pointer' }}
           >
             <Shield size={18} /> Escudos Oficiais
           </button>
           <button
             onClick={() => setSupplierTab('AGENTS')}
-            style={{ padding: '0.8rem 1rem', borderRadius: 'var(--radius-md)', display: 'flex', alignItems: 'center', gap: '0.8rem', width: '100%', textAlign: 'left', background: supplierTab === 'AGENTS' ? 'var(--accent-color)' : 'transparent', color: supplierTab === 'AGENTS' ? '#000' : 'var(--text-main)', fontWeight: supplierTab === 'AGENTS' ? 700 : 500, transition: 'all 0.2s' }}
+            className={supplierTab === 'AGENTS' ? 'active-tab' : ''}
+            style={{ padding: '0.8rem 1rem', borderRadius: 'var(--radius-md)', display: 'flex', alignItems: 'center', gap: '0.8rem', width: '100%', textAlign: 'left', background: supplierTab === 'AGENTS' ? 'var(--accent-color)' : 'transparent', color: supplierTab === 'AGENTS' ? '#000' : 'var(--text-main)', fontWeight: supplierTab === 'AGENTS' ? 700 : 500, transition: 'all 0.2s', border: 'none', cursor: 'pointer' }}
           >
             <Crown size={18} /> Agentes & Vendas
           </button>
@@ -1280,23 +1369,26 @@ const Admin = () => {
       </aside>
 
       {/* ÁREA PRINCIPAL */}
-      <main style={{ flex: 1, display: 'flex', flexDirection: 'column', height: '100vh', overflowY: 'auto', position: 'relative' }}>
+      <main className="admin-main" style={{ flex: 1, display: 'flex', flexDirection: 'column', height: '100vh', overflowY: 'auto', position: 'relative' }}>
 
         {/* TOP BAR */}
-        <header style={{ position: 'sticky', top: 0, zIndex: 50, background: 'rgba(7, 7, 9, 0.95)', backdropFilter: 'blur(10px)', borderBottom: '1px solid var(--border-color)', padding: '1.5rem 3rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center', boxShadow: '0 4px 20px rgba(0,0,0,0.5)' }}>
-          <div>
-            <h1 style={{ fontSize: '1.8rem', color: '#fff', fontWeight: 800 }}>
-              {
-                supplierTab === 'CLIENTES' ? 'Gestão de Clientes' :
-                  supplierTab === 'CONFIG' ? 'Configuração de Interface' :
-                    supplierTab === 'PRICING' ? 'Tabela de Preços Globais' :
-                      supplierTab === 'TESTIMONIALS' ? 'Gestão de Depoimentos' :
-                        supplierTab === 'TEAMS' ? 'Gestão de Escudos Oficiais' :
-                          supplierTab === 'CLOUD_ALL' ? 'Todo o Banco na Nuvem' :
-
-                            `${supplierTab.replace('CAT_', '')}`}
-            </h1>
-            <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem', marginTop: '0.2rem' }}>Painel Central de Gerenciamento iFooty.</p>
+        <header className="admin-top-bar" style={{ position: 'sticky', top: 0, zIndex: 50, background: 'rgba(7, 7, 9, 0.95)', backdropFilter: 'blur(10px)', borderBottom: '1px solid var(--border-color)', padding: '1.5rem 3rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center', boxShadow: '0 4px 20px rgba(0,0,0,0.5)' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+            <div>
+              <h1 className="admin-header-title" style={{ fontSize: '1.8rem', color: '#fff', fontWeight: 800, margin: 0 }}>
+                {
+                  supplierTab === 'CLIENTES' ? 'Gestão de Clientes' :
+                    supplierTab === 'CONFIG' ? 'Configuração de Interface' :
+                      supplierTab === 'PRICING' ? 'Tabela de Preços Globais' :
+                        supplierTab === 'TESTIMONIALS' ? 'Gestão de Depoimentos' :
+                          supplierTab === 'TEAMS' ? 'Gestão de Escudos Oficiais' :
+                            supplierTab === 'CLOUD_ALL' ? 'Todo o Banco na Nuvem' :
+                              supplierTab === 'ESTOQUE' ? 'Gestão de Estoque' :
+                                supplierTab === 'AGENTS' ? 'Agentes & Vendas' :
+                                  `${supplierTab.replace('CAT_', '')}`}
+              </h1>
+              <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem', marginTop: '0.2rem' }} className="hide-mobile">Painel Central de Gerenciamento iFooty.</p>
+            </div>
           </div>
           <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
             {supplierTab === 'TESTIMONIALS' && (
