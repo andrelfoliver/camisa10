@@ -65,17 +65,30 @@ const Profile = () => {
         const revenue = mySales.reduce((acc, o) => acc + (Number(o.total_price) || 0), 0);
         const count = mySales.length;
         
-        const baseRate = 0.08;
-        const bonusPerSale = 5.00;
-        
-        const baseCommission = revenue * baseRate;
-        const bonusMeta = count * bonusPerSale;
-        const totalPayable = baseCommission + bonusMeta;
-
+        // Plano de Carreira Progressivo
+        let currentRate = 0.08;
         let level = '🥉 Bronze';
-        if (count >= 51) level = '💎 Diamante';
-        else if (count >= 26) level = '🥇 Ouro';
-        else if (count >= 11) level = '🥈 Prata';
+        
+        if (count >= 51) {
+          currentRate = 0.15;
+          level = '💎 Diamante';
+        } else if (count >= 26) {
+          currentRate = 0.12;
+          level = '🥇 Ouro';
+        } else if (count >= 11) {
+          currentRate = 0.10;
+          level = '🥈 Prata';
+        }
+
+        const baseCommission = revenue * currentRate;
+        
+        // Bônus Fixos por Marco
+        let bonusMeta = 0;
+        if (count >= 1) bonusMeta += 5; // Primeiro gol
+        if (count >= 5) bonusMeta += 10; // Total 15
+        if (count >= 10) bonusMeta += 15; // Total 30
+        
+        const totalPayable = baseCommission + bonusMeta;
 
         setAffiliateStats({
           totalSales: count,
@@ -83,7 +96,7 @@ const Profile = () => {
           baseCommission,
           bonusMeta,
           totalPayable,
-          rate: baseRate * 100,
+          rate: Math.round(currentRate * 100),
           level
         });
       }
@@ -464,21 +477,39 @@ const Profile = () => {
                         <thead>
                           <tr style={{ background: 'rgba(255,255,255,0.02)', textAlign: 'left', color: 'var(--text-muted)' }}>
                             <th style={{ padding: '1rem' }}>REF</th>
-                            <th style={{ padding: '1rem' }}>CLIENTE</th>
                             <th style={{ padding: '1rem' }}>DATA</th>
-                            <th style={{ padding: '1rem', textAlign: 'right' }}>VALOR</th>
+                            <th style={{ padding: '1rem' }}>PRODUTOS</th>
+                            <th style={{ padding: '1rem', textAlign: 'right' }}>VENDA</th>
+                            <th style={{ padding: '1rem', textAlign: 'right' }}>%</th>
+                            <th style={{ padding: '1rem', textAlign: 'right' }}>GANHO</th>
                           </tr>
                         </thead>
                         <tbody>
-                          {attributedOrders.map((ord, idx) => (
-                            <tr key={idx} style={{ borderBottom: '1px solid rgba(255,255,255,0.03)' }}>
-                              <td style={{ padding: '1rem', fontWeight: 700, color: '#fff' }}>#{ord.id.toString().slice(-4).toUpperCase()}</td>
-                              <td style={{ padding: '1rem' }}>{ord.customer_name?.split(' ')[0]}</td>
-                              <td style={{ padding: '1rem', color: 'var(--text-muted)' }}>{new Date(ord.created_at).toLocaleDateString()}</td>
-                              <td style={{ padding: '1rem', textAlign: 'right', fontWeight: 800, color: 'var(--accent-color)' }}>${ord.total_price.toFixed(2)}</td>
-                            </tr>
-                          ))}
+                          {attributedOrders.map((ord, idx) => {
+                            const saleValue = Number(ord.total_price) || 0;
+                            const commValue = saleValue * (affiliateStats.rate / 100);
+                            const itemsSummary = ord.items?.map(item => `${item.quantity}x ${item.name.split(' ').slice(0, 2).join(' ')}`).join(', ') || '---';
+                            
+                            return (
+                              <tr key={idx} style={{ borderBottom: '1px solid rgba(255,255,255,0.03)' }}>
+                                <td style={{ padding: '1rem', fontWeight: 700, color: '#fff' }}>#{ord.id.toString().slice(-4).toUpperCase()}</td>
+                                <td style={{ padding: '1rem', color: 'var(--text-muted)', fontSize: '0.75rem' }}>{new Date(ord.created_at).toLocaleDateString()}</td>
+                                <td style={{ padding: '1rem', fontSize: '0.8rem', color: '#fff', opacity: 0.8, maxWidth: '200px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} title={itemsSummary}>
+                                  {itemsSummary}
+                                </td>
+                                <td style={{ padding: '1rem', textAlign: 'right', fontWeight: 500 }}>${saleValue.toFixed(2)}</td>
+                                <td style={{ padding: '1rem', textAlign: 'right', color: 'var(--text-muted)' }}>{affiliateStats.rate}%</td>
+                                <td style={{ padding: '1rem', textAlign: 'right', fontWeight: 800, color: 'var(--accent-color)' }}>${commValue.toFixed(2)}</td>
+                              </tr>
+                            );
+                          })}
                         </tbody>
+                        <tfoot style={{ background: 'rgba(204, 255, 0, 0.03)' }}>
+                          <tr>
+                            <td colSpan="4" style={{ padding: '1rem', textAlign: 'right', color: 'var(--text-muted)', fontSize: '0.75rem' }}>Bônus Acumulados (Metas):</td>
+                            <td style={{ padding: '1rem', textAlign: 'right', fontWeight: 800, color: 'var(--accent-color)' }}>+${affiliateStats.bonusMeta.toFixed(2)}</td>
+                          </tr>
+                        </tfoot>
                       </table>
                     </div>
                   )}
