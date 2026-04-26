@@ -1226,8 +1226,16 @@ const Admin = () => {
           .admin-sidebar::-webkit-scrollbar {
             display: none;
           }
-          .admin-sidebar > div:first-child, .admin-sidebar hr, .admin-sidebar p, .admin-sidebar > div:last-child {
+          .admin-sidebar > div:first-child, .admin-sidebar hr, .admin-sidebar p {
             display: none !important;
+          }
+          .admin-logout-btn {
+            margin-top: 0 !important;
+            padding: 0.5rem 1rem !important;
+            border-radius: 20px !important;
+            width: auto !important;
+            font-size: 0.8rem !important;
+            background: rgba(239, 68, 68, 0.1) !important;
           }
           .admin-nav {
             flex-direction: row !important;
@@ -1359,12 +1367,17 @@ const Admin = () => {
             <Crown size={18} /> Agentes & Vendas
           </button>
 
-        </nav>
-
-        <div style={{ marginTop: '2rem', borderTop: '1px solid var(--border-color)', paddingTop: '1.5rem', display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-          <button onClick={signOut} style={{ padding: '0.8rem', borderRadius: 'var(--radius-md)', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem', width: '100%', color: '#EF4444', background: 'rgba(239, 68, 68, 0.1)', border: '1px solid transparent', transition: 'all 0.2s', fontWeight: 600 }}>
+          <button 
+            onClick={signOut} 
+            className="admin-logout-btn"
+            style={{ marginTop: '1rem', padding: '0.8rem', borderRadius: 'var(--radius-md)', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem', width: '100%', color: '#EF4444', background: 'rgba(239, 68, 68, 0.1)', border: '1px solid transparent', transition: 'all 0.2s', fontWeight: 600, cursor: 'pointer' }}
+          >
             <LogOut size={18} /> Sair do Painel
           </button>
+
+        </nav>
+
+        <div className="hide-mobile" style={{ marginTop: '2rem', borderTop: '1px solid var(--border-color)', paddingTop: '1.5rem', display: 'flex', flexDirection: 'column', gap: '1rem' }}>
           <div style={{ textAlign: 'center' }}>
             <Link to="/" style={{ color: 'var(--text-muted)', fontSize: '0.85rem', textDecoration: 'underline' }}>← Visualizar Loja</Link>
           </div>
