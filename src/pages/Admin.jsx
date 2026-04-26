@@ -1203,6 +1203,9 @@ const Admin = () => {
         }
 
         @media (max-width: 992px) {
+          .admin-layout {
+            flex-direction: column !important;
+          }
           .admin-sidebar {
             display: flex !important;
             flex-direction: row !important;

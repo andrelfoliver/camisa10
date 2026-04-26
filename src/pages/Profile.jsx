@@ -146,6 +146,9 @@ const Profile = () => {
           grid-template-columns: 280px 1fr;
           gap: 2rem;
         }
+        .profile-nav-list {
+          flex-direction: column;
+        }
         
         @media (max-width: 992px) {
           .profile-grid {
@@ -182,18 +185,14 @@ const Profile = () => {
             background: rgba(255,255,255,0.05);
             border-radius: 20px !important;
             font-size: 0.9rem !important;
+            width: auto !important;
           }
           .profile-sidebar button.active {
             background: var(--accent-color) !important;
             color: #000 !important;
           }
           .profile-nav-list {
-            flex-direction: column;
-          }
-          @media (max-width: 992px) {
-            .profile-nav-list {
-              flex-direction: row !important;
-            }
+            flex-direction: row !important;
           }
           .profile-sidebar hr {
             display: none;
