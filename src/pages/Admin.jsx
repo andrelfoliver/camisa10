@@ -1269,6 +1269,28 @@ const Admin = () => {
           .hide-mobile {
             display: none !important;
           }
+          /* AJUSTES DE CONTEÚDO INTERNO */
+          .admin-main {
+            padding: 1rem !important;
+          }
+          .admin-top-bar {
+            padding: 1rem !important;
+          }
+          /* Grid de Cards */
+          div[style*="gridTemplateColumns"] {
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)) !important;
+            gap: 0.8rem !important;
+          }
+          /* Filtros */
+          div[style*="display: flex"][style*="gap: 2rem"] {
+            flex-direction: column !important;
+            gap: 1rem !important;
+          }
+          /* Pedidos/Tabelas */
+          .order-item-grid {
+            grid-template-columns: 1fr !important;
+            gap: 0.5rem !important;
+          }
         }
       `}</style>
 
