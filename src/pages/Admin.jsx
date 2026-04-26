@@ -175,7 +175,7 @@ const Admin = () => {
   const [statusFilter, setStatusFilter] = useState('all');
   const [dateRange, setDateRange] = useState({ start: '', end: '' });
   const [coupons, setCoupons] = useState([]);
-  const [commissionRate, setCommissionRate] = useState(10);
+  const [commissionRate, setCommissionRate] = useState(8);
   const [discountRate, setDiscountRate] = useState(5);
   const [isAddingCoupon, setIsAddingCoupon] = useState(false);
   const [newCoupon, setNewCoupon] = useState({ code: '', agent_id: '', discount_percent: 5 });
@@ -2102,21 +2102,36 @@ const Admin = () => {
                         })
                         .reduce((acc, order) => {
                           const rawRef = order.referrer || 'Sem Indicação';
-                          const coupon = coupons.find(c => c.code === rawRef.toUpperCase());
-                          const ref = coupon ? (coupon.agent_id || rawRef) : rawRef;
+                          
+                          // 1. Tentar encontrar o cupom/agente de forma unificada
+                          const coupon = coupons.find(c => {
+                            const agentCode = c.code?.toUpperCase();
+                            const agentName = c.agent_id?.toLowerCase();
+                            const rawId = c.agent_id || 'vendedor';
+                            const cleanId = rawId.includes('@') ? rawId.split('@')[0] : rawId.split(' ')[0];
+                            const slug = cleanId.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+                            
+                            const normalizedRef = rawRef.toLowerCase().trim();
+                            return normalizedRef === agentCode.toLowerCase() || 
+                                   normalizedRef === agentName || 
+                                   normalizedRef === slug;
+                          });
 
-                          if (prodAgentFilter && ref !== prodAgentFilter) return acc;
+                          // 2. Definir a chave única (Agent ID ou 'Sem Indicação')
+                          const refKey = coupon ? (coupon.agent_id || coupon.code) : rawRef;
+
+                          if (prodAgentFilter && refKey !== prodAgentFilter) return acc;
 
                           const orderDateStr = order.created_at.split('T')[0];
                           const isCopaPeriod = orderDateStr >= '2026-06-11' && orderDateStr <= '2026-07-19';
 
-                          if (!acc[ref]) acc[ref] = { count: 0, total: 0, seasonalBonus: 0, orderList: [] };
-                          acc[ref].count += 1;
-                          acc[ref].total += Number(order.total_price || 0);
-                          acc[ref].orderList.push(order);
+                          if (!acc[refKey]) acc[refKey] = { count: 0, total: 0, seasonalBonus: 0, orderList: [] };
+                          acc[refKey].count += 1;
+                          acc[refKey].total += Number(order.total_price || 0);
+                          acc[refKey].orderList.push(order);
 
                           if (isCopaPeriod) {
-                            acc[ref].seasonalBonus += Number(order.total_price || 0) * 0.05;
+                            acc[refKey].seasonalBonus += Number(order.total_price || 0) * 0.05;
                           }
 
                           return acc;
