@@ -13,7 +13,12 @@ export default async function handler(req, res) {
     return res.status(400).json({ error: 'Missing required fields' });
   }
 
-  const referralLink = `https://ifooty.ca/?ref=${couponCode}`;
+  const rawId = agentName || 'vendedor';
+  const cleanId = rawId.includes('@') ? rawId.split('@')[0] : rawId.split(' ')[0];
+  const slug = cleanId.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+  
+  const referralLinkFriendly = `https://ifooty.ca/?ref=${slug}`;
+  const referralLinkCoupon = `https://ifooty.ca/?ref=${couponCode}`;
 
   try {
     const { data, error } = await resend.emails.send({
@@ -36,26 +41,35 @@ export default async function handler(req, res) {
               É um prazer ter você conosco! A partir de agora, você faz parte do nosso time de elite. Criamos ferramentas exclusivas para você divulgar o manto sagrado e ser recompensado por cada venda.
             </p>
 
+            <div style="background: #f7fafc; padding: 25px; border-radius: 12px; border: 1px solid #edf2f7; margin-bottom: 30px;">
+              <h3 style="margin-top: 0; color: #1a202c; font-size: 1rem; text-transform: uppercase; letter-spacing: 1px;">Seus Dados de Divulgação:</h3>
+              
+              <div style="margin-top: 15px; padding-bottom: 15px; border-bottom: 1px solid #e2e8f0;">
+                <p style="margin: 5px 0; color: #718096; font-size: 0.85rem;">SEU CUPOM EXCLUSIVO:</p>
+                <div style="font-size: 2rem; font-weight: 900; color: #000; letter-spacing: 1px;">${couponCode}</div>
+                <p style="margin: 5px 0; color: #48bb78; font-weight: 600; font-size: 0.9rem;">Oferece ${discountPercent}% de desconto para o cliente</p>
+              </div>
+              
+              <div style="margin-top: 20px;">
+                <p style="margin: 5px 0; color: #718096; font-size: 0.85rem;">LINK 1 (AMIGÁVEL):</p>
+                <a href="${referralLinkFriendly}" style="color: #3182ce; font-weight: 600; word-break: break-all; font-size: 0.95rem;">${referralLinkFriendly}</a>
+                <p style="margin: 4px 0 0 0; color: #718096; font-size: 0.75rem;">Ideal para redes sociais e bio do Instagram.</p>
+              </div>
+
+              <div style="margin-top: 20px;">
+                <p style="margin: 5px 0; color: #718096; font-size: 0.85rem;">LINK 2 (CUPOM):</p>
+                <a href="${referralLinkCoupon}" style="color: #3182ce; font-weight: 600; word-break: break-all; font-size: 0.95rem;">${referralLinkCoupon}</a>
+                <p style="margin: 4px 0 0 0; color: #718096; font-size: 0.75rem;">Ótimo para divulgar junto com o desconto.</p>
+              </div>
+            </div>
+
             <!-- GUIA DO EMBAIXADOR CTA -->
             <div style="margin-bottom: 40px; text-align: center; padding: 25px; background: rgba(204, 255, 0, 0.05); border: 1px dashed #CCFF00; border-radius: 12px;">
               <h3 style="margin-top: 0; color: #000; font-size: 1.1rem;">📖 Seu Primeiro Passo</h3>
               <p style="color: #4a5568; font-size: 0.95rem; margin-bottom: 20px;">Preparamos um guia completo com todas as regras, bônus e dicas para você começar com o pé direito.</p>
-              <a href="https://www.ifooty.ca/afiliados" style="display: inline-block; background: #000; color: #CCFF00; padding: 12px 25px; text-decoration: none; font-weight: 800; border-radius: 6px; letter-spacing: 0.5px;">ACESSAR GUIA DO EMBAIXADOR</a>
+              <a href="https://ifooty.ca/afiliados" style="display: inline-block; background: #000; color: #CCFF00; padding: 12px 25px; text-decoration: none; font-weight: 800; border-radius: 6px; letter-spacing: 0.5px;">ACESSAR GUIA DO EMBAIXADOR</a>
             </div>
-
-            <div style="background: #f7fafc; padding: 25px; border-radius: 12px; border: 1px solid #edf2f7; margin-bottom: 30px;">
-              <h3 style="margin-top: 0; color: #1a202c; font-size: 1rem; text-transform: uppercase; letter-spacing: 1px;">Seus Dados de Divulgação:</h3>
-              <div style="margin-top: 15px;">
-                <p style="margin: 5px 0; color: #718096; font-size: 0.85rem;">SEU CUPOM EXCLUSIVO:</p>
-                <div style="font-size: 2rem; font-weight: 900; color: #000; letter-spacing: 1px;">${couponCode}</div>
-                <p style="margin: 5px 0; color: #48bb78; font-weight: 600; font-size: 0.9rem;">(Oferece ${discountPercent}% de desconto para o cliente)</p>
-              </div>
-              
-              <div style="margin-top: 25px; padding-top: 20px; border-top: 1px solid #e2e8f0;">
-                <p style="margin: 5px 0; color: #718096; font-size: 0.85rem;">SEU LINK DE REFERRAL:</p>
-                <a href="${referralLink}" style="color: #3182ce; font-weight: 600; word-break: break-all; font-size: 0.95rem;">${referralLink}</a>
-              </div>
-            </div>
+         </div>
 
             <div style="margin-bottom: 30px;">
               <h3 style="color: #1a202c; font-size: 1.2rem; margin-bottom: 15px;">💰 Seu Plano de Recompensas</h3>
