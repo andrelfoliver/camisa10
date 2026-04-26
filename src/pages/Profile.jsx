@@ -23,6 +23,7 @@ const Profile = () => {
   const [affiliateCoupon, setAffiliateCoupon] = useState(null);
   const [affiliateStats, setAffiliateStats] = useState({ totalSales: 0, totalRevenue: 0, baseCommission: 0, bonusMeta: 0, totalPayable: 0, rate: 8, level: 'Bronze' });
   const [copySuccess, setCopySuccess] = useState(null); // id do que foi copiado
+  const [affiliateDriveLink, setAffiliateDriveLink] = useState('');
 
   useEffect(() => {
     if (user) loadUserData();
@@ -77,6 +78,16 @@ const Profile = () => {
         });
       }
     }
+
+    // Carregar Link do Drive (Global)
+    const { data: pricingData } = await supabase.from('store_settings').select('value').eq('key', 'pricing').single();
+    if (pricingData?.value) {
+      try {
+        const parsed = JSON.parse(pricingData.value);
+        setAffiliateDriveLink(parsed.affiliateDriveLink || '');
+      } catch (err) { console.error("Erro ao carregar link do drive", err); }
+    }
+
     setLoading(false);
   };
 
@@ -520,7 +531,11 @@ const Profile = () => {
                 <TrendingUp size={32} className="accent-text" style={{ marginBottom: '1rem' }} />
                 <h4 style={{ fontSize: '1.2rem', marginBottom: '0.5rem' }}>Acelere suas Vendas</h4>
                 <p style={{ fontSize: '0.9rem', color: 'var(--text-muted)', marginBottom: '2rem', maxWidth: '400px', margin: '0 auto 2rem' }}>Utilize nossas fotos reais e vídeos de unboxing para passar mais confiança aos seus clientes.</p>
-                <button className="btn-primary" style={{ padding: '1rem 2rem' }}>
+                <button 
+                  onClick={() => affiliateDriveLink && window.open(affiliateDriveLink, '_blank')} 
+                  className="btn-primary" 
+                  style={{ padding: '1rem 2rem', cursor: affiliateDriveLink ? 'pointer' : 'not-allowed', opacity: affiliateDriveLink ? 1 : 0.5 }}
+                >
                    ACESSAR DRIVE DE MÍDIA <Package size={18} style={{ marginLeft: '0.5rem' }} />
                 </button>
               </div>

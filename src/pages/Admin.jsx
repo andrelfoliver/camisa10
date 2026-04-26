@@ -165,7 +165,8 @@ const Admin = () => {
     costAddCustom: 3.00,
     surcharge1Item: 5.00,
     surcharge2Items: 4.00,
-    surcharge3Items: 3.00
+    surcharge3Items: 3.00,
+    affiliateDriveLink: ""
   };
   const [pricing, setPricing] = useState(defaultPricing);
   const [bulkAdjustmentValue, setBulkAdjustmentValue] = useState(5.00);
@@ -1599,6 +1600,30 @@ const Admin = () => {
           {/* RENDERS CONDICIONAIS DAS ABAS ESPECIAIS */}
           {supplierTab === 'CONFIG' ? (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem', maxWidth: '800px' }}>
+
+              {/* CONFIGURAÇÃO MATERIAL AFILIADO */}
+              <div className="glass-panel" style={{ padding: '2.5rem', borderRadius: 'var(--radius-lg)' }}>
+                <h2 style={{ display: 'flex', alignItems: 'center', gap: '0.8rem', marginBottom: '1.5rem', fontSize: '1.5rem' }}>
+                  <Database size={24} color="var(--accent-color)" /> Material de Divulgação (Drive)
+                </h2>
+                <form onSubmit={handleSavePricing} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                  <div>
+                    <label style={{ display: 'block', marginBottom: '0.5rem', color: 'var(--text-muted)', fontWeight: 600 }}>Link da Pasta Mestre (Google Drive / Dropbox)</label>
+                    <div style={{ display: 'flex', gap: '1rem' }}>
+                      <input
+                        required
+                        type="url"
+                        value={pricing.affiliateDriveLink || ''}
+                        onChange={e => setPricing({ ...pricing, affiliateDriveLink: e.target.value })}
+                        placeholder="https://drive.google.com/drive/folders/..."
+                        style={{ flex: 1, padding: '1rem', background: 'rgba(255,255,255,0.05)', color: '#fff', border: '1px solid var(--border-color)', borderRadius: 'var(--radius-md)' }}
+                      />
+                      <button type="submit" className="btn-primary" style={{ background: 'var(--accent-color)', color: '#000', padding: '0 2rem' }}>Salvar Link</button>
+                    </div>
+                    <p style={{ marginTop: '0.8rem', fontSize: '0.85rem', color: 'var(--text-muted)' }}>Este link será aberto quando o afiliado clicar no botão "Material de Divulgação" no dashboard dele.</p>
+                  </div>
+                </form>
+              </div>
 
               {/* CONFIGURAÇÃO WHATSAPP */}
               <div className="glass-panel" style={{ padding: '2.5rem', borderRadius: 'var(--radius-lg)' }}>
