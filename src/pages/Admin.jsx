@@ -1231,11 +1231,14 @@ const Admin = () => {
           }
           .admin-logout-btn {
             margin-top: 0 !important;
-            padding: 0.5rem 1rem !important;
+            padding: 0.6rem 1.2rem !important;
             border-radius: 20px !important;
             width: auto !important;
             font-size: 0.8rem !important;
-            background: rgba(239, 68, 68, 0.1) !important;
+            background: #EF4444 !important;
+            color: #fff !important;
+            box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3) !important;
+            border: none !important;
           }
           .admin-nav {
             flex-direction: row !important;
@@ -1441,7 +1444,7 @@ const Admin = () => {
           <button 
             onClick={signOut} 
             className="admin-logout-btn"
-            style={{ marginTop: '1rem', padding: '0.8rem', borderRadius: 'var(--radius-md)', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem', width: '100%', color: '#EF4444', background: 'rgba(239, 68, 68, 0.1)', border: '1px solid transparent', transition: 'all 0.2s', fontWeight: 600, cursor: 'pointer' }}
+            style={{ marginTop: '1rem', padding: '0.8rem', borderRadius: 'var(--radius-md)', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem', width: '100%', color: '#fff', background: '#EF4444', border: 'none', transition: 'all 0.2s', fontWeight: 700, cursor: 'pointer', boxShadow: '0 4px 12px rgba(239, 68, 68, 0.3)' }}
           >
             <LogOut size={18} /> Sair do Painel
           </button>
