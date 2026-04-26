@@ -48,9 +48,15 @@ const Profile = () => {
       const { data: allOrders } = await supabase.from('orders').select('*');
       if (allOrders) {
         const mySales = allOrders.filter(o => {
-          const oRef = o.referrer;
-          const oCoupon = o.coupon_code; 
-          return oRef === coupon.agent_id || oCoupon === coupon.code;
+          const oRef = o.referrer?.toLowerCase();
+          const oCoupon = o.coupon_code?.toLowerCase();
+          const agentId = coupon.agent_id?.toLowerCase();
+          const agentCode = coupon.code?.toLowerCase();
+          const rawId = coupon.agent_id || 'vendedor';
+          const cleanId = rawId.includes('@') ? rawId.split('@')[0] : rawId.split(' ')[0];
+          const slug = cleanId.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+
+          return oRef === agentId || oRef === slug || oRef === agentCode || oCoupon === agentCode;
         });
 
         const revenue = mySales.reduce((acc, o) => acc + (Number(o.total_price) || 0), 0);
@@ -525,14 +531,24 @@ const Profile = () => {
                                 <div style={{ padding: '0 1.2rem 1.2rem 1.2rem', animation: 'slideDown 0.2s ease-out' }}>
                                   <div style={{ background: '#000', padding: '1rem', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.05)', position: 'relative' }}>
                                     <p style={{ fontSize: '0.85rem', color: '#ccc', lineHeight: 1.6, margin: 0, paddingRight: '2rem' }}>
-                                      {item.text
-                                        .replace('[CUPOM]', affiliateCoupon?.code || 'SEUCUPOM')
-                                        .replace('[LINK]', `https://ifooty.ca/?ref=${affiliateCoupon?.agent_id?.split(' ')[0]?.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "") || 'vendedor'}`)
-                                      }
+                                      {(() => {
+                                        const rawId = affiliateCoupon?.agent_id || 'vendedor';
+                                        const cleanId = rawId.includes('@') ? rawId.split('@')[0] : rawId.split(' ')[0];
+                                        const slug = cleanId.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+                                        const finalLink = `https://ifooty.ca/?ref=${slug}`;
+                                        
+                                        return item.text
+                                          .replace('[CUPOM]', affiliateCoupon?.code || 'SEUCUPOM')
+                                          .replace('[LINK]', finalLink);
+                                      })()}
                                     </p>
                                     <button 
                                       onClick={() => {
-                                        const finalLink = `https://ifooty.ca/?ref=${affiliateCoupon?.agent_id?.split(' ')[0]?.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "") || 'vendedor'}`;
+                                        const rawId = affiliateCoupon?.agent_id || 'vendedor';
+                                        const cleanId = rawId.includes('@') ? rawId.split('@')[0] : rawId.split(' ')[0];
+                                        const slug = cleanId.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+                                        const finalLink = `https://ifooty.ca/?ref=${slug}`;
+
                                         const finalMsg = item.text
                                           .replace('[CUPOM]', affiliateCoupon?.code || 'SEUCUPOM')
                                           .replace('[LINK]', finalLink);
