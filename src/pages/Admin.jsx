@@ -371,6 +371,65 @@ const Admin = () => {
     setTimeout(() => setSaved(false), 3000);
   };
 
+  const handleCleanOrphanedImages = async () => {
+    showConfirm(
+      'Limpeza de Storage',
+      'Deseja buscar e remover imagens que não estão vinculadas a nenhum produto? Isso ajudará a reduzir o consumo de dados (Egress).',
+      async () => {
+        setIsMigrating(true);
+        try {
+          // 1. Coletar todas as imagens em uso (Produtos e Galeria)
+          const { data: allProducts } = await supabase.from('products').select('image, gallery');
+          const usedImages = new Set();
+          
+          allProducts?.forEach(p => {
+            if (p.image) usedImages.add(p.image.split('/').pop());
+            if (p.gallery && Array.isArray(p.gallery)) {
+              p.gallery.forEach(img => usedImages.add(img.split('/').pop()));
+            }
+          });
+
+          // 2. Coletar imagens em uso nas Configurações (Hero Slides e Banner)
+          const { data: settings } = await supabase.from('store_settings').select('value').in('key', ['hero_bg', 'hero_slides']);
+          settings?.forEach(s => {
+            try {
+              if (s.value.startsWith('http')) {
+                usedImages.add(s.value.split('/').pop());
+              } else {
+                const parsed = JSON.parse(s.value);
+                if (Array.isArray(parsed)) parsed.forEach(img => usedImages.add(img.split('/').pop()));
+              }
+            } catch(e) {}
+          });
+
+          // 3. Listar arquivos no Storage
+          const { data: storageFiles, error: storageError } = await supabase.storage.from('product-images').list('', { limit: 1000 });
+          if (storageError) throw storageError;
+
+          // 4. Identificar órfãos
+          const orphans = storageFiles?.filter(file => !usedImages.has(file.name)) || [];
+
+          if (orphans.length === 0) {
+            showAlert('Tudo Limpo!', 'Não foram encontradas imagens órfãs no storage.');
+            return;
+          }
+
+          // 5. Deletar órfãos
+          const filesToDelete = orphans.map(f => f.name);
+          const { error: deleteError } = await supabase.storage.from('product-images').remove(filesToDelete);
+          
+          if (deleteError) throw deleteError;
+
+          showAlert('Sucesso na Limpeza', `${filesToDelete.length} imagens órfãs foram removidas permanentemente.`);
+        } catch (err) {
+          showAlert('Erro na Limpeza', err.message);
+        } finally {
+          setIsMigrating(false);
+        }
+      }
+    );
+  };
+
   const handleBulkPriceUpdate = async (multiplier = 1) => {
     const actionLabel = multiplier > 0 ? 'Aumentar' : 'Diminuir';
     showConfirm(
@@ -1587,6 +1646,37 @@ const Admin = () => {
                     </button>
                   </div>
                 )}
+              
+              {/* FERRAMENTAS DE MANUTENÇÃO E STORAGE */}
+              <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap', marginTop: '1rem', paddingTop: '1rem', borderTop: '1px solid var(--border-color)' }}>
+                <button 
+                  onClick={handleMigration} 
+                  className="btn-secondary" 
+                  disabled={isMigrating}
+                  style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', opacity: isMigrating ? 0.5 : 1, fontSize: '0.85rem' }}
+                >
+                  <RefreshCw size={16} className={isMigrating ? 'animate-spin' : ''} />
+                  Sincronizar Base
+                </button>
+                <button 
+                  onClick={handleTeamsMigration} 
+                  className="btn-secondary" 
+                  disabled={isMigratingTeams}
+                  style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', opacity: isMigratingTeams ? 0.5 : 1, fontSize: '0.85rem' }}
+                >
+                  <Shield size={16} className={isMigratingTeams ? 'animate-spin' : ''} />
+                  Sincronizar Escudos
+                </button>
+                <button 
+                  onClick={handleCleanOrphanedImages} 
+                  className="btn-secondary" 
+                  disabled={isMigrating}
+                  style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', background: 'rgba(239, 68, 68, 0.1)', color: '#EF4444', borderColor: 'rgba(239, 68, 68, 0.2)', fontSize: '0.85rem' }}
+                >
+                  <Trash2 size={16} />
+                  Limpar Imagens Não Utilizadas
+                </button>
+              </div>
             </div>
           )}
 
