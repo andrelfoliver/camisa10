@@ -83,6 +83,7 @@ const Admin = () => {
         league: rest.league,
         version: rest.version,
         inventory: rest.inventory || { ...DEFAULT_INVENTORY },
+        unavailable_sizes: rest.unavailable_sizes || [],
         description: rest.description,
         is_bestseller: !!rest.is_bestseller,
         is_new: !!rest.is_new
@@ -110,7 +111,7 @@ const Admin = () => {
 
 
   // Campo Categoria adicionado!
-  const [newProduct, setNewProduct] = useState({ name: '', price: '', image: '', category: '', league: '', team: '', version: '', is_bestseller: false, is_new: false, inventory: { ...DEFAULT_INVENTORY } });
+  const [newProduct, setNewProduct] = useState({ name: '', price: '', image: '', category: '', league: '', team: '', version: '', is_bestseller: false, is_new: false, inventory: { ...DEFAULT_INVENTORY }, unavailable_sizes: [] });
   const [imageFile, setImageFile] = useState(null);
   const [imagePreview, setImagePreview] = useState(null);
   const [galleryFiles, setGalleryFiles] = useState([]);
@@ -928,8 +929,8 @@ const Admin = () => {
         team: newProduct.team,
         league: newProduct.league,
         version: newProduct.version,
-        version: newProduct.version,
         inventory: newProduct.inventory || { ...DEFAULT_INVENTORY },
+        unavailable_sizes: newProduct.unavailable_sizes || [],
         description: newProduct.description,
         is_bestseller: !!newProduct.is_bestseller,
         is_new: !!newProduct.is_new
@@ -3436,6 +3437,43 @@ const Admin = () => {
                 </div>
               </div>
 
+              {/* === TAMANHOS INDISPONÍVEIS (FÁBRICA) === */}
+              <div style={{ background: 'rgba(239, 68, 68, 0.05)', padding: '1.2rem', borderRadius: 'var(--radius-sm)', border: '1px solid rgba(239, 68, 68, 0.2)', marginTop: '1rem' }}>
+                <h3 style={{ fontSize: '0.9rem', color: '#EF4444', marginBottom: '1rem', fontWeight: 800, textTransform: 'uppercase', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                  <X size={16} /> Bloquear Tamanhos (Fábrica não produz)
+                </h3>
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem' }}>
+                  {SIZES.map(size => {
+                    const isUnavailable = newProduct.unavailable_sizes?.includes(size);
+                    return (
+                      <button
+                        key={size}
+                        type="button"
+                        onClick={() => {
+                          const current = newProduct.unavailable_sizes || [];
+                          const updated = isUnavailable 
+                            ? current.filter(s => s !== size)
+                            : [...current, size];
+                          setNewProduct({ ...newProduct, unavailable_sizes: updated });
+                        }}
+                        style={{
+                          padding: '0.4rem 0.8rem',
+                          borderRadius: '4px',
+                          border: `1px solid ${isUnavailable ? '#EF4444' : 'var(--border-color)'}`,
+                          background: isUnavailable ? '#EF4444' : 'transparent',
+                          color: isUnavailable ? '#fff' : 'var(--text-muted)',
+                          fontSize: '0.8rem',
+                          fontWeight: 700,
+                          cursor: 'pointer'
+                        }}
+                      >
+                        {size}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
               {/* === UPLOAD DE IMAGEM === */}
               <div>
                 <label style={{ display: 'block', marginBottom: '0.5rem', color: 'var(--text-muted)', fontSize: '0.9rem' }}>
@@ -3787,6 +3825,44 @@ const Admin = () => {
                     </div>
                   ))}
                 </div>
+              </div>
+
+              {/* === TAMANHOS INDISPONÍVEIS (FÁBRICA) === */}
+              <div style={{ background: 'rgba(239, 68, 68, 0.05)', padding: '1.2rem', borderRadius: 'var(--radius-sm)', border: '1px solid rgba(239, 68, 68, 0.2)', marginTop: '1rem' }}>
+                <h3 style={{ fontSize: '0.9rem', color: '#EF4444', marginBottom: '1rem', fontWeight: 800, textTransform: 'uppercase', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                  <X size={16} /> Bloquear Tamanhos (Fábrica não produz)
+                </h3>
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem' }}>
+                  {SIZES.map(size => {
+                    const isUnavailable = editingProduct.unavailable_sizes?.includes(size);
+                    return (
+                      <button
+                        key={size}
+                        type="button"
+                        onClick={() => {
+                          const current = editingProduct.unavailable_sizes || [];
+                          const updated = isUnavailable 
+                            ? current.filter(s => s !== size)
+                            : [...current, size];
+                          setEditingProduct({ ...editingProduct, unavailable_sizes: updated });
+                        }}
+                        style={{
+                          padding: '0.4rem 0.8rem',
+                          borderRadius: '4px',
+                          border: `1px solid ${isUnavailable ? '#EF4444' : 'var(--border-color)'}`,
+                          background: isUnavailable ? '#EF4444' : 'transparent',
+                          color: isUnavailable ? '#fff' : 'var(--text-muted)',
+                          fontSize: '0.8rem',
+                          fontWeight: 700,
+                          cursor: 'pointer'
+                        }}
+                      >
+                        {size}
+                      </button>
+                    );
+                  })}
+                </div>
+                <p style={{ fontSize: '0.7rem', color: 'var(--text-muted)', marginTop: '0.8rem' }}>* Tamanhos marcados em vermelho serão removidos da loja para este produto.</p>
               </div>
 
               {/* === UPLOAD DE IMAGEM (EDIÇÃO) === */}

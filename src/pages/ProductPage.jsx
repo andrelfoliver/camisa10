@@ -53,12 +53,19 @@ const ProductPage = () => {
     ? ['16', '18', '20', '22', '24', '26', '28'] 
     : ['S', 'M', 'L', 'XL', '2XL', '3XL', '4XL'];
 
-  // Ajusta o tamanho selecionado inicial se for infantil
+  const availableSizes = sizes.filter(s => !product?.unavailable_sizes?.includes(s));
+
+  // Ajusta o tamanho selecionado inicial se for infantil ou se o padrão estiver bloqueado
   useEffect(() => {
     if (isKids && !['16', '18', '20', '22', '24', '26', '28'].includes(selectedSize)) {
-      setSelectedSize('20'); // Sugere o tamanho 20 como padrão inicial para infantil
+      const firstAvailable = availableSizes[0] || '20';
+      setSelectedSize(firstAvailable);
+    } else if (product?.unavailable_sizes?.includes(selectedSize)) {
+      // Se o tamanho padrão estiver bloqueado, pega o primeiro disponível
+      const firstAvailable = availableSizes[0] || (isKids ? '20' : 'M');
+      setSelectedSize(firstAvailable);
     }
-  }, [isKids]);
+  }, [isKids, product]);
 
   const [isCustomized, setIsCustomized] = useState(false);
   const [customName, setCustomName] = useState('');
@@ -335,7 +342,7 @@ const ProductPage = () => {
               </div>
               
               <div className="size-box-grid">
-                {sizes.map(s => {
+                {availableSizes.map(s => {
                   const stock = product.inventory?.[s] || 0;
                   return (
                     <button
