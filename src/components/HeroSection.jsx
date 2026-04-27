@@ -50,14 +50,14 @@ const HeroSection = () => {
 
   return (
     <section className="hero-funnel">
-      {/* Background Slides */}
-      {heroImages.map((src, index) => (
+      {/* Background Slides - Otimizado para carregar apenas o ativo */}
+      {heroImages.length > 0 && (
         <div 
-          key={src}
-          className={`hero-slide-bg ${index === currentIndex ? 'active' : ''}`}
-          style={{ backgroundImage: `url('${src}')` }}
+          key={heroImages[currentIndex]}
+          className="hero-slide-bg active"
+          style={{ backgroundImage: `url('${heroImages[currentIndex]}')` }}
         />
-      ))}
+      )}
       
       {/* Overlay fixo para contraste */}
       <div className="hero-overlay-static"></div>

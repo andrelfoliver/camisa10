@@ -882,7 +882,7 @@ const Admin = () => {
     const { data: uploadData, error: uploadError } = await supabase.storage
       .from('product-images')
       .upload(filename, processedFile, { 
-        cacheControl: '3600', 
+        cacheControl: '31536000', 
         upsert: true,
         contentType: isWebP ? 'image/webp' : undefined
       });

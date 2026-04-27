@@ -25,6 +25,7 @@ const ProductMedia = ({ src, alt, style, className, onError, ...props }) => {
       alt={alt || 'Product Image'}
       style={style}
       className={className}
+      loading="lazy"
       onError={onError}
       {...props}
     />
