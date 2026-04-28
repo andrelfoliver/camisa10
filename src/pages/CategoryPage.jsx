@@ -5,6 +5,7 @@ import ProductCard from '../components/ProductCard';
 import { mockEcommerceProducts, getAllProducts } from '../data/mockProducts';
 import { Filter, ChevronDown, ChevronRight, X } from 'lucide-react';
 import { useLanguage } from '../context/LanguageContext';
+import SEO from '../components/SEO';
 
 const CategoryPage = () => {
   const { category_id } = useParams();
@@ -94,6 +95,11 @@ const CategoryPage = () => {
 
   return (
     <div style={{ paddingTop: '80px', minHeight: '100vh', background: 'var(--bg-color)' }}>
+      <SEO 
+        title={title}
+        description={`Explore nossa coleção de camisas da categoria ${title} na iFooty. Qualidade premium e pronta entrega no Canadá.`}
+        url={`https://ifooty.ca/colecao/${category_id}`}
+      />
       
       {/* Mega Banner da Categoria */}
       <div style={{ background: 'linear-gradient(90deg, #1A1A24 0%, #0D0D14 100%)', padding: '3rem 0', borderBottom: '1px solid var(--border-color)' }}>

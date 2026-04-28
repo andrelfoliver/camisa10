@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://ifooty.ca/sitemap.xml

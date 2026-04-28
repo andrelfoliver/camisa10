@@ -10,6 +10,7 @@ import {
 } from 'lucide-react';
 import SizeGuideModal from '../components/SizeGuideModal';
 import ProductMedia from '../components/ProductMedia';
+import SEO from '../components/SEO';
 
 const FAQItem = ({ question, answer }) => {
   const [isOpen, setIsOpen] = useState(false);
@@ -151,8 +152,33 @@ const ProductPage = () => {
    if (selectedSize === '4XL') currentTotal += Number(pricingConfig?.size4XL || 10.00);
    if (isCustomized) currentTotal += Number(pricingConfig?.nameNumber || 12.00);
 
+  const schemaOrgJSONLD = {
+    "@context": "http://schema.org",
+    "@type": "Product",
+    "name": translateProductDisplay(product.name),
+    "image": product.image,
+    "description": product.description || `Adquira a ${translateProductDisplay(product.name)} na iFooty. Qualidade premium, pronta entrega no Canadá.`,
+    "offers": {
+      "@type": "Offer",
+      "priceCurrency": "CAD",
+      "price": basePrice,
+      "availability": "http://schema.org/InStock",
+      "url": `https://ifooty.ca/produto/${product.id}`
+    }
+  };
+
   return (
     <div style={{ paddingBottom: '5rem', minHeight: '100vh' }}>
+      <SEO 
+        title={translateProductDisplay(product.name)}
+        description={product.description || `Adquira a ${translateProductDisplay(product.name)} na iFooty. Qualidade premium e pronta entrega no Canadá.`}
+        image={product.image}
+        url={`https://ifooty.ca/produto/${product.id}`}
+        type="product"
+      />
+      <script type="application/ld+json">
+        {JSON.stringify(schemaOrgJSONLD)}
+      </script>
 
       <section className="container" style={{ padding: '2rem 1.5rem', maxWidth: '1200px', margin: '0 auto' }}>
         <div className="checkout-grid">

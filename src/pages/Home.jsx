@@ -8,6 +8,7 @@ import StatCounter from '../components/StatCounter';
 import { useNavigate } from 'react-router-dom';
 import { useCart } from '../context/CartContext';
 import { useLanguage } from '../context/LanguageContext';
+import SEO from '../components/SEO';
 
 const FAQItem = ({ question, answer }) => {
   const [isOpen, setIsOpen] = useState(false);
@@ -198,6 +199,10 @@ const Home = () => {
 
   return (
     <div style={{ paddingBottom: '4rem' }}>
+      <SEO 
+        title="Home"
+        description="Encontre mantos sagrados com qualidade premium, envio rápido para todo o país e atendimento personalizado para brasileiros e apaixonados por futebol no Canadá!"
+      />
       {/* 1. HERO */}
       <HeroSection />
       {activeTeams.length > 0 && (
