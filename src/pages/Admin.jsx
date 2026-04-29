@@ -2722,16 +2722,44 @@ const Admin = () => {
               <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem', maxWidth: '1200px' }}>
 
                 {/* DATE FILTER CONTROLS */}
-                <div className="admin-filters-bar" style={{ background: 'rgba(255,255,255,0.03)', padding: '1rem', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.05)' }}>
-                  <div style={{ flex: 1 }}>
-                    <label style={{ display: 'block', fontSize: '0.7rem', color: 'var(--text-muted)', marginBottom: '0.4rem', fontWeight: 800, textTransform: 'uppercase' }}>De:</label>
-                    <input type="date" value={dateRange.start} onChange={(e) => setDateRange({ ...dateRange, start: e.target.value })} style={{ width: '100%', padding: '0.5rem', background: '#000', border: '1px solid var(--border-color)', borderRadius: '6px', color: '#fff' }} />
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', background: 'rgba(255,255,255,0.03)', padding: '1.5rem', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.05)' }}>
+                  
+                  {/* Quick Filters */}
+                  <div style={{ display: 'flex', gap: '0.8rem', overflowX: 'auto', paddingBottom: '0.5rem', WebkitOverflowScrolling: 'touch' }}>
+                    <button onClick={() => { setDateRange({ start: '', end: '' }); setStatusFilter('all'); }} style={{ padding: '0.4rem 1rem', background: (!dateRange.start && !dateRange.end) ? 'var(--accent-color)' : 'rgba(255,255,255,0.1)', color: (!dateRange.start && !dateRange.end) ? '#000' : '#fff', border: 'none', borderRadius: '20px', cursor: 'pointer', fontSize: '0.8rem', fontWeight: 600, whiteSpace: 'nowrap' }}>Todo o Período</button>
+                    
+                    <button onClick={() => {
+                      const d = new Date(); d.setDate(d.getDate() - 7);
+                      setDateRange({ start: d.toISOString().split('T')[0], end: new Date().toISOString().split('T')[0] });
+                    }} style={{ padding: '0.4rem 1rem', background: 'rgba(255,255,255,0.1)', color: '#fff', border: 'none', borderRadius: '20px', cursor: 'pointer', fontSize: '0.8rem', fontWeight: 600, whiteSpace: 'nowrap' }}>Últimos 7 Dias</button>
+
+                    <button onClick={() => {
+                      const now = new Date();
+                      const start = new Date(now.getFullYear(), now.getMonth(), 1).toISOString().split('T')[0];
+                      const end = new Date(now.getFullYear(), now.getMonth() + 1, 0).toISOString().split('T')[0];
+                      setDateRange({ start, end });
+                    }} style={{ padding: '0.4rem 1rem', background: 'rgba(255,255,255,0.1)', color: '#fff', border: 'none', borderRadius: '20px', cursor: 'pointer', fontSize: '0.8rem', fontWeight: 600, whiteSpace: 'nowrap' }}>Este Mês</button>
+
+                    <button onClick={() => {
+                      const now = new Date();
+                      const start = new Date(now.getFullYear(), now.getMonth() - 1, 1).toISOString().split('T')[0];
+                      const end = new Date(now.getFullYear(), now.getMonth(), 0).toISOString().split('T')[0];
+                      setDateRange({ start, end });
+                    }} style={{ padding: '0.4rem 1rem', background: 'rgba(255,255,255,0.1)', color: '#fff', border: 'none', borderRadius: '20px', cursor: 'pointer', fontSize: '0.8rem', fontWeight: 600, whiteSpace: 'nowrap' }}>Mês Passado</button>
                   </div>
-                  <div style={{ flex: 1 }}>
-                    <label style={{ display: 'block', fontSize: '0.7rem', color: 'var(--text-muted)', marginBottom: '0.4rem', fontWeight: 800, textTransform: 'uppercase' }}>Até:</label>
-                    <input type="date" value={dateRange.end} onChange={(e) => setDateRange({ ...dateRange, end: e.target.value })} style={{ width: '100%', padding: '0.5rem', background: '#000', border: '1px solid var(--border-color)', borderRadius: '6px', color: '#fff' }} />
+
+                  {/* Manual Date Range */}
+                  <div className="admin-filters-bar" style={{ display: 'flex', gap: '1rem', alignItems: 'flex-end', flexWrap: 'wrap' }}>
+                    <div style={{ flex: '1 1 200px' }}>
+                      <label style={{ display: 'block', fontSize: '0.7rem', color: 'var(--text-muted)', marginBottom: '0.4rem', fontWeight: 800, textTransform: 'uppercase' }}>Período Personalizado (De):</label>
+                      <input type="date" value={dateRange.start} onChange={(e) => setDateRange({ ...dateRange, start: e.target.value })} style={{ width: '100%', padding: '0.8rem', background: '#000', border: '1px solid var(--border-color)', borderRadius: '6px', color: '#fff', colorScheme: 'dark', cursor: 'text' }} />
+                    </div>
+                    <div style={{ flex: '1 1 200px' }}>
+                      <label style={{ display: 'block', fontSize: '0.7rem', color: 'var(--text-muted)', marginBottom: '0.4rem', fontWeight: 800, textTransform: 'uppercase' }}>Até:</label>
+                      <input type="date" value={dateRange.end} onChange={(e) => setDateRange({ ...dateRange, end: e.target.value })} style={{ width: '100%', padding: '0.8rem', background: '#000', border: '1px solid var(--border-color)', borderRadius: '6px', color: '#fff', colorScheme: 'dark', cursor: 'text' }} />
+                    </div>
+                    <button onClick={() => { setDateRange({ start: '', end: '' }); setStatusFilter('all'); setOrderFilter(null); }} style={{ padding: '0.8rem 1.5rem', background: 'rgba(239, 68, 68, 0.1)', color: '#EF4444', border: '1px solid rgba(239, 68, 68, 0.2)', borderRadius: '6px', cursor: 'pointer', fontWeight: 700, fontSize: '0.8rem', whiteSpace: 'nowrap' }}>Remover Filtros</button>
                   </div>
-                  <button onClick={() => { setDateRange({ start: '', end: '' }); setStatusFilter('all'); setOrderFilter(null); }} style={{ padding: '0.5rem 1rem', background: 'rgba(255,255,255,0.1)', color: '#fff', border: '1px solid rgba(255,255,255,0.2)', borderRadius: '6px', cursor: 'pointer', fontWeight: 700, fontSize: '0.8rem' }}>Limpar Filtros</button>
                 </div>
 
                 {/* STATS SUMMARY BAR - 4 items por linha no desktop, 2 no mobile */}
