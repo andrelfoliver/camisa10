@@ -1,6 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useAuth } from '../context/AuthContext';
-import { generateNonce } from '../context/AuthContext';
 import { useLanguage } from '../context/LanguageContext';
 import { UserCircle } from 'lucide-react';
 import { Navigate } from 'react-router-dom';
@@ -16,8 +15,6 @@ const Auth = () => {
 
   // Container onde o botão oficial do Google será renderizado
   const googleBtnRef = useRef(null);
-  // Guarda o nonce gerado para usar no callback
-  const nonceRef = useRef({ raw: '', hashed: '' });
 
   // Callback chamado pelo Google SDK após autenticação
   const handleGoogleCallback = useCallback(async (response) => {
@@ -52,11 +49,6 @@ const Auth = () => {
     const initGIS = async () => {
       if (!window.google?.accounts?.id || !googleBtnRef.current) return;
 
-      // Gera novo nonce para esta sessão de login
-      const { rawNonce, hashedNonce } = await generateNonce();
-      if (cancelled) return;
-
-      nonceRef.current = { raw: rawNonce, hashed: hashedNonce };
 
       // Inicializa o GIS com o callback
       if (GOOGLE_CLIENT_ID) {
