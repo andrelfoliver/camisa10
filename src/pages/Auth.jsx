@@ -3,6 +3,7 @@ import { useAuth } from '../context/AuthContext';
 import { useLanguage } from '../context/LanguageContext';
 import { UserCircle } from 'lucide-react';
 import { Navigate } from 'react-router-dom';
+import { supabase } from '../services/supabase';
 
 const GOOGLE_CLIENT_ID = (import.meta.env.VITE_GOOGLE_CLIENT_ID || '').trim();
 
