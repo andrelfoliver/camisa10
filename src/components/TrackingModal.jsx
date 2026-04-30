@@ -43,6 +43,13 @@ const TrackingModal = ({ isOpen, onClose, initialTrackingNumber = '' }) => {
     localStorage.setItem('recent_trackings_v2', JSON.stringify(updated));
   };
 
+  const removeRecentSearch = (e, num) => {
+    e.stopPropagation();
+    const updated = recentSearches.filter(s => s.num !== num);
+    setRecentSearches(updated);
+    localStorage.setItem('recent_trackings_v2', JSON.stringify(updated));
+  };
+
   const handleSearch = async (manualNum = null) => {
     const num = manualNum || trackingNumber;
     if (!num) {
@@ -176,13 +183,31 @@ const TrackingModal = ({ isOpen, onClose, initialTrackingNumber = '' }) => {
             <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap', marginBottom: '1.5rem' }}>
               <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)', display: 'flex', alignItems: 'center', marginRight: '0.3rem' }}>Recentes:</span>
               {recentSearches.map((item, idx) => (
-                <button 
+                <div 
                   key={idx} 
                   onClick={() => handleSearch(item.num)}
-                  style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '4px', padding: '0.2rem 0.5rem', fontSize: '0.7rem', color: 'var(--accent-color)', cursor: 'pointer' }}
+                  style={{ 
+                    background: 'rgba(255,255,255,0.05)', 
+                    border: '1px solid rgba(255,255,255,0.1)', 
+                    borderRadius: '4px', 
+                    padding: '0.2rem 0.5rem', 
+                    fontSize: '0.7rem', 
+                    color: 'var(--accent-color)', 
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '0.4rem'
+                  }}
                 >
                   {item.label}
-                </button>
+                  <X 
+                    size={12} 
+                    style={{ color: 'rgba(255,255,255,0.3)', hover: { color: '#ff4d4d' } }} 
+                    onClick={(e) => removeRecentSearch(e, item.num)}
+                    onMouseEnter={(e) => e.target.style.color = '#ff4d4d'}
+                    onMouseLeave={(e) => e.target.style.color = 'rgba(255,255,255,0.3)'}
+                  />
+                </div>
               ))}
             </div>
           )}
