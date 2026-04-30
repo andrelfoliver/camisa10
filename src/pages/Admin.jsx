@@ -6,6 +6,7 @@ import { migrateProductsToSupabase } from '../services/migration';
 import { migrateTeamsToSupabase } from '../services/migration_teams';
 import WhatsAppIcon from '../components/WhatsAppIcon';
 import ProductMedia from '../components/ProductMedia';
+import TrackingModal from '../components/TrackingModal';
 import { Link, Navigate } from 'react-router-dom';
 
 const Admin = () => {
@@ -16,6 +17,7 @@ const Admin = () => {
   const [saved, setSaved] = useState(false);
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [isTrackModalOpen, setIsTrackModalOpen] = useState(false);
   const OFFICIAL_CATEGORIES = ['Seleções', 'Brasileirão', 'Internacionais', 'Lançamentos', 'Retrô'];
   const SIZES = ['S', 'M', 'L', 'XL', '2XL', '3XL', '4XL', '16', '18', '20', '22', '24', '26', '28'];
   const DEFAULT_INVENTORY = { 'S': 0, 'M': 0, 'L': 0, 'XL': 0, '2XL': 0, '3XL': 0, '4XL': 0, '16': 0, '18': 0, '20': 0, '22': 0, '24': 0, '26': 0, '28': 0 };
@@ -2720,6 +2722,15 @@ const Admin = () => {
 
             return (
               <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem', maxWidth: '1200px' }}>
+                <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '-0.5rem' }}>
+                   <button 
+                     onClick={() => setIsTrackModalOpen(true)}
+                     className="btn-primary" 
+                     style={{ padding: '0.8rem 1.5rem', borderRadius: '8px', display: 'flex', alignItems: 'center', gap: '0.5rem', fontWeight: 700 }}
+                   >
+                     <Package size={20} /> Rastreamento de Envio
+                   </button>
+                </div>
 
                 {/* DATE FILTER CONTROLS */}
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', background: 'rgba(255,255,255,0.03)', padding: '1.5rem', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.05)' }}>
@@ -4282,6 +4293,7 @@ const Admin = () => {
           </div>
         </div>
       )}
+      <TrackingModal isOpen={isTrackModalOpen} onClose={() => setIsTrackModalOpen(false)} />
     </div>
   );
 };
