@@ -21,6 +21,7 @@ const Auth = () => {
 
   // Callback chamado pelo Google SDK após autenticação
   const handleGoogleCallback = useCallback(async (response) => {
+    console.log("Google Callback recebido");
     if (!response.credential) {
       setError(t('auth_error_default'));
       return;
@@ -28,16 +29,22 @@ const Auth = () => {
     setLoading(true);
     setError(null);
     try {
-      await signInWithIdToken({
-        credential: response.credential,
-        nonce: nonceRef.current.raw,
+      // Faz o login no Supabase usando o ID Token recebido
+      const { error } = await supabase.auth.signInWithIdToken({
+        provider: 'google',
+        token: response.credential,
+        // Removido nonce para máxima compatibilidade no mobile por enquanto
       });
-      // onAuthStateChange em AuthContext vai detectar o login automaticamente
+
+      if (error) throw error;
+      
+      console.log("Login no Supabase concluído com sucesso");
     } catch (err) {
-      setError(err.message || t('auth_error_default'));
+      console.error("Erro no sign-in:", err);
+      setError(`Erro no Login: ${err.message || 'Erro desconhecido'}`);
       setLoading(false);
     }
-  }, [signInWithIdToken, t]);
+  }, [t]);
 
   useEffect(() => {
     let cancelled = false;
@@ -55,7 +62,6 @@ const Auth = () => {
       if (GOOGLE_CLIENT_ID) {
         window.google.accounts.id.initialize({
           client_id: GOOGLE_CLIENT_ID,
-          nonce: hashedNonce,
           auto_select: false,
           callback: handleGoogleCallback,
         });

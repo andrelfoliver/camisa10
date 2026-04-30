@@ -6,36 +6,6 @@ const AuthContext = createContext();
 // Email Mestre do Administrador
 const ADMIN_EMAIL = 'camisadez085@gmail.com';
 
-export async function generateNonce() {
-  // Fallback para crypto.randomUUID se não existir (ex: navegadores antigos ou sem HTTPS)
-  const rawNonce = (typeof crypto.randomUUID === 'function') 
-    ? crypto.randomUUID() 
-    : Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
-
-  let hashedNonce = '';
-  
-  try {
-    // Tenta usar a API Web Crypto se disponível
-    if (crypto.subtle && typeof TextEncoder !== 'undefined') {
-      const hashBuffer = await crypto.subtle.digest(
-        'SHA-256',
-        new TextEncoder().encode(rawNonce)
-      );
-      hashedNonce = Array.from(new Uint8Array(hashBuffer))
-        .map((b) => b.toString(16).padStart(2, '0'))
-        .join('');
-    } else {
-      // Fallback básico se SubtleCrypto não estiver disponível
-      hashedNonce = rawNonce;
-    }
-  } catch (e) {
-    console.warn("WebCrypto não disponível, usando nonce cru", e);
-    hashedNonce = rawNonce;
-  }
-  
-  return { rawNonce, hashedNonce };
-}
-
 export function AuthProvider({ children }) {
   const [session, setSession] = useState(null);
   const [user, setUser] = useState(null);
@@ -70,11 +40,10 @@ export function AuthProvider({ children }) {
     };
   }, []);
 
-  const signInWithIdToken = async ({ credential, nonce }) => {
+  const signInWithIdToken = async ({ credential }) => {
     const { error } = await supabase.auth.signInWithIdToken({
       provider: 'google',
       token: credential,
-      nonce,
     });
     if (error) throw error;
   };
