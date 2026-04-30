@@ -5,6 +5,7 @@ const corsHeaders: { [key: string]: string } = {
 };
 
 const commonTranslations: { [key: string]: string } = {
+  // Chinês
   "货物电子信息已经收到": "Informações eletrônicas recebidas",
   "已揽收": "Coletado pelo fornecedor",
   "到达": "Chegou em",
@@ -20,7 +21,17 @@ const commonTranslations: { [key: string]: string } = {
   "深圳": "Shenzhen",
   "上海": "Xangai",
   "北京": "Pequim",
-  "香港": "Hong Kong"
+  "香港": "Hong Kong",
+  // Inglês
+  "The goods leave the operation center": "As mercadorias saíram do centro de operação",
+  "Arrived at the operating center": "Chegou ao centro operacional",
+  "The goods have been received": "As mercadorias foram recebidas",
+  "Electronic information received": "Informações eletrônicas recebidas",
+  "Departed from facility": "Partiu da instalação",
+  "Arrived at facility": "Chegou na instalação",
+  "In transit": "Em trânsito",
+  "Out for delivery": "Saiu para entrega",
+  "Delivered": "Entregue"
 };
 
 const htmlEntities: { [key: string]: string } = {
@@ -41,19 +52,39 @@ async function translateText(text: string): Promise<string> {
   if (!text) return '';
   const cleanText: string = text.replace(/\/$/, '').trim();
   if (!cleanText) return '';
+
+  // 1. Tenta tradução local exata
   if (commonTranslations[cleanText]) return commonTranslations[cleanText];
 
-  if (/^[\x00-\x7F\u00C0-\u024F\s\d\W]+$/.test(cleanText)) return cleanText;
-
-  try {
-    const res = await fetch(`https://api.mymemory.translated.net/get?q=${encodeURIComponent(cleanText)}&langpair=zh|pt`);
-    const data: any = await res.json();
-    if (data.responseData && data.responseData.translatedText) {
-      return data.responseData.translatedText;
+  // 2. Se for Chinês (contém caracteres não-latinos), tenta MyMemory zh|pt
+  const hasChinese = /[^\x00-\xff]/.test(cleanText);
+  if (hasChinese) {
+    try {
+      const res = await fetch(`https://api.mymemory.translated.net/get?q=${encodeURIComponent(cleanText)}&langpair=zh|pt`);
+      const data: any = await res.json();
+      if (data.responseData && data.responseData.translatedText) {
+        return data.responseData.translatedText;
+      }
+    } catch (e) {
+      console.error("Erro na tradução ZH:", e);
     }
-  } catch (e) {
-    console.error("Erro na tradução:", e);
+    return cleanText;
   }
+
+  // 3. Se for Inglês (não é chinês e não está no mapa), tenta MyMemory en|pt
+  // Ignoramos se for apenas números ou data
+  if (/^[a-zA-Z\s,.'-]+$/.test(cleanText) && cleanText.length > 3) {
+    try {
+      const res = await fetch(`https://api.mymemory.translated.net/get?q=${encodeURIComponent(cleanText)}&langpair=en|pt`);
+      const data: any = await res.json();
+      if (data.responseData && data.responseData.translatedText) {
+        return data.responseData.translatedText;
+      }
+    } catch (e) {
+      console.error("Erro na tradução EN:", e);
+    }
+  }
+
   return cleanText;
 }
 
