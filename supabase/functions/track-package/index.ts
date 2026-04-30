@@ -5,7 +5,6 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 }
 
-// Dicionário básico para termos comuns caso a API de tradução falhe
 const commonTranslations = {
   "货物电子信息已经收到": "Informações eletrônicas recebidas",
   "已揽收": "Coletado pelo fornecedor",
@@ -20,17 +19,26 @@ const commonTranslations = {
   "签收": "Entregue/Assinado"
 };
 
+// Mapa de entidades HTML comuns para decodificação
+const htmlEntities = {
+  '&nbsp;': ' ',
+  '&aacute;': 'á', '&Aacute;': 'Á',
+  '&eacute;': 'é', '&Eacute;': 'É',
+  '&iacute;': 'í', '&Iacute;': 'Í',
+  '&oacute;': 'ó', '&Oacute;': 'Ó',
+  '&uacute;': 'ú', '&Uacute;': 'Ú',
+  '&atilde;': 'ã', '&Atilde;': 'Ã',
+  '&otilde;': 'õ', '&Otilde;': 'Õ',
+  '&ccedil;': 'ç', '&Ccedil;': 'Ç',
+  '&acirc;': 'â', '&ecirc;': 'ê', '&ocirc;': 'ô',
+  '&quot;': '"', '&amp;': '&', '&lt;': '<', '&gt;': '>'
+};
+
 async function translateText(text) {
   if (!text) return '';
-  
-  // Limpa o texto (remove / no final e espaços extras)
   const cleanText = text.replace(/\/$/, '').trim();
   if (!cleanText) return '';
-  
-  // Tenta o dicionário local primeiro
-  if (commonTranslations[cleanText]) {
-    return commonTranslations[cleanText];
-  }
+  if (commonTranslations[cleanText]) return commonTranslations[cleanText];
 
   try {
     const res = await fetch(`https://api.mymemory.translated.net/get?q=${encodeURIComponent(cleanText)}&langpair=zh|pt`);
@@ -41,7 +49,6 @@ async function translateText(text) {
   } catch (e) {
     console.error("Erro na tradução:", e);
   }
-  
   return cleanText;
 }
 
@@ -74,12 +81,18 @@ serve(async (req) => {
 
     const html = await response.text();
 
-    const cleanHTML = (str) => {
-      if (!str) return '';
-      return str.replace(/<[^>]+>/g, '').replace(/&nbsp;/g, '').trim();
+    const decodeEntities = (str) => {
+      return str.replace(/&[a-z]+;/g, (match) => htmlEntities[match] || match);
     }
 
-    // 1. Extract Main Info (reference, tracking, country, etc)
+    const cleanHTML = (str) => {
+      if (!str) return '';
+      // Remove tags, decodifica entidades e limpa espaços
+      const noTags = str.replace(/<[^>]+>/g, '');
+      return decodeEntities(noTags).trim();
+    }
+
+    // 1. Extract Main Info
     const liRegex = /<li[^>]*>([\s\S]*?)<\/li>/g;
     let match;
     const items = [];
@@ -99,10 +112,8 @@ serve(async (req) => {
       };
     }
 
-    // 2. Extract History (Timeline) - Localizado dentro da div men_li
+    // 2. Extract History (Timeline)
     const history = [];
-    
-    // Pegamos apenas o conteúdo da div men_li para evitar pegar outras tabelas do site
     const menLiMatch = html.match(/<div class="men_li">([\s\S]*?)<\/div>/);
     if (menLiMatch) {
       const menLiHtml = menLiMatch[1];
