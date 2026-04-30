@@ -6,6 +6,10 @@ import toast from 'react-hot-toast';
 
 const TrackingModal = ({ isOpen, onClose }) => {
   const [trackingNumber, setTrackingNumber] = useState('');
+  const [recentSearches, setRecentSearches] = useState(() => {
+    const saved = localStorage.getItem('recent_trackings_v2');
+    return saved ? JSON.parse(saved) : [];
+  });
   const [loading, setLoading] = useState(false);
   const [ocrLoading, setOcrLoading] = useState(false);
   const [trackingData, setTrackingData] = useState(null);
@@ -14,16 +18,29 @@ const TrackingModal = ({ isOpen, onClose }) => {
 
   if (!isOpen) return null;
 
-  const handleSearch = async () => {
-    if (!trackingNumber) {
+  const saveRecentSearch = (num, fullName) => {
+    if (!num) return;
+    const firstName = fullName ? fullName.split(' ')[0] : '';
+    const label = firstName ? `${num} (${firstName})` : num;
+    const entry = { num, label };
+    
+    const updated = [entry, ...recentSearches.filter(s => s.num !== num)].slice(0, 5);
+    setRecentSearches(updated);
+    localStorage.setItem('recent_trackings_v2', JSON.stringify(updated));
+  };
+
+  const handleSearch = async (manualNum = null) => {
+    const num = manualNum || trackingNumber;
+    if (!num) {
       toast.error("Digite um número de rastreio.");
       return;
     }
     setLoading(true);
+    if (manualNum) setTrackingNumber(manualNum);
+    
     try {
-      // Chama a Edge Function do Supabase (que atua como proxy para a API chinesa)
       const { data, error } = await supabase.functions.invoke('track-package', {
-        body: { trackingNumber }
+        body: { trackingNumber: num }
       });
 
       if (error) throw error;
@@ -32,31 +49,15 @@ const TrackingModal = ({ isOpen, onClose }) => {
       setTrackingData(data.trackingData);
       setHistory(data.history || []);
       
-      if (!data.trackingData && (!data.history || data.history.length === 0)) {
-        toast.error("Nenhum dado encontrado para esse rastreio.");
-      } else {
+      if (data.trackingData || (data.history && data.history.length > 0)) {
+        saveRecentSearch(num, data.trackingData?.consigneeName);
         toast.success("Rastreamento atualizado!");
+      } else {
+        toast.error("Nenhum dado encontrado.");
       }
-
     } catch (err) {
       console.error(err);
-      toast.error("Erro ao buscar rastreio. Verifique a conexão com o servidor chinês.");
-      
-      // MOCK DATA PARA DEMONSTRAÇÃO (Caso a Edge Function não esteja deployada)
-      toast('Exibindo dados de simulação (Mock)...', { icon: '⚠️' });
-      setTrackingData({
-        referenceNo: 'HJR0426004150322',
-        trackingNumber: trackingNumber,
-        country: 'Canada',
-        date: '2026-04-26',
-        lastRecord: 'Arrived at Destination Hub',
-        consigneeName: 'ANDRE LUIZ FERREIRA DE OLIVEIRA'
-      });
-      setHistory([
-        ['', '', '', '2026-04-28 14:30', 'Arrived at Destination Hub, Canada', ''],
-        ['', '', '', '2026-04-27 09:15', 'Departed from Transit Facility, China', ''],
-        ['', '', '', '2026-04-26 00:05', 'Shipment information received', '']
-      ]);
+      toast.error("Erro ao buscar rastreio.");
     } finally {
       setLoading(false);
     }
@@ -74,22 +75,20 @@ const TrackingModal = ({ isOpen, onClose }) => {
       const { data: { text } } = await worker.recognize(file);
       await worker.terminate();
 
-      // Procurar padrão numérico de rastreio: começa com 201, costuma ter ~16 dígitos
-      // O regex extrai dígitos e limpa espaços
       const cleanText = text.replace(/\s/g, '');
       const match = cleanText.match(/201\d{13}/);
 
       if (match) {
         setTrackingNumber(match[0]);
-        toast.success("Rastreio identificado com sucesso!");
+        toast.success("Rastreio identificado!");
+        handleSearch(match[0]);
       } else {
-        // Tenta buscar outro padrão comum caso não comece com 201
         const fallbackMatch = cleanText.match(/[A-Z0-9]{10,20}/);
         if (fallbackMatch) {
           setTrackingNumber(fallbackMatch[0]);
-          toast("Possível rastreio encontrado, verifique se está correto.", { icon: '⚠️' });
+          toast("Possível rastreio encontrado.", { icon: '⚠️' });
         } else {
-          toast.error("Não foi possível encontrar o número de rastreio na imagem.");
+          toast.error("Não foi possível encontrar o número de rastreio.");
         }
       }
     } catch (error) {
@@ -97,7 +96,7 @@ const TrackingModal = ({ isOpen, onClose }) => {
       toast.error("Erro ao processar imagem.");
     } finally {
       setOcrLoading(false);
-      event.target.value = ''; // reseta o input
+      event.target.value = '';
     }
   };
 
@@ -115,7 +114,7 @@ const TrackingModal = ({ isOpen, onClose }) => {
 
         {/* Body */}
         <div style={{ padding: '1.5rem', overflowY: 'auto', flex: 1 }}>
-          <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '1.5rem' }}>
+          <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '0.5rem' }}>
             <div style={{ flex: 1, position: 'relative' }}>
               <input
                 type="text"
@@ -144,7 +143,7 @@ const TrackingModal = ({ isOpen, onClose }) => {
             </button>
 
             <button 
-              onClick={handleSearch}
+              onClick={() => handleSearch()}
               disabled={loading || ocrLoading}
               className="btn-primary"
               style={{ padding: '0 1.5rem', borderRadius: '8px', display: 'flex', alignItems: 'center', gap: '0.5rem' }}
@@ -152,6 +151,22 @@ const TrackingModal = ({ isOpen, onClose }) => {
               {loading ? <Loader2 size={20} className="spinner" /> : <Search size={20} />} Buscar
             </button>
           </div>
+
+          {/* Recent Searches */}
+          {recentSearches.length > 0 && (
+            <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap', marginBottom: '1.5rem' }}>
+              <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)', display: 'flex', alignItems: 'center', marginRight: '0.3rem' }}>Recentes:</span>
+              {recentSearches.map((item, idx) => (
+                <button 
+                  key={idx} 
+                  onClick={() => handleSearch(item.num)}
+                  style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '4px', padding: '0.2rem 0.5rem', fontSize: '0.7rem', color: 'var(--accent-color)', cursor: 'pointer' }}
+                >
+                  {item.label}
+                </button>
+              ))}
+            </div>
+          )}
 
           {/* Resultado do Rastreamento */}
           {trackingData && (
@@ -195,6 +210,7 @@ const TrackingModal = ({ isOpen, onClose }) => {
                               <Clock size={12} /> {item[0] || 'Data Indisponível'}
                             </span>
                             <p style={{ margin: '0.2rem 0 0 0', color: isFirst ? '#fff' : 'var(--text-muted)', fontSize: '0.9rem' }}>
+                              {item[1] ? <strong>[{item[1]}] </strong> : ''}
                               {item[2] || 'Status Indisponível'}
                             </p>
                           </div>

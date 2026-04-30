@@ -16,7 +16,12 @@ const commonTranslations = {
   "海关": "Alfândega",
   "清关完成": "Desembaraço aduaneiro concluído",
   "派送中": "Em rota de entrega",
-  "签收": "Entregue/Assinado"
+  "签收": "Entregue/Assinado",
+  "广州": "Guangzhou",
+  "深圳": "Shenzhen",
+  "上海": "Xangai",
+  "北京": "Pequim",
+  "香港": "Hong Kong"
 };
 
 const htmlEntities = {
@@ -81,7 +86,7 @@ serve(async (req) => {
     const html = await response.text();
 
     const decodeEntities = (str) => {
-      return str.replace(/&[a-z]+;/g, (match) => htmlEntities[match] || match);
+      return str.replace(/&[a-zA-Z]+;/g, (match) => htmlEntities[match] || match);
     }
 
     const cleanHTML = (str) => {
@@ -116,19 +121,17 @@ serve(async (req) => {
         }
         
         if (rowData.length >= 3) {
+          // Traduz localização (index 1) e status (index 2)
+          rowData[1] = await translateText(rowData[1]);
           rowData[2] = await translateText(rowData[2]);
           history.push(rowData);
         }
       }
     }
 
-    // Processar trackingData com a lógica de data correta
     let trackingData = null;
     if (items.length >= 12) {
-      // Se tivermos histórico, pegamos a data do ÚLTIMO item da lista (que é a postagem inicial)
-      // Se não, usamos a data padrão que o site chinês fornece (que costuma ser a última atualização)
       const shippingDate = (history.length > 0) ? history[history.length - 1][0] : items[9];
-
       trackingData = {
         referenceNo: items[6],
         trackingNumber: items[7],
