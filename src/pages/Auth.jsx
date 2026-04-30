@@ -52,23 +52,28 @@ const Auth = () => {
       nonceRef.current = { raw: rawNonce, hashed: hashedNonce };
 
       // Inicializa o GIS com o callback
-      window.google.accounts.id.initialize({
-        client_id: GOOGLE_CLIENT_ID,
-        nonce: hashedNonce,
-        auto_select: false,
-        callback: handleGoogleCallback,
-      });
+      if (GOOGLE_CLIENT_ID) {
+        window.google.accounts.id.initialize({
+          client_id: GOOGLE_CLIENT_ID,
+          nonce: hashedNonce,
+          auto_select: false,
+          callback: handleGoogleCallback,
+        });
 
-      // Renderiza o botão OFICIAL do Google (abre popup OAuth real, sem FedCM)
-      window.google.accounts.id.renderButton(googleBtnRef.current, {
-        type: 'standard',
-        size: 'large',
-        theme: 'filled_black',
-        text: 'signin_with',
-        shape: 'rectangular',
-        logo_alignment: 'left',
-        width: 340,
-      });
+        // Renderiza o botão OFICIAL do Google (abre popup OAuth real, sem FedCM)
+        window.google.accounts.id.renderButton(googleBtnRef.current, {
+          type: 'standard',
+          size: 'large',
+          theme: 'filled_black',
+          text: 'signin_with',
+          shape: 'rectangular',
+          logo_alignment: 'left',
+          width: 340,
+        });
+      } else {
+        console.error("VITE_GOOGLE_CLIENT_ID não configurado!");
+        setError("Erro de configuração do Google Login.");
+      }
 
       if (!cancelled) setGisReady(true);
     };
