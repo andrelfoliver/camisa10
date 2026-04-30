@@ -1,11 +1,13 @@
-// @ts-ignore: Deno types
-const corsHeaders: { [key: string]: string } = {
+// @ts-nocheck
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+
+// @ts-ignore
+const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
-const commonTranslations: { [key: string]: string } = {
-  // Chinês
+const commonTranslations: Record<string, string> = {
   "货物电子信息已经收到": "Informações eletrônicas recebidas",
   "已揽收": "Coletado pelo fornecedor",
   "到达": "Chegou em",
@@ -17,12 +19,6 @@ const commonTranslations: { [key: string]: string } = {
   "清关完成": "Desembaraço aduaneiro concluído",
   "派送中": "Em rota de entrega",
   "签收": "Entregue/Assinado",
-  "广州": "Guangzhou",
-  "深圳": "Shenzhen",
-  "上海": "Xangai",
-  "北京": "Pequim",
-  "香港": "Hong Kong",
-  // Inglês
   "The goods leave the operation center": "As mercadorias saíram do centro de operação",
   "Arrived at the operating center": "Chegou ao centro operacional",
   "The goods have been received": "As mercadorias foram recebidas",
@@ -34,243 +30,88 @@ const commonTranslations: { [key: string]: string } = {
   "Delivered": "Entregue"
 };
 
-const htmlEntities: { [key: string]: string } = {
-  '&nbsp;': ' ',
-  '&aacute;': 'á', '&Aacute;': 'Á',
-  '&eacute;': 'é', '&Eacute;': 'É',
-  '&iacute;': 'í', '&Iacute;': 'Í',
-  '&oacute;': 'ó', '&Oacute;': 'Ó',
-  '&uacute;': 'ú', '&Uacute;': 'Ú',
-  '&atilde;': 'ã', '&Atilde;': 'Ã',
-  '&otilde;': 'õ', '&Otilde;': 'Õ',
-  '&ccedil;': 'ç', '&Ccedil;': 'Ç',
-  '&acirc;': 'â', '&ecirc;': 'ê', '&ocirc;': 'ô',
+const htmlEntities: Record<string, string> = {
+  '&nbsp;': ' ', '&aacute;': 'á', '&Aacute;': 'Á', '&eacute;': 'é', '&Eacute;': 'É',
+  '&iacute;': 'í', '&Iacute;': 'Í', '&oacute;': 'ó', '&Oacute;': 'Ó', '&uacute;': 'ú',
+  '&Uacute;': 'Ú', '&atilde;': 'ã', '&Atilde;': 'Ã', '&otilde;': 'õ', '&Otilde;': 'Õ',
+  '&ccedil;': 'ç', '&Ccedil;': 'Ç', '&acirc;': 'â', '&ecirc;': 'ê', '&ocirc;': 'ô',
   '&quot;': '"', '&amp;': '&', '&lt;': '<', '&gt;': '>'
 };
 
 async function translateText(text: string): Promise<string> {
   if (!text) return '';
-  const cleanText: string = text.replace(/\/$/, '').trim();
-  if (!cleanText) return '';
-
-  // 1. Tenta tradução local exata
-  if (commonTranslations[cleanText]) return commonTranslations[cleanText];
-
-  // 2. Se for Chinês (contém caracteres não-latinos), tenta MyMemory zh|pt
-  const hasChinese = /[^\x00-\xff]/.test(cleanText);
+  const clean = text.replace(/\/$/, '').trim();
+  if (!clean) return '';
+  if (commonTranslations[clean]) return commonTranslations[clean];
+  const hasChinese = /[^\x00-\xff]/.test(clean);
   if (hasChinese) {
     try {
-      const res = await fetch(`https://api.mymemory.translated.net/get?q=${encodeURIComponent(cleanText)}&langpair=zh|pt`);
-      const data: any = await res.json();
-      if (data.responseData && data.responseData.translatedText) {
-        return data.responseData.translatedText;
-      }
-    } catch (e) {
-      console.error("Erro na tradução ZH:", e);
-    }
-    return cleanText;
-  }
-
-  // 3. Se for Inglês (não é chinês e não está no mapa), tenta MyMemory en|pt
-  // Ignoramos se for apenas números ou data
-  if (/^[a-zA-Z\s,.'-]+$/.test(cleanText) && cleanText.length > 3) {
+      const res = await fetch(`https://api.mymemory.translated.net/get?q=${encodeURIComponent(clean)}&langpair=zh|pt`);
+      const d: any = await res.json();
+      if (d.responseData?.translatedText) return d.responseData.translatedText;
+    } catch { }
+  } else if (/^[a-zA-Z\s,.'-]+$/.test(clean) && clean.length > 3) {
     try {
-      const res = await fetch(`https://api.mymemory.translated.net/get?q=${encodeURIComponent(cleanText)}&langpair=en|pt`);
-      const data: any = await res.json();
-      if (data.responseData && data.responseData.translatedText) {
-        return data.responseData.translatedText;
-      }
-    } catch (e) {
-      console.error("Erro na tradução EN:", e);
-    }
+      const res = await fetch(`https://api.mymemory.translated.net/get?q=${encodeURIComponent(clean)}&langpair=en|pt`);
+      const d: any = await res.json();
+      if (d.responseData?.translatedText) return d.responseData.translatedText;
+    } catch { }
   }
-
-  return cleanText;
+  return clean;
 }
 
-async function fetchChineseTracking(trackingNumber: string) {
-  const decodeEntities = (str: string): string =>
-    str.replace(/&[a-zA-Z]+;/g, (match: string) => htmlEntities[match] || match);
-
-  const cleanHTML = (str: string): string => {
-    if (!str) return '';
-    const noTags: string = str.replace(/<[^>]+>/g, '');
-    return decodeEntities(noTags).trim();
-  };
-
-  const formData = new URLSearchParams();
-  formData.append('documentCode', trackingNumber);
-
-  const response = await fetch('http://193.112.141.69:8082/en/trackIndex.htm', {
+async function fetchChineseTracking(num: string) {
+  const cleanHTML = (s: string) => s ? s.replace(/<[^>]+>/g, '').replace(/&[a-zA-Z]+;/g, (m) => htmlEntities[m] || m).trim() : '';
+  const body = new URLSearchParams(); body.append('documentCode', num);
+  const res = await fetch('http://193.112.141.69:8082/en/trackIndex.htm', {
     method: 'POST',
-    headers: {
-      'Content-Type': 'application/x-www-form-urlencoded',
-      'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)',
-    },
-    body: formData.toString()
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded', 'User-Agent': 'Mozilla/5.0' },
+    body: body.toString()
   });
-
-  const html: string = await response.text();
-  const liRegex: RegExp = /<li[^>]*>([\s\S]*?)<\/li>/g;
-  let match: RegExpExecArray | null;
-  const items: string[] = [];
-  while ((match = liRegex.exec(html)) !== null) {
-    items.push(cleanHTML(match[1]));
-  }
-
-  const history: Array<{ date: string; location: string; status: string; carrier: 'CN' }> = [];
-  const menLiMatch: RegExpMatchArray | null = html.match(/<div class="men_li">([\s\S]*?)<\/div>/);
-  if (menLiMatch) {
-    const menLiHtml: string = menLiMatch[1];
-    const trRegex: RegExp = /<tr[^>]*>([\s\S]*?)<\/tr>/g;
-    const tdRegex: RegExp = /<td[^>]*>([\s\S]*?)<\/td>/g;
-
-    let trMatch: RegExpExecArray | null;
-    while ((trMatch = trRegex.exec(menLiHtml)) !== null) {
-      const rowHtml: string = trMatch[1];
-      const rowData: string[] = [];
-      let tdMatch: RegExpExecArray | null;
-      while ((tdMatch = tdRegex.exec(rowHtml)) !== null) {
-        rowData.push(cleanHTML(tdMatch[1]));
-      }
-
-      if (rowData.length >= 3) {
-        const translatedLocation: string = await translateText(rowData[1]);
-        const translatedStatus: string = await translateText(rowData[2]);
-        history.push({
-          date: rowData[0],
-          location: translatedLocation,
-          status: translatedStatus,
-          carrier: 'CN'
-        });
-      }
+  const html = await res.text();
+  const history: any[] = [];
+  const menLi = html.match(/<div class="men_li">([\s\S]*?)<\/div>/);
+  if (menLi) {
+    const trs = menLi[1].match(/<tr[^>]*>([\s\S]*?)<\/tr>/g) || [];
+    for (const tr of trs) {
+      const tds = tr.match(/<td[^>]*>([\s\S]*?)<\/td>/g) || [];
+      const row = tds.map(cleanHTML);
+      if (row.length >= 3) history.push({ date: row[0], location: await translateText(row[1]), status: await translateText(row[2]), carrier: 'CN' });
     }
   }
-
-  let trackingData = null;
-  if (items.length >= 12) {
-    const shippingDate: string = (history.length > 0) ? history[history.length - 1].date : items[9];
-    trackingData = {
-      referenceNo: items[6],
-      trackingNumber: items[7],
-      country: items[8],
-      date: shippingDate,
-      lastRecord: await translateText(items[10]),
-      consigneeName: items[11]
-    };
-  }
-
+  const items = (html.match(/<li[^>]*>([\s\S]*?)<\/li>/g) || []).map(cleanHTML);
+  const trackingData = items.length >= 12 ? { referenceNo: items[6], trackingNumber: items[7], country: items[8], date: history[history.length-1]?.date || items[9], lastRecord: await translateText(items[10]), consigneeName: items[11] } : null;
   return { trackingData, chineseHistory: history };
 }
 
-async function fetch17trackData(trackingNumber: string) {
-  // @ts-ignore: Deno global
-  const apiKey = Deno.env.get('SEVENTEENTRACK_API_KEY');
-  if (!apiKey) return [];
-
+async function fetch17trackData(num: string) {
+  // @ts-ignore
+  const key = Deno.env.get('SEVENTEENTRACK_API_KEY'); if (!key) return [];
   try {
-    const registerRes = await fetch('https://api.17track.net/track/v2.4/register', {
-      method: 'POST',
-      headers: { '17token': apiKey, 'Content-Type': 'application/json' },
-      body: JSON.stringify([{ number: trackingNumber }])
-    });
-
-    if (!registerRes.ok) return [];
-
-    const trackRes = await fetch('https://api.17track.net/track/v2.4/gettrackinfo', {
-      method: 'POST',
-      headers: { '17token': apiKey, 'Content-Type': 'application/json' },
-      body: JSON.stringify([{ number: trackingNumber }])
-    });
-
-    if (!trackRes.ok) return [];
-
-    const trackData: any = await trackRes.json();
-    const accepted: any[] = trackData?.data?.accepted || [];
-    if (accepted.length === 0) return [];
-
-    const packageInfo = accepted[0];
-    const trackList: any[] = packageInfo?.track?.z1 || [];
-    const canadianEvents: Array<{ date: string; location: string; status: string; carrier: 'CA' }> = [];
-
-    for (const event of trackList) {
-      canadianEvents.push({
-        date: event.a || '',
-        location: event.c || '',
-        status: event.z || '',
-        carrier: 'CA'
-      });
-    }
-
-    return canadianEvents;
-  } catch (e) {
-    console.error('17track error:', e);
-    return [];
-  }
+    await fetch('https://api.17track.net/track/v2.4/register', { method: 'POST', headers: { '17token': key, 'Content-Type': 'application/json' }, body: JSON.stringify([{ number: num }]) });
+    const res = await fetch('https://api.17track.net/track/v2.4/gettrackinfo', { method: 'POST', headers: { '17token': key, 'Content-Type': 'application/json' }, body: JSON.stringify([{ number: num }]) });
+    const d: any = await res.json();
+    return (d?.data?.accepted?.[0]?.track?.z1 || []).map((e: any) => ({ date: e.a || '', location: e.c || '', status: e.z || '', carrier: 'CA' }));
+  } catch { return []; }
 }
 
-function mergeTimelines(
-  chineseHistory: Array<{ date: string; location: string; status: string; carrier: 'CN' }>,
-  canadianHistory: Array<{ date: string; location: string; status: string; carrier: 'CA' }>
-) {
-  const all = [...chineseHistory, ...canadianHistory];
-  all.sort((a, b) => {
-    const dateA = new Date(a.date).getTime();
-    const dateB = new Date(b.date).getTime();
-    if (isNaN(dateA) || isNaN(dateB)) return 0;
-    return dateB - dateA;
-  });
-  return all;
-}
-
-// @ts-ignore: Deno.serve global
+// @ts-ignore
 Deno.serve(async (req: Request) => {
-  if (req.method === 'OPTIONS') {
-    return new Response('ok', { headers: corsHeaders });
-  }
-
+  if (req.method === 'OPTIONS') return new Response('ok', { headers: corsHeaders });
   try {
-    const body: any = await req.json();
-    const trackingNumber: string = body?.trackingNumber;
+    const { trackingNumber } = await req.json();
+    if (!trackingNumber) return new Response('error', { status: 400 });
+    // @ts-ignore
+    const supabase = createClient(Deno.env.get('SUPABASE_URL') || '', Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') || '');
+    const { data: cached } = await supabase.from('tracking_cache').select('*').eq('tracking_number', trackingNumber).maybeSingle();
+    if (cached && (Date.now() - new Date(cached.last_updated).getTime()) < 14400000) return new Response(JSON.stringify(cached.status_data), { headers: corsHeaders });
 
-    if (!trackingNumber) {
-      return new Response(JSON.stringify({ error: 'Tracking number is required' }), {
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        status: 400,
-      });
-    }
-
-    const results: any[] = await Promise.allSettled([
-      fetchChineseTracking(trackingNumber),
-      fetch17trackData(trackingNumber)
-    ]);
-
-    const chineseResult = results[0];
-    const canadianResult = results[1];
-
-    const chineseData = chineseResult.status === 'fulfilled' 
-      ? chineseResult.value 
-      : { trackingData: null, chineseHistory: [] };
+    const results: any[] = await Promise.allSettled([fetchChineseTracking(trackingNumber), fetch17trackData(trackingNumber)]);
+    const cn = results[0].status === 'fulfilled' ? results[0].value : { trackingData: null, chineseHistory: [] };
+    const ca = results[1].status === 'fulfilled' ? results[1].value : [];
     
-    const caHistory = canadianResult.status === 'fulfilled' 
-      ? canadianResult.value 
-      : [];
-
-    const mergedHistory = mergeTimelines(chineseData.chineseHistory, caHistory);
-
-    return new Response(JSON.stringify({
-      trackingData: chineseData.trackingData,
-      history: mergedHistory,
-      hasCanadaPostData: caHistory.length > 0,
-    }), {
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      status: 200,
-    });
-
-  } catch (error: any) {
-    return new Response(JSON.stringify({ error: error?.message || 'Unknown error' }), {
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      status: 500,
-    });
-  }
+    const finalData = { trackingData: cn.trackingData, history: [...cn.chineseHistory, ...ca].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()), hasCanadaPostData: ca.length > 0, cachedAt: new Date().toISOString() };
+    await supabase.from('tracking_cache').upsert({ tracking_number: trackingNumber, status_data: finalData, last_updated: new Date().toISOString() });
+    return new Response(JSON.stringify(finalData), { headers: corsHeaders });
+  } catch (e: any) { return new Response(e.message, { status: 500 }); }
 });
