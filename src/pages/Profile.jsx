@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useLanguage } from '../context/LanguageContext';
-import { LogOut, Package, Star, Calendar, MessageSquare, CheckCircle2, Clock, MapPin, TrendingUp, Copy, Share2, Menu, X as CloseIcon, Shield, PenTool, Zap, Lock, ChevronDown, ChevronUp } from 'lucide-react';
+import { LogOut, Package, Star, Calendar, MessageSquare, CheckCircle2, Clock, MapPin, TrendingUp, Copy, Share2, Menu, X as CloseIcon, Shield, PenTool, Zap, Lock, ChevronDown, ChevronUp, Truck } from 'lucide-react';
 import { Navigate, useNavigate } from 'react-router-dom';
 import { supabase } from '../services/supabase';
+import TrackingModal from '../components/TrackingModal';
 
 const Profile = () => {
   const { user, signOut, isAdmin, loading: authLoading } = useAuth();
@@ -26,6 +27,8 @@ const Profile = () => {
   const [copySuccess, setCopySuccess] = useState(null); // id do que foi copiado
   const [affiliateDriveLink, setAffiliateDriveLink] = useState('');
   const [expandedScript, setExpandedScript] = useState(null);
+  const [isTrackModalOpen, setIsTrackModalOpen] = useState(false);
+  const [trackingNumberToView, setTrackingNumberToView] = useState('');
 
   useEffect(() => {
     if (user) loadUserData();
@@ -332,6 +335,19 @@ const Profile = () => {
                                <p>{order?.shipping_address?.city || ''}{order?.shipping_address?.province ? ', ' + order.shipping_address.province : ''} {order?.shipping_address?.postalCode || ''}</p>
                             </div>
                          </div>
+                           {order.tracking_number && (
+                             <div style={{ marginTop: '1.5rem' }}>
+                               <button 
+                                 onClick={() => {
+                                   setTrackingNumberToView(order.tracking_number);
+                                   setIsTrackModalOpen(true);
+                                 }}
+                                 className="btn-primary" 
+                                 style={{ width: '100%', justifyContent: 'center', background: 'rgba(255,184,28,0.1)', color: 'var(--accent-color)', border: '1px solid var(--accent-color)', gap: '0.6rem', padding: '0.8rem' }}>
+                                 <Truck size={18} /> RASTREAR MEU PEDIDO
+                               </button>
+                             </div>
+                           )}
                       </div>
                     </div>
                   ))}
@@ -668,6 +684,14 @@ const Profile = () => {
 
       </div>
 
+      <TrackingModal 
+        isOpen={isTrackModalOpen} 
+        onClose={() => {
+          setIsTrackModalOpen(false);
+          setTrackingNumberToView('');
+        }} 
+        initialTrackingNumber={trackingNumberToView}
+      />
     </div>
   );
 };

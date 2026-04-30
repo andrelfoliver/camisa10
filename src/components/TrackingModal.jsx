@@ -4,8 +4,8 @@ import { createWorker } from 'tesseract.js';
 import { supabase } from '../services/supabase';
 import toast from 'react-hot-toast';
 
-const TrackingModal = ({ isOpen, onClose }) => {
-  const [trackingNumber, setTrackingNumber] = useState('');
+const TrackingModal = ({ isOpen, onClose, initialTrackingNumber = '' }) => {
+  const [trackingNumber, setTrackingNumber] = useState(initialTrackingNumber);
   const [recentSearches, setRecentSearches] = useState(() => {
     const saved = localStorage.getItem('recent_trackings_v2');
     return saved ? JSON.parse(saved) : [];
@@ -16,6 +16,19 @@ const TrackingModal = ({ isOpen, onClose }) => {
   const [history, setHistory] = useState([]);
   const [hasCanadaPostData, setHasCanadaPostData] = useState(false);
   const fileInputRef = useRef(null);
+
+  // Auto-search if initial number is provided
+  React.useEffect(() => {
+    if (isOpen && initialTrackingNumber) {
+      setTrackingNumber(initialTrackingNumber);
+      handleSearch(initialTrackingNumber);
+    } else if (isOpen && !initialTrackingNumber) {
+      // Clear data if opening empty
+      setTrackingData(null);
+      setHistory([]);
+      setTrackingNumber('');
+    }
+  }, [isOpen, initialTrackingNumber]);
 
   if (!isOpen) return null;
 

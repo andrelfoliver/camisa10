@@ -18,6 +18,7 @@ const Admin = () => {
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [isTrackModalOpen, setIsTrackModalOpen] = useState(false);
+  const [trackingNumberToView, setTrackingNumberToView] = useState('');
   const OFFICIAL_CATEGORIES = ['Seleções', 'Brasileirão', 'Internacionais', 'Lançamentos', 'Retrô'];
   const SIZES = ['S', 'M', 'L', 'XL', '2XL', '3XL', '4XL', '16', '18', '20', '22', '24', '26', '28'];
   const DEFAULT_INVENTORY = { 'S': 0, 'M': 0, 'L': 0, 'XL': 0, '2XL': 0, '3XL': 0, '4XL': 0, '16': 0, '18': 0, '20': 0, '22': 0, '24': 0, '26': 0, '28': 0 };
@@ -740,6 +741,17 @@ const Admin = () => {
       showAlert("Erro ao Atualizar", error.message);
     } else {
       setOrders(orders.map(o => o.id === orderId ? { ...o, status: newStatus } : o));
+    }
+  };
+
+  const handleUpdateTracking = async (orderId, trackingNumber) => {
+    const { error } = await supabase.from('orders').update({ tracking_number: trackingNumber }).eq('id', orderId);
+    if (error) {
+      showAlert("Erro ao Salvar Rastreio", error.message);
+    } else {
+      setOrders(orders.map(o => o.id === orderId ? { ...o, tracking_number: trackingNumber } : o));
+      setSaved(true);
+      setTimeout(() => setSaved(false), 2000);
     }
   };
 
@@ -3013,6 +3025,37 @@ const Admin = () => {
                                 <option value="cancelled">🔴 Cancelado</option>
                               </select>
 
+                              <p style={{ fontSize: '0.7rem', color: 'var(--text-muted)', fontWeight: 800, textTransform: 'uppercase', marginTop: '1rem' }}>Rastreamento de Envio</p>
+                              <div style={{ display: 'flex', gap: '0.5rem' }}>
+                                <input
+                                  type="text"
+                                  placeholder="Código de Rastreio"
+                                  defaultValue={order.tracking_number || ''}
+                                  id={`track-${order.id}`}
+                                  style={{ flex: 1, padding: '0.6rem', background: 'var(--bg-color)', color: '#fff', border: '1px solid var(--border-color)', borderRadius: '6px', fontSize: '0.8rem' }}
+                                />
+                                <button
+                                  onClick={() => {
+                                    const val = document.getElementById(`track-${order.id}`).value;
+                                    handleUpdateTracking(order.id, val);
+                                  }}
+                                  style={{ padding: '0.6rem', background: 'var(--accent-color)', color: '#000', border: 'none', borderRadius: '6px', fontWeight: 700, cursor: 'pointer' }}
+                                >
+                                  <Save size={16} />
+                                </button>
+                              </div>
+                              {order.tracking_number && (
+                                <button
+                                  onClick={() => {
+                                    setTrackingNumberToView(order.tracking_number);
+                                    setIsTrackModalOpen(true);
+                                  }}
+                                  style={{ padding: '0.6rem', background: 'rgba(255,255,255,0.05)', color: 'var(--accent-color)', border: '1px solid var(--accent-color)', borderRadius: '6px', fontWeight: 600, cursor: 'pointer', fontSize: '0.75rem', marginTop: '0.3rem' }}
+                                >
+                                  TESTAR RASTREIO
+                                </button>
+                              )}
+
                               <p style={{ fontSize: '0.7rem', color: 'var(--text-muted)', fontWeight: 800, textTransform: 'uppercase', marginTop: '1rem' }}>Ações Rápidas (Auto-Sync)</p>
                               <button
                                 onClick={() => sendWhatsAppStatus(order, 'processing')}
@@ -4293,7 +4336,14 @@ const Admin = () => {
           </div>
         </div>
       )}
-      <TrackingModal isOpen={isTrackModalOpen} onClose={() => setIsTrackModalOpen(false)} />
+      <TrackingModal 
+        isOpen={isTrackModalOpen} 
+        onClose={() => {
+          setIsTrackModalOpen(false);
+          setTrackingNumberToView('');
+        }} 
+        initialTrackingNumber={trackingNumberToView}
+      />
     </div>
   );
 };
