@@ -25,6 +25,7 @@ async function translateText(text) {
   
   // Limpa o texto (remove / no final e espaços extras)
   const cleanText = text.replace(/\/$/, '').trim();
+  if (!cleanText) return '';
   
   // Tenta o dicionário local primeiro
   if (commonTranslations[cleanText]) {
@@ -41,7 +42,7 @@ async function translateText(text) {
     console.error("Erro na tradução:", e);
   }
   
-  return cleanText; // Retorna original se falhar
+  return cleanText;
 }
 
 serve(async (req) => {
@@ -78,7 +79,7 @@ serve(async (req) => {
       return str.replace(/<[^>]+>/g, '').replace(/&nbsp;/g, '').trim();
     }
 
-    // 1. Extract Main Info
+    // 1. Extract Main Info (reference, tracking, country, etc)
     const liRegex = /<li[^>]*>([\s\S]*?)<\/li>/g;
     let match;
     const items = [];
@@ -98,31 +99,29 @@ serve(async (req) => {
       };
     }
 
-    // 2. Extract History (Timeline)
+    // 2. Extract History (Timeline) - Localizado dentro da div men_li
     const history = [];
-    const trRegex = /<tr[^>]*>([\s\S]*?)<\/tr>/g;
-    const tdRegex = /<td[^>]*>([\s\S]*?)<\/td>/g;
     
-    let trMatch;
-    // Pula o primeiro tr que é o header
-    let isHeader = true;
-    while ((trMatch = trRegex.exec(html)) !== null) {
-      if (isHeader) {
-        isHeader = false;
-        continue;
-      }
+    // Pegamos apenas o conteúdo da div men_li para evitar pegar outras tabelas do site
+    const menLiMatch = html.match(/<div class="men_li">([\s\S]*?)<\/div>/);
+    if (menLiMatch) {
+      const menLiHtml = menLiMatch[1];
+      const trRegex = /<tr[^>]*>([\s\S]*?)<\/tr>/g;
+      const tdRegex = /<td[^>]*>([\s\S]*?)<\/td>/g;
       
-      const rowHtml = trMatch[1];
-      const rowData = [];
-      let tdMatch;
-      while ((tdMatch = tdRegex.exec(rowHtml)) !== null) {
-        rowData.push(cleanHTML(tdMatch[1]));
-      }
-      
-      if (rowData.length >= 3) {
-        // Traduz o status (índice 2)
-        rowData[2] = await translateText(rowData[2]);
-        history.push(rowData);
+      let trMatch;
+      while ((trMatch = trRegex.exec(menLiHtml)) !== null) {
+        const rowHtml = trMatch[1];
+        const rowData = [];
+        let tdMatch;
+        while ((tdMatch = tdRegex.exec(rowHtml)) !== null) {
+          rowData.push(cleanHTML(tdMatch[1]));
+        }
+        
+        if (rowData.length >= 3) {
+          rowData[2] = await translateText(rowData[2]);
+          history.push(rowData);
+        }
       }
     }
 
