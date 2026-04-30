@@ -19,7 +19,6 @@ const commonTranslations = {
   "签收": "Entregue/Assinado"
 };
 
-// Mapa de entidades HTML comuns para decodificação
 const htmlEntities = {
   '&nbsp;': ' ',
   '&aacute;': 'á', '&Aacute;': 'Á',
@@ -87,7 +86,6 @@ serve(async (req) => {
 
     const cleanHTML = (str) => {
       if (!str) return '';
-      // Remove tags, decodifica entidades e limpa espaços
       const noTags = str.replace(/<[^>]+>/g, '');
       return decodeEntities(noTags).trim();
     }
@@ -98,18 +96,6 @@ serve(async (req) => {
     const items = [];
     while ((match = liRegex.exec(html)) !== null) {
       items.push(cleanHTML(match[1]));
-    }
-
-    let trackingData = null;
-    if (items.length >= 12) {
-      trackingData = {
-        referenceNo: items[6],
-        trackingNumber: items[7],
-        country: items[8],
-        date: items[9],
-        lastRecord: await translateText(items[10]),
-        consigneeName: items[11]
-      };
     }
 
     // 2. Extract History (Timeline)
@@ -134,6 +120,23 @@ serve(async (req) => {
           history.push(rowData);
         }
       }
+    }
+
+    // Processar trackingData com a lógica de data correta
+    let trackingData = null;
+    if (items.length >= 12) {
+      // Se tivermos histórico, pegamos a data do ÚLTIMO item da lista (que é a postagem inicial)
+      // Se não, usamos a data padrão que o site chinês fornece (que costuma ser a última atualização)
+      const shippingDate = (history.length > 0) ? history[history.length - 1][0] : items[9];
+
+      trackingData = {
+        referenceNo: items[6],
+        trackingNumber: items[7],
+        country: items[8],
+        date: shippingDate,
+        lastRecord: await translateText(items[10]),
+        consigneeName: items[11]
+      };
     }
 
     return new Response(JSON.stringify({ 
