@@ -33,7 +33,8 @@ const commonTranslations: Record<string, string> = {
   "Arrived at facility": "Chegou na instalação",
   "In transit": "Em trânsito",
   "Out for delivery": "Saiu para entrega",
-  "Delivered": "Entregue"
+  "Delivered": "Entregue",
+  "Electronic information submitted by shipper": "Informações eletrônicas enviadas pelo remetente"
 };
 
 const htmlEntities: Record<string, string> = {
@@ -140,8 +141,12 @@ async function fetch17trackData(num: string) {
       body: JSON.stringify([{ number: num }])
     });
     const data: any = await res.json();
-    const list = data?.data?.accepted?.[0]?.track?.z1 || [];
-    return list.map((e: any) => ({ 
+    const track = data?.data?.accepted?.[0]?.track;
+    const originList = track?.z1 || [];
+    const destList = track?.z2 || [];
+    const fullList = [...originList, ...destList];
+    
+    return fullList.map((e: any) => ({ 
       date: e.a || '', 
       location: e.c || '', 
       status: e.z || '', 
