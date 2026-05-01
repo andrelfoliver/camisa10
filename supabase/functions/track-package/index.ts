@@ -141,12 +141,20 @@ async function fetch17trackData(num: string) {
       body: JSON.stringify([{ number: num }])
     });
     const data: any = await res.json();
-    const track = data?.data?.accepted?.[0]?.track;
-    const originList = track?.z1 || [];
-    const destList = track?.z2 || [];
-    const fullList = [...originList, ...destList];
+    console.log(`17track response for ${num}:`, JSON.stringify(data));
     
-    return fullList.map((e: any) => ({ 
+    const track = data?.data?.accepted?.[0]?.track;
+    if (!track) return [];
+
+    // Tenta pegar de todas as listas possíveis (z0 é o histórico completo em algumas versões)
+    const allEvents = [...(track.z0 || []), ...(track.z1 || []), ...(track.z2 || [])];
+    
+    // Remover duplicados por data/status
+    const uniqueEvents = allEvents.filter((v, i, a) => 
+      a.findIndex(t => (t.a === v.a && t.z === v.z)) === i
+    );
+
+    return uniqueEvents.map((e: any) => ({ 
       date: e.a || '', 
       location: e.c || '', 
       status: e.z || '', 
