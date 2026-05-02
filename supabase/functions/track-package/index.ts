@@ -177,20 +177,17 @@ async function fetch17trackData(num: string) {
     );
 
     return await Promise.all(uniqueEvents.map(async (e: any) => {
-      // Formata a data ISO (2026-05-01T13:44:32-04:00) para amigável (2026-05-01 13:44:32)
       let displayDate = e.time_iso || e.a || '';
-      if (displayDate.includes('T')) {
-        displayDate = displayDate.replace('T', ' ').split('.')[0];
-        if (displayDate.includes('-') && displayDate.lastIndexOf('-') > 10) {
-           displayDate = displayDate.substring(0, displayDate.lastIndexOf('-'));
-        }
-        if (displayDate.includes('+')) {
-           displayDate = displayDate.substring(0, displayDate.indexOf('+'));
-        }
-      }
+      
+      // Limpeza robusta: Troca T por espaço e remove fuso horário (ex: -04:00 ou +02:00)
+      displayDate = displayDate
+        .replace('T', ' ')
+        .replace(/[-+]\d{2}:?\d{2}$/, '') // Remove fuso no final
+        .split('.')[0] // Remove milissegundos se houver
+        .trim();
 
       return { 
-        date: displayDate.trim(), 
+        date: displayDate, 
         location: await translateText(e.location || e.c || ''), 
         status: await translateText(e.description || e.z || ''), 
         carrier: 'CA' 
