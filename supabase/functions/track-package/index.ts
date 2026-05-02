@@ -145,8 +145,17 @@ async function fetch17trackData(num: string) {
     });
     
     const data: any = await res.json();
+    console.log(`DIAGNÓSTICO 17TRACK - Resposta para ${cleanNum}:`, JSON.stringify(data));
+    
+    if (data?.data?.rejected?.[0]) {
+      console.error(`17TRACK REJEITOU: ${data.data.rejected[0].error?.message} (Código: ${data.data.rejected[0].error?.code})`);
+    }
+
     const track = data?.data?.accepted?.[0]?.track;
-    if (!track) return [];
+    if (!track) {
+      console.log(`17TRACK ACEITOU MAS SEM TRACK: O 17track ainda não tem dados de rastreio para este número na API.`);
+      return [];
+    }
 
     const allEvents = [...(track.z0 || []), ...(track.z1 || []), ...(track.z2 || [])];
     const uniqueEvents = allEvents.filter((v, i, a) => 
