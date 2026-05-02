@@ -144,22 +144,25 @@ async function fetch17trackData(num: string) {
     console.log(`17track response for ${num}:`, JSON.stringify(data));
     
     const track = data?.data?.accepted?.[0]?.track;
-    if (!track) return [];
+    if (!track) {
+      console.log(`Sem dados de track para ${num}. Erro: ${data?.data?.rejected?.[0]?.error?.message || 'Desconhecido'}`);
+      return [];
+    }
 
-    // Tenta pegar de todas as listas possíveis (z0 é o histórico completo em algumas versões)
     const allEvents = [...(track.z0 || []), ...(track.z1 || []), ...(track.z2 || [])];
-    
-    // Remover duplicados por data/status
     const uniqueEvents = allEvents.filter((v, i, a) => 
       a.findIndex(t => (t.a === v.a && t.z === v.z)) === i
     );
 
-    return uniqueEvents.map((e: any) => ({ 
+    // TRADUÇÃO: Agora traduzimos cada evento que vem do 17track
+    const translatedEvents = await Promise.all(uniqueEvents.map(async (e: any) => ({ 
       date: e.a || '', 
-      location: e.c || '', 
-      status: e.z || '', 
+      location: await translateText(e.c || ''), 
+      status: await translateText(e.z || ''), 
       carrier: 'CA' 
-    }));
+    })));
+
+    return translatedEvents;
   } catch { return []; }
 }
 
