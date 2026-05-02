@@ -287,8 +287,7 @@ const TrackingModal = ({ isOpen, onClose, initialTrackingNumber = '' }) => {
                   </div>
                 </div>
               </div>
-            </div>
-          )}
+            )}
 
           {!trackingData && !loading && (
             <div style={{ textAlign: 'center', padding: '3rem 0', color: 'var(--text-muted)' }}>
