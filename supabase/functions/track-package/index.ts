@@ -111,6 +111,7 @@ async function fetchChineseTracking(num: string) {
       while ((tdM = tdRegex.exec(trM[1])) !== null) row.push(cleanHTML(tdM[1]));
       if (row.length >= 3) {
         history.push({ 
+          rawDate: row[0],
           date: formatToAMPM(row[0]), 
           location: await translateText(row[1]), 
           status: await translateText(row[2]), 
@@ -201,6 +202,7 @@ async function fetch17trackData(num: string) {
         .trim();
 
       return { 
+        rawDate: displayDate,
         date: formatToAMPM(displayDate), 
         location: await translateText(e.location || e.c || ''), 
         status: await translateText(e.description || e.z || ''), 
@@ -260,7 +262,11 @@ Deno.serve(async (req: Request) => {
 
     const finalData = { 
       trackingData: cn.trackingData, 
-      history: [...cn.chineseHistory, ...ca].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()), 
+      history: [...cn.chineseHistory, ...ca].sort((a, b) => {
+        const dateA = new Date(a.rawDate.replace(' ', 'T')).getTime();
+        const dateB = new Date(b.rawDate.replace(' ', 'T')).getTime();
+        return dateB - dateA;
+      }), 
       hasCanadaPostData: ca.length > 0, 
       cachedAt: new Date().toISOString() 
     };
