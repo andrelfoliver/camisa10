@@ -175,35 +175,50 @@ async function fetch17trackData(num: string) {
 Deno.serve(async (req: Request) => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: corsHeaders });
   
+  console.log("FUNÇÃO INICIADA - Recebendo requisição...");
+  
   try {
     const { trackingNumber } = await req.json();
-    if (!trackingNumber) {
-      return new Response(JSON.stringify({ error: 'Tracking number is required' }), {
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        status: 400
-      });
-    }
+    if (!trackingNumber) return new Response(JSON.stringify({ error: 'Número obrigatório' }), { headers: corsHeaders, status: 400 });
+
+    const cleanNum = trackingNumber.trim();
+    console.log(`Buscando número: ${cleanNum}`);
 
     // @ts-ignore
     const supabase = createClient(Deno.env.get('SUPABASE_URL') || '', Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') || '');
 
-    const { data: cached } = await supabase.from('tracking_cache').select('*').eq('tracking_number', trackingNumber).maybeSingle();
-    
-    if (cached && (Date.now() - new Date(cached.last_updated).getTime()) < 14400000) {
-      return new Response(JSON.stringify(cached.status_data), { 
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        status: 200
-      });
+    // Se o número tiver espaço no final, ignoramos o cache para teste
+    if (trackingNumber === cleanNum) {
+      const { data: cached } = await supabase.from('tracking_cache').select('*').eq('tracking_number', cleanNum).maybeSingle();
+      if (cached && (Date.now() - new Date(cached.last_updated).getTime()) < 14400000) {
+        console.log("Retornando dados do CACHE.");
+        return new Response(JSON.stringify(cached.status_data), { 
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          status: 200
+        });
+      }
+    } else {
+      console.log("IGNORANDO CACHE (Modo Refresh ativado pelo espaço no final)");
     }
 
+    console.log("Iniciando buscas externas (China + 17Track)...");
+    
+    // Controller para timeout de 15 segundos
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 15000);
+
     const [cnRes, caRes] = await Promise.allSettled([
-      fetchChineseTracking(trackingNumber), 
-      fetch17trackData(trackingNumber)
+      fetchChineseTracking(cleanNum), 
+      fetch17trackData(cleanNum)
     ]);
     
+    clearTimeout(timeoutId);
+
     const cn = cnRes.status === 'fulfilled' ? cnRes.value : { trackingData: null, chineseHistory: [] };
     const ca = caRes.status === 'fulfilled' ? caRes.value : [];
     
+    console.log(`Busca concluída. China: ${cn.chineseHistory.length} eventos, 17Track: ${ca.length} eventos.`);
+
     const finalData = { 
       trackingData: cn.trackingData, 
       history: [...cn.chineseHistory, ...ca].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()), 
@@ -211,11 +226,13 @@ Deno.serve(async (req: Request) => {
       cachedAt: new Date().toISOString() 
     };
 
-    await supabase.from('tracking_cache').upsert({ 
-      tracking_number: trackingNumber, 
-      status_data: finalData, 
-      last_updated: new Date().toISOString() 
-    });
+    if (finalData.history.length > 0) {
+      await supabase.from('tracking_cache').upsert({ 
+        tracking_number: cleanNum, 
+        status_data: finalData, 
+        last_updated: new Date().toISOString() 
+      });
+    }
 
     return new Response(JSON.stringify(finalData), { 
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
@@ -223,6 +240,7 @@ Deno.serve(async (req: Request) => {
     });
 
   } catch (e: any) {
+    console.error("ERRO CRÍTICO NA FUNÇÃO:", e.message);
     return new Response(JSON.stringify({ error: e.message }), { 
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       status: 500 
