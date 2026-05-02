@@ -130,39 +130,35 @@ async function fetch17trackData(num: string) {
   const apiKey = Deno.env.get('SEVENTEENTRACK_API_KEY');
   if (!apiKey) return [];
   try {
-    await fetch('https://api.17track.net/track/v2.4/register', {
+    const cleanNum = num.trim();
+    // Registra forçando o Canada Post (100011) se possível
+    await fetch('https://api.17track.net/track/v2/register', {
       method: 'POST',
       headers: { '17token': apiKey, 'Content-Type': 'application/json' },
-      body: JSON.stringify([{ number: num }])
+      body: JSON.stringify([{ number: cleanNum, carrier: 100011 }])
     });
-    const res = await fetch('https://api.17track.net/track/v2.4/gettrackinfo', {
-      method: 'POST',
-      headers: { '17token': apiKey, 'Content-Type': 'application/json' },
-      body: JSON.stringify([{ number: num }])
-    });
-    const data: any = await res.json();
-    console.log(`17track response for ${num}:`, JSON.stringify(data));
     
+    const res = await fetch('https://api.17track.net/track/v2/gettrackinfo', {
+      method: 'POST',
+      headers: { '17token': apiKey, 'Content-Type': 'application/json' },
+      body: JSON.stringify([{ number: cleanNum }])
+    });
+    
+    const data: any = await res.json();
     const track = data?.data?.accepted?.[0]?.track;
-    if (!track) {
-      console.log(`Sem dados de track para ${num}. Erro: ${data?.data?.rejected?.[0]?.error?.message || 'Desconhecido'}`);
-      return [];
-    }
+    if (!track) return [];
 
     const allEvents = [...(track.z0 || []), ...(track.z1 || []), ...(track.z2 || [])];
     const uniqueEvents = allEvents.filter((v, i, a) => 
       a.findIndex(t => (t.a === v.a && t.z === v.z)) === i
     );
 
-    // TRADUÇÃO: Agora traduzimos cada evento que vem do 17track
-    const translatedEvents = await Promise.all(uniqueEvents.map(async (e: any) => ({ 
+    return await Promise.all(uniqueEvents.map(async (e: any) => ({ 
       date: e.a || '', 
       location: await translateText(e.c || ''), 
       status: await translateText(e.z || ''), 
       carrier: 'CA' 
     })));
-
-    return translatedEvents;
   } catch { return []; }
 }
 
