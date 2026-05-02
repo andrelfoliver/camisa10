@@ -131,41 +131,55 @@ async function fetch17trackData(num: string) {
   if (!apiKey) return [];
   try {
     const cleanNum = num.trim();
-    // Registra deixando o 17track auto-detectar as transportadoras
     await fetch('https://api.17track.net/track/v2/register', {
       method: 'POST',
       headers: { '17token': apiKey, 'Content-Type': 'application/json' },
       body: JSON.stringify([{ number: cleanNum }])
     });
+
+    // PAUSA TÉCNICA: Dá tempo para o servidor do 17track processar o registro
+    await new Promise(r => setTimeout(r, 3000));
     
-    const res = await fetch('https://api.17track.net/track/v2/gettrackinfo', {
+    let res = await fetch('https://api.17track.net/track/v2/gettrackinfo', {
       method: 'POST',
       headers: { '17token': apiKey, 'Content-Type': 'application/json' },
       body: JSON.stringify([{ number: cleanNum }])
     });
     
-    const data: any = await res.json();
-    console.log(`DIAGNÓSTICO 17TRACK - Resposta para ${cleanNum}:`, JSON.stringify(data));
+    let data: any = await res.json();
+    console.log(`DIAGNÓSTICO 17TRACK V2 - Resposta para ${cleanNum}:`, JSON.stringify(data));
     
-    if (data?.data?.rejected?.[0]) {
-      console.error(`17TRACK REJEITOU: ${data.data.rejected[0].error?.message} (Código: ${data.data.rejected[0].error?.code})`);
+    const accepted = data?.data?.accepted?.[0];
+    if (!accepted) return [];
+
+    const events: any[] = [];
+    
+    // 1. Tenta o formato novo (do seu log)
+    const providers = accepted.track_info?.tracking?.providers || [];
+    providers.forEach((p: any) => {
+      if (p.events) events.push(...p.events);
+    });
+
+    // 2. Tenta o formato antigo (z0, z1, z2) como backup
+    const track = accepted.track;
+    if (track) {
+      events.push(...(track.z0 || []), ...(track.z1 || []), ...(track.z2 || []));
     }
 
-    const track = data?.data?.accepted?.[0]?.track;
-    if (!track) {
-      console.log(`17TRACK ACEITOU MAS SEM TRACK: O 17track ainda não tem dados de rastreio para este número na API.`);
+    if (events.length === 0) {
+      console.log(`17TRACK SEM EVENTOS: O objeto existe mas a lista de eventos está vazia.`);
       return [];
     }
 
-    const allEvents = [...(track.z0 || []), ...(track.z1 || []), ...(track.z2 || [])];
-    const uniqueEvents = allEvents.filter((v, i, a) => 
-      a.findIndex(t => (t.a === v.a && t.z === v.z)) === i
+    // Remover duplicados
+    const uniqueEvents = events.filter((v, i, a) => 
+      a.findIndex(t => (t.time_iso === v.time_iso && t.description === v.description)) === i
     );
 
     return await Promise.all(uniqueEvents.map(async (e: any) => ({ 
-      date: e.a || '', 
-      location: await translateText(e.c || ''), 
-      status: await translateText(e.z || ''), 
+      date: e.time_iso || e.a || '', 
+      location: await translateText(e.location || e.c || ''), 
+      status: await translateText(e.description || e.z || ''), 
       carrier: 'CA' 
     })));
   } catch { return []; }
