@@ -6,6 +6,20 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
+function formatToAMPM(dateStr: string) {
+  if (!dateStr || !dateStr.includes(' ')) return dateStr;
+  try {
+    const parts = dateStr.split(' ');
+    const date = parts[0];
+    const time = parts[parts.length - 1];
+    const [h, m, s] = time.split(':').map(Number);
+    const ampm = h >= 12 ? 'PM' : 'AM';
+    const hh = h % 12 || 12;
+    const pad = (n: number) => n < 10 ? `0${n}` : n;
+    return `${date} às ${pad(hh)}:${pad(m)}:${pad(s || 0)} ${ampm}`;
+  } catch { return dateStr; }
+}
+
 const commonTranslations: Record<string, string> = {
   "货物电子信息已经收到": "Informações eletrônicas recebidas",
   "已揽收": "Coletado pelo fornecedor",
@@ -97,7 +111,7 @@ async function fetchChineseTracking(num: string) {
       while ((tdM = tdRegex.exec(trM[1])) !== null) row.push(cleanHTML(tdM[1]));
       if (row.length >= 3) {
         history.push({ 
-          date: row[0], 
+          date: formatToAMPM(row[0]), 
           location: await translateText(row[1]), 
           status: await translateText(row[2]), 
           carrier: 'CN' 
@@ -187,7 +201,7 @@ async function fetch17trackData(num: string) {
         .trim();
 
       return { 
-        date: displayDate, 
+        date: formatToAMPM(displayDate), 
         location: await translateText(e.location || e.c || ''), 
         status: await translateText(e.description || e.z || ''), 
         carrier: 'CA' 
