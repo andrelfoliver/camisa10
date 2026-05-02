@@ -131,11 +131,11 @@ async function fetch17trackData(num: string) {
   if (!apiKey) return [];
   try {
     const cleanNum = num.trim();
-    // Registra forçando o Canada Post (100011) se possível
+    // Registra deixando o 17track auto-detectar as transportadoras
     await fetch('https://api.17track.net/track/v2/register', {
       method: 'POST',
       headers: { '17token': apiKey, 'Content-Type': 'application/json' },
-      body: JSON.stringify([{ number: cleanNum, carrier: 100011 }])
+      body: JSON.stringify([{ number: cleanNum }])
     });
     
     const res = await fetch('https://api.17track.net/track/v2/gettrackinfo', {

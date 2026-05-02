@@ -235,22 +235,30 @@ const TrackingModal = ({ isOpen, onClose, initialTrackingNumber = '' }) => {
               </div>
 
               {/* Timeline */}
-              {history.length > 0 && (
-                <div style={{ marginTop: '2rem' }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid var(--border-color)', paddingBottom: '0.5rem', marginBottom: '1rem' }}>
-                    <h3 style={{ fontSize: '1rem', margin: 0, color: '#fff' }}>Histórico (Timeline)</h3>
-                    <div style={{ display: 'flex', gap: '0.5rem' }}>
-                      <span style={{ fontSize: '0.65rem', background: 'rgba(220,50,50,0.15)', border: '1px solid rgba(220,50,50,0.3)', borderRadius: '4px', padding: '2px 6px', color: '#ff8080' }}>🇨🇳 Transportadora China</span>
-                      {hasCanadaPostData && (
-                        <span style={{ fontSize: '0.65rem', background: 'rgba(255,0,0,0.1)', border: '1px solid rgba(255,80,0,0.3)', borderRadius: '4px', padding: '2px 6px', color: '#ffaa60' }}>🇨🇦 Canada Post</span>
-                      )}
-                    </div>
+              <div style={{ marginTop: '2rem' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid var(--border-color)', paddingBottom: '0.5rem', marginBottom: '1rem' }}>
+                  <h3 style={{ fontSize: '1rem', margin: 0, color: '#fff' }}>Histórico (Timeline)</h3>
+                  <div style={{ display: 'flex', gap: '0.5rem' }}>
+                    <span style={{ fontSize: '0.65rem', background: 'rgba(220,50,50,0.15)', border: '1px solid rgba(220,50,50,0.3)', borderRadius: '4px', padding: '2px 6px', color: '#ff8080' }}>🇨🇳 China</span>
+                    {hasCanadaPostData && (
+                      <span style={{ fontSize: '0.65rem', background: 'rgba(255,140,0,0.15)', border: '1px solid rgba(255,140,0,0.3)', borderRadius: '4px', padding: '2px 6px', color: '#ffaa60' }}>🇨🇦 Canada Post</span>
+                    )}
                   </div>
+                </div>
+
+                {!hasCanadaPostData && trackingData?.country === 'CA' && (
+                  <div style={{ background: 'rgba(255,165,0,0.05)', border: '1px solid rgba(255,165,0,0.2)', borderRadius: '8px', padding: '0.8rem', marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.8rem' }}>
+                    <Clock size={18} color="orange" />
+                    <p style={{ margin: 0, fontSize: '0.75rem', color: '#ffcc80', lineHeight: '1.4' }}>
+                      <strong>Sincronizando com Canada Post:</strong> As informações locais podem levar até 24h para aparecer após a saída da China.
+                    </p>
+                  </div>
+                )}
                   <div style={{ position: 'relative', paddingLeft: '20px' }}>
                     {/* Linha vertical */}
                     <div style={{ position: 'absolute', left: '7px', top: '10px', bottom: '10px', width: '2px', background: 'var(--border-color)' }}></div>
                     
-                    {history.map((item, index) => {
+                    {history.length > 0 ? history.map((item, index) => {
                       const isFirst = index === 0;
                       const isCanada = item.carrier === 'CA';
                       const dotColor = isFirst ? 'var(--accent-color)' : isCanada ? '#ff7a3d' : 'var(--text-muted)';
@@ -273,10 +281,12 @@ const TrackingModal = ({ isOpen, onClose, initialTrackingNumber = '' }) => {
                           </div>
                         </div>
                       );
-                    })}
+                    }) : (
+                      <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', padding: '1rem 0' }}>Buscando detalhes do trajeto...</p>
+                    )}
                   </div>
                 </div>
-              )}
+              </div>
             </div>
           )}
 
