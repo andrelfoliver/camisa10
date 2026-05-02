@@ -241,7 +241,7 @@ const TrackingModal = ({ isOpen, onClose, initialTrackingNumber = '' }) => {
                   <div style={{ display: 'flex', gap: '0.5rem' }}>
                     <span style={{ fontSize: '0.65rem', background: 'rgba(220,50,50,0.15)', border: '1px solid rgba(220,50,50,0.3)', borderRadius: '4px', padding: '2px 6px', color: '#ff8080' }}>🇨🇳 China</span>
                     {hasCanadaPostData && (
-                      <span style={{ fontSize: '0.65rem', background: 'rgba(255,140,0,0.15)', border: '1px solid rgba(255,140,0,0.3)', borderRadius: '4px', padding: '2px 6px', color: '#ffaa60' }}>🇨🇦 Canada Post</span>
+                      <span style={{ fontSize: '0.65rem', background: 'rgba(0,100,255,0.2)', border: '1px solid rgba(0,100,255,0.4)', borderRadius: '4px', padding: '2px 6px', color: '#80c0ff', fontWeight: 600 }}>🇨🇦 Canada Post</span>
                     )}
                   </div>
                 </div>
@@ -261,7 +261,7 @@ const TrackingModal = ({ isOpen, onClose, initialTrackingNumber = '' }) => {
                     {history.length > 0 ? history.map((item, index) => {
                       const isFirst = index === 0;
                       const isCanada = item.carrier === 'CA';
-                      const dotColor = isFirst ? 'var(--accent-color)' : isCanada ? '#ff7a3d' : 'var(--text-muted)';
+                      const dotColor = isFirst ? 'var(--accent-color)' : isCanada ? '#3b82f6' : 'var(--text-muted)';
                       return (
                         <div key={index} style={{ position: 'relative', marginBottom: '1.5rem' }}>
                           <div style={{ position: 'absolute', left: '-20px', top: '3px', background: 'var(--bg-color)' }}>
@@ -270,7 +270,7 @@ const TrackingModal = ({ isOpen, onClose, initialTrackingNumber = '' }) => {
                           <div>
                             <span style={{ fontSize: '0.8rem', color: isFirst ? 'var(--accent-color)' : 'var(--text-muted)', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '6px', flexWrap: 'wrap' }}>
                               <Clock size={12} /> {item.date || 'Data Indisponível'}
-                              <span style={{ fontSize: '0.6rem', background: isCanada ? 'rgba(255,100,0,0.15)' : 'rgba(200,50,50,0.15)', border: `1px solid ${isCanada ? 'rgba(255,100,0,0.3)' : 'rgba(200,50,50,0.3)'}`, borderRadius: '3px', padding: '1px 5px', color: isCanada ? '#ffaa60' : '#ff9090', fontWeight: 400 }}>
+                              <span style={{ fontSize: '0.6rem', background: isCanada ? 'rgba(0,100,255,0.15)' : 'rgba(200,50,50,0.15)', border: `1px solid ${isCanada ? 'rgba(0,100,255,0.3)' : 'rgba(200,50,50,0.3)'}`, borderRadius: '3px', padding: '1px 5px', color: isCanada ? '#93c5fd' : '#ff9090', fontWeight: 400 }}>
                                 {isCanada ? '🇨🇦 Canada Post' : '🇨🇳 China'}
                               </span>
                             </span>
