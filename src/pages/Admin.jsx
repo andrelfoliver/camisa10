@@ -736,12 +736,49 @@ const Admin = () => {
 
 
   const handleUpdateOrderStatus = async (orderId, newStatus) => {
+    // 1. Atualizar o status do pedido
     const { error } = await supabase.from('orders').update({ status: newStatus }).eq('id', orderId);
+    
     if (error) {
       showAlert("Erro ao Atualizar", error.message);
-    } else {
-      setOrders(orders.map(o => o.id === orderId ? { ...o, status: newStatus } : o));
+      return;
     }
+
+    // 2. Se o status for "Preparando", tentar dar baixa no estoque manualmente
+    if (newStatus === 'processing') {
+      const order = orders.find(o => o.id === orderId);
+      if (order && order.items) {
+        for (const item of order.items) {
+          try {
+            // Buscar estoque atual do produto
+            const { data: product, error: fetchError } = await supabase
+              .from('products')
+              .select('inventory')
+              .eq('id', item.id)
+              .single();
+
+            if (!fetchError && product && product.inventory) {
+              const currentStock = product.inventory[item.size] || 0;
+              const newStock = Math.max(0, currentStock - (item.quantity || 1));
+              
+              // Atualizar apenas se houver mudança
+              if (currentStock !== newStock) {
+                const updatedInventory = { ...product.inventory, [item.size]: newStock };
+                await supabase
+                  .from('products')
+                  .update({ inventory: updatedInventory })
+                  .eq('id', item.id);
+              }
+            }
+          } catch (err) {
+            console.error(`Erro ao atualizar estoque do item ${item.id}:`, err);
+          }
+        }
+        showAlert("Sucesso", "Status atualizado e estoque sincronizado!");
+      }
+    }
+
+    setOrders(orders.map(o => o.id === orderId ? { ...o, status: newStatus } : o));
   };
 
   const handleUpdateTracking = async (orderId, trackingNumber) => {
