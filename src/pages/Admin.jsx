@@ -744,13 +744,14 @@ const Admin = () => {
       return;
     }
 
-    // 2. Se o status for "Preparando", tentar dar baixa no estoque manualmente
-    if (newStatus === 'processing') {
+    // 2. Sincronização de Estoque Automática
+    if (newStatus === 'processing' || newStatus === 'cancelled') {
       const order = orders.find(o => o.id === orderId);
       if (order && order.items) {
+        const isCancellation = newStatus === 'cancelled';
+        
         for (const item of order.items) {
           try {
-            // Buscar estoque atual do produto
             const { data: product, error: fetchError } = await supabase
               .from('products')
               .select('inventory')
@@ -759,9 +760,13 @@ const Admin = () => {
 
             if (!fetchError && product && product.inventory) {
               const currentStock = product.inventory[item.size] || 0;
-              const newStock = Math.max(0, currentStock - (item.quantity || 1));
               
-              // Atualizar apenas se houver mudança
+              // Se for cancelamento, SOMA. Se for preparando, SUBTRAI.
+              const qtyChange = (item.quantity || 1);
+              const newStock = isCancellation 
+                ? currentStock + qtyChange 
+                : Math.max(0, currentStock - qtyChange);
+              
               if (currentStock !== newStock) {
                 const updatedInventory = { ...product.inventory, [item.size]: newStock };
                 await supabase
@@ -771,10 +776,14 @@ const Admin = () => {
               }
             }
           } catch (err) {
-            console.error(`Erro ao atualizar estoque do item ${item.id}:`, err);
+            console.error(`Erro ao sincronizar estoque do item ${item.id}:`, err);
           }
         }
-        showAlert("Sucesso", "Status atualizado e estoque sincronizado!");
+        
+        const msg = isCancellation 
+          ? "Pedido cancelado e itens devolvidos ao estoque!" 
+          : "Status atualizado e estoque sincronizado!";
+        showAlert("Sucesso", msg);
       }
     }
 
@@ -2735,10 +2744,14 @@ const Admin = () => {
               return matchesDate && matchesStatus && matchesCustomer;
             });
 
-            const totalRevenue = filteredOrders.reduce((acc, o) => acc + Number(o.total_price || 0), 0);
+            const totalRevenue = filteredOrders
+              .filter(o => o.status !== 'cancelled')
+              .reduce((acc, o) => acc + Number(o.total_price || 0), 0);
             
-            // Cálculo detalhado para separar USD e CAD
-            const { totalCostCAD, totalCostUSD } = filteredOrders.reduce((acc, order) => {
+            // Cálculo detalhado para separar USD e CAD (ignorando cancelados)
+            const { totalCostCAD, totalCostUSD } = filteredOrders
+              .filter(o => o.status !== 'cancelled')
+              .reduce((acc, order) => {
               const orderCostCAD = calculateOrderCost(order);
               
               // Extrair USD (apenas para exibição no dashboard, sem comissão que é em CAD)
