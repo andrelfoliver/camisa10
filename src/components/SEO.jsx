@@ -9,7 +9,7 @@ const SEO = ({
   url = 'https://ifooty.ca',
   type = 'website'
 }) => {
-  const siteTitle = title ? `${title} | iFooty` : 'iFooty | Especialista em Camisas de Futebol no Canadá - Brasileiras, Europeias e Retrô a Pronta Entrega';
+  const siteTitle = title ? `${title} | iFooty` : 'iFooty | Especialista em Camisas de Futebol no Canadá 🇨🇦';
   const siteDescription = description || 'iFooty, a sua conexão com o futebol no Canadá. Encontre mantos sagrados com qualidade premium, envio rápido para todo o país e atendimento personalizado para brasileiros e apaixonados por futebol!';
   const siteKeywords = keywords || 'camisas de futebol canadá, futebol canadá, camisa flamengo canadá, camisa seleção brasileira canadá, camisas de time, jerseys canada';
 
