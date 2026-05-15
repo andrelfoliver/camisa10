@@ -260,9 +260,39 @@ Deno.serve(async (req: Request) => {
     
     console.log(`Busca concluída. China: ${cn.chineseHistory.length} eventos, 17Track: ${ca.length} eventos.`);
 
+    const allEvents = [...ca, ...cn.chineseHistory];
+    const toRemove = new Set();
+
+    // Deduplicação Inteligente: Se um evento da China for idêntico a um do Canada Post
+    // (mesmo status e localização) e ocorrer em uma janela de 24h (fuso horário),
+    // removemos a versão da China para evitar redundância.
+    for (let i = 0; i < allEvents.length; i++) {
+      for (let j = 0; j < allEvents.length; j++) {
+        if (i === j || toRemove.has(i) || toRemove.has(j)) continue;
+        const a = allEvents[i];
+        const b = allEvents[j];
+
+        if (a.status === b.status && a.location === b.location) {
+          const timeA = new Date(a.rawDate.replace(' ', 'T')).getTime();
+          const timeB = new Date(b.rawDate.replace(' ', 'T')).getTime();
+          const diffHours = Math.abs(timeA - timeB) / (1000 * 60 * 60);
+
+          if (diffHours < 24) {
+            if (a.carrier === 'CN' && b.carrier === 'CA') {
+              toRemove.add(i);
+            } else if (a.carrier === 'CA' && b.carrier === 'CN') {
+              toRemove.add(j);
+            }
+          }
+        }
+      }
+    }
+
+    const filteredHistory = allEvents.filter((_, idx) => !toRemove.has(idx));
+
     const finalData = { 
       trackingData: cn.trackingData, 
-      history: [...cn.chineseHistory, ...ca].sort((a, b) => {
+      history: filteredHistory.sort((a, b) => {
         const dateA = new Date(a.rawDate.replace(' ', 'T')).getTime();
         const dateB = new Date(b.rawDate.replace(' ', 'T')).getTime();
         return dateB - dateA;

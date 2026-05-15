@@ -258,30 +258,75 @@ const TrackingModal = ({ isOpen, onClose, initialTrackingNumber = '' }) => {
                     {/* Linha vertical */}
                     <div style={{ position: 'absolute', left: '7px', top: '10px', bottom: '10px', width: '2px', background: 'var(--border-color)' }}></div>
                     
-                    {history.length > 0 ? history.map((item, index) => {
-                      const isFirst = index === 0;
-                      const isCanada = item.carrier === 'CA';
-                      const dotColor = isFirst ? 'var(--accent-color)' : isCanada ? '#3b82f6' : 'var(--text-muted)';
-                      return (
-                        <div key={index} style={{ position: 'relative', marginBottom: '1.5rem' }}>
-                          <div style={{ position: 'absolute', left: '-20px', top: '3px', background: 'var(--bg-color)' }}>
-                            <CheckCircle size={16} color={dotColor} />
-                          </div>
-                          <div>
-                            <span style={{ fontSize: '0.8rem', color: isFirst ? 'var(--accent-color)' : 'var(--text-muted)', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '6px', flexWrap: 'wrap' }}>
-                              <Clock size={12} /> {item.date || 'Data Indisponível'}
-                              <span style={{ fontSize: '0.6rem', background: isCanada ? 'rgba(0,100,255,0.15)' : 'rgba(200,50,50,0.15)', border: `1px solid ${isCanada ? 'rgba(0,100,255,0.3)' : 'rgba(200,50,50,0.3)'}`, borderRadius: '3px', padding: '1px 5px', color: isCanada ? '#93c5fd' : '#ff9090', fontWeight: 400 }}>
-                                {isCanada ? '🇨🇦 Canada Post' : '🇨🇳 China'}
-                              </span>
-                            </span>
-                            <p style={{ margin: '0.2rem 0 0 0', color: isFirst ? '#fff' : 'var(--text-muted)', fontSize: '0.9rem' }}>
-                              {item.location ? <strong>[{item.location}] </strong> : ''}
-                              {item.status || 'Status Indisponível'}
-                            </p>
-                          </div>
+                    {history.length > 0 ? (() => {
+                      const groups = {};
+                      history.forEach(item => {
+                        const datePart = item.date ? item.date.split(' às ')[0] : 'Indisponível';
+                        if (!groups[datePart]) groups[datePart] = [];
+                        groups[datePart].push(item);
+                      });
+
+                      return Object.entries(groups).map(([date, items], gIdx) => (
+                        <div key={gIdx} style={{ marginBottom: '2rem' }}>
+                          <h4 style={{ 
+                            fontSize: '0.75rem', 
+                            color: 'var(--accent-color)', 
+                            textTransform: 'uppercase', 
+                            letterSpacing: '0.05em',
+                            marginBottom: '1rem',
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '8px'
+                          }}>
+                            <Calendar size={12} /> {date}
+                          </h4>
+                          
+                          {items.map((item, index) => {
+                            const isCanada = item.carrier === 'CA';
+                            const isFirst = gIdx === 0 && index === 0;
+                            const dotColor = isFirst ? 'var(--accent-color)' : isCanada ? '#3b82f6' : 'rgba(255,255,255,0.2)';
+                            
+                            return (
+                              <div key={index} style={{ position: 'relative', marginBottom: '1.2rem', paddingLeft: '5px' }}>
+                                <div style={{ 
+                                  position: 'absolute', 
+                                  left: '-25px', 
+                                  top: '4px', 
+                                  width: '12px', 
+                                  height: '12px', 
+                                  borderRadius: '50%', 
+                                  background: 'var(--bg-color)',
+                                  border: `2px solid ${dotColor}`,
+                                  zIndex: 2
+                                }}></div>
+                                
+                                <div>
+                                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
+                                    <span style={{ fontSize: '0.7rem', color: isFirst ? '#fff' : 'var(--text-muted)', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '4px' }}>
+                                      <Clock size={10} /> {item.date ? item.date.split(' às ')[1] : ''}
+                                    </span>
+                                    <span style={{ 
+                                      fontSize: '0.55rem', 
+                                      background: isCanada ? 'rgba(0,100,255,0.1)' : 'rgba(255,255,255,0.05)', 
+                                      borderRadius: '4px', 
+                                      padding: '1px 6px', 
+                                      color: isCanada ? '#93c5fd' : 'var(--text-muted)',
+                                      border: `1px solid ${isCanada ? 'rgba(0,100,255,0.2)' : 'rgba(255,255,255,0.1)'}`
+                                    }}>
+                                      {isCanada ? '📍 Local' : '🌐 Origem'}
+                                    </span>
+                                  </div>
+                                  <p style={{ margin: 0, color: isFirst ? '#fff' : 'var(--text-muted)', fontSize: '0.85rem', lineHeight: '1.4' }}>
+                                    {item.location ? <strong style={{ color: isCanada ? '#93c5fd' : 'inherit' }}>[{item.location}] </strong> : ''}
+                                    {item.status || 'Status Indisponível'}
+                                  </p>
+                                </div>
+                              </div>
+                            );
+                          })}
                         </div>
-                      );
-                    }) : (
+                      ));
+                    })() : (
                       <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', padding: '1rem 0' }}>Buscando detalhes do trajeto...</p>
                     )}
                   </div>
