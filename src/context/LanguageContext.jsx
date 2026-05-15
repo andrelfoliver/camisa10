@@ -169,6 +169,7 @@ export const translations = {
     // Success
     success_title: 'Pedido Recebido! ⚽',
     success_subtitle: 'Seu manto já está sendo preparado.',
+    success_subtitle_paid: 'Seu pagamento foi confirmado!',
     success_message: 'Enviamos um resumo detalhado para seu e-mail. Por favor, verifique sua caixa de entrada (e a pasta de spam).',
     success_whatsapp_error: 'Não conseguiu abrir o WhatsApp?',
     success_whatsapp_btn: 'Enviar Resumo Manualmente',

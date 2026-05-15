@@ -738,19 +738,16 @@ const Checkout = () => {
                   <span style={{ fontSize: '0.9rem', fontWeight: 600, color: paymentMethod === 'whatsapp' ? '#fff' : 'var(--text-muted)' }}>WhatsApp</span>
                 </button>
                 <button
-                  disabled
+                  onClick={() => setPaymentMethod('paypal')}
                   style={{
                     display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.8rem', padding: '1.2rem',
-                    borderRadius: 'var(--radius-md)', background: 'rgba(255,255,255,0.02)',
-                    border: '1px solid var(--border-color)',
-                    transition: 'all 0.3s ease', cursor: 'not-allowed', opacity: 0.4, position: 'relative'
+                    borderRadius: 'var(--radius-md)', background: paymentMethod === 'paypal' ? 'rgba(0, 112, 186, 0.1)' : 'rgba(255,255,255,0.03)',
+                    border: `1px solid ${paymentMethod === 'paypal' ? '#0070BA' : 'var(--border-color)'}`,
+                    transition: 'all 0.3s ease', cursor: 'pointer'
                   }}
                 >
-                  <CreditCard size={24} color="var(--text-muted)" />
-                  <span style={{ fontSize: '0.9rem', fontWeight: 600, color: 'var(--text-muted)' }}>PayPal / Card</span>
-                  <span style={{ position: 'absolute', top: '5px', right: '5px', fontSize: '0.65rem', background: 'var(--border-color)', color: '#fff', padding: '2px 6px', borderRadius: '4px', textTransform: 'uppercase' }}>
-                    {t('coming_soon') || 'Em breve'}
-                  </span>
+                  <CreditCard size={24} color={paymentMethod === 'paypal' ? '#0070BA' : 'var(--text-muted)'} />
+                  <span style={{ fontSize: '0.9rem', fontWeight: 600, color: paymentMethod === 'paypal' ? '#fff' : 'var(--text-muted)' }}>PayPal / Card</span>
                 </button>
               </div>
             </div>
