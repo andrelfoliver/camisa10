@@ -307,13 +307,14 @@ const TrackingModal = ({ isOpen, onClose, initialTrackingNumber = '' }) => {
                                     </span>
                                     <span style={{ 
                                       fontSize: '0.55rem', 
-                                      background: isCanada ? 'rgba(0,100,255,0.1)' : 'rgba(255,255,255,0.05)', 
+                                      background: isCanada ? 'rgba(0,100,255,0.1)' : 'rgba(255,50,50,0.1)', 
                                       borderRadius: '4px', 
                                       padding: '1px 6px', 
-                                      color: isCanada ? '#93c5fd' : 'var(--text-muted)',
-                                      border: `1px solid ${isCanada ? 'rgba(0,100,255,0.2)' : 'rgba(255,255,255,0.1)'}`
+                                      color: isCanada ? '#93c5fd' : '#ff9999',
+                                      border: `1px solid ${isCanada ? 'rgba(0,100,255,0.2)' : 'rgba(255,50,50,0.2)'}`,
+                                      fontWeight: 600
                                     }}>
-                                      {isCanada ? '📍 Local' : '🌐 Origem'}
+                                      {isCanada ? '🇨🇦 Canada Post' : '🇨🇳 China'}
                                     </span>
                                   </div>
                                   <p style={{ margin: 0, color: isFirst ? '#fff' : 'var(--text-muted)', fontSize: '0.85rem', lineHeight: '1.4' }}>
