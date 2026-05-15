@@ -814,7 +814,7 @@ const Checkout = () => {
               </div>
             )}
             <p style={{ textAlign: 'center', marginTop: '1rem', fontSize: '0.85rem', color: 'var(--text-muted)' }}>
-              {t('checkout_summary_footer_note')}
+              {paymentMethod === 'paypal' ? t('checkout_summary_footer_note_paypal') : t('checkout_summary_footer_note')}
             </p>
           </div>
         </div>

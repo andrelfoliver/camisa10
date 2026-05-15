@@ -134,6 +134,7 @@ export const translations = {
     about_text2: 'Após conquistar nossa comunidade na Columbia Britânica, agora chegamos com tudo em Calgary, especializados em entregar mantos oficiais de alta qualidade para que cada grito de "gol" tenha o orgulho do seu time do coração.',
     success_support_wa_msg: 'Olá! Acabei de fazer um pedido na iFooty e gostaria de tirar algumas dúvidas. 😊',
     checkout_summary_footer_note: 'Você enviará um resumo do pedido para nosso atendimento. O pagamento só será feito após confirmarmos os detalhes do pedido com você. Pagamento via e-Transfer Interac!',
+    checkout_summary_footer_note_paypal: 'O pagamento é processado de forma segura pelo PayPal. Seus dados estão protegidos e você receberá uma confirmação imediata após a conclusão.',
     // Home Extras
     home_numbers_title: 'Nossos números',
     home_empty_team: 'Nenhuma camisa encontrada no momento. Tente outro clube!',
@@ -422,6 +423,7 @@ export const translations = {
     about_text2: 'After winning over our community in British Columbia, we have now arrived in Calgary, specialized in delivering high-quality official fan jerseys so that every shout of "goal" carries the pride of your heart team.',
     success_support_wa_msg: 'Hi! I just placed an order on iFooty and have some questions. 😊',
     checkout_summary_footer_note: 'You will send an order summary to our support. Payment will only be made after we confirm the order details with you. Payment via Interac e-Transfer!',
+    checkout_summary_footer_note_paypal: 'Payment is securely processed by PayPal. Your data is protected and you will receive an immediate confirmation upon completion.',
     // Home Extras
     home_numbers_title: 'Our numbers',
     home_empty_team: 'No jerseys found for this team at the moment. Try another club!',
