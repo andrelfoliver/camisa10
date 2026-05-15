@@ -117,8 +117,13 @@ const Footer = () => {
         </div>
         <div>
           <h3 style={{ marginBottom: '1rem', fontSize: '1.1rem' }}>{t('footer_payment')}</h3>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', background: 'var(--surface-color)', padding: '0.5rem 1rem', borderRadius: 'var(--radius-sm)', width: 'fit-content', border: '1px solid var(--border-color)' }}>
-            <span style={{ fontWeight: 600, color: '#FFB81C' }}>Interac</span> <span style={{ fontWeight: 400, color: 'var(--text-main)' }}>e-Transfer</span>
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', background: 'var(--surface-color)', padding: '0.5rem 1rem', borderRadius: 'var(--radius-sm)', border: '1px solid var(--border-color)', width: 'fit-content' }}>
+              <span style={{ fontWeight: 600, color: '#FFB81C' }}>Interac</span> <span style={{ fontWeight: 400, color: 'var(--text-main)' }}>e-Transfer</span>
+            </div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', background: 'var(--surface-color)', padding: '0.5rem 1rem', borderRadius: 'var(--radius-sm)', border: '1px solid var(--border-color)', width: 'fit-content' }}>
+              <span style={{ fontWeight: 800, color: '#003087' }}>Pay</span><span style={{ fontWeight: 800, color: '#009cde' }}>Pal</span>
+            </div>
           </div>
           <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem', marginTop: '1rem' }}>
             {t('footer_payment_desc')}
