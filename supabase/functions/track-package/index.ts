@@ -263,25 +263,39 @@ Deno.serve(async (req: Request) => {
     const allEvents = [...ca, ...cn.chineseHistory];
     const toRemove = new Set();
 
-    // Deduplicação Inteligente: Se um evento da China for idêntico a um do Canada Post
-    // (mesmo status e localização) e ocorrer em uma janela de 24h (fuso horário),
-    // removemos a versão da China para evitar redundância.
+    // Função auxiliar para normalização agressiva (remove acentos, pontuação, espaços e converte para minúsculo)
+    const normalize = (s: string) => s ? s.toLowerCase()
+      .normalize("NFD").replace(/[\u0300-\u036f]/g, "") // Remove acentos
+      .replace(/[^a-z0-9]/g, '') // Mantém apenas letras e números
+      .trim() : '';
+
+    // Deduplicação Inteligente com Normalização Agressiva
     for (let i = 0; i < allEvents.length; i++) {
       for (let j = 0; j < allEvents.length; j++) {
         if (i === j || toRemove.has(i) || toRemove.has(j)) continue;
         const a = allEvents[i];
         const b = allEvents[j];
 
-        if (a.status === b.status && a.location === b.location) {
+        // Só comparamos se forem de transportadoras diferentes (CN vs CA)
+        if (a.carrier === b.carrier) continue;
+
+        const statusA = normalize(a.status);
+        const statusB = normalize(b.status);
+        const locA = normalize(a.location);
+        const locB = normalize(b.location);
+
+        // Se o conteúdo (status + localização) for idêntico após normalização
+        if (statusA === statusB && locA === locB) {
           const timeA = new Date(a.rawDate.replace(' ', 'T')).getTime();
           const timeB = new Date(b.rawDate.replace(' ', 'T')).getTime();
-          const diffHours = Math.abs(timeA - timeB) / (1000 * 60 * 60);
-
-          if (diffHours < 24) {
-            if (a.carrier === 'CN' && b.carrier === 'CA') {
-              toRemove.add(i);
-            } else if (a.carrier === 'CA' && b.carrier === 'CN') {
-              toRemove.add(j);
+          
+          // Se as datas forem válidas e estiverem em uma janela de 24h
+          if (!isNaN(timeA) && !isNaN(timeB)) {
+            const diffHours = Math.abs(timeA - timeB) / (1000 * 60 * 60);
+            if (diffHours < 24) {
+              // Sempre remove o da China (CN) em favor do Local (CA)
+              if (a.carrier === 'CN') toRemove.add(i);
+              else if (b.carrier === 'CN') toRemove.add(j);
             }
           }
         }
