@@ -45,13 +45,13 @@ const ProductPage = () => {
 
   // Form Customization Options
   const [selectedSize, setSelectedSize] = useState('M');
-  
+
   // Lógica dinâmica para definir quais tamanhos exibir
-  const isKids = product?.category?.toLowerCase().includes('infantil') || 
-                 product?.name?.toLowerCase().includes('infantil') || 
-                 product?.name?.toLowerCase().includes('kids');
-  const sizes = isKids 
-    ? ['16', '18', '20', '22', '24', '26', '28'] 
+  const isKids = product?.category?.toLowerCase().includes('infantil') ||
+    product?.name?.toLowerCase().includes('infantil') ||
+    product?.name?.toLowerCase().includes('kids');
+  const sizes = isKids
+    ? ['16', '18', '20', '22', '24', '26', '28']
     : ['S', 'M', 'L', 'XL', '2XL', '3XL', '4XL'];
 
   const availableSizes = sizes.filter(s => !product?.unavailable_sizes?.includes(s));
@@ -133,7 +133,7 @@ const ProductPage = () => {
     // Busca a primeira imagem que NÃO seja vídeo para usar como thumbnail na sacola
     const isVideo = (url) => url?.toLowerCase().endsWith('.mp4');
     let displayImage = product.image;
-    
+
     if (isVideo(displayImage)) {
       displayImage = product.gallery?.find(img => !isVideo(img)) || '/placeholder.jpg';
     }
@@ -146,11 +146,11 @@ const ProductPage = () => {
     if (buyNow) navigate('/checkout');
   };
 
-   const basePrice = Number(product.price) || 47.90;
-   let currentTotal = basePrice;
-   if (['2XL', '3XL'].includes(selectedSize)) currentTotal += Number(pricingConfig?.size2XL3XL || 7.00);
-   if (selectedSize === '4XL') currentTotal += Number(pricingConfig?.size4XL || 10.00);
-   if (isCustomized) currentTotal += Number(pricingConfig?.nameNumber || 12.00);
+  const basePrice = Number(product.price) || 47.90;
+  let currentTotal = basePrice;
+  if (['2XL', '3XL'].includes(selectedSize)) currentTotal += Number(pricingConfig?.size2XL3XL || 7.00);
+  if (selectedSize === '4XL') currentTotal += Number(pricingConfig?.size4XL || 10.00);
+  if (isCustomized) currentTotal += Number(pricingConfig?.nameNumber || 12.00);
 
   const schemaOrgJSONLD = {
     "@context": "http://schema.org",
@@ -169,7 +169,7 @@ const ProductPage = () => {
 
   return (
     <div style={{ paddingBottom: '5rem', minHeight: '100vh' }}>
-      <SEO 
+      <SEO
         title={translateProductDisplay(product.name)}
         description={product.description || `Adquira a ${translateProductDisplay(product.name)} na iFooty. Qualidade premium e pronta entrega no Canadá.`}
         image={product.image}
@@ -202,13 +202,13 @@ const ProductPage = () => {
             </div>
 
             <div style={{ flex: 1, minWidth: 0 }}>
-              <div 
+              <div
                 className="mobile-product-carousel"
                 onScroll={(e) => {
                   const scrollLeft = e.target.scrollLeft;
                   const width = e.target.offsetWidth;
                   const index = Math.round(scrollLeft / width);
-                  if(index !== product.gallery?.indexOf(activeImage)) {
+                  if (index !== product.gallery?.indexOf(activeImage)) {
                     setActiveImage(product.gallery[index]);
                   }
                 }}
@@ -217,7 +217,7 @@ const ProductPage = () => {
                   <ProductMedia key={i} src={img} alt="" />
                 ))}
               </div>
-              
+
               <div className="carousel-dots">
                 {product.gallery?.map((_, i) => (
                   <div key={i} className={`dot ${product.gallery[i] === activeImage ? 'active' : ''}`} />
@@ -225,10 +225,10 @@ const ProductPage = () => {
               </div>
 
               <div className="desktop-only" style={{ background: 'var(--surface-color)', border: '1px solid var(--border-color)', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', padding: '1rem' }}>
-                <ProductMedia 
-                  src={activeImage} 
-                  alt={product.name} 
-                  style={{ width: '100%', maxHeight: '600px', objectFit: 'contain' }} 
+                <ProductMedia
+                  src={activeImage}
+                  alt={product.name}
+                  style={{ width: '100%', maxHeight: '600px', objectFit: 'contain' }}
                 />
               </div>
             </div>
@@ -236,7 +236,7 @@ const ProductPage = () => {
 
           {/* Lado Direito - Form de Checkout */}
           <div style={{ display: 'flex', flexDirection: 'column', padding: '1rem 0', minWidth: 0 }}>
-            
+
             <div className="mobile-only">
               <div className="mobile-breadcrumbs">{t('category_home')} &gt; {product.category || t('footer_catalog')} &gt; {translateProductDisplay(product.name)}</div>
               <h1 className="mobile-product-title">{translateProductDisplay(product.name)}</h1>
@@ -246,27 +246,27 @@ const ProductPage = () => {
                 const numId = String(product.id).split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
                 const reviewsCount = (numId % 18) + 7;
                 const rating = (4.8 + (numId % 3) / 10).toFixed(1);
-                
+
                 return (
                   <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: '#FCD34D', marginBottom: '1rem', fontSize: '0.9rem' }}>
                     <div style={{ display: 'flex', gap: '2px' }}>
                       <Star size={14} fill="currentColor" /><Star size={14} fill="currentColor" /><Star size={14} fill="currentColor" /><Star size={14} fill="currentColor" /><Star size={14} fill="currentColor" />
                     </div>
                     <span style={{ color: 'var(--text-muted)' }}>
-                      {rating} | {reviewsCount} {t('product_reviews_count')} | 
-                      <a 
+                      {rating} | {reviewsCount} {t('product_reviews_count')} |
+                      <a
                         href={`https://wa.me/${pricingConfig?.whatsAppNumber || '17788061419'}?text=Olá! Tenho uma dúvida sobre o produto: ${product.name}`}
                         target="_blank"
                         rel="noopener noreferrer"
                         style={{ color: 'var(--accent-color)', marginLeft: '0.3rem', textDecoration: 'none', fontWeight: 600 }}
                       >
-                         {t('product_ask_question')}
+                        {t('product_ask_question')}
                       </a>
                     </span>
                   </div>
                 );
               })()}
-              
+
               <div style={{ marginBottom: '1.5rem' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                   <span style={{ fontSize: '1.8rem', fontWeight: 900, color: 'var(--text-main)' }}>${currentTotal.toFixed(2)} CAD</span>
@@ -280,26 +280,26 @@ const ProductPage = () => {
                 {t('product_volume_promo')}
               </div>
               <h1 style={{ fontSize: '2.5rem', marginBottom: '0.5rem', lineHeight: 1.2, fontWeight: 800 }}>{translateProductDisplay(product.name)}</h1>
-              
+
               {(() => {
                 const numId = String(product.id).split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
                 const reviewsCount = (numId % 18) + 7;
                 const rating = (4.8 + (numId % 3) / 10).toFixed(1);
-                
+
                 return (
                   <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: '#FCD34D', marginBottom: '1.5rem' }}>
                     <div style={{ display: 'flex', gap: '2px' }}>
                       <Star size={18} fill="currentColor" /><Star size={18} fill="currentColor" /><Star size={18} fill="currentColor" /><Star size={18} fill="currentColor" /><Star size={18} fill="currentColor" />
                     </div>
                     <span style={{ fontSize: '1rem', color: 'var(--text-muted)' }}>
-                      {rating} | {reviewsCount} {t('product_reviews_count')} | 
-                      <a 
+                      {rating} | {reviewsCount} {t('product_reviews_count')} |
+                      <a
                         href={`https://wa.me/${pricingConfig?.whatsAppNumber || '17788061419'}?text=Olá! Tenho uma dúvida sobre o produto: ${product.name}`}
                         target="_blank"
                         rel="noopener noreferrer"
                         style={{ color: 'var(--accent-color)', marginLeft: '0.5rem', textDecoration: 'none', fontWeight: 600 }}
                       >
-                         {t('product_ask_question')}
+                        {t('product_ask_question')}
                       </a>
                     </span>
                   </div>
@@ -316,31 +316,31 @@ const ProductPage = () => {
                 </div>
               </div>
             </div>
-            
+
             {/* Stock Badge - Pronta Entrega */}
             {product.inventory?.[selectedSize] > 0 && (
-              <div 
+              <div
                 className="pulse-soft"
-                style={{ 
-                  background: 'rgba(204, 255, 0, 0.05)', 
-                  border: '1px solid rgba(204, 255, 0, 0.3)', 
-                  borderRadius: '8px', 
-                  padding: '1rem', 
-                  marginBottom: '1.5rem', 
-                  display: 'flex', 
-                  alignItems: 'center', 
+                style={{
+                  background: 'rgba(204, 255, 0, 0.05)',
+                  border: '1px solid rgba(204, 255, 0, 0.3)',
+                  borderRadius: '8px',
+                  padding: '1rem',
+                  marginBottom: '1.5rem',
+                  display: 'flex',
+                  alignItems: 'center',
                   gap: '1rem'
                 }}
               >
-                <div style={{ 
-                  background: 'var(--accent-color)', 
-                  color: '#000', 
-                  width: '32px', 
-                  height: '32px', 
-                  borderRadius: '50%', 
-                  display: 'flex', 
-                  alignItems: 'center', 
-                  justifyContent: 'center', 
+                <div style={{
+                  background: 'var(--accent-color)',
+                  color: '#000',
+                  width: '32px',
+                  height: '32px',
+                  borderRadius: '50%',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
                   fontSize: '1.2rem',
                   flexShrink: 0
                 }}>⚡</div>
@@ -359,14 +359,14 @@ const ProductPage = () => {
                 <p style={{ fontWeight: 700, fontSize: '0.9rem', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
                   {t('product_size')}: <span style={{ color: 'var(--accent-color)' }}>{selectedSize}</span>
                 </p>
-                <div 
+                <div
                   onClick={() => setIsSizeGuideOpen(true)}
                   style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', color: 'var(--text-main)', fontSize: '0.8rem', cursor: 'pointer', borderBottom: '1px solid #666' }}
                 >
-                   📏 {t('product_size_guide')}
+                  📏 {t('product_size_guide')}
                 </div>
               </div>
-              
+
               <div className="size-box-grid">
                 {availableSizes.map(s => {
                   const stock = product.inventory?.[s] || 0;
@@ -379,18 +379,18 @@ const ProductPage = () => {
                     >
                       {s}
                       {stock > 0 && (
-                        <span style={{ 
-                          position: 'absolute', 
-                          top: '-4px', 
-                          right: '-4px', 
-                          background: 'var(--accent-color)', 
-                          color: '#000', 
-                          borderRadius: '50%', 
-                          width: '18px', 
-                          height: '18px', 
-                          fontSize: '0.65rem', 
-                          display: 'flex', 
-                          alignItems: 'center', 
+                        <span style={{
+                          position: 'absolute',
+                          top: '-4px',
+                          right: '-4px',
+                          background: 'var(--accent-color)',
+                          color: '#000',
+                          borderRadius: '50%',
+                          width: '18px',
+                          height: '18px',
+                          fontSize: '0.65rem',
+                          display: 'flex',
+                          alignItems: 'center',
                           justifyContent: 'center',
                           fontWeight: 900,
                           boxShadow: '0 2px 5px rgba(0,0,0,0.3)'
@@ -428,9 +428,9 @@ const ProductPage = () => {
               )}
 
               {['2XL', '3XL', '4XL'].includes(selectedSize) && (
-                 <p style={{ fontSize: '0.75rem', color: 'var(--accent-color)', marginTop: '0.5rem', fontWeight: 600 }}>
-                   {t('product_plus_size_alert')}
-                 </p>
+                <p style={{ fontSize: '0.75rem', color: 'var(--accent-color)', marginTop: '0.5rem', fontWeight: 600 }}>
+                  {t('product_plus_size_alert')}
+                </p>
               )}
             </div>
 
@@ -438,23 +438,23 @@ const ProductPage = () => {
             <div style={{ marginBottom: '1.5rem' }}>
               <p style={{ fontWeight: 700, marginBottom: '0.8rem', fontSize: '0.9rem', textTransform: 'uppercase' }}>{t('product_customization')}</p>
               <div style={{ display: 'flex', gap: '0.5rem' }}>
-                <button 
-                  onClick={() => setIsCustomized(false)} 
-                  style={{ 
-                    flex: 1, border: `1px solid ${!isCustomized ? 'var(--accent-color)' : 'var(--border-color)'}`, 
-                    background: !isCustomized ? 'rgba(204, 255, 0, 0.05)' : 'transparent', 
-                    padding: '0.75rem', color: !isCustomized ? 'var(--accent-color)' : 'var(--text-main)', 
+                <button
+                  onClick={() => setIsCustomized(false)}
+                  style={{
+                    flex: 1, border: `1px solid ${!isCustomized ? 'var(--accent-color)' : 'var(--border-color)'}`,
+                    background: !isCustomized ? 'rgba(204, 255, 0, 0.05)' : 'transparent',
+                    padding: '0.75rem', color: !isCustomized ? 'var(--accent-color)' : 'var(--text-main)',
                     borderRadius: '4px', cursor: 'pointer', fontWeight: 700, fontSize: '0.85rem'
                   }}
                 >
                   {t('product_customization_none')}
                 </button>
-                <button 
-                  onClick={() => setIsCustomized(true)} 
-                  style={{ 
-                    flex: 1, border: `1px solid ${isCustomized ? 'var(--accent-color)' : 'var(--border-color)'}`, 
-                    background: isCustomized ? 'rgba(204, 255, 0, 0.05)' : 'transparent', 
-                    padding: '0.75rem', color: isCustomized ? 'var(--accent-color)' : 'var(--text-main)', 
+                <button
+                  onClick={() => setIsCustomized(true)}
+                  style={{
+                    flex: 1, border: `1px solid ${isCustomized ? 'var(--accent-color)' : 'var(--border-color)'}`,
+                    background: isCustomized ? 'rgba(204, 255, 0, 0.05)' : 'transparent',
+                    padding: '0.75rem', color: isCustomized ? 'var(--accent-color)' : 'var(--text-main)',
                     borderRadius: '4px', cursor: 'pointer', fontWeight: 700, fontSize: '0.85rem'
                   }}
                 >
@@ -503,14 +503,14 @@ const ProductPage = () => {
             </div>
 
 
-            </div>
-
           </div>
-        </section>
 
-      <SizeGuideModal 
-        isOpen={isSizeGuideOpen} 
-        onClose={() => setIsSizeGuideOpen(false)} 
+        </div>
+      </section>
+
+      <SizeGuideModal
+        isOpen={isSizeGuideOpen}
+        onClose={() => setIsSizeGuideOpen(false)}
       />
 
       {/* 8. PROVA SOCIAL */}
@@ -518,10 +518,10 @@ const ProductPage = () => {
         <h2 style={{ fontSize: '2.5rem', marginBottom: '1rem' }}>{t('product_social_title')}</h2>
         <p className="text-muted" style={{ textAlign: 'center', marginBottom: '3rem', fontSize: '1.2rem' }}>
           {t('product_social_subtitle_part1')}
-          <strong style={{ color: 'var(--accent-color)' }}>+200 {language === 'pt' ? 'clientes' : 'customers'}</strong>
+          <strong style={{ color: 'var(--accent-color)' }}>+250 {language === 'pt' ? 'clientes' : 'customers'}</strong>
           {t('product_social_subtitle_part2')}
         </p>
-        
+
         {testimonials.length > 0 ? (
           <div className="reveal" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '3rem', marginBottom: '5rem' }}>
             {testimonials.map(t => (
@@ -530,7 +530,7 @@ const ProductPage = () => {
                 <div style={{ color: '#FCD34D', marginBottom: '1rem', display: 'flex', gap: '2px' }}>
                   {Array.from({ length: t.rating || 5 }).map((_, i) => <Star key={i} size={16} fill="currentColor" />)}
                 </div>
-                <p style={{ fontSize: '1.05rem', marginBottom: '1.2rem', fontStyle: 'italic', lineHeight: 1.6, color: 'var(--text-main)' }}>"{ t.content }"</p>
+                <p style={{ fontSize: '1.05rem', marginBottom: '1.2rem', fontStyle: 'italic', lineHeight: 1.6, color: 'var(--text-main)' }}>"{t.content}"</p>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                   <p style={{ fontWeight: 700, color: 'var(--accent-color)' }}>— {t.name}{t.location ? `, ${t.location}` : ''}</p>
                   {t.date && <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>{new Date(t.date).toLocaleDateString(language === 'pt' ? 'pt-BR' : 'en-CA', { month: 'short', year: 'numeric' })}</span>}
@@ -540,7 +540,7 @@ const ProductPage = () => {
           </div>
         ) : (
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '2rem' }}>
-             {/* Simplified placeholders translated via logic above or just generic */}
+            {/* Simplified placeholders translated via logic above or just generic */}
           </div>
         )}
       </section>
