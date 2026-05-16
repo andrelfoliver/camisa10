@@ -2744,43 +2744,52 @@ const Admin = () => {
               return matchesDate && matchesStatus && matchesCustomer;
             });
 
-            const totalRevenue = filteredOrders
-              .filter(o => o.status !== 'cancelled')
-              .reduce((acc, o) => acc + Number(o.total_price || 0), 0);
-            
-            // Cálculo detalhado para separar USD e CAD (ignorando cancelados)
-            const { totalCostCAD, totalCostUSD } = filteredOrders
-              .filter(o => o.status !== 'cancelled')
-              .reduce((acc, order) => {
-              const orderCostCAD = calculateOrderCost(order);
+            // Cálculo consolidado de todas as métricas do dashboard
+            const stats = filteredOrders.reduce((acc, order) => {
+              const isCancelled = order.status === 'cancelled';
+              const itemsCount = order.items?.reduce((s, i) => s + (i.quantity || 1), 0) || 0;
               
-              // Extrair USD (apenas para exibição no dashboard, sem comissão que é em CAD)
-              const itemsCostUSD = order.items?.reduce((sum, item) => {
-                const base = calculateItemBaseCostUSD(item);
-                let addons = 0;
-                const size = item.size || 'M';
-                if (size === '2XL') addons += (pricing.costAdd2XL || 1);
-                if (['3XL', '4XL'].includes(size)) addons += (pricing.costAdd3XL4XL || 2);
-                if (item.extras?.nameNumber) addons += (pricing.costAddCustom || 3);
-                if (item.extras?.patch) addons += (pricing.costAddPatch || 1);
-                return sum + ((base + addons) * (item.quantity || 1));
-              }, 0) || 0;
+              // Contadores de status (independente de estar cancelado ou não para os contadores de status)
+              if (order.status === 'shipped') acc.countShipped++;
+              if (order.status === 'completed') acc.countCompleted++;
+              if (order.status === 'cancelled') acc.countCancelled++;
+              if (order.status === 'pending') acc.countPending++;
+              if (order.status === 'processing') acc.countProcessing++;
 
-              const totalItemsCount = order.items?.reduce((s, i) => s + (i.quantity || 1), 0) || 0;
-              let surchargeUSD = 0;
-              if (totalItemsCount === 1) surchargeUSD = pricing.surcharge1Item || 5;
-              else if (totalItemsCount === 2) surchargeUSD = pricing.surcharge2Items || 4;
-              else if (totalItemsCount === 3) surchargeUSD = pricing.surcharge3Items || 3;
+              if (!isCancelled) {
+                acc.totalRevenue += Number(order.total_price || 0);
+                acc.totalJerseys += itemsCount;
 
-              const orderUSD = itemsCostUSD + surchargeUSD;
+                const orderCostCAD = calculateOrderCost(order);
+                acc.totalCostCAD += orderCostCAD;
 
-              return {
-                totalCostUSD: acc.totalCostUSD + orderUSD,
-                totalCostCAD: acc.totalCostCAD + orderCostCAD
-              };
-            }, { totalCostCAD: 0, totalCostUSD: 0 });
+                // Cálculo USD
+                const itemsCostUSD = order.items?.reduce((sum, item) => {
+                  const base = calculateItemBaseCostUSD(item);
+                  let addons = 0;
+                  const size = item.size || 'M';
+                  if (size === '2XL') addons += (pricing.costAdd2XL || 1);
+                  if (['3XL', '4XL'].includes(size)) addons += (pricing.costAdd3XL4XL || 2);
+                  if (item.extras?.nameNumber) addons += (pricing.costAddCustom || 3);
+                  if (item.extras?.patch) addons += (pricing.costAddPatch || 1);
+                  return sum + ((base + addons) * (item.quantity || 1));
+                }, 0) || 0;
 
-            const totalProfit = totalRevenue - totalCostCAD;
+                let surchargeUSD = 0;
+                if (itemsCount === 1) surchargeUSD = pricing.surcharge1Item || 5;
+                else if (itemsCount === 2) surchargeUSD = pricing.surcharge2Items || 4;
+                else if (itemsCount === 3) surchargeUSD = pricing.surcharge3Items || 3;
+
+                acc.totalCostUSD += (itemsCostUSD + surchargeUSD);
+              }
+
+              return acc;
+            }, { 
+              totalRevenue: 0, totalCostCAD: 0, totalCostUSD: 0, totalJerseys: 0,
+              countShipped: 0, countCompleted: 0, countCancelled: 0, countPending: 0, countProcessing: 0
+            });
+
+            const totalProfit = stats.totalRevenue - stats.totalCostCAD;
 
             return (
               <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem', maxWidth: '1200px' }}>
@@ -2835,57 +2844,71 @@ const Admin = () => {
                   </div>
                 </div>
 
-                {/* STATS SUMMARY BAR - 4 items por linha no desktop, 2 no mobile */}
-                <div className="admin-stats-grid">
-                  <div
-                    onClick={() => setStatusFilter('all')}
-                    className="glass-panel"
-                    style={{ padding: '0.8rem', borderRadius: '12px', borderLeft: '4px solid #fff', cursor: 'pointer', outline: statusFilter === 'all' ? '2px solid rgba(255,255,255,0.3)' : 'none', opacity: statusFilter === 'all' ? 1 : 0.6 }}
-                  >
-                    <p style={{ fontSize: '0.6rem', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: 800 }}>Total Pedidos</p>
-                    <h3 style={{ fontSize: '1.2rem', color: '#fff', margin: 0 }}>{filteredOrders.length}</h3>
+                {/* STATS SUMMARY BAR - COMPLETE */}
+                <div className="admin-stats-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: '1rem' }}>
+                  <div className="glass-panel" style={{ padding: '0.8rem', borderRadius: '12px', borderLeft: '4px solid var(--accent-color)' }}>
+                    <p style={{ fontSize: '0.6rem', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: 800 }}>Vendas 🇨🇦 (CAD)</p>
+                    <h3 style={{ fontSize: '1.2rem', color: 'var(--accent-color)', margin: 0 }}>${stats.totalRevenue.toFixed(2)}</h3>
                   </div>
-                  <div
+                  <div className="glass-panel" style={{ padding: '0.8rem', borderRadius: '12px', borderLeft: '4px solid #22c55e' }}>
+                    <p style={{ fontSize: '0.6rem', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: 800 }}>Lucro Real 🇨🇦</p>
+                    <h3 style={{ fontSize: '1.2rem', color: '#22c55e', margin: 0 }}>${totalProfit.toFixed(2)}</h3>
+                  </div>
+                  <div className="glass-panel" style={{ padding: '0.8rem', borderRadius: '12px', borderLeft: '4px solid #fff' }}>
+                    <p style={{ fontSize: '0.6rem', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: 800 }}>Camisas Vendidas</p>
+                    <h3 style={{ fontSize: '1.2rem', color: '#fff', margin: 0 }}>{stats.totalJerseys} unid.</h3>
+                  </div>
+                  
+                  {/* Status Counters */}
+                  <div 
                     onClick={() => setStatusFilter('pending')}
-                    className="glass-panel"
-                    style={{ padding: '0.8rem', borderRadius: '12px', borderLeft: '4px solid #FFB81C', cursor: 'pointer', outline: statusFilter === 'pending' ? '2px solid #FFB81C' : 'none', opacity: statusFilter === 'pending' ? 1 : statusFilter === 'all' ? 1 : 0.6 }}
+                    className="glass-panel" 
+                    style={{ padding: '0.8rem', borderRadius: '12px', borderLeft: '4px solid #FFB81C', cursor: 'pointer', opacity: statusFilter === 'pending' ? 1 : 0.7 }}
                   >
                     <p style={{ fontSize: '0.6rem', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: 800 }}>Novos</p>
-                    <h3 style={{ fontSize: '1.2rem', color: '#fff', margin: 0 }}>{filteredOrders.filter(o => o.status === 'pending').length}</h3>
+                    <h3 style={{ fontSize: '1.2rem', color: '#fff', margin: 0 }}>{stats.countPending}</h3>
                   </div>
-                  <div
+                  <div 
                     onClick={() => setStatusFilter('processing')}
-                    className="glass-panel"
-                    style={{ padding: '0.8rem', borderRadius: '12px', borderLeft: '4px solid #3B82F6', cursor: 'pointer', outline: statusFilter === 'processing' ? '2px solid #3B82F6' : 'none', opacity: statusFilter === 'processing' ? 1 : statusFilter === 'all' ? 1 : 0.6 }}
+                    className="glass-panel" 
+                    style={{ padding: '0.8rem', borderRadius: '12px', borderLeft: '4px solid #3B82F6', cursor: 'pointer', opacity: statusFilter === 'processing' ? 1 : 0.7 }}
                   >
                     <p style={{ fontSize: '0.6rem', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: 800 }}>Preparação</p>
-                    <h3 style={{ fontSize: '1.2rem', color: '#fff', margin: 0 }}>{filteredOrders.filter(o => o.status === 'processing').length}</h3>
+                    <h3 style={{ fontSize: '1.2rem', color: '#fff', margin: 0 }}>{stats.countProcessing}</h3>
                   </div>
-                  <div
-                    onClick={() => setStatusFilter('completed')}
-                    className="glass-panel"
-                    style={{ padding: '0.8rem', borderRadius: '12px', borderLeft: '4px solid #10B981', cursor: 'pointer', outline: statusFilter === 'completed' ? '2px solid #10B981' : 'none', opacity: statusFilter === 'completed' ? 1 : statusFilter === 'all' ? 1 : 0.6 }}
+                  <div 
+                    onClick={() => setStatusFilter('shipped')}
+                    className="glass-panel" 
+                    style={{ padding: '0.8rem', borderRadius: '12px', borderLeft: '4px solid #10B981', cursor: 'pointer', opacity: statusFilter === 'shipped' ? 1 : 0.7 }}
                   >
-                    <p style={{ fontSize: '0.6rem', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: 800 }}>Concluídos</p>
-                    <h3 style={{ fontSize: '1.2rem', color: '#fff', margin: 0 }}>{filteredOrders.filter(o => ['shipped', 'completed'].includes(o.status)).length}</h3>
+                    <p style={{ fontSize: '0.6rem', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: 800 }}>Enviados</p>
+                    <h3 style={{ fontSize: '1.2rem', color: '#fff', margin: 0 }}>{stats.countShipped}</h3>
+                  </div>
+                  <div 
+                    onClick={() => setStatusFilter('completed')}
+                    className="glass-panel" 
+                    style={{ padding: '0.8rem', borderRadius: '12px', borderLeft: '4px solid #A855F7', cursor: 'pointer', opacity: statusFilter === 'completed' ? 1 : 0.7 }}
+                  >
+                    <p style={{ fontSize: '0.6rem', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: 800 }}>Finalizados</p>
+                    <h3 style={{ fontSize: '1.2rem', color: '#fff', margin: 0 }}>{stats.countCompleted}</h3>
+                  </div>
+                  <div 
+                    onClick={() => setStatusFilter('cancelled')}
+                    className="glass-panel" 
+                    style={{ padding: '0.8rem', borderRadius: '12px', borderLeft: '4px solid #EF4444', cursor: 'pointer', opacity: statusFilter === 'cancelled' ? 1 : 0.7 }}
+                  >
+                    <p style={{ fontSize: '0.6rem', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: 800 }}>Cancelados</p>
+                    <h3 style={{ fontSize: '1.2rem', color: '#fff', margin: 0 }}>{stats.countCancelled}</h3>
                   </div>
 
-                  {/* Segunda Linha */}
-                  <div className="glass-panel" style={{ padding: '0.8rem', borderRadius: '12px', borderLeft: '4px solid var(--accent-color)' }}>
-                    <p style={{ fontSize: '0.6rem', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: 800 }}>Receita 🇨🇦 (CAD)</p>
-                    <h3 style={{ fontSize: '1.2rem', color: 'var(--accent-color)', margin: 0 }}>${totalRevenue.toFixed(2)}</h3>
-                  </div>
-                  <div className="glass-panel" style={{ padding: '0.8rem', borderRadius: '12px', borderLeft: '4px solid #f87171' }}>
+                  {/* Secondary Info */}
+                  <div className="glass-panel" style={{ padding: '0.8rem', borderRadius: '12px', borderLeft: '4px solid #64748b' }}>
                     <p style={{ fontSize: '0.6rem', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: 800 }}>Custo 🇺🇸 (USD)</p>
-                    <h3 style={{ fontSize: '1.2rem', color: '#fff', margin: 0 }}>${totalCostUSD.toFixed(2)}</h3>
+                    <h3 style={{ fontSize: '1.1rem', color: '#fff', margin: 0 }}>${stats.totalCostUSD.toFixed(2)}</h3>
                   </div>
                   <div className="glass-panel" style={{ padding: '0.8rem', borderRadius: '12px', borderLeft: '4px solid #64748b' }}>
                     <p style={{ fontSize: '0.6rem', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: 800 }}>Custo 🇨🇦 (CAD)</p>
-                    <h3 style={{ fontSize: '1.2rem', color: '#fff', margin: 0 }}>${totalCostCAD.toFixed(2)}</h3>
-                  </div>
-                  <div className="glass-panel" style={{ padding: '0.8rem', borderRadius: '12px', borderLeft: '4px solid #22c55e' }}>
-                    <p style={{ fontSize: '0.6rem', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: 800 }}>Lucro 🇨🇦 (CAD)</p>
-                    <h3 style={{ fontSize: '1.2rem', color: '#22c55e', margin: 0 }}>${totalProfit.toFixed(2)}</h3>
+                    <h3 style={{ fontSize: '1.1rem', color: '#fff', margin: 0 }}>${stats.totalCostCAD.toFixed(2)}</h3>
                   </div>
                 </div>
 
