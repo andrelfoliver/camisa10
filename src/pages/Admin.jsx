@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from '../services/supabase';
 import { useAuth } from '../context/AuthContext';
-import { Save, Check, Crown, Heart, Database, HardDrive, Star, LogOut, Package, Plus, Trash2, Edit, X, Users, Image, DollarSign, MapPin, RefreshCw, Shield, AlertTriangle, MessageSquare, ChevronDown, ChevronUp, MoreHorizontal, ExternalLink, Settings, Tag, TrendingUp, Truck, BarChart } from 'lucide-react';
+import { Save, Check, Crown, Heart, Database, HardDrive, Star, LogOut, Package, Plus, Trash2, Edit, X, Users, Image, DollarSign, MapPin, RefreshCw, Shield, AlertTriangle, MessageSquare, ChevronDown, ChevronUp, MoreHorizontal, ExternalLink, Settings, Tag, TrendingUp, Truck, BarChart, Eye, EyeOff } from 'lucide-react';
 import { migrateProductsToSupabase } from '../services/migration';
 import { migrateTeamsToSupabase } from '../services/migration_teams';
 import WhatsAppIcon from '../components/WhatsAppIcon';
@@ -190,6 +190,7 @@ const Admin = () => {
   const [expandedOrderId, setExpandedOrderId] = useState(null);
   const [expandedAgentId, setExpandedAgentId] = useState(null);
   const [expandedCustomerId, setExpandedCustomerId] = useState(null);
+  const [showValues, setShowValues] = useState(false);
 
   // Filtros do Relatório de Produtividade
   const [prodDateRange, setProdDateRange] = useState({
@@ -1522,6 +1523,14 @@ const Admin = () => {
           </button>
 
           <button
+            onClick={() => setSupplierTab('CIDADES')}
+            className={supplierTab === 'CIDADES' ? 'active-tab' : ''}
+            style={{ padding: '0.8rem 1.5rem', background: supplierTab === 'CIDADES' ? 'var(--accent-color)' : 'transparent', color: supplierTab === 'CIDADES' ? '#000' : 'var(--text-muted)', border: 'none', borderRadius: '4px', cursor: 'pointer', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '0.5rem' }}
+          >
+            <MapPin size={18} /> CIDADES ATENDIDAS
+          </button>
+
+          <button
             onClick={() => setSupplierTab('CONFIG')}
             className={supplierTab === 'CONFIG' ? 'active-tab' : ''}
             style={{ padding: '0.8rem 1rem', borderRadius: 'var(--radius-md)', display: 'flex', alignItems: 'center', gap: '0.8rem', width: '100%', textAlign: 'left', background: supplierTab === 'CONFIG' ? '#3B82F6' : 'transparent', color: supplierTab === 'CONFIG' ? '#fff' : 'var(--text-main)', fontWeight: supplierTab === 'CONFIG' ? 700 : 500, transition: 'all 0.2s', border: 'none', cursor: 'pointer' }}
@@ -1591,12 +1600,35 @@ const Admin = () => {
                             supplierTab === 'CLOUD_ALL' ? 'Todo o Banco na Nuvem' :
                               supplierTab === 'ESTOQUE' ? 'Gestão de Estoque' :
                                 supplierTab === 'AGENTS' ? 'Agentes & Vendas' :
-                                  `${supplierTab.replace('CAT_', '')}`}
+                                  supplierTab === 'CIDADES' ? 'Distribuição Geográfica' :
+                                    `${supplierTab.replace('CAT_', '')}`}
               </h1>
               <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem', marginTop: '0.2rem' }} className="hide-mobile">Painel Central de Gerenciamento iFooty.</p>
             </div>
           </div>
-          <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
+          <div style={{ display: 'flex', gap: '1.2rem', alignItems: 'center' }}>
+            {/* Botão Global de Privacidade */}
+            <button 
+               onClick={() => setShowValues(!showValues)}
+               className="glass-panel"
+               style={{ 
+                 padding: '0.6rem 1.2rem', 
+                 borderRadius: '8px', 
+                 display: 'flex', 
+                 alignItems: 'center', 
+                 gap: '0.5rem', 
+                 fontWeight: 700, 
+                 color: 'var(--accent-color)', 
+                 cursor: 'pointer', 
+                 border: '1px solid rgba(164, 210, 51, 0.3)',
+                 background: 'rgba(164, 210, 51, 0.05)',
+                 transition: 'all 0.2s'
+               }}
+               title={showValues ? "Ocultar Valores" : "Mostrar Valores"}
+             >
+               {showValues ? <EyeOff size={18} /> : <Eye size={18} />}
+               <span style={{ fontSize: '0.8rem' }}>{showValues ? "Ocultar" : "Ver Valores"}</span>
+             </button>
             {supplierTab === 'TESTIMONIALS' && (
               <button onClick={() => setShowAddTestimonial(true)} className="btn-primary" style={{ background: '#A855F7', color: '#fff' }}>
                 <Plus size={18} /> Novo Histórico (2022)
@@ -1998,7 +2030,104 @@ const Admin = () => {
                 </div>
               )}
             </div>
-          ) : supplierTab === 'AGENTS' ? (
+          ) : supplierTab === 'CIDADES' ? (() => {
+            // Normalização de cidade para evitar duplicidade
+            const normalizeCity = (c) => (c || 'N/A').split('(')[0].split('/')[0].trim();
+
+            const cityStats = orders.reduce((acc, order) => {
+              const rawCity = order.shipping_address?.city || 'N/A';
+              const city = normalizeCity(rawCity);
+              const province = order.shipping_address?.province || '';
+              const key = `${city}${province ? `, ${province}` : ''}`;
+              if (!acc[key]) acc[key] = { count: 0, revenue: 0 };
+              acc[key].count++;
+              acc[key].revenue += Number(order.total_price || 0);
+              return acc;
+            }, {});
+
+            const sortedCities = Object.entries(cityStats)
+              .sort((a, b) => b[1].count - a[1].count);
+
+            const uniqueProvinces = new Set(
+              Object.keys(cityStats)
+                .map(k => k.split(',')[1]?.trim())
+                .filter(Boolean)
+            );
+            const totalCities = Object.keys(cityStats).length;
+            const totalProvinces = uniqueProvinces.size;
+            const totalOrdersCA = Object.values(cityStats).reduce((sum, d) => sum + d.count, 0);
+
+            return (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem', maxWidth: '1000px' }}>
+                <div style={{ background: 'rgba(255,255,255,0.03)', padding: '2rem', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.05)' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.8rem', marginBottom: '2rem' }}>
+                    <MapPin size={24} color="var(--accent-color)" />
+                    <div>
+                      <h3 style={{ margin: 0, color: '#fff' }}>Onde suas camisas estão?</h3>
+                      <p style={{ margin: 0, fontSize: '0.9rem', color: 'var(--text-muted)' }}>Mapeamento completo de todos os pedidos realizados por cidade.</p>
+                    </div>
+                  </div>
+
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1.8fr 1fr', gap: '1rem', marginBottom: '2.5rem' }}>
+                    <div className="glass-panel" style={{ padding: '1.2rem', borderRadius: '12px', borderLeft: '4px solid var(--accent-color)' }}>
+                      <p style={{ fontSize: '0.65rem', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: 800, margin: '0 0 0.5rem 0' }}>Cidades Atendidas</p>
+                      <h3 style={{ fontSize: '1.8rem', color: '#fff', margin: 0 }}>{totalCities}</h3>
+                    </div>
+                    <div className="glass-panel" style={{ padding: '1.2rem', borderRadius: '12px', borderLeft: '4px solid #3B82F6' }}>
+                      <p style={{ fontSize: '0.65rem', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: 800, margin: '0 0 0.5rem 0' }}>Províncias Atendidas</p>
+                      <h3 style={{ fontSize: '1.8rem', color: '#fff', margin: '0 0 0.8rem 0' }}>{totalProvinces}/10</h3>
+                      <div style={{ display: 'flex', flexWrap: 'nowrap', gap: '5px', overflowX: 'auto', paddingBottom: '5px' }}>
+                        {['AB', 'BC', 'MB', 'NB', 'NL', 'NS', 'ON', 'PE', 'QC', 'SK'].map(p => {
+                          const isServed = uniqueProvinces.has(p);
+                          return (
+                            <span 
+                              key={p} 
+                              style={{ 
+                                fontSize: '0.65rem', 
+                                fontWeight: 800, 
+                                padding: '2px 4px', 
+                                borderRadius: '3px', 
+                                background: isServed ? 'rgba(34, 197, 94, 0.2)' : 'rgba(255,255,255,0.05)',
+                                color: isServed ? '#22c55e' : 'rgba(255,255,255,0.2)',
+                                border: isServed ? '1px solid rgba(34, 197, 94, 0.3)' : '1px solid rgba(255,255,255,0.05)',
+                                transition: 'all 0.3s ease'
+                              }}
+                              title={isServed ? `Província atendida: ${p}` : `Ainda não atendida: ${p}`}
+                            >
+                              {p}
+                            </span>
+                          );
+                        })}
+                      </div>
+                    </div>
+                    <div className="glass-panel" style={{ padding: '1.2rem', borderRadius: '12px', borderLeft: '4px solid #10B981' }}>
+                      <p style={{ fontSize: '0.65rem', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: 800, margin: '0 0 0.5rem 0' }}>Total Pedidos (Canadá)</p>
+                      <h3 style={{ fontSize: '1.8rem', color: '#fff', margin: 0 }}>{totalOrdersCA}</h3>
+                    </div>
+                  </div>
+
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: '1rem' }}>
+                    {sortedCities.map(([city, data]) => (
+                      <div key={city} className="glass-panel" style={{ padding: '1.2rem', borderRadius: '12px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                        <div>
+                          <h4 style={{ margin: 0, color: '#fff', fontSize: '1rem' }}>{city}</h4>
+                          <p style={{ margin: '0.2rem 0 0 0', fontSize: '0.8rem', color: 'var(--text-muted)' }}>
+                            {data.count} {data.count === 1 ? 'pedido realizado' : 'pedidos realizados'}
+                          </p>
+                        </div>
+                        <div style={{ textAlign: 'right' }}>
+                          <span style={{ display: 'block', fontSize: '1.2rem', fontWeight: 800, color: 'var(--accent-color)' }}>
+                            {showValues ? `$${data.revenue.toFixed(2)}` : '****'}
+                          </span>
+                          <span style={{ fontSize: '0.65rem', color: 'var(--text-muted)', textTransform: 'uppercase' }}>Faturamento</span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            );
+          })() : supplierTab === 'AGENTS' ? (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
 
               {/* CONFIGURAÇÕES GLOBAIS */}
@@ -2751,6 +2880,20 @@ const Admin = () => {
               return o.status === statusFilter;
             });
 
+            // Normalização de cidade para evitar duplicidade
+            const normalizeCity = (c) => (c || 'N/A').split('(')[0].split('/')[0].trim();
+
+            const cityStats = ordersForStats.reduce((acc, order) => {
+              const rawCity = order.shipping_address?.city || 'N/A';
+              const city = normalizeCity(rawCity);
+              const province = order.shipping_address?.province || '';
+              const key = `${city}${province ? `, ${province}` : ''}`;
+              if (!acc[key]) acc[key] = { count: 0, revenue: 0 };
+              acc[key].count++;
+              acc[key].revenue += Number(order.total_price || 0);
+              return acc;
+            }, {});
+
             // 3. Cálculo consolidado de todas as métricas do dashboard usando ordersForStats (dados brutos do período)
             const stats = ordersForStats.reduce((acc, order) => {
               const isCancelled = order.status === 'cancelled';
@@ -2800,7 +2943,7 @@ const Admin = () => {
 
             return (
               <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem', maxWidth: '1200px' }}>
-                <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '-0.5rem' }}>
+                <div style={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'center', gap: '1rem', marginBottom: '-0.5rem' }}>
                    <button 
                      onClick={() => setIsTrackModalOpen(true)}
                      className="btn-primary" 
@@ -2851,15 +2994,21 @@ const Admin = () => {
                   </div>
                 </div>
 
+
+
                 {/* STATS SUMMARY BAR - COMPLETE */}
                 <div className="admin-stats-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: '1rem' }}>
                   <div className="glass-panel" style={{ padding: '0.8rem', borderRadius: '12px', borderLeft: '4px solid var(--accent-color)' }}>
                     <p style={{ fontSize: '0.6rem', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: 800 }}>Vendas 🇨🇦 (CAD)</p>
-                    <h3 style={{ fontSize: '1.2rem', color: 'var(--accent-color)', margin: 0 }}>${stats.totalRevenue.toFixed(2)}</h3>
+                    <h3 style={{ fontSize: '1.2rem', color: 'var(--accent-color)', margin: 0 }}>
+                      {showValues ? `$${stats.totalRevenue.toFixed(2)}` : '****'}
+                    </h3>
                   </div>
                   <div className="glass-panel" style={{ padding: '0.8rem', borderRadius: '12px', borderLeft: '4px solid #22c55e' }}>
                     <p style={{ fontSize: '0.6rem', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: 800 }}>Lucro Real 🇨🇦</p>
-                    <h3 style={{ fontSize: '1.2rem', color: '#22c55e', margin: 0 }}>${totalProfit.toFixed(2)}</h3>
+                    <h3 style={{ fontSize: '1.2rem', color: '#22c55e', margin: 0 }}>
+                      {showValues ? `$${totalProfit.toFixed(2)}` : '****'}
+                    </h3>
                   </div>
                   <div className="glass-panel" style={{ padding: '0.8rem', borderRadius: '12px', borderLeft: '4px solid #fff' }}>
                     <p style={{ fontSize: '0.6rem', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: 800 }}>Camisas Vendidas</p>
@@ -2911,11 +3060,15 @@ const Admin = () => {
                   {/* Secondary Info */}
                   <div className="glass-panel" style={{ padding: '0.8rem', borderRadius: '12px', borderLeft: '4px solid #64748b' }}>
                     <p style={{ fontSize: '0.6rem', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: 800 }}>Custo 🇺🇸 (USD)</p>
-                    <h3 style={{ fontSize: '1.1rem', color: '#fff', margin: 0 }}>${stats.totalCostUSD.toFixed(2)}</h3>
+                    <h3 style={{ fontSize: '1.1rem', color: '#fff', margin: 0 }}>
+                      {showValues ? `$${stats.totalCostUSD.toFixed(2)}` : '****'}
+                    </h3>
                   </div>
                   <div className="glass-panel" style={{ padding: '0.8rem', borderRadius: '12px', borderLeft: '4px solid #64748b' }}>
                     <p style={{ fontSize: '0.6rem', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: 800 }}>Custo 🇨🇦 (CAD)</p>
-                    <h3 style={{ fontSize: '1.1rem', color: '#fff', margin: 0 }}>${stats.totalCostCAD.toFixed(2)}</h3>
+                    <h3 style={{ fontSize: '1.1rem', color: '#fff', margin: 0 }}>
+                      {showValues ? `$${stats.totalCostCAD.toFixed(2)}` : '****'}
+                    </h3>
                   </div>
                 </div>
 
