@@ -2734,18 +2734,25 @@ const Admin = () => {
               )}
             </div>
           ) : supplierTab === 'PEDIDOS' ? (() => {
-            const filteredOrders = orders.filter(o => {
+            // 1. Primeiro filtramos apenas por data e cliente para ter os dados dos cards (Stats)
+            const ordersForStats = orders.filter(o => {
               const orderDate = new Date(o.created_at).toISOString().split('T')[0];
               const matchesDate = (!dateRange.start || orderDate >= dateRange.start) &&
                 (!dateRange.end || orderDate <= dateRange.end);
-              const matchesStatus = statusFilter === 'all' ||
-                (statusFilter === 'completed' ? ['shipped', 'completed'].includes(o.status) : o.status === statusFilter);
               const matchesCustomer = !orderFilter || o.user_id === orderFilter;
-              return matchesDate && matchesStatus && matchesCustomer;
+              return matchesDate && matchesCustomer;
             });
 
-            // Cálculo consolidado de todas as métricas do dashboard
-            const stats = filteredOrders.reduce((acc, order) => {
+            // 2. Depois aplicamos o filtro de status apenas para a listagem da tabela
+            const filteredOrders = ordersForStats.filter(o => {
+              if (statusFilter === 'all') {
+                return o.status !== 'completed' && o.status !== 'cancelled';
+              }
+              return o.status === statusFilter;
+            });
+
+            // 3. Cálculo consolidado de todas as métricas do dashboard usando ordersForStats (dados brutos do período)
+            const stats = ordersForStats.reduce((acc, order) => {
               const isCancelled = order.status === 'cancelled';
               const itemsCount = order.items?.reduce((s, i) => s + (i.quantity || 1), 0) || 0;
               
