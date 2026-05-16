@@ -23,7 +23,7 @@ const HeroSection = () => {
           .select('value')
           .eq('key', 'hero_slides')
           .single();
-        
+
         if (data && data.value) {
           const parsed = JSON.parse(data.value);
           if (Array.isArray(parsed) && parsed.length > 0) {
@@ -52,18 +52,18 @@ const HeroSection = () => {
     <section className="hero-funnel">
       {/* Background Slides - Otimizado para carregar apenas o ativo */}
       {heroImages.length > 0 && (
-        <div 
+        <div
           key={heroImages[currentIndex]}
           className="hero-slide-bg active"
           style={{ backgroundImage: `url('${heroImages[currentIndex]}')` }}
         />
       )}
-      
+
       {/* Overlay fixo para contraste */}
       <div className="hero-overlay-static"></div>
 
       <div className="hero-container-modern animate-fade-in">
-        
+
         {/* Social Proof no topo à direita - Fixo */}
         <div className="hero-social-proof-top">
           <div className="social-proof-avatars">
@@ -74,7 +74,7 @@ const HeroSection = () => {
           </div>
           <div className="social-proof-content">
             <span className="social-proof-number">+<StatCounter target={200} variant="simple" duration={2000} /></span>
-            <span className="social-proof-label">{t('hero_satisfied_clients').replace('⭐ +200 ', '')}</span>
+            <span className="social-proof-label">{t('hero_satisfied_clients').replace('⭐ +250 ', '')}</span>
           </div>
         </div>
 
@@ -121,8 +121,8 @@ const HeroSection = () => {
         {/* Carousel Dots */}
         <div className="hero-carousel-dots">
           {heroImages.map((_, i) => (
-            <button 
-              key={i} 
+            <button
+              key={i}
               className={`dot ${i === currentIndex ? 'active' : ''}`}
               onClick={() => setCurrentIndex(i)}
             />
