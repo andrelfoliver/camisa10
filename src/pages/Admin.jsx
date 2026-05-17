@@ -3203,6 +3203,11 @@ const Admin = () => {
                                 <p>{order.shipping_address?.street}{order.shipping_address?.apartment ? `, Apt ${order.shipping_address.apartment}` : ''}</p>
                                 <p>{order.shipping_address?.city}, {order.shipping_address?.province} {order.shipping_address?.postalCode}</p>
                                 <p style={{ color: 'var(--text-muted)', marginTop: '0.2rem' }}><MapPin size={12} /> {order.customer_phone}</p>
+                                {order.shipping_address?.instructions && (
+                                  <div style={{ marginTop: '0.5rem', padding: '0.5rem', background: 'rgba(204, 255, 0, 0.1)', borderLeft: '3px solid var(--accent-color)', borderRadius: '4px' }}>
+                                    <p style={{ margin: 0, fontSize: '0.75rem', color: '#fff' }}><strong>Instruções:</strong> {order.shipping_address.instructions}</p>
+                                  </div>
+                                )}
                               </div>
 
                               <div style={{ padding: '1rem', background: 'rgba(255,255,255,0.03)', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.05)' }}>

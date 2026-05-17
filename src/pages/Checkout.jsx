@@ -29,6 +29,7 @@ const Checkout = () => {
     province: '',
     postalCode: '',
     country: 'Canada',
+    instructions: '',
     saveAddress: true
   });
 
@@ -179,8 +180,9 @@ const Checkout = () => {
     if (isPickup) {
       message += `MÉTODO: 📍 RETIRADA (Wolf Willow, Calgary)\n\n`;
     } else {
-      message += `MÉTODO: 🚚 ENTREGA VIA CORREIOS\n`;
+      message += `Nome: ${formData.name}\n`;
       message += `Endereço: ${formData.street}, ${formData.addressNumber}${formData.apartment ? ', Unit ' + formData.apartment : ''}\n`;
+      if (formData.instructions) message += `Instruções de Entrega: ${formData.instructions}\n`;
       message += `Bairro: ${formData.district}\n`;
       message += `Cidade: ${formData.city}, ${formData.province}\n`;
       message += `Postal Code: ${formData.postalCode}\n`;
@@ -302,7 +304,8 @@ const Checkout = () => {
           city: formData.deliveryMethod === 'pickup' ? 'Calgary' : formData.city,
           province: formData.deliveryMethod === 'pickup' ? 'AB' : formData.province,
           postalCode: formData.postalCode,
-          country: formData.country
+          country: formData.country,
+          instructions: formData.instructions
         },
         usd_cad_rate: currentExchangeRate,
         items: cartItems.map(item => ({
@@ -613,6 +616,15 @@ const Checkout = () => {
                         style={{ width: '100%', padding: '0.75rem', borderRadius: 'var(--radius-sm)', background: 'rgba(0,0,0,0.2)', border: '1px solid var(--border-color)', color: 'var(--text-muted)', fontSize: '1rem', cursor: 'not-allowed' }}
                       />
                     </div>
+                  </div>
+
+                  <div style={{ marginTop: '1rem' }}>
+                    <label style={{ display: 'block', marginBottom: '0.5rem', color: 'var(--text-muted)' }}>Instruções de Entrega (Opcional)</label>
+                    <textarea
+                      placeholder="Ex: Deixar na porta, código do interfone 1234, etc."
+                      value={formData.instructions} onChange={e => setFormData({ ...formData, instructions: e.target.value })}
+                      style={{ width: '100%', padding: '0.75rem', borderRadius: 'var(--radius-sm)', background: 'var(--bg-color)', border: '1px solid var(--border-color)', color: 'var(--text-main)', fontSize: '1rem', minHeight: '80px', resize: 'vertical' }}
+                    />
                   </div>
                 </>
               )}
