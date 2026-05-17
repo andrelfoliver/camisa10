@@ -788,7 +788,20 @@ const Admin = () => {
       }
     }
 
+    const orderToUpdate = orders.find(o => o.id === orderId);
     setOrders(orders.map(o => o.id === orderId ? { ...o, status: newStatus } : o));
+
+    // 3. Enviar notificação por e-mail automaticamente (em background)
+    if (orderToUpdate && ['processing', 'shipped', 'completed', 'cancelled'].includes(newStatus)) {
+      fetch('/api/send-status-email', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          order: { ...orderToUpdate, status: newStatus },
+          newStatus: newStatus
+        })
+      }).catch(err => console.error("Erro ao enviar email de status:", err));
+    }
   };
 
   const handleUpdateTracking = async (orderId, trackingNumber) => {
