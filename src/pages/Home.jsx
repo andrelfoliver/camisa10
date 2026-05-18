@@ -368,17 +368,19 @@ const Home = () => {
               <p style={{ color: 'var(--text-main)', opacity: 0.8, fontWeight: 500, fontSize: '0.8rem', textTransform: 'uppercase' }}>{t('stats_clients')}</p>
             </div>
 
-            {/* Envio */}
+            {/* Avaliação Média */}
             <div className="glass-panel" style={{ padding: '1rem', borderRadius: 'var(--radius-md)', textAlign: 'center', border: '1px solid var(--border-color)' }}>
               <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '0.75rem' }}>
-                <div style={{ padding: '0.5rem', background: 'rgba(219, 254, 135, 0.1)', borderRadius: '50%' }}>
-                  <Truck size={20} color="var(--accent-color)" />
+                <div style={{ padding: '0.5rem', background: 'rgba(219, 254, 135, 0.1)', borderRadius: '50%', display: 'flex', gap: '2px' }}>
+                  <Star size={20} color="var(--accent-color)" fill="var(--accent-color)" />
                 </div>
               </div>
               <h3 style={{ fontSize: '1.6rem', fontWeight: 800, color: 'var(--accent-color)', marginBottom: '0.25rem' }}>
-                <StatCounter target={100} variant="simple" suffix="%" delay={400} />
+                <StatCounter target={9} prefix="4." variant="simple" suffix="/5" delay={400} />
               </h3>
-              <p style={{ color: 'var(--text-main)', opacity: 0.8, fontWeight: 500, fontSize: '0.8rem', textTransform: 'uppercase' }}>{t('stats_shipping')}</p>
+              <p style={{ color: 'var(--text-main)', opacity: 0.8, fontWeight: 500, fontSize: '0.75rem', textTransform: 'uppercase', lineHeight: 1.2 }}>
+                AVALIAÇÃO DOS CLIENTES
+              </p>
             </div>
 
             {/* WhatsApp */}
