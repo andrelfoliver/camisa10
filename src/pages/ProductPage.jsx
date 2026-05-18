@@ -71,6 +71,8 @@ const ProductPage = () => {
   const [isCustomized, setIsCustomized] = useState(false);
   const [customName, setCustomName] = useState('');
   const [customNumber, setCustomNumber] = useState('');
+  const [isExtraCustomized, setIsExtraCustomized] = useState(false);
+  const [customExtraName, setCustomExtraName] = useState('');
   const [quantity, setQuantity] = useState(1);
 
   useEffect(() => {
@@ -141,7 +143,13 @@ const ProductPage = () => {
     const productWithFix = { ...product, image: displayImage };
 
     for (let i = 0; i < quantity; i++) {
-      addToCart(productWithFix, selectedSize, { nameNumber: isCustomized, customName, customNumber });
+      addToCart(productWithFix, selectedSize, {
+        nameNumber: isCustomized,
+        customName,
+        customNumber,
+        extraCustomization: isExtraCustomized,
+        customExtraName
+      });
     }
     if (buyNow) navigate('/checkout');
   };
@@ -151,6 +159,7 @@ const ProductPage = () => {
   if (['2XL', '3XL'].includes(selectedSize)) currentTotal += Number(pricingConfig?.size2XL3XL || 7.00);
   if (selectedSize === '4XL') currentTotal += Number(pricingConfig?.size4XL || 10.00);
   if (isCustomized) currentTotal += Number(pricingConfig?.nameNumber || 12.00);
+  if (isExtraCustomized) currentTotal += 6.90;
 
   const schemaOrgJSONLD = {
     "@context": "http://schema.org",
@@ -484,6 +493,54 @@ const ProductPage = () => {
                     maxLength="2"
                     value={customNumber}
                     onChange={e => setCustomNumber(e.target.value)}
+                    style={{ width: '100%', padding: '0.8rem', border: '1px solid var(--border-color)', borderRadius: '4px', background: 'rgba(255,255,255,0.02)', color: '#fff', fontSize: '1rem', outline: 'none' }}
+                  />
+                </div>
+              </div>
+            )}
+
+            {/* Extra Customization Toggle */}
+            <div style={{ marginBottom: '1.5rem', marginTop: '1rem' }}>
+              <p style={{ fontWeight: 700, marginBottom: '0.8rem', fontSize: '0.9rem', textTransform: 'uppercase' }}>
+                Personalização Extra (+ $6.90)
+              </p>
+              <div style={{ display: 'flex', gap: '0.5rem' }}>
+                <button
+                  onClick={() => setIsExtraCustomized(false)}
+                  style={{
+                    flex: 1, border: `1px solid ${!isExtraCustomized ? 'var(--accent-color)' : 'var(--border-color)'}`,
+                    background: !isExtraCustomized ? 'rgba(204, 255, 0, 0.05)' : 'transparent',
+                    padding: '0.75rem', color: !isExtraCustomized ? 'var(--accent-color)' : 'var(--text-main)',
+                    borderRadius: '4px', cursor: 'pointer', fontWeight: 700, fontSize: '0.85rem'
+                  }}
+                >
+                  Não
+                </button>
+                <button
+                  onClick={() => setIsExtraCustomized(true)}
+                  style={{
+                    flex: 1, border: `1px solid ${isExtraCustomized ? 'var(--accent-color)' : 'var(--border-color)'}`,
+                    background: isExtraCustomized ? 'rgba(204, 255, 0, 0.05)' : 'transparent',
+                    padding: '0.75rem', color: isExtraCustomized ? 'var(--accent-color)' : 'var(--text-main)',
+                    borderRadius: '4px', cursor: 'pointer', fontWeight: 700, fontSize: '0.85rem'
+                  }}
+                >
+                  Sim
+                </button>
+              </div>
+            </div>
+
+            {isExtraCustomized && (
+              <div style={{ marginBottom: '2.5rem', background: 'var(--surface-color)', padding: '1.2rem', borderRadius: '8px', border: '1px solid var(--border-color)' }}>
+                <div>
+                  <label style={{ fontSize: '0.8rem', fontWeight: 800, color: 'var(--text-muted)', display: 'block', marginBottom: '0.4rem', textTransform: 'uppercase' }}>
+                    Nome Extra (Ex: iFooty Canadá)
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="Ex: IFOOTY CANADA"
+                    value={customExtraName}
+                    onChange={e => setCustomExtraName(e.target.value.toUpperCase())}
                     style={{ width: '100%', padding: '0.8rem', border: '1px solid var(--border-color)', borderRadius: '4px', background: 'rgba(255,255,255,0.02)', color: '#fff', fontSize: '1rem', outline: 'none' }}
                   />
                 </div>

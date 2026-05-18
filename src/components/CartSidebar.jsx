@@ -64,10 +64,23 @@ const CartSidebar = () => {
                   <span style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>{language === 'pt' ? 'Tam' : 'Size'}: {item.size} • ${(item.price).toFixed(2)}</span>
                   
                   {/* Extras Tags */}
-                  {(item.extras?.nameNumber || item.extras?.patch) && (
+                  {(item.extras?.nameNumber || item.extras?.patch || item.extras?.extraCustomization) && (
                     <div style={{ display: 'flex', gap: '0.3rem', flexWrap: 'wrap', marginTop: '0.3rem' }}>
                       {item.extras.nameNumber && <span style={{fontSize: '0.7rem', padding: '2px 6px', background: 'rgba(255,184,28,0.2)', color: 'var(--accent-color)', borderRadius: '2px'}}>+ {language === 'pt' ? 'Nome/Num' : 'Name/Num'}</span>}
                       {item.extras.patch && <span style={{fontSize: '0.7rem', padding: '2px 6px', background: 'rgba(255,184,28,0.2)', color: 'var(--accent-color)', borderRadius: '2px'}}>+ Patch</span>}
+                      {item.extras.extraCustomization && <span style={{fontSize: '0.7rem', padding: '2px 6px', background: 'rgba(239,68,68,0.2)', color: '#f87171', borderRadius: '2px'}}>+ Extra (+ $6.90)</span>}
+                    </div>
+                  )}
+
+                  {/* Print details */}
+                  {item.extras?.nameNumber && (
+                    <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '0.2rem' }}>
+                      ✍️ {item.extras.customName} ({item.extras.customNumber})
+                    </div>
+                  )}
+                  {item.extras?.extraCustomization && (
+                    <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '0.1rem' }}>
+                      ⭐ Extra: {item.extras.customExtraName}
                     </div>
                   )}
 

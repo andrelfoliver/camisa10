@@ -189,7 +189,20 @@ const Checkout = () => {
       message += `País: ${formData.country}\n\n`;
     }
 
-    message += `\n${t('cart_subtotal')}: $${subtotal.toFixed(2)}\n`;
+    message += `🛒 ITENS DO PEDIDO:\n`;
+    cartItems.forEach(item => {
+      message += `- ${item.quantity}x ${item.name} (${item.size})`;
+      if (item.extras?.nameNumber) {
+        message += ` [Estampa: ${item.extras.customName} (${item.extras.customNumber})]`;
+      }
+      if (item.extras?.extraCustomization) {
+        message += ` [Extra: ${item.extras.customExtraName}]`;
+      }
+      message += ` - $${(item.price * item.quantity).toFixed(2)}\n`;
+    });
+    message += `\n`;
+
+    message += `${t('cart_subtotal')}: $${subtotal.toFixed(2)}\n`;
     if (discount > 0) message += `Desconto Qtd: -$${discount.toFixed(2)}\n`;
     if (appliedCoupon) message += `Cupom ${appliedCoupon.code}: -${appliedCoupon.discount_percent}% OFF\n`;
     message += `Frete: ${currentShipping === 0 ? 'GRÁTIS' : '$' + currentShipping.toFixed(2)}\n`;
@@ -663,9 +676,21 @@ const Checkout = () => {
           <div className="glass-panel" style={{ padding: '2rem', borderRadius: 'var(--radius-md)' }}>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', borderBottom: '1px solid var(--border-color)', paddingBottom: '1.5rem', marginBottom: '1.5rem' }}>
               {cartItems.map(item => (
-                <div key={`${item.id}-${item.size}`} style={{ display: 'flex', justifyContent: 'space-between' }}>
-                  <span>{item.quantity}x {item.name} ({item.size})</span>
-                  <span>${(item.price * item.quantity).toFixed(2)}</span>
+                <div key={item.cartId} style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem', borderBottom: '1px solid rgba(255,255,255,0.05)', paddingBottom: '0.8rem', marginBottom: '0.8rem' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                    <span style={{ fontWeight: 600 }}>{item.quantity}x {item.name} ({item.size})</span>
+                    <span>${(item.price * item.quantity).toFixed(2)}</span>
+                  </div>
+                  {item.extras?.nameNumber && (
+                    <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', paddingLeft: '1rem' }}>
+                      ✍️ {item.extras.customName} ({item.extras.customNumber})
+                    </div>
+                  )}
+                  {item.extras?.extraCustomization && (
+                    <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', paddingLeft: '1rem' }}>
+                      ⭐️ Extra: {item.extras.customExtraName} (+ $6.90)
+                    </div>
+                  )}
                 </div>
               ))}
             </div>

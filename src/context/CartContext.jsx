@@ -135,7 +135,7 @@ export const CartProvider = ({ children }) => {
     loadPricing();
   }, []);
 
-  const addToCart = (product, size, extras = { nameNumber: false, patch: false }) => {
+  const addToCart = (product, size, extras = { nameNumber: false, patch: false, extraCustomization: false }) => {
     let basePrice = product.price || 69.90;
     
     let addonsPrice = 0;
@@ -143,9 +143,10 @@ export const CartProvider = ({ children }) => {
     if (size === '4XL') addonsPrice += pricing.size4XL || 10.00;
     if (extras.nameNumber) addonsPrice += pricing.nameNumber || 12.00;
     if (extras.patch) addonsPrice += pricing.patch || 5.00;
+    if (extras.extraCustomization) addonsPrice += 6.90;
 
     const finalPrice = basePrice + addonsPrice;
-    const cartId = `${product.id}-${size}-${extras.nameNumber}-${extras.patch}`;
+    const cartId = `${product.id}-${size}-${extras.nameNumber ? 'yes' : 'no'}-${extras.patch ? 'yes' : 'no'}-${extras.extraCustomization ? 'yes' : 'no'}-${extras.customName || ''}-${extras.customNumber || ''}-${extras.customExtraName || ''}`;
 
     setCartItems(prev => {
       const existing = prev.find(item => item.cartId === cartId);
