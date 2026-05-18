@@ -740,9 +740,14 @@ const Checkout = () => {
               )}
 
               {appliedCoupon && (
-                <div style={{ display: 'flex', justifyContent: 'space-between', color: '#10B981', fontWeight: 600 }}>
-                  <span>Desconto do Cupom</span>
-                  <span>- ${(cartTotal - finalTotal).toFixed(2)}</span>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.1rem' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', color: '#10B981', fontWeight: 600 }}>
+                    <span>Cupom {appliedCoupon.code} ({appliedCoupon.discount_percent}% OFF)</span>
+                    <span>- ${(cartTotal - finalTotal).toFixed(2)}</span>
+                  </div>
+                  <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)', alignSelf: 'flex-start', paddingLeft: '0.2rem' }}>
+                    * {appliedCoupon.discount_percent}% aplicados sobre o valor líquido com desconto de atacado (${cartTotal.toFixed(2)})
+                  </span>
                 </div>
               )}
 
