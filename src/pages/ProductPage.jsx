@@ -170,8 +170,8 @@ const ProductPage = () => {
   return (
     <div style={{ paddingBottom: '5rem', minHeight: '100vh' }}>
       <SEO
-        title={translateProductDisplay(product.name)}
-        description={product.description || `Adquira a ${translateProductDisplay(product.name)} na iFooty. Qualidade premium e pronta entrega no Canadá.`}
+        title={`${translateProductDisplay(product.name)} | Camisas de Futebol no Canadá`}
+        description={product.description || `Compre a ${translateProductDisplay(product.name)} versão ${product.version || 'Torcedor/Jogador'} na iFooty. Camisa de futebol premium em tecido dry-fit. Pronta entrega com envio rápido para brasileiros no Canadá!`}
         image={product.image}
         url={`https://ifooty.ca/produto/${product.id}`}
         type="product"
