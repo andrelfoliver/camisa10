@@ -4,6 +4,69 @@ import { createWorker } from 'tesseract.js';
 import { supabase } from '../services/supabase';
 import toast from 'react-hot-toast';
 
+// Image preprocessing for OCR to boost contrast and binarize shipping labels
+const preprocessImage = (file) => {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const img = new Image();
+      img.onload = () => {
+        const canvas = document.createElement('canvas');
+        const ctx = canvas.getContext('2d');
+        
+        // Define a maximum width to optimize performance
+        const MAX_WIDTH = 1200;
+        let width = img.width;
+        let height = img.height;
+        
+        if (width > MAX_WIDTH) {
+          height = Math.round((height * MAX_WIDTH) / width);
+          width = MAX_WIDTH;
+        }
+        
+        canvas.width = width;
+        canvas.height = height;
+        
+        ctx.drawImage(img, 0, 0, width, height);
+        
+        const imgData = ctx.getImageData(0, 0, width, height);
+        const data = imgData.data;
+        
+        // Boost contrast by 120
+        const contrast = 120;
+        const factor = (259 * (contrast + 255)) / (255 * (259 - contrast));
+        
+        for (let i = 0; i < data.length; i += 4) {
+          const r = data[i];
+          const g = data[i + 1];
+          const b = data[i + 2];
+          
+          // Grayscale luminance
+          const gray = 0.299 * r + 0.587 * g + 0.114 * b;
+          
+          // Apply contrast stretch
+          const enhanced = factor * (gray - 128) + 128;
+          const finalVal = Math.max(0, Math.min(255, enhanced));
+          
+          data[i] = finalVal;     // R
+          data[i + 1] = finalVal; // G
+          data[i + 2] = finalVal; // B
+        }
+        
+        ctx.putImageData(imgData, 0, 0);
+        
+        canvas.toBlob((blob) => {
+          resolve(blob || file);
+        }, 'image/jpeg', 0.9);
+      };
+      img.onerror = reject;
+      img.src = e.target.result;
+    };
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
+};
+
 const TrackingModal = ({ isOpen, onClose, initialTrackingNumber = '' }) => {
   const [trackingNumber, setTrackingNumber] = useState(initialTrackingNumber);
   const [recentSearches, setRecentSearches] = useState(() => {
@@ -97,17 +160,40 @@ const TrackingModal = ({ isOpen, onClose, initialTrackingNumber = '' }) => {
     toast("Lendo etiqueta... Isso pode levar alguns segundos.", { icon: '🔍' });
 
     try {
+      // Preprocess image to enhance text contrast and remove background/shadow noise
+      let processedFile;
+      try {
+        processedFile = await preprocessImage(file);
+      } catch (err) {
+        console.warn("Preprocessing failed, fallback to raw file", err);
+        processedFile = file;
+      }
+
       const worker = await createWorker('eng');
-      const { data: { text } } = await worker.recognize(file);
+      const { data: { text } } = await worker.recognize(processedFile);
       await worker.terminate();
 
       const cleanText = text.replace(/\s/g, '');
-      const match = cleanText.match(/201\d{13}/);
+      
+      // Robust OCR parsing:
+      // Match a pattern that matches "201" prefix and 13 digits with common OCR substitutions
+      const ocrRegex = /[2Zz][0Oo][1Ii|!l][0-9OoIi|!lZzSsBbGgTt]{13}/;
+      const match = cleanText.match(ocrRegex);
 
       if (match) {
-        setTrackingNumber(match[0]);
+        // Map common OCR substitutions back to correct digits
+        const mappedTracking = match[0]
+          .replace(/[Oo]/g, '0')
+          .replace(/[Ii|!l]/g, '1')
+          .replace(/[Zz]/g, '2')
+          .replace(/[Ss]/g, '5')
+          .replace(/[Bb]/g, '8')
+          .replace(/[Gg]/g, '6')
+          .replace(/[Tt]/g, '7');
+
+        setTrackingNumber(mappedTracking);
         toast.success("Rastreio identificado!");
-        handleSearch(match[0]);
+        handleSearch(mappedTracking);
       } else {
         const fallbackMatch = cleanText.match(/[A-Z0-9]{10,20}/);
         if (fallbackMatch) {

@@ -7,3 +7,7 @@ dist/
 debug.html
 test_image.jpg
 yupoo_data.json
+
+# Orçamentos Locais
+orcamento*
+generate_pdf.js
