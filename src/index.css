@@ -308,6 +308,51 @@ button {
   box-shadow: 0 15px 35px rgba(37, 211, 102, 0.4);
 }
 
+/* WhatsApp Group Vertical Banner */
+.whatsapp-group-float {
+  position: fixed;
+  top: 50%;
+  right: -2px;
+  transform: translateY(-50%);
+  background: var(--accent-color);
+  color: #000;
+  z-index: 998;
+  padding: 15px 6px;
+  border-radius: 8px 0 0 8px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-decoration: none;
+  transition: right 0.3s ease, background 0.3s ease;
+  box-shadow: -4px 0 15px var(--accent-glow);
+}
+
+.whatsapp-group-float:hover {
+  right: 0;
+  background: var(--accent-hover);
+}
+
+.whatsapp-group-float span {
+  writing-mode: vertical-rl;
+  transform: rotate(180deg);
+  font-family: var(--font-display);
+  font-weight: 800;
+  letter-spacing: 1px;
+  font-size: 0.85rem;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+@media (max-width: 768px) {
+  .whatsapp-group-float {
+    padding: 12px 4px;
+  }
+  .whatsapp-group-float span {
+    font-size: 0.75rem;
+  }
+}
+
 .badge {
   position: absolute;
   top: 1rem;

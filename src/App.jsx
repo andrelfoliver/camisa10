@@ -102,6 +102,19 @@ const AppLayout = () => {
         <WhatsAppIcon size={32} />
       </a>
 
+      {/* WhatsApp Group Vertical Banner */}
+      {!isAdminPage && (
+        <a 
+          href="https://chat.whatsapp.com/KKKNZoOnr57AanDT33KPrT?mode=gi_t" 
+          target="_blank" 
+          rel="noopener noreferrer" 
+          className="whatsapp-group-float"
+          title="Entrar no Grupo VIP"
+        >
+          <span>Grupo no WhatsApp</span>
+        </a>
+      )}
+
       {/* 
         Sales Popup Widget
         Only display on storefront pages, hide on Admin to reduce noise. 
