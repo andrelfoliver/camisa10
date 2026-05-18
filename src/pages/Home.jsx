@@ -3,7 +3,7 @@ import HeroSection from '../components/HeroSection';
 import TeamsBar from '../components/TeamsBar';
 import ProductCard from '../components/ProductCard';
 import { supabase } from '../services/supabase';
-import { ShieldCheck, Truck, Star, Package, Lock, CheckCircle2, AlertTriangle, ChevronDown, ChevronUp, ChevronRight, Users, Zap, Quote } from 'lucide-react';
+import { ShieldCheck, Truck, Star, Package, Lock, CheckCircle2, AlertTriangle, ChevronDown, ChevronUp, ChevronRight, Users, Zap, Quote, MapPin } from 'lucide-react';
 import StatCounter from '../components/StatCounter';
 import { useNavigate } from 'react-router-dom';
 import { useCart } from '../context/CartContext';
@@ -26,6 +26,50 @@ const FAQItem = ({ question, answer }) => {
   );
 };
 
+const TypewriterCities = ({ cities }) => {
+  const [index, setIndex] = useState(0);
+  const [text, setText] = useState('');
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [isWaiting, setIsWaiting] = useState(false);
+  
+  useEffect(() => {
+    if (!cities || cities.length === 0) return;
+    if (isWaiting) return;
+    
+    const currentCity = String(cities[index % cities.length]);
+    const typeSpeed = isDeleting ? 40 : 100;
+    
+    const timeout = setTimeout(() => {
+      if (!isDeleting && text === currentCity) {
+        setIsWaiting(true);
+        setTimeout(() => {
+          setIsDeleting(true);
+          setIsWaiting(false);
+        }, 2000); // Pausa ao completar a palavra
+      } else if (isDeleting && text === '') {
+        setIsDeleting(false);
+        setIndex((prev) => prev + 1);
+      } else {
+        setText(currentCity.substring(0, text.length + (isDeleting ? -1 : 1)));
+      }
+    }, typeSpeed);
+    
+    return () => clearTimeout(timeout);
+  }, [text, isDeleting, index, cities, isWaiting]);
+
+  return (
+    <span style={{ display: 'inline-block', whiteSpace: 'nowrap' }}>
+      {text}
+      <span style={{ 
+        borderRight: '3px solid var(--accent-color)', 
+        animation: 'blink 1s step-end infinite',
+        marginLeft: '4px'
+      }}></span>
+      <style>{`@keyframes blink { 50% { border-color: transparent; } }`}</style>
+    </span>
+  );
+};
+
 
 
 const Home = () => {
@@ -39,6 +83,7 @@ const Home = () => {
   const [activeTeamFilter, setActiveTeamFilter] = useState(null);
   const [allProductsData, setAllProductsData] = useState([]);
   const [dbTeams, setDbTeams] = useState([]);
+  const [topCities, setTopCities] = useState(['Toronto', 'Vancouver', 'Calgary']);
 
   const [storeSections, setStoreSections] = useState({
     'Seleções': [],
@@ -188,6 +233,50 @@ const Home = () => {
         .order('date', { ascending: false });
       if (testimonialsData) setTestimonials(testimonialsData);
 
+      // 4. Buscar cidades reais para o card animado
+      const { data: citiesData } = await supabase
+        .from('orders')
+        .select('shipping_address')
+        .not('shipping_address', 'is', null);
+
+      if (citiesData && citiesData.length > 0) {
+        const counts = {};
+        citiesData.forEach(o => {
+          let city = o.shipping_address?.city;
+          if (city && typeof city === 'string' && city.trim() !== '') {
+            // Pega apenas a primeira parte antes de qualquer vírgula, barra ou parênteses (sem cortar o hífen!)
+            city = city.split(',')[0].split('/')[0].split('(')[0].trim();
+            
+            // Remove números e caracteres estranhos, MAS PRESERVA O HÍFEN
+            city = city.replace(/[^a-zA-Záéíóúâêôãõç\s-]/gi, '').trim();
+            
+            // Se o usuário digitou uma frase enorme (limitando a 3 palavras para não cortar Mont-Royal)
+            if (city.split(/[\s-]/).length > 3) {
+              city = city.split(' ').slice(0, 3).join(' ');
+            }
+            
+            if (city.length >= 3 && city.length <= 25) {
+              // Capitaliza cada palavra separadamente e preserva hífens
+              const normalizedCity = city.split(/([\s-])/).map(w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()).join('');
+              const province = o.shipping_address?.province;
+              
+              let finalName = normalizedCity;
+              if (province && typeof province === 'string' && province.trim().length >= 2) {
+                // Pega a sigla da província (2 letras)
+                const prov = province.trim().substring(0, 2).toUpperCase();
+                finalName = `${normalizedCity} | ${prov}`;
+              }
+              
+              counts[finalName] = (counts[finalName] || 0) + 1;
+            }
+          }
+        });
+        const sorted = Object.entries(counts).sort((a,b) => b[1] - a[1]).map(e => e[0]);
+        if (sorted.length > 0) {
+          setTopCities(sorted.slice(0, 10)); // Top 10 cidades para a animação
+        }
+      }
+
       setLoading(false);
     }
     fetchHomeData();
@@ -305,17 +394,19 @@ const Home = () => {
               <p style={{ color: 'var(--text-main)', opacity: 0.8, fontWeight: 500, fontSize: '0.8rem', textTransform: 'uppercase' }}>{t('stats_whatsapp')}</p>
             </div>
 
-            {/* Seguro */}
-            <div className="glass-panel" style={{ padding: '1rem', borderRadius: 'var(--radius-md)', textAlign: 'center', border: '1px solid var(--border-color)' }}>
+            {/* Cidades (Substitui Seguro) */}
+            <div className="glass-panel" style={{ padding: '1rem', borderRadius: 'var(--radius-md)', textAlign: 'center', border: '1px solid var(--border-color)', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
               <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '0.75rem' }}>
                 <div style={{ padding: '0.5rem', background: 'rgba(219, 254, 135, 0.1)', borderRadius: '50%' }}>
-                  <Lock size={20} color="var(--accent-color)" />
+                  <MapPin size={20} color="var(--accent-color)" />
                 </div>
               </div>
-              <h3 style={{ fontSize: '1.6rem', fontWeight: 800, color: 'var(--accent-color)', marginBottom: '0.25rem' }}>
-                <StatCounter target={100} variant="simple" suffix="%" delay={1200} />
+              <h3 style={{ fontSize: '1.4rem', fontWeight: 800, color: 'var(--accent-color)', marginBottom: '0.25rem', minHeight: '2.4rem', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <TypewriterCities cities={topCities} />
               </h3>
-              <p style={{ color: 'var(--text-main)', opacity: 0.8, fontWeight: 500, fontSize: '0.8rem', textTransform: 'uppercase' }}>{t('stats_payment')}</p>
+              <p style={{ color: 'var(--text-main)', opacity: 0.8, fontWeight: 500, fontSize: '0.75rem', textTransform: 'uppercase', marginTop: '0.5rem', lineHeight: 1.2 }}>
+                CIDADES QUE JÁ ENVIAMOS
+              </p>
             </div>
 
           </div>

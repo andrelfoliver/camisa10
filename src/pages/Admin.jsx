@@ -734,8 +734,15 @@ const Admin = () => {
       showAlert("Erro inesperado", err.message);
     }
   };
-
-
+  const handleTogglePartnership = async (orderId, currentMethod) => {
+    const newMethod = currentMethod === 'parceria' ? 'whatsapp' : 'parceria';
+    const { error } = await supabase.from('orders').update({ payment_method: newMethod }).eq('id', orderId);
+    if (!error) {
+      setOrders(orders.map(o => o.id === orderId ? { ...o, payment_method: newMethod } : o));
+    } else {
+      showAlert("Erro", "Não foi possível atualizar o método de pagamento.");
+    }
+  };
   const handleUpdateOrderStatus = async (orderId, newStatus) => {
     // 1. Atualizar o status do pedido
     const { error } = await supabase.from('orders').update({ status: newStatus }).eq('id', orderId);
@@ -856,8 +863,10 @@ const Admin = () => {
     return c.costFan || 9; // Fallback para Fan
   };
 
+  const getValidRevenue = (order) => order?.payment_method === 'parceria' ? 0 : Number(order?.total_price || 0);
+
   const getOrderCommissionBreakdown = (order) => {
-    if (!order || !order.referrer) return null;
+    if (!order || !order.referrer || order.payment_method === 'parceria') return null;
     
     // Identificar o agente (código do cupom ou agent_id)
     const rawRef = order.referrer || 'Sem Indicação';
@@ -882,12 +891,12 @@ const Admin = () => {
     else if (agentOrdersCount >= 26) rate = 0.12;
     else if (agentOrdersCount >= 11) rate = 0.10;
 
-    const base = Number(order.total_price || 0) * rate;
+    const base = getValidRevenue(order) * rate;
 
     // Bônus Sazonal
     const orderDateStr = order.created_at?.split('T')[0] || '';
     const isCopaPeriod = orderDateStr >= '2026-06-11' && orderDateStr <= '2026-07-19';
-    const seasonal = isCopaPeriod ? Number(order.total_price || 0) * 0.05 : 0;
+    const seasonal = isCopaPeriod ? getValidRevenue(order) * 0.05 : 0;
 
     // BÔNUS META
     const sortedAgentOrders = [...agentOrders].sort((a, b) => new Date(a.created_at) - new Date(b.created_at));
@@ -2420,11 +2429,11 @@ const Admin = () => {
 
                           if (!acc[refKey]) acc[refKey] = { count: 0, total: 0, seasonalBonus: 0, orderList: [] };
                           acc[refKey].count += 1;
-                          acc[refKey].total += Number(order.total_price || 0);
+                          acc[refKey].total += getValidRevenue(order);
                           acc[refKey].orderList.push(order);
 
                           if (isCopaPeriod) {
-                            acc[refKey].seasonalBonus += Number(order.total_price || 0) * 0.05;
+                            acc[refKey].seasonalBonus += getValidRevenue(order) * 0.05;
                           }
 
                           return acc;
@@ -2487,7 +2496,7 @@ const Admin = () => {
                                               <td style={{ padding: '0.5rem', fontWeight: 600 }}>#{o.id.slice(0,8)}</td>
                                               <td style={{ padding: '0.5rem' }}>{new Date(o.created_at).toLocaleDateString('pt-BR')}</td>
                                               <td style={{ padding: '0.5rem' }}>{o.customer_name}</td>
-                                              <td style={{ padding: '0.5rem' }}>${Number(o.total_price).toFixed(2)}</td>
+                                              <td style={{ padding: '0.5rem' }}>${getValidRevenue(o).toFixed(2)}</td>
                                               <td style={{ padding: '0.5rem' }}>
                                                 <span style={{ 
                                                   padding: '2px 8px', 
@@ -2903,7 +2912,7 @@ const Admin = () => {
               const key = `${city}${province ? `, ${province}` : ''}`;
               if (!acc[key]) acc[key] = { count: 0, revenue: 0 };
               acc[key].count++;
-              acc[key].revenue += Number(order.total_price || 0);
+              acc[key].revenue += getValidRevenue(order);
               return acc;
             }, {});
 
@@ -2920,7 +2929,7 @@ const Admin = () => {
               if (order.status === 'processing') acc.countProcessing++;
 
               if (!isCancelled) {
-                acc.totalRevenue += Number(order.total_price || 0);
+                acc.totalRevenue += getValidRevenue(order);
                 acc.totalJerseys += itemsCount;
 
                 const orderCostCAD = calculateOrderCost(order);
@@ -3145,7 +3154,7 @@ const Admin = () => {
                             <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{order.customer_email}</span>
                           </div>
                           <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>{new Date(order.created_at).toLocaleDateString()}</span>
-                          <span style={{ fontWeight: 800, color: 'var(--accent-color)' }}>${Number(order.total_price).toFixed(2)}</span>
+                          <span style={{ fontWeight: 800, color: 'var(--accent-color)' }}>${getValidRevenue(order).toFixed(2)}</span>
                           <div>
                             <span style={{
                               fontSize: '0.65rem',
@@ -3214,7 +3223,7 @@ const Admin = () => {
                                 <p style={{ fontSize: '0.65rem', color: 'var(--text-muted)', fontWeight: 800, textTransform: 'uppercase', marginBottom: '0.5rem' }}>DRE do Pedido (CAD)</p>
                                 <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.85rem', marginBottom: '0.3rem' }}>
                                   <span>Receita Bruta:</span>
-                                  <span style={{ color: 'var(--accent-color)', fontWeight: 700 }}>${Number(order.total_price).toFixed(2)}</span>
+                                  <span style={{ color: 'var(--accent-color)', fontWeight: 700 }}>${getValidRevenue(order).toFixed(2)}</span>
                                 </div>
                                 <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.85rem', marginBottom: '0.3rem' }}>
                                   <span>Custo Fornecedor:</span>
@@ -3253,7 +3262,7 @@ const Admin = () => {
                                 })()}
                                 <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.9rem', fontWeight: 800, borderTop: '1px solid rgba(255,255,255,0.1)', paddingTop: '0.3rem', marginTop: '0.3rem' }}>
                                   <span>Lucro Líquido:</span>
-                                  <span style={{ color: '#22c55e' }}>${(Number(order.total_price) - calculateOrderCost(order)).toFixed(2)}</span>
+                                  <span style={{ color: '#22c55e' }}>${(getValidRevenue(order) - calculateOrderCost(order)).toFixed(2)}</span>
                                 </div>
                                 <p style={{ fontSize: '0.6rem', color: 'var(--text-muted)', marginTop: '0.5rem' }}>
                                   * Baseado em {order.usd_cad_rate ? `câmbio histórico (${order.usd_cad_rate})` : `câmbio atual/fallback (${pricing.exchangeRateFallback || 1.38})`}.
@@ -3275,6 +3284,24 @@ const Admin = () => {
                                 <option value="completed">✅ Finalizado</option>
                                 <option value="cancelled">🔴 Cancelado</option>
                               </select>
+                              
+                              <button
+                                onClick={() => handleTogglePartnership(order.id, order.payment_method)}
+                                style={{
+                                  background: order.payment_method === 'parceria' ? 'rgba(204, 255, 0, 0.1)' : 'transparent',
+                                  color: order.payment_method === 'parceria' ? 'var(--accent-color)' : 'var(--text-muted)',
+                                  border: `1px solid ${order.payment_method === 'parceria' ? 'var(--accent-color)' : 'var(--border-color)'}`,
+                                  borderRadius: '6px',
+                                  padding: '0.5rem',
+                                  fontSize: '0.75rem',
+                                  fontWeight: order.payment_method === 'parceria' ? 700 : 500,
+                                  cursor: 'pointer',
+                                  width: '100%',
+                                  transition: 'all 0.3s'
+                                }}
+                              >
+                                {order.payment_method === 'parceria' ? '★ Marcado como Parceria (Receita $0)' : 'Marcar como Parceria / Doação'}
+                              </button>
 
                               <p style={{ fontSize: '0.7rem', color: 'var(--text-muted)', fontWeight: 800, textTransform: 'uppercase', marginTop: '1rem' }}>Rastreamento de Envio</p>
                               <div style={{ display: 'flex', gap: '0.5rem' }}>
