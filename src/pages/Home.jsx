@@ -438,8 +438,8 @@ const Home = () => {
           <h2 style={{ fontSize: '2.5rem', marginBottom: '2rem', color: '#EF4444', fontWeight: 800 }}>{t('promo_banner_title')}</h2>
           {(() => {
             const basePromoPrice = pricingConfig?.promoBasePrice || 47.90;
-            const discountPercent2 = (pricingConfig?.discounts || []).find(d => d.qty === 2)?.percent || 8;
-            const discountPercent3 = (pricingConfig?.discounts || []).find(d => d.qty === 3)?.percent || 12;
+            const discountPercent2 = (pricingConfig?.discounts || []).find(d => d.qty === 2)?.percent || (pricingConfig?.discounts || []).find(d => d.qty === 2)?.amount || 4;
+            const discountPercent3 = (pricingConfig?.discounts || []).find(d => d.qty === 3)?.percent || (pricingConfig?.discounts || []).find(d => d.qty === 3)?.amount || 7;
 
             const normalPrice2 = basePromoPrice * 2;
             const finalPricePerUnit2 = basePromoPrice * (1 - (discountPercent2 / 100));

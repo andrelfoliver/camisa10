@@ -143,11 +143,10 @@ const Admin = () => {
     size2XL3XL: 7,
     size4XL: 10,
     discounts: [
-      { qty: 2, amount: 15 },
-      { qty: 3, amount: 20 },
-      { qty: 4, amount: 25 },
-      { qty: 5, amount: 30 },
-      { qty: 10, amount: 35 }
+      { qty: 2, percent: 4 },
+      { qty: 3, percent: 7 },
+      { qty: 5, percent: 10 },
+      { qty: 10, percent: 15 }
     ],
     shippingCost: 0,
     freeShippingThreshold: 0,
@@ -2714,9 +2713,9 @@ const Admin = () => {
                         </div>
                         <div style={{ flex: 1 }}>
                           <label style={{ display: 'block', marginBottom: '0.3rem', color: 'var(--text-muted)', fontSize: '0.8rem' }}>Desconto Total (% OFF)</label>
-                          <input required type="number" step="0.01" value={discount.amount} onChange={(e) => {
+                          <input required type="number" step="0.01" value={discount.percent || discount.amount || 0} onChange={(e) => {
                             const newDiscounts = [...pricing.discounts];
-                            newDiscounts[index].amount = parseFloat(e.target.value);
+                            newDiscounts[index].percent = parseFloat(e.target.value);
                             setPricing({ ...pricing, discounts: newDiscounts });
                           }} style={{ width: '100%', padding: '0.8rem', background: 'var(--bg-color)', color: '#fff', border: '1px solid var(--border-color)', borderRadius: '4px' }} />
                         </div>

@@ -32,7 +32,7 @@ export const CartProvider = ({ children }) => {
   const [pricing, setPricing] = useState({
     nameNumber: 11.90, patch: 3.90, size2XL3XL: 7.90, size4XL: 11.90,
     shippingCost: 0, freeShippingThreshold: 0,
-    discounts: [{ qty: 2, percent: 8 }, { qty: 3, percent: 12 }, { qty: 5, percent: 15 }, { qty: 10, percent: 20 }]
+    discounts: [{ qty: 2, percent: 4 }, { qty: 3, percent: 7 }, { qty: 5, percent: 10 }, { qty: 10, percent: 15 }]
   });
 
   // 1. Efeito de Carregamento e Sincronização (Login/Logout/Refresh)
@@ -205,9 +205,10 @@ export const CartProvider = ({ children }) => {
     const sortedDiscounts = (pricing.discounts || []).sort((a,b) => b.qty - a.qty);
     const matchedDiscount = sortedDiscounts.find(d => totalItems >= d.qty);
     
-    if (matchedDiscount && matchedDiscount.percent) {
+    if (matchedDiscount) {
+       const pct = matchedDiscount.percent || matchedDiscount.amount || 0;
        // Desconto aplica-se APENAS sobre o valor base acumulado
-       discount = baseSubtotal * (matchedDiscount.percent / 100);
+       discount = baseSubtotal * (pct / 100);
     }
 
     // Lógica de Frete
