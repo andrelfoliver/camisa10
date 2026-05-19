@@ -18,6 +18,7 @@ const Checkout = () => {
 
   const [formData, setFormData] = useState({
     name: user?.user_metadata?.full_name || '',
+    email: user?.email || '',
     phone: '',
     instagram: '',
     deliveryMethod: 'shipping', // 'shipping' | 'pickup'
@@ -174,7 +175,9 @@ const Checkout = () => {
   const generateWhatsAppMessage = () => {
     const isPickup = formData.deliveryMethod === 'pickup';
     let message = `${t('checkout_wa_order_title')}\n\n`;
-    message += `${t('checkout_wa_customer')} ${formData.name}\n`;
+    message += `${t('checkout_wa_customer')}\n`;
+    message += `Nome: ${formData.name}\n`;
+    if (user?.email || formData.email) message += `Email: ${user?.email || formData.email}\n`;
     message += `Telefone: ${formData.phone}\n`;
     
     if (isPickup) {
@@ -265,6 +268,11 @@ const Checkout = () => {
       showPopup("Por favor, insira um telefone válido com 10 dígitos (DDD + Número).");
       return false;
     }
+    
+    if (!user && !formData.email.trim()) {
+      showPopup("Por favor, insira um e-mail válido para podermos enviar as atualizações do seu pedido.");
+      return false;
+    }
 
     // 2. Validações Específicas para Entrega
     if (formData.deliveryMethod === 'shipping') {
@@ -304,9 +312,9 @@ const Checkout = () => {
       }
 
       const orderData = {
-        user_id: user.id,
+        user_id: user?.id || null,
         customer_name: formData.name,
-        customer_email: user.email,
+        customer_email: user?.email || formData.email,
         customer_phone: formData.phone,
         shipping_address: {
           method: formData.deliveryMethod,
@@ -341,7 +349,10 @@ const Checkout = () => {
       };
 
       const { error: orderError } = await supabase.from('orders').insert([orderData]);
-      if (orderError) throw orderError;
+      if (orderError) {
+        console.warn("⚠️ Erro ao salvar pedido no DB (possível compra como visitante):", orderError);
+        // Não jogamos throw para não impedir o cliente visitante de prosseguir para o WhatsApp
+      }
 
       // 1.2. Decrementar estoque local (Pronta Entrega)
       try {
@@ -442,20 +453,8 @@ const Checkout = () => {
   // Determinar o caminho de retorno (categoria anterior ou home)
   const returnPath = sessionStorage.getItem('ifooty_last_browsed_path') || '/';
 
-  if (!user) {
-    return (
-      <div className="container" style={{ padding: '6rem 1.5rem', textAlign: 'center' }}>
-        <h2 style={{ marginBottom: '1rem' }}>{t('checkout_login_title')}</h2>
-        <p style={{ color: 'var(--text-muted)' }}>{t('checkout_login_text')}</p>
-        <button className="btn-primary" onClick={() => {
-          sessionStorage.setItem('ifooty_redirect_after_login', '/checkout'); // Se logar, volta pra cá
-          navigate('/auth');
-        }} style={{ marginTop: '2rem', display: 'inline-flex', alignItems: 'center', gap: '0.5rem' }}>
-          <LogIn size={20} /> {t('checkout_login_btn')}
-        </button>
-      </div>
-    );
-  }
+  // Bloco de Login removido para permitir Checkout como Visitante
+  // if (!user) { ... }
 
   if (cartItems.length === 0) {
     return (
@@ -540,6 +539,17 @@ const Checkout = () => {
                     style={{ width: '100%', padding: '0.75rem', borderRadius: 'var(--radius-sm)', background: 'var(--bg-color)', border: '1px solid var(--border-color)', color: 'var(--text-main)', fontSize: '1rem' }}
                   />
                 </div>
+                {!user && (
+                  <div>
+                    <label style={{ display: 'block', marginBottom: '0.5rem', color: 'var(--text-muted)' }}>E-mail *</label>
+                    <input
+                      type="email"
+                      value={formData.email} onChange={e => setFormData({ ...formData, email: e.target.value })}
+                      placeholder="seu@email.com"
+                      style={{ width: '100%', padding: '0.75rem', borderRadius: 'var(--radius-sm)', background: 'var(--bg-color)', border: '1px solid var(--border-color)', color: 'var(--text-main)', fontSize: '1rem' }}
+                    />
+                  </div>
+                )}
                 <div>
                   <label style={{ display: 'block', marginBottom: '0.5rem', color: 'var(--text-muted)' }}>{t('checkout_phone')}</label>
                   <input
