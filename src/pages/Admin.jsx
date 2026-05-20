@@ -862,7 +862,14 @@ const Admin = () => {
     return c.costFan || 9; // Fallback para Fan
   };
 
-  const getValidRevenue = (order) => order?.payment_method === 'parceria' ? 0 : Number(order?.total_price || 0);
+  const getValidRevenue = (order) => {
+    if (order?.payment_method === 'parceria') return 0;
+    const gross = Number(order?.total_price || 0);
+    if (order?.payment_method === 'paypal') {
+      return gross - (gross * 0.029) - 0.30;
+    }
+    return gross;
+  };
 
   const getOrderCommissionBreakdown = (order) => {
     if (!order || !order.referrer || order.payment_method === 'parceria') return null;
@@ -3221,8 +3228,18 @@ const Admin = () => {
                               <div style={{ padding: '1rem', background: 'rgba(255,255,255,0.03)', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.05)' }}>
                                 <p style={{ fontSize: '0.65rem', color: 'var(--text-muted)', fontWeight: 800, textTransform: 'uppercase', marginBottom: '0.5rem' }}>DRE do Pedido (CAD)</p>
                                 <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.85rem', marginBottom: '0.3rem' }}>
-                                  <span>Receita Bruta:</span>
-                                  <span style={{ color: 'var(--accent-color)', fontWeight: 700 }}>${getValidRevenue(order).toFixed(2)}</span>
+                                  <span>Receita Bruta (Valor Pago):</span>
+                                  <span style={{ color: 'var(--accent-color)', fontWeight: 700 }}>${(Number(order?.total_price || 0)).toFixed(2)}</span>
+                                </div>
+                                {order?.payment_method === 'paypal' && (
+                                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.85rem', marginBottom: '0.3rem' }}>
+                                    <span>Taxa PayPal Estimada:</span>
+                                    <span style={{ color: '#EAB308', fontWeight: 700 }}>-${(Number(order?.total_price || 0) * 0.029 + 0.30).toFixed(2)}</span>
+                                  </div>
+                                )}
+                                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.85rem', marginBottom: '0.3rem' }}>
+                                  <span>Receita Líquida (Após Taxas):</span>
+                                  <span style={{ color: '#22c55e', fontWeight: 700 }}>${getValidRevenue(order).toFixed(2)}</span>
                                 </div>
                                 <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.85rem', marginBottom: '0.3rem' }}>
                                   <span>Custo Fornecedor:</span>
