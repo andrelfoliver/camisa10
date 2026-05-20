@@ -3205,8 +3205,11 @@ const Admin = () => {
                                     <div style={{ flex: 1 }}>
                                       <p style={{ color: '#fff', fontSize: '0.9rem', fontWeight: 600 }}>{item.quantity}x {item.name}</p>
                                       <p style={{ color: 'var(--text-muted)', fontSize: '0.8rem' }}>Tamanho: {item.size}</p>
-                                      {item.extras?.customization && (
-                                        <p style={{ color: 'var(--accent-color)', fontSize: '0.75rem', fontWeight: 800 }}>Custom: {item.extras.customization.name} / {item.extras.customization.number}</p>
+                                      {item.extras?.nameNumber && (
+                                        <p style={{ color: 'var(--accent-color)', fontSize: '0.75rem', fontWeight: 800 }}>Custom: {item.extras.customName} / {item.extras.customNumber}</p>
+                                      )}
+                                      {item.extras?.extraCustomization && item.extras?.customExtraName && (
+                                        <p style={{ color: '#00BCD4', fontSize: '0.75rem', fontWeight: 800 }}>Extra: {item.extras.customExtraName}</p>
                                       )}
                                     </div>
                                   </div>

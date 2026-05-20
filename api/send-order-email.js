@@ -74,11 +74,17 @@ export default async function handler(req, res) {
   try {
     const itemsHtml = order.items.map(item => {
       const imageUrl = normalizeImgUrl(item.image);
-      const customization = item.extras?.nameNumber 
-        ? `<div style="margin-top: 5px; padding: 8px; background: #FFF9C4; border-left: 4px solid #FBC02D; font-size: 0.9rem; color: #444;">
+      let customization = '';
+      if (item.extras?.nameNumber) {
+        customization += `<div style="margin-top: 5px; padding: 8px; background: #FFF9C4; border-left: 4px solid #FBC02D; font-size: 0.9rem; color: #444;">
              <strong>${t.customLabel}:</strong> ${item.extras.customName || 'N/A'} - ${item.extras.customNumber || 'N/A'}
-           </div>`
-        : '';
+           </div>`;
+      }
+      if (item.extras?.extraCustomization && item.extras?.customExtraName) {
+        customization += `<div style="margin-top: 5px; padding: 8px; background: #E0F7FA; border-left: 4px solid #00BCD4; font-size: 0.9rem; color: #444;">
+             <strong>EXTRA CUSTOM:</strong> ${item.extras.customExtraName}
+           </div>`;
+      }
       
       const patches = item.extras?.patches 
         ? `<div style="margin-top: 3px; font-size: 0.85rem; color: #666;"><strong>${t.patchesLabel}</strong></div>`
@@ -104,11 +110,17 @@ export default async function handler(req, res) {
     // --- NOVA SEÇÃO: RESUMO PARA O FORNECEDOR (SEM PREÇOS) ---
     const supplierItemsHtml = order.items.map(item => {
       const imageUrl = normalizeImgUrl(item.image);
-      const customization = item.extras?.nameNumber 
-        ? `<div style="margin-top: 5px; padding: 6px; background: #f0f4f8; border-radius: 4px; font-size: 0.85rem; color: #2d3748;">
+      let customization = '';
+      if (item.extras?.nameNumber) {
+        customization += `<div style="margin-top: 5px; padding: 6px; background: #f0f4f8; border-radius: 4px; font-size: 0.85rem; color: #2d3748;">
              🛠️ <strong>PERSONALIZADO:</strong> ${item.extras.customName || 'N/A'} - ${item.extras.customNumber || 'N/A'}
-           </div>`
-        : '';
+           </div>`;
+      }
+      if (item.extras?.extraCustomization && item.extras?.customExtraName) {
+        customization += `<div style="margin-top: 5px; padding: 6px; background: #e0f2fe; border-radius: 4px; font-size: 0.85rem; color: #0369a1;">
+             ⭐ <strong>EXTRA:</strong> ${item.extras.customExtraName}
+           </div>`;
+      }
       
       const patches = item.extras?.patches 
         ? `<div style="margin-top: 3px; font-size: 0.85rem; color: #4a5568;">🎖️ <strong>+ Patches</strong></div>`
