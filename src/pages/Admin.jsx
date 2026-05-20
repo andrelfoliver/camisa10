@@ -191,6 +191,12 @@ const Admin = () => {
   const [expandedCustomerId, setExpandedCustomerId] = useState(null);
   const [showValues, setShowValues] = useState(false);
   const [supplierEmail, setSupplierEmail] = useState('');
+  const [toast, setToast] = useState({ show: false, message: '', type: 'success' });
+
+  const showToast = (message, type = 'success') => {
+    setToast({ show: true, message, type });
+    setTimeout(() => setToast(t => ({ ...t, show: false })), 4000);
+  };
 
   // Filtros do Relatório de Produtividade
   const [prodDateRange, setProdDateRange] = useState({
@@ -853,7 +859,7 @@ const Admin = () => {
   const sendToSupplier = async (order) => {
     const email = supplierEmail.trim();
     if (!email) {
-      alert('Por favor, configure o e-mail do fornecedor primeiro nas Configurações de Preço.');
+      showToast('Por favor, configure o e-mail do fornecedor primeiro nas Configurações de Preço.', 'error');
       return;
     }
     try {
@@ -877,12 +883,12 @@ const Admin = () => {
       });
       const data = await res.json();
       if (data.supplier) {
-        alert(`✅ E-mail enviado para o fornecedor (${email}) com sucesso!`);
+        showToast(`✅ E-mail enviado para o fornecedor (${email}) com sucesso!`, 'success');
       } else {
-        alert('❌ Erro ao enviar para o fornecedor. Verifique o e-mail configurado.');
+        showToast('❌ Erro ao enviar para o fornecedor. Verifique o e-mail configurado.', 'error');
       }
     } catch (err) {
-      alert('❌ Erro de conexão ao tentar enviar o e-mail.');
+      showToast('❌ Erro de conexão ao tentar enviar o e-mail.', 'error');
       console.error(err);
     }
   };
@@ -943,7 +949,7 @@ const Admin = () => {
     });
 
     if (!changed) {
-      alert('✅ Todos os itens já possuem número preenchido!');
+      showToast('✅ Todos os itens já possuem número preenchido!', 'info');
       return;
     }
 
@@ -956,10 +962,10 @@ const Admin = () => {
       if (error) throw error;
 
       setOrders(prev => prev.map(o => o.id === order.id ? { ...o, items: updatedItems } : o));
-      alert(`🎲 Números atribuídos com sucesso! Revise antes de enviar ao fornecedor.`);
+      showToast('🎲 Números atribuídos com sucesso! Revise antes de enviar ao fornecedor.', 'success');
     } catch (err) {
       console.error(err);
-      alert('❌ Erro ao salvar os números. Tente novamente.');
+      showToast('❌ Erro ao salvar os números. Tente novamente.', 'error');
     }
   };
 
@@ -2829,10 +2835,19 @@ const Admin = () => {
                       type="email"
                       value={supplierEmail}
                       onChange={e => setSupplierEmail(e.target.value)}
+                      onBlur={async (e) => {
+                        const val = e.target.value.trim();
+                        if (!val) return;
+                        await supabase.from('store_settings').upsert(
+                          { key: 'supplier_email', value: val },
+                          { onConflict: 'key' }
+                        );
+                        showToast(`✅ E-mail do fornecedor salvo: ${val}`, 'success');
+                      }}
                       placeholder="fornecedor@exemplo.com"
                       style={{ width: '100%', padding: '0.8rem', background: 'rgba(0,0,0,0.2)', color: '#fff', border: '1px solid rgba(234, 179, 8, 0.4)', borderRadius: '6px', fontSize: '0.95rem' }}
                     />
-                    {supplierEmail && <p style={{ fontSize: '0.75rem', color: '#EAB308', marginTop: '0.4rem' }}>✅ Configurado: {supplierEmail} — salva ao clicar em "Salvar Configurações"</p>}
+                    {supplierEmail && <p style={{ fontSize: '0.75rem', color: '#10B981', marginTop: '0.4rem' }}>✅ Configurado: {supplierEmail} — salvo automaticamente ao sair do campo</p>}
                   </div>
 
                   <div style={{ marginTop: '2rem', borderTop: '1px solid var(--border-color)', paddingTop: '2rem' }}>
@@ -4746,6 +4761,27 @@ const Admin = () => {
               </button>
             </div>
           </div>
+        </div>
+      )}
+
+      {/* TOAST DE NOTIFICAÇÃO PREMIUM */}
+      {toast.show && (
+        <div style={{
+          position: 'fixed', bottom: '2rem', right: '2rem', zIndex: 99999,
+          background: toast.type === 'success' ? 'rgba(16,185,129,0.12)' : toast.type === 'error' ? 'rgba(239,68,68,0.12)' : 'rgba(99,102,241,0.12)',
+          border: `1px solid ${toast.type === 'success' ? '#10B981' : toast.type === 'error' ? '#EF4444' : '#818CF8'}`,
+          borderRadius: '12px', padding: '1rem 1.5rem',
+          backdropFilter: 'blur(12px)',
+          boxShadow: '0 8px 32px rgba(0,0,0,0.4)',
+          display: 'flex', alignItems: 'center', gap: '0.75rem',
+          maxWidth: '380px', animation: 'slideInRight 0.3s ease-out'
+        }}>
+          <span style={{ fontSize: '1.3rem' }}>
+            {toast.type === 'success' ? '✅' : toast.type === 'error' ? '❌' : 'ℹ️'}
+          </span>
+          <span style={{ color: '#fff', fontSize: '0.9rem', fontWeight: 600, lineHeight: 1.4 }}>
+            {toast.message}
+          </span>
         </div>
       )}
 
