@@ -883,12 +883,12 @@ const Admin = () => {
       });
       const data = await res.json();
       if (data.supplier) {
-        showToast(`✅ E-mail enviado para o fornecedor (${email}) com sucesso!`, 'success');
+        showToast(`E-mail enviado para o fornecedor (${email}) com sucesso!`, 'success');
       } else {
-        showToast('❌ Erro ao enviar para o fornecedor. Verifique o e-mail configurado.', 'error');
+        showToast('Erro ao enviar para o fornecedor. Verifique o e-mail configurado.', 'error');
       }
     } catch (err) {
-      showToast('❌ Erro de conexão ao tentar enviar o e-mail.', 'error');
+      showToast('Erro de conexão ao tentar enviar o e-mail.', 'error');
       console.error(err);
     }
   };
@@ -949,7 +949,7 @@ const Admin = () => {
     });
 
     if (!changed) {
-      showToast('✅ Todos os itens já possuem número preenchido!', 'info');
+      showToast('Todos os itens já possuem número preenchido!', 'info');
       return;
     }
 
@@ -962,10 +962,10 @@ const Admin = () => {
       if (error) throw error;
 
       setOrders(prev => prev.map(o => o.id === order.id ? { ...o, items: updatedItems } : o));
-      showToast('🎲 Números atribuídos com sucesso! Revise antes de enviar ao fornecedor.', 'success');
+      showToast('Números atribuídos com sucesso! Revise antes de enviar ao fornecedor.', 'success');
     } catch (err) {
       console.error(err);
-      showToast('❌ Erro ao salvar os números. Tente novamente.', 'error');
+      showToast('Erro ao salvar os números. Tente novamente.', 'error');
     }
   };
 
@@ -2842,7 +2842,7 @@ const Admin = () => {
                           { key: 'supplier_email', value: val },
                           { onConflict: 'key' }
                         );
-                        showToast(`✅ E-mail do fornecedor salvo: ${val}`, 'success');
+                        showToast(`E-mail do fornecedor salvo: ${val}`, 'success');
                       }}
                       placeholder="fornecedor@exemplo.com"
                       style={{ width: '100%', padding: '0.8rem', background: 'rgba(0,0,0,0.2)', color: '#fff', border: '1px solid rgba(234, 179, 8, 0.4)', borderRadius: '6px', fontSize: '0.95rem' }}
