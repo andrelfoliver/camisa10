@@ -7,6 +7,7 @@ import { migrateTeamsToSupabase } from '../services/migration_teams';
 import WhatsAppIcon from '../components/WhatsAppIcon';
 import ProductMedia from '../components/ProductMedia';
 import TrackingModal from '../components/TrackingModal';
+import CanadaMap, { normalizeProvince } from '../components/CanadaMap';
 import { Link, Navigate } from 'react-router-dom';
 
 const Admin = () => {
@@ -2209,6 +2210,12 @@ const Admin = () => {
             const totalProvinces = uniqueProvinces.size;
             const totalOrdersCA = Object.values(cityStats).reduce((sum, d) => sum + d.count, 0);
 
+            const provCounts = {};
+            orders.forEach(o => {
+              const prov = normalizeProvince(o.shipping_address?.province);
+              if (prov) provCounts[prov] = (provCounts[prov] || 0) + 1;
+            });
+
             return (
               <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem', maxWidth: '1000px' }}>
                 <div style={{ background: 'rgba(255,255,255,0.03)', padding: '2rem', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.05)' }}>
@@ -2220,41 +2227,52 @@ const Admin = () => {
                     </div>
                   </div>
 
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1.8fr 1fr', gap: '1rem', marginBottom: '2.5rem' }}>
-                    <div className="glass-panel" style={{ padding: '1.2rem', borderRadius: '12px', borderLeft: '4px solid var(--accent-color)' }}>
-                      <p style={{ fontSize: '0.65rem', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: 800, margin: '0 0 0.5rem 0' }}>Cidades Atendidas</p>
-                      <h3 style={{ fontSize: '1.8rem', color: '#fff', margin: 0 }}>{totalCities}</h3>
-                    </div>
-                    <div className="glass-panel" style={{ padding: '1.2rem', borderRadius: '12px', borderLeft: '4px solid #3B82F6' }}>
-                      <p style={{ fontSize: '0.65rem', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: 800, margin: '0 0 0.5rem 0' }}>Províncias Atendidas</p>
-                      <h3 style={{ fontSize: '1.8rem', color: '#fff', margin: '0 0 0.8rem 0' }}>{totalProvinces}/10</h3>
-                      <div style={{ display: 'flex', flexWrap: 'nowrap', gap: '5px', overflowX: 'auto', paddingBottom: '5px' }}>
-                        {['AB', 'BC', 'MB', 'NB', 'NL', 'NS', 'ON', 'PE', 'QC', 'SK'].map(p => {
-                          const isServed = uniqueProvinces.has(p);
-                          return (
-                            <span 
-                              key={p} 
-                              style={{ 
-                                fontSize: '0.65rem', 
-                                fontWeight: 800, 
-                                padding: '2px 4px', 
-                                borderRadius: '3px', 
-                                background: isServed ? 'rgba(34, 197, 94, 0.2)' : 'rgba(255,255,255,0.05)',
-                                color: isServed ? '#22c55e' : 'rgba(255,255,255,0.2)',
-                                border: isServed ? '1px solid rgba(34, 197, 94, 0.3)' : '1px solid rgba(255,255,255,0.05)',
-                                transition: 'all 0.3s ease'
-                              }}
-                              title={isServed ? `Província atendida: ${p}` : `Ainda não atendida: ${p}`}
-                            >
-                              {p}
-                            </span>
-                          );
-                        })}
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: '1.5rem', marginBottom: '2.5rem' }}>
+                    <div style={{ flex: '1 1 50%', display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                      <div style={{ display: 'flex', gap: '1rem' }}>
+                        <div className="glass-panel" style={{ flex: 1, padding: '1.2rem', borderRadius: '12px', borderLeft: '4px solid var(--accent-color)' }}>
+                          <p style={{ fontSize: '0.65rem', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: 800, margin: '0 0 0.5rem 0' }}>Cidades Atendidas</p>
+                          <h3 style={{ fontSize: '1.8rem', color: '#fff', margin: 0 }}>{totalCities}</h3>
+                        </div>
+                        <div className="glass-panel" style={{ flex: 1, padding: '1.2rem', borderRadius: '12px', borderLeft: '4px solid #10B981' }}>
+                          <p style={{ fontSize: '0.65rem', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: 800, margin: '0 0 0.5rem 0' }}>Total Pedidos</p>
+                          <h3 style={{ fontSize: '1.8rem', color: '#fff', margin: 0 }}>{totalOrdersCA}</h3>
+                        </div>
+                      </div>
+                      <div className="glass-panel" style={{ padding: '1.2rem', borderRadius: '12px', borderLeft: '4px solid #3B82F6' }}>
+                        <p style={{ fontSize: '0.65rem', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: 800, margin: '0 0 0.5rem 0' }}>Províncias Atendidas</p>
+                        <h3 style={{ fontSize: '1.8rem', color: '#fff', margin: '0 0 0.8rem 0' }}>{totalProvinces}/10</h3>
+                        <div style={{ display: 'flex', flexWrap: 'nowrap', gap: '5px', overflowX: 'auto', paddingBottom: '5px' }}>
+                          {['AB', 'BC', 'MB', 'NB', 'NL', 'NS', 'ON', 'PE', 'QC', 'SK'].map(p => {
+                            const isServed = uniqueProvinces.has(p);
+                            return (
+                              <span 
+                                key={p} 
+                                style={{ 
+                                  fontSize: '0.65rem', 
+                                  fontWeight: 800, 
+                                  padding: '2px 4px', 
+                                  borderRadius: '3px', 
+                                  background: isServed ? 'rgba(34, 197, 94, 0.2)' : 'rgba(255,255,255,0.05)',
+                                  color: isServed ? '#22c55e' : 'rgba(255,255,255,0.2)',
+                                  border: isServed ? '1px solid rgba(34, 197, 94, 0.3)' : '1px solid rgba(255,255,255,0.05)',
+                                  transition: 'all 0.3s ease'
+                                }}
+                                title={isServed ? `Província atendida: ${p}` : `Ainda não atendida: ${p}`}
+                              >
+                                {p}
+                              </span>
+                            );
+                          })}
+                        </div>
                       </div>
                     </div>
-                    <div className="glass-panel" style={{ padding: '1.2rem', borderRadius: '12px', borderLeft: '4px solid #10B981' }}>
-                      <p style={{ fontSize: '0.65rem', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: 800, margin: '0 0 0.5rem 0' }}>Total Pedidos (Canadá)</p>
-                      <h3 style={{ fontSize: '1.8rem', color: '#fff', margin: 0 }}>{totalOrdersCA}</h3>
+                    
+                    <div className="glass-panel" style={{ flex: '0 1 350px', padding: '1.2rem', borderRadius: '12px', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
+                      <p style={{ fontSize: '0.65rem', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: 800, margin: '0 0 1rem 0', textAlign: 'center' }}>Distribuição Geográfica</p>
+                      <div style={{ width: '100%', maxWidth: '280px', margin: '0 auto' }}>
+                        <CanadaMap provinceCounts={provCounts} />
+                      </div>
                     </div>
                   </div>
 

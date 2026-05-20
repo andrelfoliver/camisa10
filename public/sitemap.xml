@@ -1386,17 +1386,17 @@
     <priority>0.9</priority>
   </url>
   <url>
-    <loc>https://ifooty.ca/produto/1389</loc>
-    <changefreq>daily</changefreq>
-    <priority>0.9</priority>
-  </url>
-  <url>
     <loc>https://ifooty.ca/produto/1388</loc>
     <changefreq>daily</changefreq>
     <priority>0.9</priority>
   </url>
   <url>
     <loc>https://ifooty.ca/produto/1385</loc>
+    <changefreq>daily</changefreq>
+    <priority>0.9</priority>
+  </url>
+  <url>
+    <loc>https://ifooty.ca/produto/1389</loc>
     <changefreq>daily</changefreq>
     <priority>0.9</priority>
   </url>
