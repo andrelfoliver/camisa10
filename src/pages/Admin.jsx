@@ -2213,7 +2213,12 @@ const Admin = () => {
             const provCounts = {};
             orders.forEach(o => {
               const prov = normalizeProvince(o.shipping_address?.province);
-              if (prov) provCounts[prov] = (provCounts[prov] || 0) + 1;
+              if (prov) {
+                const itemCount = Array.isArray(o.items) 
+                  ? o.items.reduce((sum, item) => sum + (Number(item.quantity) || 1), 0)
+                  : 1;
+                provCounts[prov] = (provCounts[prov] || 0) + itemCount;
+              }
             });
 
             return (

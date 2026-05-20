@@ -139,7 +139,7 @@ const CanadaMap = ({ provinceCounts = {} }) => {
             {tooltip.name}
           </span>
           <span style={{ fontSize: '13px', fontWeight: 600, color: '#fff', marginTop: '2px', fontFamily: 'Inter, sans-serif' }}>
-            {tooltip.count} {tooltip.count === 1 ? 'pedido' : 'pedidos'}
+            {tooltip.count} {tooltip.count === 1 ? 'camisa' : 'camisas'}
           </span>
         </div>
       )}
