@@ -246,9 +246,12 @@ const Checkout = () => {
   // CÁLCULO DO TOTAL COM FRETE DINÂMICO
   const currentShipping = formData.deliveryMethod === 'pickup' ? 0 : appliedShipping;
   
-  const finalTotal = appliedCoupon
+  const baseFinalTotal = appliedCoupon
     ? (subtotal - discount) * (1 - appliedCoupon.discount_percent / 100) + (currentShipping || 0)
     : (subtotal - discount + (currentShipping || 0));
+
+  const paypalFee = paymentMethod === 'paypal' ? baseFinalTotal * 0.03 : 0;
+  const finalTotal = baseFinalTotal + paypalFee;
 
   // Memoize PayPal options to avoid re-rendering
   const initialPayPalOptions = useMemo(() => ({
@@ -757,6 +760,13 @@ const Checkout = () => {
                 <span>Frete / Shipping</span>
                 <span>{appliedShipping === 0 && pricingConfig.shippingCost > 0 ? 'GRÁTIS' : `$${appliedShipping.toFixed(2)}`}</span>
               </div>
+
+              {paymentMethod === 'paypal' && (
+                <div style={{ display: 'flex', justifyContent: 'space-between', color: '#EAB308', fontWeight: 600, marginTop: '0.4rem' }}>
+                  <span>Taxa PayPal (3%)</span>
+                  <span>+ ${paypalFee.toFixed(2)}</span>
+                </div>
+              )}
             </div>
             <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '1.25rem', fontWeight: 'bold', marginBottom: '2rem' }}>
               <span>{t('cart_total')} CAD</span>
@@ -827,6 +837,10 @@ const Checkout = () => {
                             shipping: {
                               currency_code: "CAD",
                               value: appliedShipping.toFixed(2)
+                            },
+                            handling: {
+                              currency_code: "CAD",
+                              value: paypalFee.toFixed(2)
                             }
                           }
                         },
