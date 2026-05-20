@@ -322,6 +322,56 @@ export default async function handler(req, res) {
 
               <h2 style="color: #1e293b; font-size: 1.2rem; margin-bottom: 15px;">🛒 ITENS DO PEDIDO</h2>
               ${supplierItemsHtml}
+
+              <!-- TABELA-RESUMO -->
+              ${(() => {
+                const totalQty = order.items.reduce((acc, i) => acc + (i.quantity || 1), 0);
+                const rows = order.items.map(item => {
+                  let custom = '';
+                  if (item.extras?.nameNumber) custom += `${item.extras.customName || ''} #${item.extras.customNumber || ''}`;
+                  if (item.extras?.extraCustomization && item.extras?.customExtraName) {
+                    custom += (custom ? ' | ' : '') + item.extras.customExtraName;
+                  }
+                  if (item.extras?.patches) custom += (custom ? ' | ' : '') + 'Patches';
+                  return `
+                    <tr>
+                      <td style="padding: 8px 10px; border-bottom: 1px solid #e2e8f0; font-size: 0.85rem; color: #1e293b;">${item.name}</td>
+                      <td style="padding: 8px 10px; border-bottom: 1px solid #e2e8f0; font-size: 0.85rem; text-align: center; font-weight: 700; color: #ef4444;">${item.size}</td>
+                      <td style="padding: 8px 10px; border-bottom: 1px solid #e2e8f0; font-size: 0.85rem; text-align: center; font-weight: 700; color: #ef4444;">${item.quantity || 1}</td>
+                      <td style="padding: 8px 10px; border-bottom: 1px solid #e2e8f0; font-size: 0.8rem; color: #64748b;">${custom || '—'}</td>
+                    </tr>
+                  `;
+                }).join('');
+
+                return `
+                  <div style="margin-top: 30px; padding: 20px; background: #f8fafc; border-radius: 12px; border: 2px solid #000;">
+                    <h2 style="color: #0f172a; font-size: 1.1rem; margin: 0 0 12px 0; display: flex; align-items: center; gap: 8px;">
+                      📋 RESUMO GERAL DO PEDIDO
+                      <span style="margin-left: auto; background: #000; color: #CCFF00; font-size: 1rem; font-weight: 900; padding: 4px 14px; border-radius: 20px;">
+                        TOTAL: ${totalQty} ${totalQty === 1 ? 'peça' : 'peças'}
+                      </span>
+                    </h2>
+                    <table style="width: 100%; border-collapse: collapse; background: #ffffff; border-radius: 8px; overflow: hidden; border: 1px solid #e2e8f0;">
+                      <thead>
+                        <tr style="background: #0f172a;">
+                          <th style="padding: 10px; text-align: left; font-size: 0.8rem; color: #94a3b8; font-weight: 600; text-transform: uppercase; letter-spacing: 1px;">Produto</th>
+                          <th style="padding: 10px; text-align: center; font-size: 0.8rem; color: #94a3b8; font-weight: 600; text-transform: uppercase; letter-spacing: 1px;">Tam.</th>
+                          <th style="padding: 10px; text-align: center; font-size: 0.8rem; color: #94a3b8; font-weight: 600; text-transform: uppercase; letter-spacing: 1px;">Qtd</th>
+                          <th style="padding: 10px; text-align: left; font-size: 0.8rem; color: #94a3b8; font-weight: 600; text-transform: uppercase; letter-spacing: 1px;">Personalização</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        ${rows}
+                        <tr style="background: #f1f5f9;">
+                          <td colspan="2" style="padding: 10px; font-weight: 800; font-size: 0.9rem; color: #0f172a;">TOTAL DE PEÇAS</td>
+                          <td style="padding: 10px; text-align: center; font-weight: 900; font-size: 1.1rem; color: #ef4444;">${totalQty}</td>
+                          <td style="padding: 10px;"></td>
+                        </tr>
+                      </tbody>
+                    </table>
+                  </div>
+                `;
+              })()}
             </div>
           </div>
         `,
