@@ -8,7 +8,7 @@ export default async function handler(req, res) {
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
-  const { order, language = 'pt' } = req.body;
+  const { order, language = 'pt', adminOnly = false } = req.body;
 
   if (!order) {
     return res.status(400).json({ error: 'Order data missing' });
@@ -255,8 +255,8 @@ export default async function handler(req, res) {
       `,
     });
 
-    // Enviar ambos simultaneamente
-    const [adminRes, customerRes] = await Promise.all([adminEmailPromise, customerEmailPromise]);
+    // Enviar somente para o admin se adminOnly=true, caso contrário envia para ambos
+    const adminRes = await adminEmailPromise;
 
     if (adminRes.error) {
       console.error('❌ Resend Admin Error:', JSON.stringify(adminRes.error, null, 2));
@@ -264,16 +264,22 @@ export default async function handler(req, res) {
       console.log('✅ Admin Notification Sent:', adminRes.data?.id);
     }
 
-    if (customerRes.error) {
-      console.error('❌ Resend Customer Error:', JSON.stringify(customerRes.error, null, 2));
+    let customerRes = { data: null, error: null };
+    if (!adminOnly) {
+      customerRes = await customerEmailPromise;
+      if (customerRes.error) {
+        console.error('❌ Resend Customer Error:', JSON.stringify(customerRes.error, null, 2));
+      } else {
+        console.log('✅ Customer Confirmation Sent:', customerRes.data?.id);
+      }
     } else {
-      console.log('✅ Customer Confirmation Sent:', customerRes.data?.id);
+      console.log('ℹ️ adminOnly=true — skipping customer email.');
     }
 
     res.status(200).json({ 
       success: true, 
       admin: adminRes.data?.id, 
-      customer: customerRes.data?.id,
+      customer: customerRes.data?.id || null,
       errors: (adminRes.error || customerRes.error) ? { admin: adminRes.error, customer: customerRes.error } : null
     });
   } catch (err) {
