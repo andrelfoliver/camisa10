@@ -8,7 +8,7 @@ export default async function handler(req, res) {
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
-  const { order, language = 'pt', adminOnly = false } = req.body;
+  const { order, language = 'pt', adminOnly = false, supplierEmail = null, supplierOnly = false } = req.body;
 
   if (!order) {
     return res.status(400).json({ error: 'Order data missing' });
@@ -265,7 +265,7 @@ export default async function handler(req, res) {
     }
 
     let customerRes = { data: null, error: null };
-    if (!adminOnly) {
+    if (!adminOnly && !supplierOnly) {
       customerRes = await customerEmailPromise;
       if (customerRes.error) {
         console.error('❌ Resend Customer Error:', JSON.stringify(customerRes.error, null, 2));
@@ -273,14 +273,66 @@ export default async function handler(req, res) {
         console.log('✅ Customer Confirmation Sent:', customerRes.data?.id);
       }
     } else {
-      console.log('ℹ️ adminOnly=true — skipping customer email.');
+      console.log('ℹ️ adminOnly/supplierOnly=true — skipping customer email.');
+    }
+
+    // --- EMAIL PARA O FORNECEDOR (somente itens, sem financeiro) ---
+    let supplierRes = { data: null, error: null };
+    if (supplierEmail) {
+      const supplierEmailPromise = resend.emails.send({
+        from: 'iFooty Store <vendas@ifooty.ca>',
+        to: [supplierEmail],
+        subject: `📦 Novo Pedido iFooty — ${order.customer_name}`,
+        html: `
+          <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; max-width: 650px; margin: 0 auto; background: #ffffff;">
+            <div style="padding: 25px 30px; background: #000000; text-align: center; border-radius: 8px 8px 0 0;">
+              <h1 style="margin: 0; font-style: italic; font-weight: 900; letter-spacing: -1px; font-family: sans-serif; font-size: 2rem;">
+                <span style="color: #CCFF00;">i</span><span style="color: #FFFFFF;">Footy</span><span style="color: #CCFF00;">.</span>
+              </h1>
+              <p style="color: #ffffff; margin: 5px 0 0 0; opacity: 0.8; font-size: 0.85rem; text-transform: uppercase; letter-spacing: 2px;">Pedido de Produção</p>
+            </div>
+            <div style="padding: 30px; border: 1px solid #edf2f7; border-top: none; border-radius: 0 0 8px 8px;">
+              <div style="margin-bottom: 25px; padding: 20px; background: #f8fafc; border: 2px dashed #cbd5e1; border-radius: 12px;">
+                <h2 style="color: #1e293b; font-size: 1.2rem; margin-top: 0; margin-bottom: 5px;">📦 DADOS DE ENTREGA</h2>
+                <div style="padding: 15px; background: #ffffff; border-radius: 8px; border: 1px solid #e2e8f0; font-family: monospace; line-height: 1.7; color: #000;">
+                  ${order.shipping_address.method === 'pickup' ? `
+                    <div style="background: #FFF9C4; padding: 10px; border-radius: 4px; border: 1px solid #FBC02D; text-align: center;">
+                      <strong>📍 RETIRADA EM LOJA (Wolf Willow)</strong>
+                    </div>
+                  ` : `
+                    <strong>Full name:</strong> ${order.customer_name}<br/>
+                    <strong>Zip code:</strong> ${order.shipping_address.postalCode}<br/>
+                    <strong>Country:</strong> ${order.shipping_address.country || 'Canada'}<br/>
+                    <strong>Province:</strong> ${order.shipping_address.province}<br/>
+                    <strong>City:</strong> ${order.shipping_address.city}<br/>
+                    <strong>Address:</strong> ${order.shipping_address.street}${order.shipping_address.apartment ? ' (Unit ' + order.shipping_address.apartment + ')' : ''}<br/>
+                    <strong>Address number:</strong> ${order.shipping_address.number || 'N/A'}<br/>
+                    <strong>Phone:</strong> ${order.customer_phone}
+                  `}
+                </div>
+              </div>
+
+              <h2 style="color: #1e293b; font-size: 1.2rem; margin-bottom: 15px;">🛒 ITENS DO PEDIDO</h2>
+              ${supplierItemsHtml}
+            </div>
+          </div>
+        `,
+      });
+
+      supplierRes = await supplierEmailPromise;
+      if (supplierRes.error) {
+        console.error('❌ Resend Supplier Error:', JSON.stringify(supplierRes.error, null, 2));
+      } else {
+        console.log('✅ Supplier Email Sent:', supplierRes.data?.id);
+      }
     }
 
     res.status(200).json({ 
       success: true, 
       admin: adminRes.data?.id, 
       customer: customerRes.data?.id || null,
-      errors: (adminRes.error || customerRes.error) ? { admin: adminRes.error, customer: customerRes.error } : null
+      supplier: supplierRes.data?.id || null,
+      errors: (adminRes.error || customerRes.error || supplierRes.error) ? { admin: adminRes.error, customer: customerRes.error, supplier: supplierRes.error } : null
     });
   } catch (err) {
     console.error('📛 Massive Server Error:', err);

@@ -190,6 +190,7 @@ const Admin = () => {
   const [expandedAgentId, setExpandedAgentId] = useState(null);
   const [expandedCustomerId, setExpandedCustomerId] = useState(null);
   const [showValues, setShowValues] = useState(false);
+  const [supplierEmail, setSupplierEmail] = useState(() => localStorage.getItem('ifooty_supplier_email') || '');
 
   // Filtros do Relatório de Produtividade
   const [prodDateRange, setProdDateRange] = useState({
@@ -841,6 +842,43 @@ const Admin = () => {
     // SE for uma mudança de status disparada pelo botão, atualizar banco automaticamente
     if (order.status !== type && templates[type]) {
       handleUpdateOrderStatus(order.id, type);
+    }
+  };
+
+  const sendToSupplier = async (order) => {
+    const email = supplierEmail.trim();
+    if (!email) {
+      alert('Por favor, configure o e-mail do fornecedor primeiro nas Configurações de Preço.');
+      return;
+    }
+    try {
+      const res = await fetch('/api/send-order-email', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          adminOnly: true,
+          supplierEmail: email,
+          order: {
+            ...order,
+            customer_name: order.customer_name,
+            customer_email: order.customer_email,
+            customer_phone: order.customer_phone,
+            total_price: order.total_price,
+            payment_method: order.payment_method,
+            shipping_address: order.shipping_address,
+            items: order.items,
+          }
+        })
+      });
+      const data = await res.json();
+      if (data.supplier) {
+        alert(`✅ E-mail enviado para o fornecedor (${email}) com sucesso!`);
+      } else {
+        alert('❌ Erro ao enviar para o fornecedor. Verifique o e-mail configurado.');
+      }
+    } catch (err) {
+      alert('❌ Erro de conexão ao tentar enviar o e-mail.');
+      console.error(err);
     }
   };
 
@@ -2702,6 +2740,24 @@ const Admin = () => {
                     </div>
                   </div>
 
+                  <div style={{ marginTop: '1.5rem', padding: '1.5rem', background: 'rgba(234, 179, 8, 0.05)', borderRadius: '12px', border: '1px solid rgba(234, 179, 8, 0.2)' }}>
+                    <h3 style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', marginBottom: '1.2rem', fontSize: '1.1rem', color: '#EAB308' }}>
+                      📧 E-mail do Fornecedor
+                    </h3>
+                    <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem', marginBottom: '1rem' }}>Configure o e-mail do seu fornecedor para usar o botão "Mandar para Fornecedor" em cada pedido.</p>
+                    <input
+                      type="email"
+                      value={supplierEmail}
+                      onChange={e => {
+                        setSupplierEmail(e.target.value);
+                        localStorage.setItem('ifooty_supplier_email', e.target.value);
+                      }}
+                      placeholder="fornecedor@exemplo.com"
+                      style={{ width: '100%', padding: '0.8rem', background: 'rgba(0,0,0,0.2)', color: '#fff', border: '1px solid rgba(234, 179, 8, 0.4)', borderRadius: '6px', fontSize: '0.95rem' }}
+                    />
+                    {supplierEmail && <p style={{ fontSize: '0.75rem', color: '#EAB308', marginTop: '0.4rem' }}>✅ Configurado: {supplierEmail}</p>}
+                  </div>
+
                   <div style={{ marginTop: '2rem', borderTop: '1px solid var(--border-color)', paddingTop: '2rem' }}>
                     <h2 style={{ display: 'flex', alignItems: 'center', gap: '0.8rem', marginBottom: '1.5rem', fontSize: '1.5rem', color: '#10B981' }}>
                       <Package color="#10B981" /> Desconto Progressivo (Valor Total)
@@ -3354,6 +3410,12 @@ const Admin = () => {
                               )}
 
                               <p style={{ fontSize: '0.7rem', color: 'var(--text-muted)', fontWeight: 800, textTransform: 'uppercase', marginTop: '1rem' }}>Ações Rápidas (Auto-Sync)</p>
+                              <button
+                                onClick={() => sendToSupplier(order)}
+                                style={{ padding: '0.6rem', borderRadius: '4px', background: 'rgba(234, 179, 8, 0.1)', color: '#EAB308', border: '1px solid #EAB308', fontWeight: 700, cursor: 'pointer', fontSize: '0.8rem' }}
+                              >
+                                📧 MANDAR PARA FORNECEDOR
+                              </button>
                               <button
                                 onClick={() => sendWhatsAppStatus(order, 'processing')}
                                 style={{ padding: '0.6rem', borderRadius: '4px', background: 'rgba(59, 130, 246, 0.1)', color: '#3B82F6', border: '1px solid #3B82F6', fontWeight: 700, cursor: 'pointer', fontSize: '0.8rem' }}
