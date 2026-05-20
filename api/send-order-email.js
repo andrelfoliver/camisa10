@@ -48,30 +48,21 @@ export default async function handler(req, res) {
 
   const t = emailLocales[language] || emailLocales.pt;
 
-  // Helper para garantir que as URLs das imagens sejam absolutas (e-mail não aceita caminhos relativos)
+  // Helper para garantir que as URLs das imagens sejam absolutas
   const normalizeImgUrl = (url) => {
     const placeholder = 'https://nshatpbtpoyrphlvpghq.supabase.co/storage/v1/object/public/products/placeholder_shirt.jpg';
-    
     if (!url) return placeholder;
-    
-    // Se for um vídeo, não podemos usar na tag <img> do e-mail
-    if (url.toLowerCase().endsWith('.mp4')) {
-      return placeholder;
-    }
-
+    if (url.toLowerCase().endsWith('.mp4')) return placeholder;
     if (url.startsWith('http')) return url;
-    
-    // Se for um caminho relativo do Supabase (comum em novos uploads)
     if (url.startsWith('/storage')) {
-      const supabaseBase = 'https://nshatpbtpoyrphlvpghq.supabase.co'; // Extraído das configurações de produção
+      const supabaseBase = 'https://nshatpbtpoyrphlvpghq.supabase.co';
       return `${supabaseBase}${url}`;
     }
-    
-    // Fallback para o domínio do site
     return `https://ifooty.ca${url.startsWith('/') ? '' : '/'}${url}`;
   };
 
   try {
+    // --- HTML DOS ITENS (com preços — para admin e cliente) ---
     const itemsHtml = order.items.map(item => {
       const imageUrl = normalizeImgUrl(item.image);
       let customization = '';
@@ -85,11 +76,9 @@ export default async function handler(req, res) {
              <strong>EXTRA CUSTOM:</strong> ${item.extras.customExtraName}
            </div>`;
       }
-      
-      const patches = item.extras?.patches 
+      const patches = item.extras?.patches
         ? `<div style="margin-top: 3px; font-size: 0.85rem; color: #666;"><strong>${t.patchesLabel}</strong></div>`
         : '';
- 
       return `
         <div style="margin-bottom: 20px; padding: 15px; border: 1px solid #edf2f7; border-radius: 8px; display: flex; align-items: center; gap: 15px;">
           <div style="flex-shrink: 0;">
@@ -107,7 +96,7 @@ export default async function handler(req, res) {
       `;
     }).join('');
 
-    // --- NOVA SEÇÃO: RESUMO PARA O FORNECEDOR (SEM PREÇOS) ---
+    // --- HTML DOS ITENS SEM PREÇOS (para fornecedor) ---
     const supplierItemsHtml = order.items.map(item => {
       const imageUrl = normalizeImgUrl(item.image);
       let customization = '';
@@ -121,11 +110,9 @@ export default async function handler(req, res) {
              ⭐ <strong>EXTRA:</strong> ${item.extras.customExtraName}
            </div>`;
       }
-      
-      const patches = item.extras?.patches 
+      const patches = item.extras?.patches
         ? `<div style="margin-top: 3px; font-size: 0.85rem; color: #4a5568;">🎖️ <strong>+ Patches</strong></div>`
         : '';
- 
       return `
         <div style="margin-bottom: 15px; padding: 12px; border: 1px solid #e2e8f0; border-radius: 8px; display: flex; align-items: center; gap: 12px; background: #ffffff;">
           <div style="flex-shrink: 0;">
@@ -143,126 +130,133 @@ export default async function handler(req, res) {
       `;
     }).join('');
 
-    // --- EMAIL 1: NOTIFICAÇÃO PARA O ADMIN (VOCÊ) - SEMPRE EM PT ---
-    const adminEmailPromise = resend.emails.send({
-      from: 'iFooty Alerts <vendas@ifooty.ca>',
-      to: ['camisadez085@gmail.com'],
-      replyTo: 'camisadez085@gmail.com',
-      subject: `⚽ NOVO PEDIDO: ${order.customer_name}`,
-      html: `
-        <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; max-width: 650px; margin: 0 auto; background: #ffffff;">
-          <div style="padding: 30px; background: #000000; text-align: center; border-radius: 8px 8px 0 0;">
-            <h1 style="margin: 0; font-style: italic; font-weight: 900; letter-spacing: -1px; font-family: sans-serif; font-size: 2.5rem;">
-              <span style="color: #CCFF00;">i</span><span style="color: #FFFFFF;">Footy</span><span style="color: #CCFF00;">.</span>
-            </h1>
-            <p style="color: #ffffff; margin: 5px 0 0 0; opacity: 0.8; font-size: 0.9rem; text-transform: uppercase; letter-spacing: 2px;">Notificação de Venda Oficial</p>
-          </div>
-          <div style="padding: 30px; border: 1px solid #edf2f7; border-top: none; border-radius: 0 0 8px 8px;">
-            <div style="margin-bottom: 30px;">
-              <h2 style="color: #2d3748; font-size: 1.5rem; margin-bottom: 15px; border-bottom: 2px solid #CCFF00; display: inline-block;">Detalhes do Cliente</h2>
-              <table style="width: 100%; border-collapse: collapse;">
-                <tr><td style="padding: 8px 0; color: #718096; width: 120px;">Nome:</td><td style="padding: 8px 0; color: #1a202c; font-weight: 600;">${order.customer_name}</td></tr>
-                <tr><td style="padding: 8px 0; color: #718096;">E-mail:</td><td style="padding: 8px 0; color: #1a202c;">${order.customer_email}</td></tr>
-                <tr><td style="padding: 8px 0; color: #718096;">WhatsApp:</td><td style="padding: 8px 0; color: #1a202c;">${order.customer_phone}</td></tr>
-              </table>
-            </div>
+    // --- TABELA-RESUMO (para fornecedor) ---
+    const totalQty = order.items.reduce((acc, i) => acc + (i.quantity || 1), 0);
+    const summaryRows = order.items.map(item => {
+      let custom = '';
+      if (item.extras?.nameNumber) custom += `${item.extras.customName || ''} #${item.extras.customNumber || ''}`;
+      if (item.extras?.extraCustomization && item.extras?.customExtraName) {
+        custom += (custom ? ' | ' : '') + item.extras.customExtraName;
+      }
+      if (item.extras?.patches) custom += (custom ? ' | ' : '') + 'Patches';
+      return `
+        <tr>
+          <td style="padding: 8px 10px; border-bottom: 1px solid #e2e8f0; font-size: 0.85rem; color: #1e293b;">${item.name}</td>
+          <td style="padding: 8px 10px; border-bottom: 1px solid #e2e8f0; font-size: 0.85rem; text-align: center; font-weight: 700; color: #ef4444;">${item.size}</td>
+          <td style="padding: 8px 10px; border-bottom: 1px solid #e2e8f0; font-size: 0.85rem; text-align: center; font-weight: 700; color: #ef4444;">${item.quantity || 1}</td>
+          <td style="padding: 8px 10px; border-bottom: 1px solid #e2e8f0; font-size: 0.8rem; color: #64748b;">${custom || '—'}</td>
+        </tr>
+      `;
+    }).join('');
 
-            <div style="margin-bottom: 40px; padding: 25px; background: #f8fafc; border: 2px dashed #cbd5e1; border-radius: 12px;">
-              <h2 style="color: #1e293b; font-size: 1.3rem; margin-top: 0; margin-bottom: 5px;">📦 DADOS PARA O FORNECEDOR</h2>
-              <p style="color: #64748b; font-size: 0.85rem; margin-bottom: 15px;">(Copie ou Printe o bloco abaixo)</p>
-              
-              <div style="margin-bottom: 20px; padding: 20px; background: #ffffff; border-radius: 8px; border: 1px solid #e2e8f0; font-family: monospace; line-height: 1.6; color: #000;">
-                ${order.shipping_address.method === 'pickup' ? `
-                  <div style="background: #FFF9C4; padding: 10px; border-radius: 4px; border: 1px solid #FBC02D; text-align: center; margin-bottom: 15px;">
-                    <strong>📍 ATENÇÃO: RETIRADA EM LOJA</strong><br/>
-                    Fazer o pedido no nome da iFooty (Wolf Willow).
-                  </div>
-                ` : `
-                  <strong>Full name:</strong> ${order.customer_name}<br/>
-                  <strong>Zip code:</strong> ${order.shipping_address.postalCode}<br/>
-                  <strong>Country:</strong> ${order.shipping_address.country || 'Canada'}<br/>
-                  <strong>Province:</strong> ${order.shipping_address.province}<br/>
-                  <strong>City:</strong> ${order.shipping_address.city}<br/>
-                  <strong>District:</strong> ${order.shipping_address.district || 'N/A'}<br/>
-                  <strong>Address:</strong> ${order.shipping_address.street}${order.shipping_address.apartment ? ' (Unit ' + order.shipping_address.apartment + ')' : ''}<br/>
-                  <strong>Address number:</strong> ${order.shipping_address.number}<br/>
-                  <strong>Phone:</strong> ${order.customer_phone}
-                `}
-              </div>
+    const summaryTableHtml = `
+      <div style="margin-top: 30px; padding: 20px; background: #f8fafc; border-radius: 12px; border: 2px solid #000;">
+        <h2 style="color: #0f172a; font-size: 1.1rem; margin: 0 0 12px 0;">
+          📋 RESUMO GERAL DO PEDIDO
+          <span style="float: right; background: #000; color: #CCFF00; font-size: 1rem; font-weight: 900; padding: 4px 14px; border-radius: 20px;">
+            TOTAL: ${totalQty} ${totalQty === 1 ? 'peça' : 'peças'}
+          </span>
+        </h2>
+        <table style="width: 100%; border-collapse: collapse; background: #ffffff; border: 1px solid #e2e8f0;">
+          <thead>
+            <tr style="background: #0f172a;">
+              <th style="padding: 10px; text-align: left; font-size: 0.8rem; color: #94a3b8; font-weight: 600; text-transform: uppercase;">Produto</th>
+              <th style="padding: 10px; text-align: center; font-size: 0.8rem; color: #94a3b8; font-weight: 600; text-transform: uppercase;">Tam.</th>
+              <th style="padding: 10px; text-align: center; font-size: 0.8rem; color: #94a3b8; font-weight: 600; text-transform: uppercase;">Qtd</th>
+              <th style="padding: 10px; text-align: left; font-size: 0.8rem; color: #94a3b8; font-weight: 600; text-transform: uppercase;">Personalização</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${summaryRows}
+            <tr style="background: #f1f5f9;">
+              <td colspan="2" style="padding: 10px; font-weight: 800; font-size: 0.9rem; color: #0f172a;">TOTAL DE PEÇAS</td>
+              <td style="padding: 10px; text-align: center; font-weight: 900; font-size: 1.1rem; color: #ef4444;">${totalQty}</td>
+              <td style="padding: 10px;"></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    `;
 
-              ${supplierItemsHtml}
-            </div>
-
-            <div style="margin-bottom: 30px;">
-              <h2 style="color: #2d3748; font-size: 1.5rem; margin-bottom: 20px;">Detalhes Financeiros (Sua Referência)</h2>
-              ${itemsHtml}
-            </div>
-            
-            <div style="background: #f7fafc; padding: 25px; border-radius: 8px; margin-bottom: 30px;">
-              <table style="width: 100%; font-size: 0.95rem; color: #4a5568;">
-                ${order.coupon_code ? `
-                <tr><td style="padding: 5px 0;">Subtotal:</td><td style="text-align: right; color: #1a202c;">$${(order.total_price + (order.coupon_discount || 0)).toFixed(2)} CAD</td></tr>
-                <tr><td style="padding: 5px 0; color: #10B981;">Cupom (${order.coupon_code}):</td><td style="text-align: right; color: #10B981;">-$${(order.coupon_discount || 0).toFixed(2)} CAD</td></tr>
-                ` : ''}
-                <tr><td colspan="2" style="border-top: 1px solid #edf2f7; padding-top: 15px; margin-top: 10px;"></td></tr>
-                <tr><td style="font-size: 1.4rem; font-weight: 800; color: #1a202c;">TOTAL FINAL</td><td style="text-align: right; font-size: 1.4rem; font-weight: 900; color: #CCFF00; background: #000; padding: 10px 15px; border-radius: 6px;">$${order.total_price.toFixed(2)} CAD</td></tr>
-              </table>
-            </div>
-          </div>
-        </div>
-      `,
-    });
-
-
-    // --- EMAIL 2: CONFIRMAÇÃO PARA O CLIENTE (MULTI-IDIOMA) ---
-    const customerEmailPromise = resend.emails.send({
-      from: 'iFooty Store <vendas@ifooty.ca>',
-      to: [order.customer_email],
-      replyTo: 'camisadez085@gmail.com',
-      subject: t.customerSubject,
-      html: `
-        <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; max-width: 650px; margin: 0 auto; background: #ffffff; border: 1px solid #edf2f7; border-radius: 8px; overflow: hidden;">
-          <div style="padding: 40px 30px; background: #000000; text-align: center;">
-            <h1 style="margin: 0; font-style: italic; font-weight: 900; letter-spacing: -1px; font-family: sans-serif; font-size: 3rem;">
-              <span style="color: #CCFF00;">i</span><span style="color: #FFFFFF;">Footy</span><span style="color: #CCFF00;">.</span>
-            </h1>
-            <p style="color: #ffffff; margin-top: 10px; font-size: 1.1rem; opacity: 0.9;">${t.greeting}, ${order.customer_name.split(' ')[0]}!</p>
-          </div>
-          
-          <div style="padding: 40px 30px;">
-            <div style="background: #fdfdea; border: 1px solid #fcf8e3; padding: 20px; border-radius: 8px; margin-bottom: 30px;">
-              <h3 style="color: #856404; margin: 0 0 10px 0; display: flex; align-items: center; gap: 8px;">${t.nextStepsTitle}</h3>
-              <p style="color: #856404; margin: 0; line-height: 1.5;">${t.nextStepsBody}</p>
-            </div>
-
-            <div style="margin-bottom: 30px;">
-              <h2 style="color: #1a202c; font-size: 1.3rem; margin-bottom: 20px;">${t.itemsSummary}</h2>
-              ${itemsHtml}
-            </div>
-
-            <div style="border-top: 1px solid #edf2f7; padding-top: 30px; text-align: center;">
-              <p style="color: #718096; font-size: 0.95rem; margin-bottom: 20px;">${t.footerQuestion}</p>
-              <div style="display: inline-block; padding: 12px 25px; background: #CCFF00; color: #000; text-decoration: none; font-weight: 800; border-radius: 6px; text-transform: uppercase; font-size: 0.9rem;">
-                ${t.ctaButton}
-              </div>
-            </div>
-          </div>
-          
-          <div style="padding: 20px; background: #f7fafc; text-align: center; color: #a0aec0; font-size: 0.8rem;">
-            <p>© ${new Date().getFullYear()} iFooty Store Canada. ${t.footerCopyright}</p>
-          </div>
-        </div>
-      `,
-    });
-
-    // --- Lógica de envio condicional ---
-    // supplierOnly=true → somente o fornecedor recebe (admin e cliente são pulados)
+    // ================================================================
+    // LÓGICA DE ENVIO CONDICIONAL:
+    // supplierOnly=true → SOMENTE fornecedor (admin e cliente pulados)
     // adminOnly=true    → admin recebe, cliente é pulado
     // padrão            → admin + cliente recebem
+    // ================================================================
 
     let adminRes = { data: null, error: null };
+    let customerRes = { data: null, error: null };
+    let supplierRes = { data: null, error: null };
+
+    // --- EMAIL 1: ADMIN --- (pulado quando supplierOnly=true)
     if (!supplierOnly) {
-      adminRes = await adminEmailPromise;
+      adminRes = await resend.emails.send({
+        from: 'iFooty Alerts <vendas@ifooty.ca>',
+        to: ['camisadez085@gmail.com'],
+        replyTo: 'camisadez085@gmail.com',
+        subject: `⚽ NOVO PEDIDO: ${order.customer_name}`,
+        html: `
+          <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; max-width: 650px; margin: 0 auto; background: #ffffff;">
+            <div style="padding: 30px; background: #000000; text-align: center; border-radius: 8px 8px 0 0;">
+              <h1 style="margin: 0; font-style: italic; font-weight: 900; letter-spacing: -1px; font-family: sans-serif; font-size: 2.5rem;">
+                <span style="color: #CCFF00;">i</span><span style="color: #FFFFFF;">Footy</span><span style="color: #CCFF00;">.</span>
+              </h1>
+              <p style="color: #ffffff; margin: 5px 0 0 0; opacity: 0.8; font-size: 0.9rem; text-transform: uppercase; letter-spacing: 2px;">Notificação de Venda Oficial</p>
+            </div>
+            <div style="padding: 30px; border: 1px solid #edf2f7; border-top: none; border-radius: 0 0 8px 8px;">
+              <div style="margin-bottom: 30px;">
+                <h2 style="color: #2d3748; font-size: 1.5rem; margin-bottom: 15px; border-bottom: 2px solid #CCFF00; display: inline-block;">Detalhes do Cliente</h2>
+                <table style="width: 100%; border-collapse: collapse;">
+                  <tr><td style="padding: 8px 0; color: #718096; width: 120px;">Nome:</td><td style="padding: 8px 0; color: #1a202c; font-weight: 600;">${order.customer_name}</td></tr>
+                  <tr><td style="padding: 8px 0; color: #718096;">E-mail:</td><td style="padding: 8px 0; color: #1a202c;">${order.customer_email}</td></tr>
+                  <tr><td style="padding: 8px 0; color: #718096;">WhatsApp:</td><td style="padding: 8px 0; color: #1a202c;">${order.customer_phone}</td></tr>
+                </table>
+              </div>
+
+              <div style="margin-bottom: 40px; padding: 25px; background: #f8fafc; border: 2px dashed #cbd5e1; border-radius: 12px;">
+                <h2 style="color: #1e293b; font-size: 1.3rem; margin-top: 0; margin-bottom: 5px;">📦 DADOS PARA O FORNECEDOR</h2>
+                <p style="color: #64748b; font-size: 0.85rem; margin-bottom: 15px;">(Copie ou Printe o bloco abaixo)</p>
+                <div style="margin-bottom: 20px; padding: 20px; background: #ffffff; border-radius: 8px; border: 1px solid #e2e8f0; font-family: monospace; line-height: 1.6; color: #000;">
+                  ${order.shipping_address.method === 'pickup' ? `
+                    <div style="background: #FFF9C4; padding: 10px; border-radius: 4px; border: 1px solid #FBC02D; text-align: center; margin-bottom: 15px;">
+                      <strong>📍 ATENÇÃO: RETIRADA EM LOJA</strong><br/>
+                      Fazer o pedido no nome da iFooty (Wolf Willow).
+                    </div>
+                  ` : `
+                    <strong>Full name:</strong> ${order.customer_name}<br/>
+                    <strong>Zip code:</strong> ${order.shipping_address.postalCode}<br/>
+                    <strong>Country:</strong> ${order.shipping_address.country || 'Canada'}<br/>
+                    <strong>Province:</strong> ${order.shipping_address.province}<br/>
+                    <strong>City:</strong> ${order.shipping_address.city}<br/>
+                    <strong>District:</strong> ${order.shipping_address.district || 'N/A'}<br/>
+                    <strong>Address:</strong> ${order.shipping_address.street}${order.shipping_address.apartment ? ' (Unit ' + order.shipping_address.apartment + ')' : ''}<br/>
+                    <strong>Address number:</strong> ${order.shipping_address.number}<br/>
+                    <strong>Phone:</strong> ${order.customer_phone}
+                  `}
+                </div>
+                ${supplierItemsHtml}
+              </div>
+
+              <div style="margin-bottom: 30px;">
+                <h2 style="color: #2d3748; font-size: 1.5rem; margin-bottom: 20px;">Detalhes Financeiros (Sua Referência)</h2>
+                ${itemsHtml}
+              </div>
+
+              <div style="background: #f7fafc; padding: 25px; border-radius: 8px; margin-bottom: 30px;">
+                <table style="width: 100%; font-size: 0.95rem; color: #4a5568;">
+                  ${order.coupon_code ? `
+                  <tr><td style="padding: 5px 0;">Subtotal:</td><td style="text-align: right; color: #1a202c;">$${(order.total_price + (order.coupon_discount || 0)).toFixed(2)} CAD</td></tr>
+                  <tr><td style="padding: 5px 0; color: #10B981;">Cupom (${order.coupon_code}):</td><td style="text-align: right; color: #10B981;">-$${(order.coupon_discount || 0).toFixed(2)} CAD</td></tr>
+                  ` : ''}
+                  <tr><td colspan="2" style="border-top: 1px solid #edf2f7; padding-top: 15px; margin-top: 10px;"></td></tr>
+                  <tr><td style="font-size: 1.4rem; font-weight: 800; color: #1a202c;">TOTAL FINAL</td><td style="text-align: right; font-size: 1.4rem; font-weight: 900; color: #CCFF00; background: #000; padding: 10px 15px; border-radius: 6px;">$${order.total_price.toFixed(2)} CAD</td></tr>
+                </table>
+              </div>
+            </div>
+          </div>
+        `,
+      });
       if (adminRes.error) {
         console.error('❌ Resend Admin Error:', JSON.stringify(adminRes.error, null, 2));
       } else {
@@ -272,9 +266,43 @@ export default async function handler(req, res) {
       console.log('ℹ️ supplierOnly=true — skipping admin email.');
     }
 
-    let customerRes = { data: null, error: null };
+    // --- EMAIL 2: CLIENTE --- (pulado quando adminOnly=true ou supplierOnly=true)
     if (!adminOnly && !supplierOnly) {
-      customerRes = await customerEmailPromise;
+      customerRes = await resend.emails.send({
+        from: 'iFooty Store <vendas@ifooty.ca>',
+        to: [order.customer_email],
+        replyTo: 'camisadez085@gmail.com',
+        subject: t.customerSubject,
+        html: `
+          <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; max-width: 650px; margin: 0 auto; background: #ffffff; border: 1px solid #edf2f7; border-radius: 8px; overflow: hidden;">
+            <div style="padding: 40px 30px; background: #000000; text-align: center;">
+              <h1 style="margin: 0; font-style: italic; font-weight: 900; letter-spacing: -1px; font-family: sans-serif; font-size: 3rem;">
+                <span style="color: #CCFF00;">i</span><span style="color: #FFFFFF;">Footy</span><span style="color: #CCFF00;">.</span>
+              </h1>
+              <p style="color: #ffffff; margin-top: 10px; font-size: 1.1rem; opacity: 0.9;">${t.greeting}, ${order.customer_name.split(' ')[0]}!</p>
+            </div>
+            <div style="padding: 40px 30px;">
+              <div style="background: #fdfdea; border: 1px solid #fcf8e3; padding: 20px; border-radius: 8px; margin-bottom: 30px;">
+                <h3 style="color: #856404; margin: 0 0 10px 0;">${t.nextStepsTitle}</h3>
+                <p style="color: #856404; margin: 0; line-height: 1.5;">${t.nextStepsBody}</p>
+              </div>
+              <div style="margin-bottom: 30px;">
+                <h2 style="color: #1a202c; font-size: 1.3rem; margin-bottom: 20px;">${t.itemsSummary}</h2>
+                ${itemsHtml}
+              </div>
+              <div style="border-top: 1px solid #edf2f7; padding-top: 30px; text-align: center;">
+                <p style="color: #718096; font-size: 0.95rem; margin-bottom: 20px;">${t.footerQuestion}</p>
+                <div style="display: inline-block; padding: 12px 25px; background: #CCFF00; color: #000; font-weight: 800; border-radius: 6px; text-transform: uppercase; font-size: 0.9rem;">
+                  ${t.ctaButton}
+                </div>
+              </div>
+            </div>
+            <div style="padding: 20px; background: #f7fafc; text-align: center; color: #a0aec0; font-size: 0.8rem;">
+              <p>© ${new Date().getFullYear()} iFooty Store Canada. ${t.footerCopyright}</p>
+            </div>
+          </div>
+        `,
+      });
       if (customerRes.error) {
         console.error('❌ Resend Customer Error:', JSON.stringify(customerRes.error, null, 2));
       } else {
@@ -284,10 +312,9 @@ export default async function handler(req, res) {
       console.log('ℹ️ adminOnly/supplierOnly=true — skipping customer email.');
     }
 
-    // --- EMAIL PARA O FORNECEDOR (somente itens, sem financeiro) ---
-    let supplierRes = { data: null, error: null };
+    // --- EMAIL 3: FORNECEDOR --- (somente quando supplierEmail é fornecido)
     if (supplierEmail) {
-      const supplierEmailPromise = resend.emails.send({
+      supplierRes = await resend.emails.send({
         from: 'iFooty Store <vendas@ifooty.ca>',
         to: [supplierEmail],
         subject: `📦 Novo Pedido iFooty — ${order.customer_name}`,
@@ -322,62 +349,11 @@ export default async function handler(req, res) {
 
               <h2 style="color: #1e293b; font-size: 1.2rem; margin-bottom: 15px;">🛒 ITENS DO PEDIDO</h2>
               ${supplierItemsHtml}
-
-              <!-- TABELA-RESUMO -->
-              ${(() => {
-                const totalQty = order.items.reduce((acc, i) => acc + (i.quantity || 1), 0);
-                const rows = order.items.map(item => {
-                  let custom = '';
-                  if (item.extras?.nameNumber) custom += `${item.extras.customName || ''} #${item.extras.customNumber || ''}`;
-                  if (item.extras?.extraCustomization && item.extras?.customExtraName) {
-                    custom += (custom ? ' | ' : '') + item.extras.customExtraName;
-                  }
-                  if (item.extras?.patches) custom += (custom ? ' | ' : '') + 'Patches';
-                  return `
-                    <tr>
-                      <td style="padding: 8px 10px; border-bottom: 1px solid #e2e8f0; font-size: 0.85rem; color: #1e293b;">${item.name}</td>
-                      <td style="padding: 8px 10px; border-bottom: 1px solid #e2e8f0; font-size: 0.85rem; text-align: center; font-weight: 700; color: #ef4444;">${item.size}</td>
-                      <td style="padding: 8px 10px; border-bottom: 1px solid #e2e8f0; font-size: 0.85rem; text-align: center; font-weight: 700; color: #ef4444;">${item.quantity || 1}</td>
-                      <td style="padding: 8px 10px; border-bottom: 1px solid #e2e8f0; font-size: 0.8rem; color: #64748b;">${custom || '—'}</td>
-                    </tr>
-                  `;
-                }).join('');
-
-                return `
-                  <div style="margin-top: 30px; padding: 20px; background: #f8fafc; border-radius: 12px; border: 2px solid #000;">
-                    <h2 style="color: #0f172a; font-size: 1.1rem; margin: 0 0 12px 0; display: flex; align-items: center; gap: 8px;">
-                      📋 RESUMO GERAL DO PEDIDO
-                      <span style="margin-left: auto; background: #000; color: #CCFF00; font-size: 1rem; font-weight: 900; padding: 4px 14px; border-radius: 20px;">
-                        TOTAL: ${totalQty} ${totalQty === 1 ? 'peça' : 'peças'}
-                      </span>
-                    </h2>
-                    <table style="width: 100%; border-collapse: collapse; background: #ffffff; border-radius: 8px; overflow: hidden; border: 1px solid #e2e8f0;">
-                      <thead>
-                        <tr style="background: #0f172a;">
-                          <th style="padding: 10px; text-align: left; font-size: 0.8rem; color: #94a3b8; font-weight: 600; text-transform: uppercase; letter-spacing: 1px;">Produto</th>
-                          <th style="padding: 10px; text-align: center; font-size: 0.8rem; color: #94a3b8; font-weight: 600; text-transform: uppercase; letter-spacing: 1px;">Tam.</th>
-                          <th style="padding: 10px; text-align: center; font-size: 0.8rem; color: #94a3b8; font-weight: 600; text-transform: uppercase; letter-spacing: 1px;">Qtd</th>
-                          <th style="padding: 10px; text-align: left; font-size: 0.8rem; color: #94a3b8; font-weight: 600; text-transform: uppercase; letter-spacing: 1px;">Personalização</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        ${rows}
-                        <tr style="background: #f1f5f9;">
-                          <td colspan="2" style="padding: 10px; font-weight: 800; font-size: 0.9rem; color: #0f172a;">TOTAL DE PEÇAS</td>
-                          <td style="padding: 10px; text-align: center; font-weight: 900; font-size: 1.1rem; color: #ef4444;">${totalQty}</td>
-                          <td style="padding: 10px;"></td>
-                        </tr>
-                      </tbody>
-                    </table>
-                  </div>
-                `;
-              })()}
+              ${summaryTableHtml}
             </div>
           </div>
         `,
       });
-
-      supplierRes = await supplierEmailPromise;
       if (supplierRes.error) {
         console.error('❌ Resend Supplier Error:', JSON.stringify(supplierRes.error, null, 2));
       } else {
@@ -385,12 +361,14 @@ export default async function handler(req, res) {
       }
     }
 
-    res.status(200).json({ 
-      success: true, 
-      admin: adminRes.data?.id, 
+    res.status(200).json({
+      success: true,
+      admin: adminRes.data?.id || null,
       customer: customerRes.data?.id || null,
       supplier: supplierRes.data?.id || null,
-      errors: (adminRes.error || customerRes.error || supplierRes.error) ? { admin: adminRes.error, customer: customerRes.error, supplier: supplierRes.error } : null
+      errors: (adminRes.error || customerRes.error || supplierRes.error)
+        ? { admin: adminRes.error, customer: customerRes.error, supplier: supplierRes.error }
+        : null
     });
   } catch (err) {
     console.error('📛 Massive Server Error:', err);
