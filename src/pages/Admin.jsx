@@ -3308,7 +3308,7 @@ const Admin = () => {
                             <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{order.customer_email}</span>
                           </div>
                           <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>{new Date(order.created_at).toLocaleDateString()}</span>
-                          <span style={{ fontWeight: 800, color: 'var(--accent-color)' }}>${getValidRevenue(order).toFixed(2)}</span>
+                          <span style={{ fontWeight: 800, color: 'var(--accent-color)' }}>{showValues ? `$${getValidRevenue(order).toFixed(2)}` : '****'}</span>
                           <div>
                             <span style={{
                               fontSize: '0.65rem',
@@ -3380,21 +3380,21 @@ const Admin = () => {
                                 <p style={{ fontSize: '0.65rem', color: 'var(--text-muted)', fontWeight: 800, textTransform: 'uppercase', marginBottom: '0.5rem' }}>DRE do Pedido (CAD)</p>
                                 <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.85rem', marginBottom: '0.3rem' }}>
                                   <span>Receita Bruta (Valor Pago):</span>
-                                  <span style={{ color: 'var(--accent-color)', fontWeight: 700 }}>${(Number(order?.total_price || 0)).toFixed(2)}</span>
+                                  <span style={{ color: 'var(--accent-color)', fontWeight: 700 }}>{showValues ? `$${(Number(order?.total_price || 0)).toFixed(2)}` : '****'}</span>
                                 </div>
                                 {order?.payment_method === 'paypal' && (
                                   <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.85rem', marginBottom: '0.3rem' }}>
                                     <span>Taxa PayPal Estimada:</span>
-                                    <span style={{ color: '#EAB308', fontWeight: 700 }}>-${(Number(order?.total_price || 0) * 0.029 + 0.30).toFixed(2)}</span>
+                                    <span style={{ color: '#EAB308', fontWeight: 700 }}>{showValues ? `-$${(Number(order?.total_price || 0) * 0.029 + 0.30).toFixed(2)}` : '****'}</span>
                                   </div>
                                 )}
                                 <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.85rem', marginBottom: '0.3rem' }}>
                                   <span>Receita Líquida (Após Taxas):</span>
-                                  <span style={{ color: '#22c55e', fontWeight: 700 }}>${getValidRevenue(order).toFixed(2)}</span>
+                                  <span style={{ color: '#22c55e', fontWeight: 700 }}>{showValues ? `$${getValidRevenue(order).toFixed(2)}` : '****'}</span>
                                 </div>
                                 <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.85rem', marginBottom: '0.3rem' }}>
                                   <span>Custo Fornecedor:</span>
-                                  <span style={{ color: '#ef4444' }}>-${(calculateOrderCost(order) - calculateOrderCommission(order)).toFixed(2)}</span>
+                                  <span style={{ color: '#ef4444' }}>{showValues ? `-$${(calculateOrderCost(order) - calculateOrderCommission(order)).toFixed(2)}` : '****'}</span>
                                 </div>
                                 {(() => {
                                   const breakdown = getOrderCommissionBreakdown(order);
@@ -3406,30 +3406,30 @@ const Admin = () => {
                                       </p>
                                       <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.8rem', marginBottom: '0.2rem' }}>
                                         <span style={{ color: 'var(--text-muted)' }}>- Comissão Base ({breakdown.rate}%):</span>
-                                        <span style={{ color: '#ef4444' }}>-${breakdown.base.toFixed(2)}</span>
+                                        <span style={{ color: '#ef4444' }}>{showValues ? `-$${breakdown.base.toFixed(2)}` : '****'}</span>
                                       </div>
                                       {breakdown.performance > 0 && (
                                         <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.8rem', marginBottom: '0.2rem' }}>
                                           <span style={{ color: 'var(--text-muted)' }}>- Bônus Meta (Venda #{breakdown.rank}):</span>
-                                          <span style={{ color: '#ef4444' }}>-${breakdown.performance.toFixed(2)}</span>
+                                          <span style={{ color: '#ef4444' }}>{showValues ? `-$${breakdown.performance.toFixed(2)}` : '****'}</span>
                                         </div>
                                       )}
                                       {breakdown.seasonal > 0 && (
                                         <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.8rem', marginBottom: '0.2rem' }}>
                                           <span style={{ color: 'var(--text-muted)' }}>- Bônus Sazonal:</span>
-                                          <span style={{ color: '#ef4444' }}>-${breakdown.seasonal.toFixed(2)}</span>
+                                          <span style={{ color: '#ef4444' }}>{showValues ? `-$${breakdown.seasonal.toFixed(2)}` : '****'}</span>
                                         </div>
                                       )}
                                       <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.85rem', fontWeight: 700, marginTop: '0.3rem', color: '#fff' }}>
                                         <span>Total Comissão:</span>
-                                        <span>-${breakdown.total.toFixed(2)}</span>
+                                        <span>{showValues ? `-$${breakdown.total.toFixed(2)}` : '****'}</span>
                                       </div>
                                     </div>
                                   );
                                 })()}
                                 <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.9rem', fontWeight: 800, borderTop: '1px solid rgba(255,255,255,0.1)', paddingTop: '0.3rem', marginTop: '0.3rem' }}>
                                   <span>Lucro Líquido:</span>
-                                  <span style={{ color: '#22c55e' }}>${(getValidRevenue(order) - calculateOrderCost(order)).toFixed(2)}</span>
+                                  <span style={{ color: '#22c55e' }}>{showValues ? `$${(getValidRevenue(order) - calculateOrderCost(order)).toFixed(2)}` : '****'}</span>
                                 </div>
                                 <p style={{ fontSize: '0.6rem', color: 'var(--text-muted)', marginTop: '0.5rem' }}>
                                   * Baseado em {order.usd_cad_rate ? `câmbio histórico (${order.usd_cad_rate})` : `câmbio atual/fallback (${pricing.exchangeRateFallback || 1.38})`}.
