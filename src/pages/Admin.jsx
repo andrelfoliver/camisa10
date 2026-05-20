@@ -888,13 +888,16 @@ const Admin = () => {
   };
 
   const autoAssignNumbers = async (order) => {
-    // Coleta números já usados neste pedido para evitar repetição
-    const usedNumbers = new Set(
-      order.items
-        .filter(i => i.extras?.nameNumber && i.extras?.customNumber)
-        .map(i => parseInt(i.extras.customNumber))
-        .filter(n => !isNaN(n))
-    );
+    // Coleta todos os números já usados (incluindo multi-valores separados por vírgula)
+    const usedNumbers = new Set();
+    order.items.forEach(i => {
+      if (i.extras?.nameNumber && i.extras?.customNumber) {
+        String(i.extras.customNumber).split(',').forEach(n => {
+          const num = parseInt(n.trim());
+          if (!isNaN(num)) usedNumbers.add(num);
+        });
+      }
+    });
 
     // Pool de disponíveis: 1 a 33
     const available = Array.from({ length: 33 }, (_, i) => i + 1).filter(n => !usedNumbers.has(n));
@@ -909,22 +912,34 @@ const Admin = () => {
     let changed = false;
 
     const updatedItems = order.items.map(item => {
-      // Só preenche se tiver personalização de nome/número mas número vazio
-      if (item.extras?.nameNumber && !item.extras?.customNumber) {
-        if (poolIdx >= available.length) {
-          // Pool esgotado — sorteia de 1-33 sem restrição
-          return {
-            ...item,
-            extras: { ...item.extras, customNumber: String(Math.floor(Math.random() * 33) + 1) }
-          };
+      if (!item.extras?.nameNumber) return item;
+
+      const qty = item.quantity || 1;
+      const existingNums = item.extras?.customNumber
+        ? String(item.extras.customNumber).split(',').map(n => n.trim()).filter(Boolean)
+        : [];
+
+      // Já tem todos os números necessários? Pula
+      if (existingNums.length >= qty) return item;
+
+      // Quantos faltam?
+      const needed = qty - existingNums.length;
+      const newNums = [...existingNums];
+
+      for (let q = 0; q < needed; q++) {
+        if (poolIdx < available.length) {
+          newNums.push(String(available[poolIdx++]));
+        } else {
+          // Pool esgotado — reutiliza aleatório
+          newNums.push(String(Math.floor(Math.random() * 33) + 1));
         }
-        changed = true;
-        return {
-          ...item,
-          extras: { ...item.extras, customNumber: String(available[poolIdx++]) }
-        };
       }
-      return item;
+
+      changed = true;
+      return {
+        ...item,
+        extras: { ...item.extras, customNumber: newNums.join(',') }
+      };
     });
 
     if (!changed) {
@@ -940,7 +955,6 @@ const Admin = () => {
 
       if (error) throw error;
 
-      // Atualiza estado local imediatamente
       setOrders(prev => prev.map(o => o.id === order.id ? { ...o, items: updatedItems } : o));
       alert(`🎲 Números atribuídos com sucesso! Revise antes de enviar ao fornecedor.`);
     } catch (err) {
@@ -3473,7 +3487,14 @@ const Admin = () => {
                               )}
 
                               <p style={{ fontSize: '0.7rem', color: 'var(--text-muted)', fontWeight: 800, textTransform: 'uppercase', marginTop: '1rem' }}>Ações Rápidas (Auto-Sync)</p>
-                              {order.items.some(i => i.extras?.nameNumber && !i.extras?.customNumber) && (
+                              {order.items.some(i => {
+                                if (!i.extras?.nameNumber) return false;
+                                const qty = i.quantity || 1;
+                                const assigned = i.extras?.customNumber
+                                  ? String(i.extras.customNumber).split(',').filter(Boolean).length
+                                  : 0;
+                                return assigned < qty;
+                              }) && (
                                 <button
                                   onClick={() => autoAssignNumbers(order)}
                                   style={{ padding: '0.6rem', borderRadius: '4px', background: 'rgba(99, 102, 241, 0.15)', color: '#818CF8', border: '1px solid #818CF8', fontWeight: 700, cursor: 'pointer', fontSize: '0.8rem' }}

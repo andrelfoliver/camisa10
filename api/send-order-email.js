@@ -132,21 +132,56 @@ export default async function handler(req, res) {
 
     // --- TABELA-RESUMO (para fornecedor) ---
     const totalQty = order.items.reduce((acc, i) => acc + (i.quantity || 1), 0);
-    const summaryRows = order.items.map(item => {
-      let custom = '';
-      if (item.extras?.nameNumber) custom += `${item.extras.customName || ''} #${item.extras.customNumber || ''}`;
-      if (item.extras?.extraCustomization && item.extras?.customExtraName) {
-        custom += (custom ? ' | ' : '') + item.extras.customExtraName;
+    const summaryRows = order.items.flatMap(item => {
+      const hasCustomization = item.extras?.nameNumber || (item.extras?.extraCustomization && item.extras?.customExtraName) || item.extras?.patches;
+      if (!hasCustomization) {
+        // Item sem personalização — uma linha simples
+        let custom = '—';
+        if (item.extras?.patches) custom = 'Patches';
+        return [`
+          <tr>
+            <td style="padding: 8px 10px; border-bottom: 1px solid #e2e8f0; font-size: 0.85rem; color: #1e293b;">${item.name}</td>
+            <td style="padding: 8px 10px; border-bottom: 1px solid #e2e8f0; font-size: 0.85rem; text-align: center; font-weight: 700; color: #ef4444;">${item.size}</td>
+            <td style="padding: 8px 10px; border-bottom: 1px solid #e2e8f0; font-size: 0.85rem; text-align: center; font-weight: 700; color: #ef4444;">${item.quantity || 1}</td>
+            <td style="padding: 8px 10px; border-bottom: 1px solid #e2e8f0; font-size: 0.8rem; color: #64748b;">${custom}</td>
+          </tr>
+        `];
       }
-      if (item.extras?.patches) custom += (custom ? ' | ' : '') + 'Patches';
-      return `
+
+      // Item com personalização — expande por número atribuído
+      const extraName = item.extras?.extraCustomization && item.extras?.customExtraName ? item.extras.customExtraName : '';
+      const patches = item.extras?.patches ? 'Patches' : '';
+
+      if (item.extras?.nameNumber && item.extras?.customNumber) {
+        // Múltiplos números separados por vírgula → uma linha por unidade
+        const numbers = String(item.extras.customNumber).split(',').map(n => n.trim()).filter(Boolean);
+        return numbers.map(num => {
+          let custom = `${item.extras.customName || ''} #${num}`;
+          if (extraName) custom += ` | ${extraName}`;
+          if (patches) custom += ` | ${patches}`;
+          return `
+            <tr>
+              <td style="padding: 8px 10px; border-bottom: 1px solid #e2e8f0; font-size: 0.85rem; color: #1e293b;">${item.name}</td>
+              <td style="padding: 8px 10px; border-bottom: 1px solid #e2e8f0; font-size: 0.85rem; text-align: center; font-weight: 700; color: #ef4444;">${item.size}</td>
+              <td style="padding: 8px 10px; border-bottom: 1px solid #e2e8f0; font-size: 0.85rem; text-align: center; font-weight: 700; color: #ef4444;">1</td>
+              <td style="padding: 8px 10px; border-bottom: 1px solid #e2e8f0; font-size: 0.8rem; color: #64748b;">${custom}</td>
+            </tr>
+          `;
+        });
+      }
+
+      // Nome sem número ainda, ou apenas extra/patches
+      let custom = item.extras?.nameNumber ? `${item.extras.customName || '?'} #?` : '';
+      if (extraName) custom += (custom ? ' | ' : '') + extraName;
+      if (patches) custom += (custom ? ' | ' : '') + patches;
+      return [`
         <tr>
           <td style="padding: 8px 10px; border-bottom: 1px solid #e2e8f0; font-size: 0.85rem; color: #1e293b;">${item.name}</td>
           <td style="padding: 8px 10px; border-bottom: 1px solid #e2e8f0; font-size: 0.85rem; text-align: center; font-weight: 700; color: #ef4444;">${item.size}</td>
           <td style="padding: 8px 10px; border-bottom: 1px solid #e2e8f0; font-size: 0.85rem; text-align: center; font-weight: 700; color: #ef4444;">${item.quantity || 1}</td>
           <td style="padding: 8px 10px; border-bottom: 1px solid #e2e8f0; font-size: 0.8rem; color: #64748b;">${custom || '—'}</td>
         </tr>
-      `;
+      `];
     }).join('');
 
     const summaryTableHtml = `
