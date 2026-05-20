@@ -255,13 +255,21 @@ export default async function handler(req, res) {
       `,
     });
 
-    // Enviar somente para o admin se adminOnly=true, caso contrário envia para ambos
-    const adminRes = await adminEmailPromise;
+    // --- Lógica de envio condicional ---
+    // supplierOnly=true → somente o fornecedor recebe (admin e cliente são pulados)
+    // adminOnly=true    → admin recebe, cliente é pulado
+    // padrão            → admin + cliente recebem
 
-    if (adminRes.error) {
-      console.error('❌ Resend Admin Error:', JSON.stringify(adminRes.error, null, 2));
+    let adminRes = { data: null, error: null };
+    if (!supplierOnly) {
+      adminRes = await adminEmailPromise;
+      if (adminRes.error) {
+        console.error('❌ Resend Admin Error:', JSON.stringify(adminRes.error, null, 2));
+      } else {
+        console.log('✅ Admin Notification Sent:', adminRes.data?.id);
+      }
     } else {
-      console.log('✅ Admin Notification Sent:', adminRes.data?.id);
+      console.log('ℹ️ supplierOnly=true — skipping admin email.');
     }
 
     let customerRes = { data: null, error: null };

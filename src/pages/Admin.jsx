@@ -190,7 +190,7 @@ const Admin = () => {
   const [expandedAgentId, setExpandedAgentId] = useState(null);
   const [expandedCustomerId, setExpandedCustomerId] = useState(null);
   const [showValues, setShowValues] = useState(false);
-  const [supplierEmail, setSupplierEmail] = useState(() => localStorage.getItem('ifooty_supplier_email') || '');
+  const [supplierEmail, setSupplierEmail] = useState('');
 
   // Filtros do Relatório de Produtividade
   const [prodDateRange, setProdDateRange] = useState({
@@ -278,6 +278,9 @@ const Admin = () => {
           setPricing(parsed);
         } catch (e) { }
       }
+
+      const { data: supplierData } = await supabase.from('store_settings').select('value').eq('key', 'supplier_email').single();
+      if (supplierData?.value) setSupplierEmail(supplierData.value);
 
       // Novas configurações na nuvem
       const { data: cloudSettings } = await supabase.from('store_settings').select('*').in('key', ['queridinhas_ids', 'best_seller_id', 'catalog_ids', 'whatsapp_number', 'hero_slides']);
@@ -371,6 +374,8 @@ const Admin = () => {
         await supabase.from('store_settings').insert([{ key: 'pricing', value: JSON.stringify(pricing) }]);
       }
     }
+    // Salvar email do fornecedor
+    await supabase.from('store_settings').upsert({ key: 'supplier_email', value: supplierEmail.trim() }, { onConflict: 'key' });
     setSaved(true);
     setTimeout(() => setSaved(false), 3000);
   };
@@ -856,7 +861,7 @@ const Admin = () => {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          adminOnly: true,
+          supplierOnly: true,
           supplierEmail: email,
           order: {
             ...order,
@@ -2748,14 +2753,11 @@ const Admin = () => {
                     <input
                       type="email"
                       value={supplierEmail}
-                      onChange={e => {
-                        setSupplierEmail(e.target.value);
-                        localStorage.setItem('ifooty_supplier_email', e.target.value);
-                      }}
+                      onChange={e => setSupplierEmail(e.target.value)}
                       placeholder="fornecedor@exemplo.com"
                       style={{ width: '100%', padding: '0.8rem', background: 'rgba(0,0,0,0.2)', color: '#fff', border: '1px solid rgba(234, 179, 8, 0.4)', borderRadius: '6px', fontSize: '0.95rem' }}
                     />
-                    {supplierEmail && <p style={{ fontSize: '0.75rem', color: '#EAB308', marginTop: '0.4rem' }}>✅ Configurado: {supplierEmail}</p>}
+                    {supplierEmail && <p style={{ fontSize: '0.75rem', color: '#EAB308', marginTop: '0.4rem' }}>✅ Configurado: {supplierEmail} — salva ao clicar em "Salvar Configurações"</p>}
                   </div>
 
                   <div style={{ marginTop: '2rem', borderTop: '1px solid var(--border-color)', paddingTop: '2rem' }}>

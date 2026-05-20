@@ -47,7 +47,7 @@ const Checkout = () => {
   useEffect(() => {
     async function loadConfig() {
       const { data } = await supabase.from('store_settings').select('value').eq('key', 'whatsapp_number').single();
-      if (data && data.value) setWaNumber(data.value);
+      if (data?.value) setWaNumber(data.value);
     }
     loadConfig();
   }, []);
@@ -361,7 +361,7 @@ const Checkout = () => {
         console.warn("⚠️ Erro ao atualizar estoque (alguns itens podem não ser pronta entrega):", stockErr);
       }
 
-      // 1.5. Notificar por E-mail
+      // 1.5. Notificar por E-mail (Admin + Cliente)
       try {
         await fetch('/api/send-order-email', {
           method: 'POST',
