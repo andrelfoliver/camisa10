@@ -887,6 +887,67 @@ const Admin = () => {
     }
   };
 
+  const autoAssignNumbers = async (order) => {
+    // Coleta números já usados neste pedido para evitar repetição
+    const usedNumbers = new Set(
+      order.items
+        .filter(i => i.extras?.nameNumber && i.extras?.customNumber)
+        .map(i => parseInt(i.extras.customNumber))
+        .filter(n => !isNaN(n))
+    );
+
+    // Pool de disponíveis: 1 a 33
+    const available = Array.from({ length: 33 }, (_, i) => i + 1).filter(n => !usedNumbers.has(n));
+
+    // Embaralha o pool (Fisher-Yates)
+    for (let i = available.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [available[i], available[j]] = [available[j], available[i]];
+    }
+
+    let poolIdx = 0;
+    let changed = false;
+
+    const updatedItems = order.items.map(item => {
+      // Só preenche se tiver personalização de nome/número mas número vazio
+      if (item.extras?.nameNumber && !item.extras?.customNumber) {
+        if (poolIdx >= available.length) {
+          // Pool esgotado — sorteia de 1-33 sem restrição
+          return {
+            ...item,
+            extras: { ...item.extras, customNumber: String(Math.floor(Math.random() * 33) + 1) }
+          };
+        }
+        changed = true;
+        return {
+          ...item,
+          extras: { ...item.extras, customNumber: String(available[poolIdx++]) }
+        };
+      }
+      return item;
+    });
+
+    if (!changed) {
+      alert('✅ Todos os itens já possuem número preenchido!');
+      return;
+    }
+
+    try {
+      const { error } = await supabase
+        .from('orders')
+        .update({ items: updatedItems })
+        .eq('id', order.id);
+
+      if (error) throw error;
+
+      // Atualiza estado local imediatamente
+      setOrders(prev => prev.map(o => o.id === order.id ? { ...o, items: updatedItems } : o));
+      alert(`🎲 Números atribuídos com sucesso! Revise antes de enviar ao fornecedor.`);
+    } catch (err) {
+      console.error(err);
+      alert('❌ Erro ao salvar os números. Tente novamente.');
+    }
+  };
 
   const calculateItemBaseCostUSD = (item) => {
     const name = (item.name || '').toLowerCase();
@@ -3412,6 +3473,14 @@ const Admin = () => {
                               )}
 
                               <p style={{ fontSize: '0.7rem', color: 'var(--text-muted)', fontWeight: 800, textTransform: 'uppercase', marginTop: '1rem' }}>Ações Rápidas (Auto-Sync)</p>
+                              {order.items.some(i => i.extras?.nameNumber && !i.extras?.customNumber) && (
+                                <button
+                                  onClick={() => autoAssignNumbers(order)}
+                                  style={{ padding: '0.6rem', borderRadius: '4px', background: 'rgba(99, 102, 241, 0.15)', color: '#818CF8', border: '1px solid #818CF8', fontWeight: 700, cursor: 'pointer', fontSize: '0.8rem' }}
+                                >
+                                  🎲 AUTO-NUMERAR (1–33)
+                                </button>
+                              )}
                               <button
                                 onClick={() => sendToSupplier(order)}
                                 style={{ padding: '0.6rem', borderRadius: '4px', background: 'rgba(234, 179, 8, 0.1)', color: '#EAB308', border: '1px solid #EAB308', fontWeight: 700, cursor: 'pointer', fontSize: '0.8rem' }}
