@@ -1684,6 +1684,14 @@ const Admin = () => {
           </button>
 
           <button
+            onClick={() => setSupplierTab('FINANCEIRO')}
+            className={supplierTab === 'FINANCEIRO' ? 'active-tab' : ''}
+            style={{ padding: '0.8rem 1.5rem', background: supplierTab === 'FINANCEIRO' ? 'var(--accent-color)' : 'transparent', color: supplierTab === 'FINANCEIRO' ? '#000' : 'var(--text-muted)', border: 'none', borderRadius: '4px', cursor: 'pointer', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '0.5rem' }}
+          >
+            <TrendingUp size={18} /> FINANCEIRO
+          </button>
+
+          <button
             onClick={() => setSupplierTab('CONFIG')}
             className={supplierTab === 'CONFIG' ? 'active-tab' : ''}
             style={{ padding: '0.8rem 1rem', borderRadius: 'var(--radius-md)', display: 'flex', alignItems: 'center', gap: '0.8rem', width: '100%', textAlign: 'left', background: supplierTab === 'CONFIG' ? '#3B82F6' : 'transparent', color: supplierTab === 'CONFIG' ? '#fff' : 'var(--text-main)', fontWeight: supplierTab === 'CONFIG' ? 700 : 500, transition: 'all 0.2s', border: 'none', cursor: 'pointer' }}
@@ -1754,7 +1762,8 @@ const Admin = () => {
                               supplierTab === 'ESTOQUE' ? 'Gestão de Estoque' :
                                 supplierTab === 'AGENTS' ? 'Agentes & Vendas' :
                                   supplierTab === 'CIDADES' ? 'Distribuição Geográfica' :
-                                    `${supplierTab.replace('CAT_', '')}`}
+                                    supplierTab === 'FINANCEIRO' ? 'Resumo Financeiro Executivo' :
+                                      `${supplierTab.replace('CAT_', '')}`}
               </h1>
               <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem', marginTop: '0.2rem' }} className="hide-mobile">Painel Central de Gerenciamento iFooty.</p>
             </div>
@@ -2299,6 +2308,221 @@ const Admin = () => {
                       </div>
                     ))}
                   </div>
+                </div>
+              </div>
+            );
+          })() : supplierTab === 'FINANCEIRO' ? (() => {
+            // Group orders by month/year (excluding cancelled orders for financial stats)
+            const monthlyStats = orders.reduce((acc, order) => {
+              const dateStr = order.created_at;
+              if (!dateStr) return acc;
+              const date = new Date(dateStr);
+              if (isNaN(date.getTime())) return acc;
+              
+              const month = date.getMonth(); // 0-11
+              const year = date.getFullYear();
+              const key = `${month + 1}-${year}`; // "5-2026"
+              const monthLabel = date.toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' }); // "maio de 2026"
+              const capitalizedLabel = monthLabel.charAt(0).toUpperCase() + monthLabel.slice(1);
+              
+              if (!acc[key]) {
+                acc[key] = {
+                  key,
+                  label: capitalizedLabel,
+                  orderCount: 0,
+                  shirtCount: 0,
+                  revenue: 0,
+                  cost: 0,
+                  profit: 0,
+                  paypalVolume: 0,
+                  transferVolume: 0,
+                  partnerVolume: 0,
+                  year
+                };
+              }
+              
+              const isCancelled = order.status === 'cancelled';
+              if (!isCancelled) {
+                acc[key].orderCount++;
+                const itemsCount = order.items?.reduce((s, i) => s + (i.quantity || 1), 0) || 0;
+                acc[key].shirtCount += itemsCount;
+
+                const revenue = getValidRevenue(order);
+                const cost = calculateOrderCost(order);
+                const profit = revenue - cost;
+                
+                acc[key].revenue += revenue;
+                acc[key].cost += cost;
+                acc[key].profit += profit;
+                
+                if (order.payment_method === 'paypal') {
+                  acc[key].paypalVolume += revenue;
+                } else if (order.payment_method === 'parceria') {
+                  acc[key].partnerVolume += revenue;
+                } else {
+                  acc[key].transferVolume += revenue;
+                }
+              }
+              
+              return acc;
+            }, {});
+
+            // Sort months (most recent first)
+            const sortedMonths = Object.values(monthlyStats).sort((a, b) => {
+              const [aMonth, aYear] = a.key.split('-').map(Number);
+              const [bMonth, bYear] = b.key.split('-').map(Number);
+              if (aYear !== bYear) return bYear - aYear;
+              return bMonth - aMonth;
+            });
+
+            // Calculate totals across all months for executive cards
+            const totals = sortedMonths.reduce((t, m) => {
+              t.revenue += m.revenue;
+              t.cost += m.cost;
+              t.profit += m.profit;
+              t.shirtCount += m.shirtCount;
+              t.orderCount += m.orderCount;
+              t.paypalVolume += m.paypalVolume;
+              t.transferVolume += m.transferVolume;
+              return t;
+            }, { revenue: 0, cost: 0, profit: 0, shirtCount: 0, orderCount: 0, paypalVolume: 0, transferVolume: 0 });
+
+            const averageMargin = totals.revenue > 0 ? (totals.profit / totals.revenue) * 100 : 0;
+            const averageTicket = totals.orderCount > 0 ? totals.revenue / totals.orderCount : 0;
+
+            return (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem', maxWidth: '1000px' }}>
+                <div style={{ background: 'rgba(255,255,255,0.03)', padding: '2rem', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.05)' }}>
+                  
+                  {/* Title & Description */}
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.8rem', marginBottom: '2rem' }}>
+                    <TrendingUp size={24} color="var(--accent-color)" />
+                    <div>
+                      <h3 style={{ margin: 0, color: '#fff' }}>DRE & Faturamento Executivo</h3>
+                      <p style={{ margin: 0, fontSize: '0.9rem', color: 'var(--text-muted)' }}>Visão geral simplificada de receitas, custos e margens operacionais consolidadas.</p>
+                    </div>
+                  </div>
+
+                  {/* Executive Cards */}
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '1rem', marginBottom: '2.5rem' }}>
+                    
+                    <div className="glass-panel" style={{ padding: '1.2rem', borderRadius: '12px', borderLeft: '4px solid var(--accent-color)' }}>
+                      <p style={{ fontSize: '0.65rem', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: 800, margin: '0 0 0.5rem 0' }}>Receita Bruta (CAD)</p>
+                      <h3 style={{ fontSize: '1.8rem', color: 'var(--accent-color)', margin: '0 0 0.2rem 0', fontWeight: 800 }}>
+                        {showValues ? `$${totals.revenue.toFixed(2)}` : '****'}
+                      </h3>
+                      <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>Língido de taxas PayPal</span>
+                    </div>
+
+                    <div className="glass-panel" style={{ padding: '1.2rem', borderRadius: '12px', borderLeft: '4px solid #ef4444' }}>
+                      <p style={{ fontSize: '0.65rem', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: 800, margin: '0 0 0.5rem 0' }}>Custo Operacional (CAD)</p>
+                      <h3 style={{ fontSize: '1.8rem', color: '#fff', margin: '0 0 0.2rem 0', fontWeight: 800 }}>
+                        {showValues ? `$${totals.cost.toFixed(2)}` : '****'}
+                      </h3>
+                      <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>Custo fob + taxas de frete</span>
+                    </div>
+
+                    <div className="glass-panel" style={{ padding: '1.2rem', borderRadius: '12px', borderLeft: '4px solid #22c55e' }}>
+                      <p style={{ fontSize: '0.65rem', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: 800, margin: '0 0 0.5rem 0' }}>Lucro Líquido Real (CAD)</p>
+                      <h3 style={{ fontSize: '1.8rem', color: '#22c55e', margin: '0 0 0.2rem 0', fontWeight: 800 }}>
+                        {showValues ? `$${totals.profit.toFixed(2)}` : '****'}
+                      </h3>
+                      <span style={{ fontSize: '0.7rem', color: '#22c55e', fontWeight: 700 }}>
+                        {showValues ? `${averageMargin.toFixed(1)}% Margem` : '****'}
+                      </span>
+                    </div>
+
+                    <div className="glass-panel" style={{ padding: '1.2rem', borderRadius: '12px', borderLeft: '4px solid #3B82F6' }}>
+                      <p style={{ fontSize: '0.65rem', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: 800, margin: '0 0 0.5rem 0' }}>Volume & Vendas</p>
+                      <h3 style={{ fontSize: '1.8rem', color: '#fff', margin: '0 0 0.2rem 0', fontWeight: 800 }}>
+                        {totals.shirtCount} <span style={{ fontSize: '1rem', color: 'var(--text-muted)' }}>camisas</span>
+                      </h3>
+                      <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>
+                        {totals.orderCount} pedidos • Ticket Médio: {showValues ? `$${averageTicket.toFixed(2)}` : '****'}
+                      </span>
+                    </div>
+
+                  </div>
+
+                  {/* Month over Month Table */}
+                  <div className="glass-panel" style={{ padding: '1.5rem', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.05)', marginBottom: '2.5rem', overflowX: 'auto' }}>
+                    <h4 style={{ margin: '0 0 1.2rem 0', color: '#fff', fontSize: '1rem', fontWeight: 700 }}>Histórico Mensal Consolidado</h4>
+                    
+                    <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', minWidth: '700px' }}>
+                      <thead>
+                        <tr style={{ borderBottom: '1px solid rgba(255,255,255,0.1)', paddingBottom: '0.5rem' }}>
+                          <th style={{ padding: '0.8rem 0.5rem', color: 'var(--text-muted)', fontSize: '0.75rem', textTransform: 'uppercase', fontWeight: 800 }}>Mês / Ano</th>
+                          <th style={{ padding: '0.8rem 0.5rem', color: 'var(--text-muted)', fontSize: '0.75rem', textTransform: 'uppercase', fontWeight: 800, textAlign: 'center' }}>Pedidos</th>
+                          <th style={{ padding: '0.8rem 0.5rem', color: 'var(--text-muted)', fontSize: '0.75rem', textTransform: 'uppercase', fontWeight: 800, textAlign: 'center' }}>Camisas</th>
+                          <th style={{ padding: '0.8rem 0.5rem', color: 'var(--text-muted)', fontSize: '0.75rem', textTransform: 'uppercase', fontWeight: 800, textAlign: 'right' }}>Faturamento</th>
+                          <th style={{ padding: '0.8rem 0.5rem', color: 'var(--text-muted)', fontSize: '0.75rem', textTransform: 'uppercase', fontWeight: 800, textAlign: 'right' }}>Custos</th>
+                          <th style={{ padding: '0.8rem 0.5rem', color: 'var(--text-muted)', fontSize: '0.75rem', textTransform: 'uppercase', fontWeight: 800, textAlign: 'right' }}>Lucro Líquido</th>
+                          <th style={{ padding: '0.8rem 0.5rem', color: 'var(--text-muted)', fontSize: '0.75rem', textTransform: 'uppercase', fontWeight: 800, textAlign: 'center' }}>Margem</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {sortedMonths.length === 0 ? (
+                          <tr>
+                            <td colSpan="7" style={{ padding: '2rem', textAlign: 'center', color: 'var(--text-muted)', fontSize: '0.9rem' }}>Nenhum dado financeiro registrado.</td>
+                          </tr>
+                        ) : sortedMonths.map((m) => {
+                          const margin = m.revenue > 0 ? (m.profit / m.revenue) * 100 : 0;
+                          return (
+                            <tr key={m.key} style={{ borderBottom: '1px solid rgba(255,255,255,0.03)', transition: 'background 0.2s' }} onMouseEnter={(e) => e.currentTarget.style.background = 'rgba(255,255,255,0.02)'} onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}>
+                              <td style={{ padding: '1rem 0.5rem', color: '#fff', fontWeight: 600, fontSize: '0.9rem' }}>{m.label}</td>
+                              <td style={{ padding: '1rem 0.5rem', color: 'var(--text-muted)', fontSize: '0.9rem', textAlign: 'center' }}>{m.orderCount}</td>
+                              <td style={{ padding: '1rem 0.5rem', color: 'var(--text-muted)', fontSize: '0.9rem', textAlign: 'center' }}>{m.shirtCount}</td>
+                              <td style={{ padding: '1rem 0.5rem', color: 'var(--accent-color)', fontWeight: 700, fontSize: '0.9rem', textAlign: 'right' }}>
+                                {showValues ? `$${m.revenue.toFixed(2)}` : '****'}
+                              </td>
+                              <td style={{ padding: '1rem 0.5rem', color: '#fff', fontSize: '0.9rem', textAlign: 'right' }}>
+                                {showValues ? `$${m.cost.toFixed(2)}` : '****'}
+                              </td>
+                              <td style={{ padding: '1rem 0.5rem', color: '#22c55e', fontWeight: 700, fontSize: '0.9rem', textAlign: 'right' }}>
+                                {showValues ? `$${m.profit.toFixed(2)}` : '****'}
+                              </td>
+                              <td style={{ padding: '1rem 0.5rem', color: '#22c55e', fontWeight: 600, fontSize: '0.9rem', textAlign: 'center' }}>
+                                {showValues ? `${margin.toFixed(1)}%` : '****'}
+                              </td>
+                            </tr>
+                          );
+                        })}
+                      </tbody>
+                    </table>
+                  </div>
+
+                  {/* Payment Method Breakdown */}
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '1.5rem' }}>
+                    <div className="glass-panel" style={{ padding: '1.5rem', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.05)' }}>
+                      <h4 style={{ margin: '0 0 1rem 0', color: '#fff', fontSize: '0.95rem', fontWeight: 700 }}>Distribuição por Meio de Pagamento</h4>
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                        <div>
+                          <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.3rem', fontSize: '0.85rem' }}>
+                            <span style={{ color: 'var(--text-muted)' }}>Interac e-Transfer</span>
+                            <span style={{ color: '#fff', fontWeight: 700 }}>
+                              {showValues ? `$${totals.transferVolume.toFixed(2)}` : '****'} ({totals.revenue > 0 ? ((totals.transferVolume / totals.revenue) * 100).toFixed(0) : 0}%)
+                            </span>
+                          </div>
+                          <div style={{ width: '100%', height: '6px', background: 'rgba(255,255,255,0.05)', borderRadius: '3px' }}>
+                            <div style={{ height: '100%', background: 'var(--accent-color)', borderRadius: '3px', width: `${totals.revenue > 0 ? (totals.transferVolume / totals.revenue) * 100 : 0}%` }} />
+                          </div>
+                        </div>
+
+                        <div>
+                          <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.3rem', fontSize: '0.85rem' }}>
+                            <span style={{ color: 'var(--text-muted)' }}>PayPal Secure</span>
+                            <span style={{ color: '#fff', fontWeight: 700 }}>
+                              {showValues ? `$${totals.paypalVolume.toFixed(2)}` : '****'} ({totals.revenue > 0 ? ((totals.paypalVolume / totals.revenue) * 100).toFixed(0) : 0}%)
+                            </span>
+                          </div>
+                          <div style={{ width: '100%', height: '6px', background: 'rgba(255,255,255,0.05)', borderRadius: '3px' }}>
+                            <div style={{ height: '100%', background: '#3B82F6', borderRadius: '3px', width: `${totals.revenue > 0 ? (totals.paypalVolume / totals.revenue) * 100 : 0}%` }} />
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
                 </div>
               </div>
             );
