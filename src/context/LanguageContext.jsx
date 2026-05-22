@@ -86,7 +86,7 @@ export const translations = {
       },
       {
         question: 'Quais formas de pagamento vocês aceitam?',
-        answer: 'Aceitamos pagamento via PayPal (cartão de crédito, débito ou saldo PayPal) e atendimento direto via WhatsApp.'
+        answer: 'Aceitamos pagamento via PayPal (cartão de crédito, débito ou saldo PayPal) e atendimento direto via WhatsApp. Também aceitamos E‑transfer Interac.',
       },
       {
         question: 'É seguro comprar no iFooty?',
