@@ -935,6 +935,11 @@ button {
   line-height: 1.6;
   font-family: var(--font-body);
   flex-grow: 1;
+  display: -webkit-box;
+  -webkit-line-clamp: 7;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .testimonial-avatar-container {

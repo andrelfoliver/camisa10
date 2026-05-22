@@ -150,6 +150,23 @@ const Profile = () => {
     if (error) {
       alert(t('profile_feedback_error') + error.message);
     } else {
+      // Notificar o gestor
+      try {
+        await fetch('/api/notify-testimonial', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            name: feedbackData.name,
+            content: feedbackData.content,
+            rating: feedbackData.rating,
+            location: feedbackData.location,
+            userEmail: user.email
+          })
+        });
+      } catch (e) {
+        console.error('Erro ao notificar gestor:', e);
+      }
+      
       alert(t('profile_feedback_success'));
       setContent('');
       loadUserData();

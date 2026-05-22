@@ -72,6 +72,58 @@ const TypewriterCities = ({ cities }) => {
 
 
 
+const TestimonialCard = ({ testimonial, t }) => {
+  const [expanded, setExpanded] = useState(false);
+  
+  return (
+    <div className="testimonial-card-premium shadow-hover">
+      <Quote className="testimonial-quote-icon" size={80} />
+      
+      <div className="testimonial-badge-year">
+        {t('social_proof_client_since')} {testimonial.date ? new Date(testimonial.date).getFullYear() : new Date().getFullYear()}
+      </div>
+
+      <div className="testimonial-stars-container">
+        {Array.from({ length: Number(testimonial.rating) || 5 }).map((_, i) => (
+          <Star key={i} size={16} fill="#FFB81C" />
+        ))}
+      </div>
+
+      <div style={{ flexGrow: 1, display: 'flex', flexDirection: 'column' }}>
+        <p className="testimonial-content-text" style={expanded ? { WebkitLineClamp: 'unset', overflow: 'visible', display: 'block' } : {}}>
+          "{testimonial.content}"
+        </p>
+        {testimonial.content && testimonial.content.length > 180 && (
+          <button 
+            onClick={() => setExpanded(!expanded)} 
+            style={{ background: 'transparent', border: 'none', color: 'var(--accent-color)', cursor: 'pointer', textAlign: 'left', fontWeight: 'bold', padding: '0 0 1rem 0', fontSize: '0.9rem', marginTop: '-1rem' }}
+          >
+            {expanded ? 'Ler menos' : 'Ler mais'}
+          </button>
+        )}
+      </div>
+
+      <div className="testimonial-avatar-container">
+        {testimonial.avatar_url ? (
+          <img 
+            src={testimonial.avatar_url} 
+            alt={testimonial.name} 
+            className="testimonial-avatar-img"
+            onError={(e) => { e.target.style.display = 'none'; e.target.nextSibling.style.display = 'flex'; }}
+          />
+        ) : null}
+        <div className="testimonial-avatar-fallback" style={{ display: testimonial.avatar_url ? 'none' : 'flex' }}>
+          {(testimonial.name || '?').charAt(0)}
+        </div>
+        <div>
+          <p style={{ fontWeight: 800, color: '#fff', fontSize: '1.1rem' }}>{testimonial.name}</p>
+          <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem' }}>{testimonial.location}</p>
+        </div>
+      </div>
+    </div>
+  );
+};
+
 const Home = () => {
   const { pricingConfig } = useCart();
   const { t, language, translateProductDisplay } = useLanguage();
@@ -572,39 +624,7 @@ const Home = () => {
         <div className="testimonials-track hide-scrollbar">
           {testimonials.length > 0 ? (
             testimonials.map(testimonial => (
-              <div key={testimonial.id} className="testimonial-card-premium shadow-hover">
-                <Quote className="testimonial-quote-icon" size={80} />
-                
-                <div className="testimonial-badge-year">
-                  {t('social_proof_client_since')} {testimonial.date ? new Date(testimonial.date).getFullYear() : new Date().getFullYear()}
-                </div>
-
-                <div className="testimonial-stars-container">
-                  {Array.from({ length: Number(testimonial.rating) || 5 }).map((_, i) => (
-                    <Star key={i} size={16} fill="#FFB81C" />
-                  ))}
-                </div>
-
-                <p className="testimonial-content-text">"{testimonial.content}"</p>
-
-                <div className="testimonial-avatar-container">
-                  {testimonial.avatar_url ? (
-                    <img 
-                      src={testimonial.avatar_url} 
-                      alt={testimonial.name} 
-                      className="testimonial-avatar-img"
-                      onError={(e) => { e.target.style.display = 'none'; e.target.nextSibling.style.display = 'flex'; }}
-                    />
-                  ) : null}
-                  <div className="testimonial-avatar-fallback" style={{ display: testimonial.avatar_url ? 'none' : 'flex' }}>
-                    {(testimonial.name || '?').charAt(0)}
-                  </div>
-                  <div>
-                    <p style={{ fontWeight: 800, color: '#fff', fontSize: '1.1rem' }}>{testimonial.name}</p>
-                    <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem' }}>{testimonial.location}</p>
-                  </div>
-                </div>
-              </div>
+              <TestimonialCard key={testimonial.id} testimonial={testimonial} t={t} />
             ))
           ) : (
             // Fallback caso não tenha nada no banco ainda
