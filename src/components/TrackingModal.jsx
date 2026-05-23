@@ -67,6 +67,51 @@ const preprocessImage = (file) => {
   });
 };
 
+const getDaysPassedBetween = (startDateStr, endDateStr) => {
+  if (!startDateStr) return null;
+  
+  const parseDatePart = (str) => {
+    if (!str) return null;
+    return str.includes(' às ') ? str.split(' às ')[0] : str.split(' ')[0];
+  };
+
+  const startPart = parseDatePart(startDateStr);
+  if (!startPart) return null;
+  const startParts = startPart.split('-');
+  if (startParts.length !== 3) return null;
+  const startYear = parseInt(startParts[0], 10);
+  const startMonth = parseInt(startParts[1], 10) - 1;
+  const startDay = parseInt(startParts[2], 10);
+  if (isNaN(startYear) || isNaN(startMonth) || isNaN(startDay)) return null;
+
+  const dStart = new Date(startYear, startMonth, startDay);
+
+  let dEnd;
+  if (endDateStr) {
+    const endPart = parseDatePart(endDateStr);
+    if (endPart) {
+      const endParts = endPart.split('-');
+      if (endParts.length === 3) {
+        const endYear = parseInt(endParts[0], 10);
+        const endMonth = parseInt(endParts[1], 10) - 1;
+        const endDay = parseInt(endParts[2], 10);
+        if (!isNaN(endYear) && !isNaN(endMonth) && !isNaN(endDay)) {
+          dEnd = new Date(endYear, endMonth, endDay);
+        }
+      }
+    }
+  }
+
+  if (!dEnd) {
+    const today = new Date();
+    dEnd = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+  }
+
+  const diffTime = dEnd - dStart;
+  const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+  return diffDays >= 0 ? diffDays : 0;
+};
+
 const TrackingModal = ({ isOpen, onClose, initialTrackingNumber = '' }) => {
   const [trackingNumber, setTrackingNumber] = useState(initialTrackingNumber);
   const [recentSearches, setRecentSearches] = useState(() => {
@@ -212,6 +257,13 @@ const TrackingModal = ({ isOpen, onClose, initialTrackingNumber = '' }) => {
     }
   };
 
+  const deliveredEvent = history.find(item => {
+    const status = (item.status || '').toLowerCase();
+    return status.includes('entregue') || status.includes('assinado') || status.includes('delivered');
+  });
+
+  const daysPassed = trackingData ? getDaysPassedBetween(trackingData.date, deliveredEvent ? (deliveredEvent.date || deliveredEvent.rawDate) : null) : null;
+
   return (
     <div style={{ position: 'fixed', inset: 0, zIndex: 9999, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(0,0,0,0.8)', backdropFilter: 'blur(5px)', padding: '1rem' }}>
       <div style={{ background: 'var(--surface-color)', width: '100%', maxWidth: '600px', borderRadius: '16px', border: '1px solid var(--border-color)', overflow: 'hidden', display: 'flex', flexDirection: 'column', maxHeight: '90vh' }}>
@@ -318,6 +370,58 @@ const TrackingModal = ({ isOpen, onClose, initialTrackingNumber = '' }) => {
                   <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)', textTransform: 'uppercase' }}>Data de Envio</span>
                   <p style={{ margin: 0, fontWeight: 700, color: '#fff' }}><Calendar size={14} style={{ display: 'inline', marginRight: '4px' }}/>{trackingData.date || 'N/A'}</p>
                 </div>
+                
+                {daysPassed !== null && (
+                  <div style={{
+                    gridColumn: 'span 2',
+                    background: 'linear-gradient(135deg, rgba(255,255,255,0.03) 0%, rgba(255,255,255,0.01) 100%)',
+                    border: '1px solid rgba(255,255,255,0.05)',
+                    borderRadius: '12px',
+                    padding: '1rem',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    marginTop: '0.5rem',
+                    boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.05)'
+                  }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                      <div style={{
+                        width: '32px',
+                        height: '32px',
+                        borderRadius: '50%',
+                        background: 'rgba(186, 230, 30, 0.1)',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        border: '1px solid rgba(186, 230, 30, 0.2)'
+                      }}>
+                        <Clock size={16} color="var(--accent-color)" />
+                      </div>
+                      <div>
+                        <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)', textTransform: 'uppercase', display: 'block', letterSpacing: '0.05em' }}>
+                          Tempo de Trânsito
+                        </span>
+                        <span style={{ fontSize: '0.8rem', color: '#fff', fontWeight: 500 }}>
+                          {deliveredEvent ? 'Entregue com sucesso' : 'Pacote em trânsito'}
+                        </span>
+                      </div>
+                    </div>
+                    <div style={{ textAlign: 'right' }}>
+                      <span style={{
+                        fontSize: '1.25rem',
+                        fontWeight: 800,
+                        color: 'var(--accent-color)',
+                        textShadow: '0 0 12px rgba(186, 230, 30, 0.2)',
+                        display: 'block'
+                      }}>
+                        {daysPassed} {daysPassed === 1 ? 'dia' : 'dias'}
+                      </span>
+                      <span style={{ fontSize: '0.65rem', color: 'var(--text-muted)' }}>
+                        {deliveredEvent ? 'desde o envio' : 'decorridos'}
+                      </span>
+                    </div>
+                  </div>
+                )}
               </div>
 
               {/* Timeline */}
