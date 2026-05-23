@@ -291,6 +291,15 @@ export const translations = {
     checkout_city_label: 'Cidade',
     checkout_province_label: 'Estado/Província',
     checkout_country_label: 'País',
+    exit_title: 'Antes de ir...',
+    exit_subtitle: 'Sentimos muito que você não tenha encontrado o que procurava.',
+    exit_label: 'Conta pra gente: qual produto você queria ver aqui na iFooty?',
+    exit_placeholder: 'Ex: Camisa retrô do Brasil 1970, agasalho do Real Madrid...',
+    exit_btn_submit: 'Enviar Sugestão',
+    exit_submitting: 'Enviando...',
+    exit_footer: 'Prometemos tentar trazer essa novidade para você! ⚽',
+    exit_success: 'Obrigado pelo seu feedback! Vamos verificar isso. ⚽',
+    exit_error: 'Ocorreu um erro ao enviar. Tente novamente mais tarde.',
   },
   en: {
     nav_home: 'Home',
@@ -581,6 +590,15 @@ export const translations = {
     checkout_city_label: 'City',
     checkout_province_label: 'State/Province',
     checkout_country_label: 'Country',
+    exit_title: 'Before you go...',
+    exit_subtitle: 'We are sorry that you did not find what you were looking for.',
+    exit_label: 'Tell us: which product would you like to see here at iFooty?',
+    exit_placeholder: 'e.g. Retro Brazil 1970 jersey, Real Madrid tracksuit...',
+    exit_btn_submit: 'Submit Suggestion',
+    exit_submitting: 'Sending...',
+    exit_footer: 'We promise to try to bring this update to you! ⚽',
+    exit_success: 'Thank you for your feedback! We will check it out. ⚽',
+    exit_error: 'An error occurred while sending. Please try again later.',
   }
 };
 

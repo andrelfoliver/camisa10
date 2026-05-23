@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { toast } from 'react-hot-toast';
 import { X, MessageSquare, Send } from 'lucide-react';
+import { useLanguage } from '../context/LanguageContext';
 
 const ExitIntentPopup = () => {
+    const { t } = useLanguage();
     const [isVisible, setIsVisible] = useState(false);
     const [feedback, setFeedback] = useState('');
     const [isSubmitting, setIsSubmitting] = useState(false);
@@ -38,7 +40,7 @@ const ExitIntentPopup = () => {
             });
 
             if (response.ok) {
-                toast.success('Obrigado pelo seu feedback! Vamos verificar isso. ⚽', {
+                toast.success(t('exit_success'), {
                     style: {
                         background: '#1a1a1a',
                         color: '#ccff00',
@@ -49,8 +51,8 @@ const ExitIntentPopup = () => {
             } else {
                 throw new Error('Erro ao enviar');
             }
-        } catch (error) {
-            toast.error('Ocorreu um erro ao enviar. Tente novamente mais tarde.');
+        } catch {
+            toast.error(t('exit_error'));
         } finally {
             setIsSubmitting(false);
         }
@@ -72,14 +74,14 @@ const ExitIntentPopup = () => {
                     <div className="icon-badge">
                         <MessageSquare size={24} className="text-neon" />
                     </div>
-                    <h2>Antes de ir...</h2>
-                    <p>Sentimos muito que você não tenha encontrado o que procurava.</p>
+                    <h2>{t('exit_title')}</h2>
+                    <p>{t('exit_subtitle')}</p>
                 </div>
 
                 <form onSubmit={handleSubmit} className="feedback-form">
-                    <label>Conta pra gente: qual produto você queria ver aqui na iFooty?</label>
+                    <label>{t('exit_label')}</label>
                     <textarea
-                        placeholder="Ex: Camisa retrô do Brasil 1970, agasalho do Real Madrid..."
+                        placeholder={t('exit_placeholder')}
                         value={feedback}
                         onChange={(e) => setFeedback(e.target.value)}
                         required
@@ -90,10 +92,10 @@ const ExitIntentPopup = () => {
                         className="submit-btn"
                     >
                         {isSubmitting ? (
-                            <span className="loader">Enviando...</span>
+                            <span className="loader">{t('exit_submitting')}</span>
                         ) : (
                             <>
-                                <span>Enviar Sugestão</span>
+                                <span>{t('exit_btn_submit')}</span>
                                 <Send size={18} />
                             </>
                         )}
@@ -101,7 +103,7 @@ const ExitIntentPopup = () => {
                 </form>
 
                 <div className="popup-footer">
-                    <p>Prometemos tentar trazer essa novidade para você! ⚽</p>
+                    <p>{t('exit_footer')}</p>
                 </div>
             </div>
 
