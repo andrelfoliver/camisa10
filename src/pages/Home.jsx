@@ -126,7 +126,7 @@ const TestimonialCard = ({ testimonial, t }) => {
 
 const Home = () => {
   const { pricingConfig } = useCart();
-  const { t, language, translateProductDisplay } = useLanguage();
+  const { t, language, translateProductDisplay, formatPrice } = useLanguage();
 
   // Estado inicial limpo - O site agora é 100% dinâmico via Supabase
   const [queridinhas, setQueridinhas] = useState([]);
@@ -508,11 +508,11 @@ const Home = () => {
                 {/* Combo 2 Camisas */}
                 <div className="glass-panel" style={{ flex: 1, minWidth: '250px', padding: '2rem', borderRadius: 'var(--radius-md)', display: 'flex', flexDirection: 'column' }}>
                   <h3 style={{ fontSize: '1.5rem', marginBottom: '1rem' }}>{t('promo_banner_combo2')}</h3>
-                  <p style={{ color: 'var(--text-muted)', fontSize: '1rem', marginBottom: '0.2rem' }}>{t('promo_banner_from')} <del>${normalPrice2.toFixed(2)}</del> {t('promo_banner_for')}</p>
-                  <p style={{ fontSize: '3rem', fontWeight: 800, color: 'var(--text-main)', marginBottom: '1rem', lineHeight: 1 }}>${finalTotal2.toFixed(2)}</p>
+                  <p style={{ color: 'var(--text-muted)', fontSize: '1rem', marginBottom: '0.2rem' }}>{t('promo_banner_from')} <del>{formatPrice(normalPrice2)}</del> {t('promo_banner_for')}</p>
+                  <p style={{ fontSize: '3rem', fontWeight: 800, color: 'var(--text-main)', marginBottom: '1rem', lineHeight: 1 }}>{formatPrice(finalTotal2)}</p>
                   <div style={{ background: 'rgba(255,255,255,0.05)', padding: '0.8rem', borderRadius: '8px', marginBottom: '1.5rem', fontSize: '0.95rem' }}>
-                    <span style={{ display: 'block', marginBottom: '0.2rem' }}>{t('home_comes_out_to')} <strong>${finalPricePerUnit2.toFixed(2)}</strong> {t('promo_banner_each')}</span>
-                    <span style={{ color: '#10B981', fontWeight: 700 }}>💰 {t('promo_banner_savings')} ${savings2.toFixed(2)}</span>
+                    <span style={{ display: 'block', marginBottom: '0.2rem' }}>{t('home_comes_out_to')} <strong>{formatPrice(finalPricePerUnit2)}</strong> {t('promo_banner_each')}</span>
+                    <span style={{ color: '#10B981', fontWeight: 700 }}>💰 {t('promo_banner_savings')} {formatPrice(savings2)}</span>
                   </div>
 
                   <div style={{ marginTop: 'auto' }}>
@@ -524,11 +524,11 @@ const Home = () => {
                 <div className="glass-panel" style={{ flex: 1, minWidth: '250px', padding: '2rem', borderRadius: 'var(--radius-md)', border: '2px solid var(--accent-color)', position: 'relative', display: 'flex', flexDirection: 'column' }}>
                   <div className="badge" style={{ background: 'var(--accent-color)', color: '#000', left: '50%', transform: 'translate(-50%, -150%)', width: 'max-content' }}>{t('promo_banner_best_offer')}</div>
                   <h3 style={{ fontSize: '1.5rem', marginBottom: '1rem' }}>{t('promo_banner_combo3')}</h3>
-                  <p style={{ color: 'var(--text-muted)', fontSize: '1rem', marginBottom: '0.2rem' }}>{t('promo_banner_from')} <del>${normalPrice3.toFixed(2)}</del> {t('promo_banner_for')}</p>
-                  <p style={{ fontSize: '3rem', fontWeight: 800, color: 'var(--accent-color)', marginBottom: '1rem', lineHeight: 1 }}>${finalTotal3.toFixed(2)}</p>
+                  <p style={{ color: 'var(--text-muted)', fontSize: '1rem', marginBottom: '0.2rem' }}>{t('promo_banner_from')} <del>{formatPrice(normalPrice3)}</del> {t('promo_banner_for')}</p>
+                  <p style={{ fontSize: '3rem', fontWeight: 800, color: 'var(--accent-color)', marginBottom: '1rem', lineHeight: 1 }}>{formatPrice(finalTotal3)}</p>
                   <div style={{ background: 'rgba(219, 254, 135, 0.1)', border: '1px solid rgba(219, 254, 135, 0.3)', padding: '0.8rem', borderRadius: '8px', marginBottom: '1.5rem', fontSize: '0.95rem' }}>
-                    <span style={{ display: 'block', color: 'var(--text-main)', marginBottom: '0.2rem' }}>{t('home_only')} <strong>${finalPricePerUnit3.toFixed(2)}</strong> {t('promo_banner_each')}</span>
-                    <span style={{ color: '#10B981', fontWeight: 700 }}>🔥 {t('home_savings')} ${savings3.toFixed(2)}!</span>
+                    <span style={{ display: 'block', color: 'var(--text-main)', marginBottom: '0.2rem' }}>{t('home_only')} <strong>{formatPrice(finalPricePerUnit3)}</strong> {t('promo_banner_each')}</span>
+                    <span style={{ color: '#10B981', fontWeight: 700 }}>🔥 {t('home_savings')} {formatPrice(savings3)}!</span>
                   </div>
 
                   <div style={{ marginTop: 'auto' }}>
@@ -587,11 +587,11 @@ const Home = () => {
             <div style={{ display: 'flex', gap: '2rem', flexWrap: 'wrap', justifyContent: 'center' }}>
               <div style={{ background: 'rgba(255,255,255,0.03)', padding: '2rem', borderRadius: 'var(--radius-lg)', minWidth: '250px', border: '1px solid var(--border-color)' }}>
                 <p style={{ fontSize: '1.2rem', fontWeight: 600, marginBottom: '0.5rem' }}>{t('customization_item1')}</p>
-                <p style={{ color: 'var(--accent-color)', fontWeight: 800, fontSize: '1.5rem' }}>+ {pricingConfig?.nameNumber || '11.90'} CAD</p>
+                <p style={{ color: 'var(--accent-color)', fontWeight: 800, fontSize: '1.5rem' }}>+ {formatPrice(pricingConfig?.nameNumber || 11.90)}</p>
               </div>
               <div style={{ background: 'rgba(255,255,255,0.03)', padding: '2rem', borderRadius: 'var(--radius-lg)', minWidth: '250px', border: '1px solid var(--border-color)' }}>
                 <p style={{ fontSize: '1.2rem', fontWeight: 600, marginBottom: '0.5rem' }}>{t('customization_item2')}</p>
-                <p style={{ color: 'var(--accent-color)', fontWeight: 800, fontSize: '1.5rem' }}>+ {pricingConfig?.patch || '4.90'} CAD</p>
+                <p style={{ color: 'var(--accent-color)', fontWeight: 800, fontSize: '1.5rem' }}>+ {formatPrice(pricingConfig?.patch || 4.90)}</p>
               </div>
             </div>
           </div>

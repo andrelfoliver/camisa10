@@ -10,7 +10,7 @@ import { useLanguage } from '../context/LanguageContext';
 const Navbar = () => {
   const { cartItems, setIsCartOpen } = useCart();
   const { user, isAdmin } = useAuth();
-  const { language, setLanguage, t } = useLanguage();
+  const { language, setLanguage, t, currency, toggleCurrency } = useLanguage();
   const navigate = useNavigate();
   const [mobileMenuOpen, setMobileMenuOpen] = React.useState(false);
   const [isSearchOpen, setIsSearchOpen] = React.useState(false);
@@ -223,6 +223,30 @@ const Navbar = () => {
               ) : (
                 <UserCircle size={22} />
               )}
+            </button>
+
+            {/* Seletor de Moeda */}
+            <button
+              onClick={toggleCurrency}
+              style={{
+                background: 'rgba(255,255,255,0.05)',
+                border: '1px solid rgba(255,255,255,0.1)',
+                borderRadius: '6px',
+                padding: '0.25rem 0.5rem',
+                color: 'var(--accent-color)',
+                fontSize: '0.75rem',
+                fontWeight: 700,
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '0.25rem',
+                transition: 'all 0.2s',
+                marginRight: '0.25rem',
+                textShadow: '0 0 8px rgba(186, 230, 30, 0.2)'
+              }}
+              title={currency === 'CAD' ? 'Switch to USD' : 'Switch to CAD'}
+            >
+              <span>{currency === 'CAD' ? '🇨🇦 CAD' : '🇺🇸 USD'}</span>
             </button>
 
             {/* 2. Seletor de Idioma (Hover - Estilo ifutz) */}

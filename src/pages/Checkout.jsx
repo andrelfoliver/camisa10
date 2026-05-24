@@ -11,7 +11,7 @@ import { supabase } from '../services/supabase';
 import { useLanguage } from '../context/LanguageContext';
 
 const Checkout = () => {
-  const { t, language } = useLanguage();
+  const { t, language, currency, setCurrency, convertPrice, formatPrice } = useLanguage();
   const { cartItems, cartTotal, subtotal, discount, clearCart, appliedShipping, pricingConfig } = useCart();
   const { user } = useAuth();
   const navigate = useNavigate();
@@ -44,6 +44,56 @@ const Checkout = () => {
   // Custom Notification State
   const [notification, setNotification] = useState({ show: false, message: '', type: 'error' });
 
+  // CÁLCULO DO TOTAL COM FRETE DINÂMICO
+  const currentShipping = formData.deliveryMethod === 'pickup' ? 0 : appliedShipping;
+  
+  const baseFinalTotal = appliedCoupon
+    ? (subtotal - discount) * (1 - appliedCoupon.discount_percent / 100) + (currentShipping || 0)
+    : (subtotal - discount + (currentShipping || 0));
+
+  const paypalFee = paymentMethod === 'paypal' ? baseFinalTotal * 0.03 : 0;
+  const finalTotal = baseFinalTotal + paypalFee;
+
+  // CÁLCULO DOS TOTAIS CONVERTIDOS PARA EXIBIÇÃO E CHECKOUT
+  const displaySubtotal = convertPrice(subtotal);
+  const displayDiscount = convertPrice(discount);
+  const displayCouponDiscount = appliedCoupon
+    ? (displaySubtotal - displayDiscount) * (appliedCoupon.discount_percent / 100)
+    : 0;
+  const displayShipping = convertPrice(currentShipping);
+  const displayBaseFinalTotal = displaySubtotal - displayDiscount - displayCouponDiscount + displayShipping;
+  const displayPaypalFee = paymentMethod === 'paypal' ? displayBaseFinalTotal * 0.03 : 0;
+  const displayFinalTotal = displayBaseFinalTotal + displayPaypalFee;
+
+  // Memoize PayPal options to avoid re-rendering, recalculating when currency changes
+  const initialPayPalOptions = useMemo(() => ({
+    "client-id": import.meta.env.VITE_PAYPAL_CLIENT_ID,
+    currency: currency === 'USD' ? 'USD' : 'CAD',
+    intent: "capture",
+  }), [currency]);
+
+  // Sync initial country with currency from IP detection if not already edited
+  useEffect(() => {
+    if (currency === 'USD' && formData.country === 'Canada') {
+      setFormData(prev => ({
+        ...prev,
+        country: 'United States',
+        deliveryMethod: 'shipping'
+      }));
+      setPaymentMethod('paypal');
+    }
+  }, [currency]);
+
+  // Sync currency and payment method based on country selection
+  useEffect(() => {
+    if (formData.country === 'United States') {
+      setCurrency('USD');
+      setPaymentMethod('paypal');
+    } else {
+      setCurrency('CAD');
+    }
+  }, [formData.country, setCurrency]);
+
   useEffect(() => {
     async function loadConfig() {
       const { data } = await supabase.from('store_settings').select('value').eq('key', 'whatsapp_number').single();
@@ -67,7 +117,7 @@ const Checkout = () => {
         if (!addressInputRef.current) return;
 
         autocomplete = new Autocomplete(addressInputRef.current, {
-          componentRestrictions: { country: 'ca' },
+          componentRestrictions: { country: ['ca', 'us'] },
           fields: ['address_components', 'geometry'],
           types: ['address']
         });
@@ -200,16 +250,16 @@ const Checkout = () => {
       if (item.extras?.extraCustomization) {
         message += ` [Extra: ${item.extras.customExtraName}]`;
       }
-      message += ` - $${(item.price * item.quantity).toFixed(2)}\n`;
+      message += ` - $${(convertPrice(item.price) * item.quantity).toFixed(2)}\n`;
     });
     message += `\n`;
 
-    message += `${t('cart_subtotal')}: $${subtotal.toFixed(2)}\n`;
-    if (discount > 0) message += `Desconto Qtd: -$${discount.toFixed(2)}\n`;
-    if (appliedCoupon) message += `Cupom ${appliedCoupon.code}: -${appliedCoupon.discount_percent}% OFF\n`;
-    message += `Frete: ${currentShipping === 0 ? 'GRÁTIS' : '$' + currentShipping.toFixed(2)}\n`;
+    message += `${t('cart_subtotal')}: $${displaySubtotal.toFixed(2)}\n`;
+    if (discount > 0) message += `Desconto Qtd: -$${displayDiscount.toFixed(2)}\n`;
+    if (appliedCoupon) message += `Cupom ${appliedCoupon.code}: -${appliedCoupon.discount_percent}% OFF (-$${displayCouponDiscount.toFixed(2)})\n`;
+    message += `Frete: ${currentShipping === 0 ? 'GRÁTIS' : '$' + displayShipping.toFixed(2)}\n`;
 
-    message += `\n${t('checkout_wa_total')} $${finalTotal.toFixed(2)} CAD\n`;
+    message += `\n${t('checkout_wa_total')} $${displayFinalTotal.toFixed(2)} ${currency}\n`;
     message += `\n${t('checkout_wa_footer')}`;
 
     return message;
@@ -243,22 +293,7 @@ const Checkout = () => {
     }
   };
 
-  // CÁLCULO DO TOTAL COM FRETE DINÂMICO
-  const currentShipping = formData.deliveryMethod === 'pickup' ? 0 : appliedShipping;
-  
-  const baseFinalTotal = appliedCoupon
-    ? (subtotal - discount) * (1 - appliedCoupon.discount_percent / 100) + (currentShipping || 0)
-    : (subtotal - discount + (currentShipping || 0));
-
-  const paypalFee = paymentMethod === 'paypal' ? baseFinalTotal * 0.03 : 0;
-  const finalTotal = baseFinalTotal + paypalFee;
-
-  // Memoize PayPal options to avoid re-rendering
-  const initialPayPalOptions = useMemo(() => ({
-    "client-id": import.meta.env.VITE_PAYPAL_CLIENT_ID,
-    currency: "CAD",
-    intent: "capture",
-  }), []);
+  // pricing options, calculations and PayPal memoization moved to top of Checkout
   const validateForm = () => {
     // 1. Validações Básicas Comuns
     if (formData.name.trim().length < 3) {
@@ -278,11 +313,19 @@ const Checkout = () => {
         return false;
       }
 
-      // Validação Postal Code (Canadá: A1B 2C3)
-      const pcRegex = /^[A-Z]\d[A-Z] ?\d[A-Z]\d$/i;
-      if (!pcRegex.test(formData.postalCode)) {
-        showPopup("Formato de Postal Code inválido. Exemplo correto: T2X 0V1");
-        return false;
+      // Validação Postal Code / ZIP Code
+      if (formData.country === 'Canada') {
+        const pcRegex = /^[A-Z]\d[A-Z] ?\d[A-Z]\d$/i;
+        if (!pcRegex.test(formData.postalCode)) {
+          showPopup("Formato de Postal Code inválido. Exemplo correto: T2X 0V1");
+          return false;
+        }
+      } else {
+        const zipRegex = /^\d{5}(-\d{4})?$/;
+        if (!zipRegex.test(formData.postalCode)) {
+          showPopup("Formato de ZIP Code americano inválido. Exemplo correto: 90210");
+          return false;
+        }
       }
 
       if (formData.district.trim().length < 2) {
@@ -521,10 +564,16 @@ const Checkout = () => {
               <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{t('checkout_home_delivery_desc')}</div>
             </button>
             <button
-              onClick={() => setFormData({ ...formData, deliveryMethod: 'pickup' })}
+              onClick={() => {
+                if (formData.country === 'Canada') {
+                  setFormData({ ...formData, deliveryMethod: 'pickup' });
+                }
+              }}
+              disabled={formData.country !== 'Canada'}
               style={{
                 padding: '1.5rem', borderRadius: 'var(--radius-md)', border: `2px solid ${formData.deliveryMethod === 'pickup' ? 'var(--accent-color)' : 'var(--border-color)'}`,
-                background: formData.deliveryMethod === 'pickup' ? 'rgba(204, 255, 0, 0.05)' : 'transparent', textAlign: 'center', cursor: 'pointer', transition: 'all 0.3s'
+                background: formData.deliveryMethod === 'pickup' ? 'rgba(204, 255, 0, 0.05)' : 'transparent', textAlign: 'center', cursor: formData.country === 'Canada' ? 'pointer' : 'not-allowed', transition: 'all 0.3s',
+                opacity: formData.country === 'Canada' ? 1 : 0.5
               }}
             >
               <div style={{ color: formData.deliveryMethod === 'pickup' ? 'var(--accent-color)' : 'var(--text-muted)', marginBottom: '0.5rem' }}><MapPin size={24} /></div>
@@ -629,10 +678,24 @@ const Checkout = () => {
                     </div>
                     <div>
                       <label style={{ display: 'block', marginBottom: '0.5rem', color: 'var(--text-muted)' }}>{t('checkout_country_label')}</label>
-                      <input
-                        type="text" value={formData.country} readOnly
-                        style={{ width: '100%', padding: '0.75rem', borderRadius: 'var(--radius-sm)', background: 'rgba(0,0,0,0.2)', border: '1px solid var(--border-color)', color: 'var(--text-muted)', fontSize: '1rem', cursor: 'not-allowed' }}
-                      />
+                      <select
+                        value={formData.country}
+                        onChange={e => {
+                          const country = e.target.value;
+                          setFormData({ 
+                            ...formData, 
+                            country,
+                            deliveryMethod: country === 'United States' ? 'shipping' : formData.deliveryMethod 
+                          });
+                          if (country === 'United States') {
+                            setPaymentMethod('paypal');
+                          }
+                        }}
+                        style={{ width: '100%', padding: '0.75rem', borderRadius: 'var(--radius-sm)', background: 'var(--bg-color)', border: '1px solid var(--border-color)', color: 'var(--text-main)', fontSize: '1rem' }}
+                      >
+                        <option value="Canada">Canada</option>
+                        <option value="United States">United States</option>
+                      </select>
                     </div>
                   </div>
 
@@ -684,7 +747,7 @@ const Checkout = () => {
                 <div key={item.cartId} style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem', borderBottom: '1px solid rgba(255,255,255,0.05)', paddingBottom: '0.8rem', marginBottom: '0.8rem' }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between' }}>
                     <span style={{ fontWeight: 600 }}>{item.quantity}x {item.name} ({item.size})</span>
-                    <span>${(item.price * item.quantity).toFixed(2)}</span>
+                    <span>${(convertPrice(item.price) * item.quantity).toFixed(2)}</span>
                   </div>
                   {item.extras?.nameNumber && (
                     <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', paddingLeft: '1rem' }}>
@@ -693,7 +756,7 @@ const Checkout = () => {
                   )}
                   {item.extras?.extraCustomization && (
                     <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', paddingLeft: '1rem' }}>
-                      ⭐️ Extra: {item.extras.customExtraName} (+ $6.90)
+                      ⭐️ Extra: {item.extras.customExtraName} (+ {formatPrice(6.90)})
                     </div>
                   )}
                 </div>
@@ -702,7 +765,7 @@ const Checkout = () => {
             <div style={{ display: 'flex', flexDirection: 'column', gap: '0.8rem', borderBottom: '1px solid var(--border-color)', paddingBottom: '1.5rem', marginBottom: '1.5rem' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', color: 'var(--text-main)' }}>
                 <span>{t('cart_subtotal')}</span>
-                <span>${subtotal.toFixed(2)}</span>
+                <span>${displaySubtotal.toFixed(2)}</span>
               </div>
 
               {/* CAMPO DE CUPOM */}
@@ -740,7 +803,7 @@ const Checkout = () => {
               {discount > 0 && (
                 <div style={{ display: 'flex', justifyContent: 'space-between', color: '#10B981', fontWeight: 600 }}>
                   <span>{t('checkout_discount')}</span>
-                  <span>- ${discount.toFixed(2)}</span>
+                  <span>- ${displayDiscount.toFixed(2)}</span>
                 </div>
               )}
 
@@ -748,29 +811,29 @@ const Checkout = () => {
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '0.1rem' }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', color: '#10B981', fontWeight: 600 }}>
                     <span>Cupom {appliedCoupon.code} ({appliedCoupon.discount_percent}% OFF)</span>
-                    <span>- ${(cartTotal - finalTotal).toFixed(2)}</span>
+                    <span>- ${displayCouponDiscount.toFixed(2)}</span>
                   </div>
                   <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)', alignSelf: 'flex-start', paddingLeft: '0.2rem' }}>
-                    * {appliedCoupon.discount_percent}% aplicados sobre o valor líquido com desconto de atacado (${cartTotal.toFixed(2)})
+                    * {appliedCoupon.discount_percent}% aplicados sobre o valor líquido com desconto de atacado (${convertPrice(cartTotal).toFixed(2)})
                   </span>
                 </div>
               )}
 
-              <div style={{ display: 'flex', justifyContent: 'space-between', color: appliedShipping === 0 && pricingConfig.shippingCost > 0 ? '#10B981' : 'var(--text-main)', fontWeight: appliedShipping === 0 && pricingConfig.shippingCost > 0 ? 600 : 400 }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', color: currentShipping === 0 ? '#10B981' : 'var(--text-main)', fontWeight: currentShipping === 0 ? 600 : 400 }}>
                 <span>Frete / Shipping</span>
-                <span>{appliedShipping === 0 && pricingConfig.shippingCost > 0 ? 'GRÁTIS' : `$${appliedShipping.toFixed(2)}`}</span>
+                <span>{currentShipping === 0 ? 'GRÁTIS' : `$${displayShipping.toFixed(2)}`}</span>
               </div>
 
               {paymentMethod === 'paypal' && (
                 <div style={{ display: 'flex', justifyContent: 'space-between', color: '#EAB308', fontWeight: 600, marginTop: '0.4rem' }}>
                   <span>Taxa PayPal (3%)</span>
-                  <span>+ ${paypalFee.toFixed(2)}</span>
+                  <span>+ ${displayPaypalFee.toFixed(2)}</span>
                 </div>
               )}
             </div>
             <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '1.25rem', fontWeight: 'bold', marginBottom: '2rem' }}>
-              <span>{t('cart_total')} CAD</span>
-              <span style={{ color: 'var(--accent-color)' }}>${finalTotal.toFixed(2)}</span>
+              <span>{t('cart_total')} {currency}</span>
+              <span style={{ color: 'var(--accent-color)' }}>${displayFinalTotal.toFixed(2)}</span>
             </div>
 
             {/* PAYMENT METHOD SELECTION */}
@@ -778,32 +841,49 @@ const Checkout = () => {
               <label style={{ display: 'block', marginBottom: '1rem', color: 'var(--text-muted)', fontSize: '0.9rem', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '1px' }}>
                 {t('payment_method_title') || 'Forma de Pagamento'}
               </label>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
-                <button
-                  onClick={() => setPaymentMethod('whatsapp')}
-                  style={{
-                    display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.8rem', padding: '1.2rem',
-                    borderRadius: 'var(--radius-md)', background: paymentMethod === 'whatsapp' ? 'rgba(37, 211, 102, 0.1)' : 'rgba(255,255,255,0.03)',
-                    border: `1px solid ${paymentMethod === 'whatsapp' ? '#25D366' : 'var(--border-color)'}`,
-                    transition: 'all 0.3s ease', cursor: 'pointer'
-                  }}
-                >
-                  <MessageSquare size={24} color={paymentMethod === 'whatsapp' ? '#25D366' : 'var(--text-muted)'} />
-                  <span style={{ fontSize: '0.9rem', fontWeight: 600, color: paymentMethod === 'whatsapp' ? '#fff' : 'var(--text-muted)' }}>WhatsApp</span>
-                </button>
-                <button
-                  onClick={() => setPaymentMethod('paypal')}
-                  style={{
-                    display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.8rem', padding: '1.2rem',
-                    borderRadius: 'var(--radius-md)', background: paymentMethod === 'paypal' ? 'rgba(0, 112, 186, 0.1)' : 'rgba(255,255,255,0.03)',
-                    border: `1px solid ${paymentMethod === 'paypal' ? '#0070BA' : 'var(--border-color)'}`,
-                    transition: 'all 0.3s ease', cursor: 'pointer'
-                  }}
-                >
-                  <CreditCard size={24} color={paymentMethod === 'paypal' ? '#0070BA' : 'var(--text-muted)'} />
-                  <span style={{ fontSize: '0.9rem', fontWeight: 600, color: paymentMethod === 'paypal' ? '#fff' : 'var(--text-muted)' }}>PayPal / Card</span>
-                </button>
-              </div>
+              {formData.country === 'Canada' ? (
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+                  <button
+                    onClick={() => setPaymentMethod('whatsapp')}
+                    style={{
+                      display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.8rem', padding: '1.2rem',
+                      borderRadius: 'var(--radius-md)', background: paymentMethod === 'whatsapp' ? 'rgba(37, 211, 102, 0.1)' : 'rgba(255,255,255,0.03)',
+                      border: `1px solid ${paymentMethod === 'whatsapp' ? '#25D366' : 'var(--border-color)'}`,
+                      transition: 'all 0.3s ease', cursor: 'pointer'
+                    }}
+                  >
+                    <MessageSquare size={24} color={paymentMethod === 'whatsapp' ? '#25D366' : 'var(--text-muted)'} />
+                    <span style={{ fontSize: '0.9rem', fontWeight: 600, color: paymentMethod === 'whatsapp' ? '#fff' : 'var(--text-muted)' }}>WhatsApp</span>
+                  </button>
+                  <button
+                    onClick={() => setPaymentMethod('paypal')}
+                    style={{
+                      display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.8rem', padding: '1.2rem',
+                      borderRadius: 'var(--radius-md)', background: paymentMethod === 'paypal' ? 'rgba(0, 112, 186, 0.1)' : 'rgba(255,255,255,0.03)',
+                      border: `1px solid ${paymentMethod === 'paypal' ? '#0070BA' : 'var(--border-color)'}`,
+                      transition: 'all 0.3s ease', cursor: 'pointer'
+                    }}
+                  >
+                    <CreditCard size={24} color={paymentMethod === 'paypal' ? '#0070BA' : 'var(--text-muted)'} />
+                    <span style={{ fontSize: '0.9rem', fontWeight: 600, color: paymentMethod === 'paypal' ? '#fff' : 'var(--text-muted)' }}>PayPal / Card</span>
+                  </button>
+                </div>
+              ) : (
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '1rem' }}>
+                  <button
+                    disabled
+                    style={{
+                      display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.8rem', padding: '1.2rem',
+                      borderRadius: 'var(--radius-md)', background: 'rgba(0, 112, 186, 0.1)',
+                      border: '1px solid #0070BA',
+                      transition: 'all 0.3s ease', cursor: 'default'
+                    }}
+                  >
+                    <CreditCard size={24} color="#0070BA" />
+                    <span style={{ fontSize: '0.9rem', fontWeight: 600, color: '#fff' }}>PayPal / Card (Only available payment method for US orders)</span>
+                  </button>
+                </div>
+              )}
             </div>
 
             {paymentMethod === 'whatsapp' ? (
@@ -824,33 +904,71 @@ const Checkout = () => {
                     if (!validateForm()) {
                       return actions.reject();
                     }
+                    
+                    const displayCurrency = currency === 'USD' ? 'USD' : 'CAD';
+
+                    // Calculate each item's converted price
+                    const paypalItems = cartItems.map(item => {
+                      const convertedPrice = Number(convertPrice(item.price).toFixed(2));
+                      return {
+                        name: `${item.name} (${item.size})`,
+                        quantity: item.quantity.toString(),
+                        unit_amount: {
+                          currency_code: displayCurrency,
+                          value: convertedPrice.toFixed(2)
+                        },
+                        _convertedPrice: convertedPrice,
+                        _quantity: item.quantity
+                      };
+                    });
+
+                    const rawItemTotal = paypalItems.reduce((sum, item) => sum + (item._convertedPrice * item._quantity), 0);
+                    const rawShipping = Number(convertPrice(currentShipping).toFixed(2));
+                    const rawFinalTotal = Number(convertPrice(finalTotal).toFixed(2));
+                    const rawHandling = Number(convertPrice(paypalFee).toFixed(2));
+
+                    // item_total + shipping + handling - discount = total_amount
+                    const expectedDiscountedItemTotal = Number((rawFinalTotal - rawShipping - rawHandling).toFixed(2));
+                    const rawDiscount = Number((rawItemTotal - expectedDiscountedItemTotal).toFixed(2));
+
+                    let valueItemTotal = rawItemTotal.toFixed(2);
+                    let valueDiscount = rawDiscount.toFixed(2);
+
+                    if (rawDiscount < 0) {
+                      valueDiscount = "0.00";
+                      valueItemTotal = (rawFinalTotal - rawShipping - rawHandling).toFixed(2);
+                    }
+
                     return actions.order.create({
                       purchase_units: [{
                         amount: {
-                          currency_code: "CAD",
-                          value: finalTotal.toFixed(2),
+                          currency_code: displayCurrency,
+                          value: rawFinalTotal.toFixed(2),
                           breakdown: {
                             item_total: {
-                              currency_code: "CAD",
-                              value: (subtotal - discount - (appliedCoupon ? (subtotal - discount) * (appliedCoupon.discount_percent / 100) : 0)).toFixed(2)
+                              currency_code: displayCurrency,
+                              value: valueItemTotal
                             },
                             shipping: {
-                              currency_code: "CAD",
-                              value: appliedShipping.toFixed(2)
+                              currency_code: displayCurrency,
+                              value: rawShipping.toFixed(2)
                             },
                             handling: {
-                              currency_code: "CAD",
-                              value: paypalFee.toFixed(2)
-                            }
+                              currency_code: displayCurrency,
+                              value: rawHandling.toFixed(2)
+                            },
+                            ...(Number(valueDiscount) > 0 ? {
+                              discount: {
+                                currency_code: displayCurrency,
+                                value: valueDiscount
+                              }
+                            } : {})
                           }
                         },
-                        items: cartItems.map(item => ({
-                          name: `${item.name} (${item.size})`,
-                          quantity: item.quantity.toString(),
-                          unit_amount: {
-                            currency_code: "CAD",
-                            value: item.price.toFixed(2)
-                          }
+                        items: paypalItems.map(item => ({
+                          name: item.name,
+                          quantity: item.quantity,
+                          unit_amount: item.unit_amount
                         }))
                       }]
                     });

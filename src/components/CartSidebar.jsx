@@ -7,7 +7,7 @@ import { useLanguage } from '../context/LanguageContext';
 
 const CartSidebar = () => {
   const { isCartOpen, setIsCartOpen, cartItems, removeFromCart, updateQuantity, subtotal, discount, cartTotal } = useCart();
-  const { t, language, translateProductDisplay } = useLanguage();
+  const { t, language, translateProductDisplay, formatPrice } = useLanguage();
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -61,14 +61,14 @@ const CartSidebar = () => {
                 </div>
                 <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
                   <h4 style={{ fontSize: '1rem', margin: 0 }}>{translateProductDisplay(item.name)}</h4>
-                  <span style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>{language === 'pt' ? 'Tam' : 'Size'}: {item.size} • ${(item.price).toFixed(2)}</span>
+                  <span style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>{language === 'pt' ? 'Tam' : 'Size'}: {item.size} • {formatPrice(item.price)}</span>
                   
                   {/* Extras Tags */}
                   {(item.extras?.nameNumber || item.extras?.patch || item.extras?.extraCustomization) && (
                     <div style={{ display: 'flex', gap: '0.3rem', flexWrap: 'wrap', marginTop: '0.3rem' }}>
                       {item.extras.nameNumber && <span style={{fontSize: '0.7rem', padding: '2px 6px', background: 'rgba(255,184,28,0.2)', color: 'var(--accent-color)', borderRadius: '2px'}}>+ {language === 'pt' ? 'Nome/Num' : 'Name/Num'}</span>}
                       {item.extras.patch && <span style={{fontSize: '0.7rem', padding: '2px 6px', background: 'rgba(255,184,28,0.2)', color: 'var(--accent-color)', borderRadius: '2px'}}>+ Patch</span>}
-                      {item.extras.extraCustomization && <span style={{fontSize: '0.7rem', padding: '2px 6px', background: 'rgba(239,68,68,0.2)', color: '#f87171', borderRadius: '2px'}}>+ Extra (+ $6.90)</span>}
+                      {item.extras.extraCustomization && <span style={{fontSize: '0.7rem', padding: '2px 6px', background: 'rgba(239,68,68,0.2)', color: '#f87171', borderRadius: '2px'}}>+ Extra (+ {formatPrice(6.90)})</span>}
                     </div>
                   )}
 
@@ -103,17 +103,17 @@ const CartSidebar = () => {
         <div style={{ padding: '1.5rem', borderTop: '1px solid var(--border-color)', background: 'var(--surface-color)' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem', fontSize: '1rem', color: 'var(--text-muted)' }}>
             <span>{t('cart_subtotal')}</span>
-            <span>${subtotal?.toFixed(2)} CAD</span>
+            <span>{formatPrice(subtotal)}</span>
           </div>
           {discount > 0 && (
             <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem', fontSize: '1rem', color: '#10B981' }}>
               <span>{t('cart_discount')}</span>
-              <span>-${discount.toFixed(2)} CAD</span>
+              <span>-{formatPrice(discount)}</span>
             </div>
           )}
           <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '1.5rem', marginTop: '0.5rem', fontSize: '1.25rem', fontWeight: 600 }}>
             <span>{t('cart_total')}</span>
-            <span>${cartTotal?.toFixed(2)} CAD</span>
+            <span>{formatPrice(cartTotal)}</span>
           </div>
           <button 
             className="btn-primary" 

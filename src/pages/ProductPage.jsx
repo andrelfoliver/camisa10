@@ -32,7 +32,7 @@ const ProductPage = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const { addToCart, pricingConfig } = useCart();
-  const { t, language, translateProductDisplay } = useLanguage();
+  const { t, language, translateProductDisplay, formatPrice } = useLanguage();
   const [isSizeGuideOpen, setIsSizeGuideOpen] = useState(false);
 
 
@@ -278,7 +278,7 @@ const ProductPage = () => {
 
               <div style={{ marginBottom: '1.5rem' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                  <span style={{ fontSize: '1.8rem', fontWeight: 900, color: 'var(--text-main)' }}>${currentTotal.toFixed(2)} CAD</span>
+                  <span style={{ fontSize: '1.8rem', fontWeight: 900, color: 'var(--text-main)' }}>{formatPrice(currentTotal)}</span>
                 </div>
                 <div style={{ fontSize: '0.85rem', color: '#10B981', fontWeight: 700 }}>{t('product_free_shipping')}</div>
               </div>
@@ -317,11 +317,11 @@ const ProductPage = () => {
 
               <div style={{ display: 'flex', flexDirection: 'column', marginBottom: '1.5rem' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                  <span style={{ fontSize: '2.5rem', fontWeight: 800, color: 'var(--accent-color)' }}>${currentTotal.toFixed(2)} CAD</span>
+                  <span style={{ fontSize: '2.5rem', fontWeight: 800, color: 'var(--accent-color)' }}>{formatPrice(currentTotal)}</span>
                   <span style={{ fontSize: '1.2rem', fontWeight: 700, color: 'var(--text-main)' }}>{t('product_price_transfer')}</span>
                 </div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginTop: '0.2rem' }}>
-                  <span style={{ fontSize: '1.2rem', color: 'var(--text-muted)', textDecoration: 'line-through' }}>${(currentTotal + 50).toFixed(2)} CAD</span>
+                  <span style={{ fontSize: '1.2rem', color: 'var(--text-muted)', textDecoration: 'line-through' }}>{formatPrice(currentTotal + 50)}</span>
                 </div>
               </div>
             </div>

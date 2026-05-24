@@ -9,7 +9,7 @@ import ProductMedia from './ProductMedia';
 const ProductCard = ({ product }) => {
   const { addToCart } = useCart();
   const navigate = useNavigate();
-  const { translateProductDisplay, language, t } = useLanguage();
+  const { translateProductDisplay, language, t, formatPrice } = useLanguage();
   const [selectedSize, setSelectedSize] = useState('M');
   const [imageError, setImageError] = useState(false);
   const sizes = ['S', 'M', 'L', 'XL'];
@@ -125,7 +125,7 @@ const ProductCard = ({ product }) => {
           {translateProductDisplay(product.name)}
         </h3>
         <span style={{ fontSize: '1.1rem', fontWeight: 700, fontFamily: 'var(--font-display)', marginBottom: '0.75rem' }}>
-          ${product.price ? product.price.toFixed(2) : '47.90'} <span style={{fontSize: '0.8rem', color: 'var(--text-muted)'}}>CAD</span>
+          {formatPrice(product.price || 47.90)}
         </span>
         
         <div style={{ marginTop: 'auto' }}>

@@ -8,13 +8,13 @@ export const translations = {
     nav_br: 'Brasileirão',
     nav_intl: 'Internacionais',
     nav_retro: 'Retrô',
-    top_bar_announcement: '⚡ Entrega para todo Canadá | Para Calgary (24h), se disponível',
+    top_bar_announcement: '⚡ Entrega para Canadá & EUA | Para Calgary (24h), se disponível',
     nav_admin: 'Admin',
     hero_title_part1: 'VISTA AS CORES DO SEU TIME MESMO ',
     hero_title_accent: 'LONGE DE CASA',
-    hero_subtitle: 'Camisas brasileiras, europeias e internacionais',
-    hero_satisfied_clients: '⭐ +300 clientes satisfeitos no Canadá',
-    hero_shipping_all: 'Todo o Canadá',
+    hero_subtitle: 'Camisas brasileiras, europeias e internacionais | Envio para Canadá e EUA',
+    hero_satisfied_clients: '⭐ +300 clientes satisfeitos no Canadá & EUA',
+    hero_shipping_all: 'Canadá & EUA',
     hero_shipping_calgary: 'Entrega prioritária para Calgary',
     hero_shipping_guaranteed: 'Entrega garantida',
     hero_shipping_moneyback: 'Ou devolução do dinheiro',
@@ -53,7 +53,7 @@ export const translations = {
     cart_continue_shopping: 'Continuar Comprando',
     sales_popup_bought: 'comprou',
     sales_popup_time: 'Comprado',
-    stats_clients: 'Clientes satisfeitos no Canadá',
+    stats_clients: 'Clientes satisfeitos no Canadá & EUA',
     stats_shipping: 'Taxa de envio no prazo',
     stats_whatsapp: 'Resposta média no WhatsApp',
     stats_payment: 'Pagamento seguro garantido',
@@ -65,9 +65,9 @@ export const translations = {
     customization_item1: 'Nome + Número',
     customization_item2: 'Patch de Campeonatos',
     emotional_title: 'Porque ser torcedor não tem distância 🇧🇷',
-    emotional_text: 'A saudade do seu país e a paixão pelo futebol vivem na mesma gaveta. Entregamos a qualidade de jogador profissional diretamente na sua porta no Canadá.',
+    emotional_text: 'A saudade do seu país e a paixão pelo futebol vivem na mesma gaveta. Entregamos a qualidade de jogador profissional diretamente na sua porta no Canadá e EUA.',
     social_proof_title: 'Voz da Arquibancada 🗣️',
-    social_proof_subtitle: 'Desde 2022, conectando brasileiros em todo o Canadá com seus mantos favoritos.',
+    social_proof_subtitle: 'Desde 2022, conectando brasileiros em todo o Canadá & EUA com seus mantos favoritos.',
     social_proof_client_since: 'Cliente desde',
     social_proof_swipe: 'Deslize lateralmente para ler mais →',
     faq_title: 'Dúvidas Frequentes',
@@ -94,15 +94,15 @@ export const translations = {
       },
       {
         question: 'Quanto tempo demora pra chegar?',
-        answer: '10 a 15 dias úteis em todo o Canadá após a confirmação do pagamento. Camisas personalizadas podem levar 1-2 dias a mais. Você recebe código de rastreio por email assim que o pedido é despachado.'
+        answer: '10 a 15 dias úteis para o Canadá & EUA após a confirmação do pagamento. Camisas personalizadas podem levar 1-2 dias a mais. Você recebe código de rastreio por email assim que o pedido é despachado.'
       },
       {
-        question: 'Entregam em toda província do Canadá?',
-        answer: "Sim — de Vancouver a St. John's. Prazos podem variar levemente pra regiões remotas (norte de Ontario, territórios, comunidades isoladas)."
+        question: 'Entregam em todo o Canadá e Estados Unidos?',
+        answer: "Sim — entregamos para todas as províncias do Canadá e estados dos EUA. Os prazos podem variar levemente para regiões remotas."
       },
       {
         question: 'Quanto custa o frete?',
-        answer: 'Gratis para todo o Canadá. Oferta por tempo limitado.'
+        answer: 'Grátis para todo o Canadá & EUA. Oferta por tempo limitado.'
       },
       {
         question: 'Posso trocar se o tamanho não servir?',
@@ -116,7 +116,7 @@ export const translations = {
     cta_security: 'Site 100% Blindado',
     cta_title: 'Garanta sua camisa antes que acabe!',
     cta_btn: 'Ver Catálogo',
-    footer_about: 'A sua conexão com o futebol, onde quer que você esteja. Especialistas em camisas de futebol para brasileiros no Canadá.',
+    footer_about: 'A sua conexão com o futebol, onde quer que você esteja. Especialistas em camisas de futebol para brasileiros no Canadá & EUA.',
     footer_links: 'Links Rápidos',
     footer_how_to_buy: 'Como Comprar',
     footer_about_us: 'Sobre Nós',
@@ -130,7 +130,7 @@ export const translations = {
     nav_lancamentos: 'Lançamentos',
     footer_catalog: 'Catálogo',
     about_title: 'Nossa História ⚽',
-    about_text1: 'Nascida em Coquitlam/BC, em 2022, a iFooty surgiu de um desejo simples, mas poderoso: aproximar os brasileiros no Canadá de suas raízes. Sabemos que uma camisa de futebol não é apenas uma peça de roupa, é uma segunda pele que carrega memórias e pertencimento.',
+    about_text1: 'Nascida em Coquitlam/BC, em 2022, a iFooty surgiu de um desejo simples, mas poderoso: aproximar os brasileiros no Canadá e EUA de suas raízes. Sabemos que uma camisa de futebol não é apenas uma peça de roupa, é uma segunda pele que carrega memórias e pertencimento.',
     about_text2: 'Após conquistar nossa comunidade na Columbia Britânica, agora chegamos com tudo em Calgary, especializados em entregar mantos oficiais de alta qualidade para que cada grito de "gol" tenha o orgulho do seu time do coração.',
     success_support_wa_msg: 'Olá! Acabei de fazer um pedido na iFooty e gostaria de tirar algumas dúvidas. 😊',
     checkout_summary_footer_note: 'Você enviará um resumo do pedido para nosso atendimento. O pagamento só será feito após confirmarmos os detalhes do pedido com você. Pagamento via e-Transfer Interac!',
@@ -147,8 +147,8 @@ export const translations = {
     // Product Extras
     product_loading: 'Carregando produto...',
     product_not_found: 'Produto não encontrado.',
-    product_free_shipping: 'Frete grátis para todo o Canadá',
-    product_volume_promo: '🚀 Desconto progressivo: na compra de 2 ou mais camisas você economiza! 🚀',
+    product_free_shipping: 'Frete grátis para todo o Canadá e EUA',
+    product_volume_promo: '🚀 Desconto progressive: na compra de 2 ou mais camisas você economiza! 🚀',
     product_reviews_count: 'Avaliações',
     product_questions_count: 'Perguntas',
     product_ask_question: 'Tirar dúvidas',
@@ -163,7 +163,7 @@ export const translations = {
     product_table_weight: 'PESO IND.',
     product_social_title: 'O que nossos clientes dizem',
     product_social_subtitle_part1: 'Já somos ',
-    product_social_subtitle_part2: ' vestindo a paixão no Canadá! 🍁',
+    product_social_subtitle_part2: ' vestindo a paixão no Canadá & EUA! 🍁',
     product_faq_title: 'Perguntas Frequentes',
     product_cta_secure: 'Compra Segura',
     product_cta_guarantee: 'Garantimos a qualidade do produto e suporte completo ao cliente via WhatsApp.',
@@ -200,7 +200,7 @@ export const translations = {
     profile_delivery: 'Entrega:',
     profile_order_prefix: 'Pedido #',
     profile_feedback_title: 'O que você achou da iFooty? 🗣️',
-    profile_feedback_subtitle: 'Sua opinião nos ajuda a crescer e ajuda outros brasileiros no Canadá!',
+    profile_feedback_subtitle: 'Sua opinião nos ajuda a crescer e ajuda outros brasileiros no Canadá & EUA!',
     profile_feedback_rating_label: 'Nota para sua experiência:',
     profile_feedback_location_label: 'De onde você comprou? (Cidade, Província)',
     profile_feedback_location_placeholder: 'Ex: Toronto, ON',
@@ -241,7 +241,7 @@ export const translations = {
     checkout_login_title: 'Calma lá, artilheiro!',
     checkout_login_text: 'Você precisa se identificar no nosso sistema para separar suas camisas.',
     checkout_login_btn: 'Fazer Login / Cadastro',
-    checkout_delivery_title: 'Entrega no Canadá',
+    checkout_delivery_title: 'Entrega no Canadá / EUA',
     checkout_summary_title: 'Resumo',
     checkout_subtotal: 'Subtotal',
     checkout_discount: 'Desconto Progressivo',
@@ -274,7 +274,7 @@ export const translations = {
     success_message_paid: 'Recebemos seu pedido pago. Você receberá o código de rastreio em breve por e-mail.',
     success_support_wa_msg_paid: 'Olá! Acabei de fazer um pedido pago via PayPal e gostaria de acompanhar o envio. 😊',
     product_ready_delivery: '⚡ Pronta Entrega - Envio em 24h',
-    product_stock_units: 'Restam apenas {count} unidades no Canadá',
+    product_stock_units: 'Restam apenas {count} unidades no Canadá & EUA',
     product_stock_sizes_available: 'Disponível em Estoque (Envio 24h):',
     product_stock_preorder: 'Tamanhos sob encomenda (10-15 dias):',
     checkout_title: 'Entrega ou Retirada',
@@ -306,13 +306,13 @@ export const translations = {
     nav_br: 'Brazilian League',
     nav_intl: 'International',
     nav_retro: 'Retro',
-    top_bar_announcement: '⚡ Delivery across Canada | Within 24h in Calgary if available',
+    top_bar_announcement: '⚡ Delivery across Canada & US | Within 24h in Calgary if available',
     nav_admin: 'Admin',
     hero_title_part1: 'WEAR YOUR TEAM COLORS EVEN ',
     hero_title_accent: 'FAR FROM HOME',
-    hero_subtitle: 'Brazilian, European and International Jerseys | Shipping across Canada',
-    hero_satisfied_clients: '⭐ +300 satisfied customers in Canada',
-    hero_shipping_all: 'All of Canada',
+    hero_subtitle: 'Brazilian, European and International Jerseys | Shipping across Canada & US',
+    hero_satisfied_clients: '⭐ +300 satisfied customers in Canada & US',
+    hero_shipping_all: 'Canada & US',
     hero_shipping_calgary: 'Priority delivery to Calgary',
     hero_shipping_guaranteed: 'Guaranteed delivery',
     hero_shipping_moneyback: 'Or money back guarantee',
@@ -351,7 +351,7 @@ export const translations = {
     cart_continue_shopping: 'Continue Shopping',
     sales_popup_bought: 'bought',
     sales_popup_time: 'Purchased',
-    stats_clients: 'Satisfied customers in Canada',
+    stats_clients: 'Satisfied customers in Canada & US',
     stats_shipping: 'On-time shipping rate',
     stats_whatsapp: 'Avg response time on WhatsApp',
     stats_payment: 'Secure payment guaranteed',
@@ -363,9 +363,9 @@ export const translations = {
     customization_item1: 'Name + Number',
     customization_item2: 'League Patches',
     emotional_title: 'Because being a fan knows no distance 🇧🇷',
-    emotional_text: 'The longing for your country and the passion for football live in the same drawer. We deliver professional player quality directly to your door in Canada.',
+    emotional_text: 'The longing for your country and the passion for football live in the same drawer. We deliver professional player quality directly to your door in Canada & US.',
     social_proof_title: 'Voice of the Stands 🗣️',
-    social_proof_subtitle: 'Since 2022, connecting Brazilians across Canada with their favorite mantles.',
+    social_proof_subtitle: 'Since 2022, connecting Brazilians across Canada & US with their favorite mantles.',
     social_proof_client_since: 'Customer since',
     social_proof_swipe: 'Swipe to read more →',
     faq_title: 'Common Questions',
@@ -392,15 +392,15 @@ export const translations = {
       },
       {
         question: 'How long does it take to arrive?',
-        answer: '10 to 15 business days across Canada after payment confirmation. Customized jerseys may take 1-2 days longer. You will receive a tracking code by email as soon as the order is shipped.'
+        answer: '10 to 15 business days across Canada & US after payment confirmation. Customized jerseys may take 1-2 days longer. You will receive a tracking code by email as soon as the order is shipped.'
       },
       {
-        question: 'Do you deliver to all provinces in Canada?',
-        answer: "Yes — from Vancouver to St. John's. Delivery times may vary slightly for remote regions (Northern Ontario, territories, isolated communities)."
+        question: 'Do you deliver to all provinces in Canada and states in the US?',
+        answer: "Yes — we ship to all provinces in Canada and states in the US. Delivery times may vary slightly for remote regions."
       },
       {
         question: 'How much is shipping?',
-        answer: 'Free for all of Canada. Limited time offer.'
+        answer: 'Free for all of Canada & US. Limited time offer.'
       },
       {
         question: 'Can I exchange it if the size doesn’t fit?',
@@ -414,7 +414,7 @@ export const translations = {
     cta_security: '100% Shielded Site',
     cta_title: 'Guarantee your jersey before it sells out!',
     cta_btn: 'View Catalog',
-    footer_about: 'Your connection to football, wherever you are. Specialized in football jerseys for Brazilians in Canada.',
+    footer_about: 'Your connection to football, wherever you are. Specialized in football jerseys for Brazilians in Canada & US.',
     footer_links: 'Quick Links',
     footer_how_to_buy: 'How to Buy',
     footer_about_us: 'About Us',
@@ -428,7 +428,7 @@ export const translations = {
     nav_lancamentos: 'New Arrivals',
     footer_catalog: 'Catalog',
     about_title: 'Our Story ⚽',
-    about_text1: 'Born in Coquitlam, BC in 2022, iFooty emerged from a simple but powerful desire: to bring Brazilians in Canada closer to their roots. We know that a football jersey is not just a piece of clothing, it is a second skin that carries memories and belonging.',
+    about_text1: 'Born in Coquitlam, BC in 2022, iFooty emerged from a simple but powerful desire: to bring Brazilians in Canada & US closer to their roots. We know that a football jersey is not just a piece of clothing, it is a second skin that carries memories and belonging.',
     about_text2: 'After winning over our community in British Columbia, we have now arrived in Calgary, specialized in delivering high-quality official fan jerseys so that every shout of "goal" carries the pride of your heart team.',
     success_support_wa_msg: 'Hi! I just placed an order on iFooty and have some questions. 😊',
     checkout_summary_footer_note: 'You will send an order summary to our support. Payment will only be made after we confirm the order details with you. Payment via Interac e-Transfer!',
@@ -445,7 +445,7 @@ export const translations = {
     // Product Extras
     product_loading: 'Loading product...',
     product_not_found: 'Product not found.',
-    product_free_shipping: 'Free shipping to all Canada',
+    product_free_shipping: 'Free shipping to all Canada & US',
     product_volume_promo: '🚀 Volume discount: buy 2 or more jerseys and save! 🚀',
     product_reviews_count: 'Reviews',
     product_questions_count: 'Questions',
@@ -461,7 +461,7 @@ export const translations = {
     product_table_weight: 'SUGGESTED WEIGHT',
     product_social_title: 'What our customers say',
     product_social_subtitle_part1: "We are already ",
-    product_social_subtitle_part2: ' wearing the passion in Canada! 🍁',
+    product_social_subtitle_part2: ' wearing the passion in Canada & US! 🍁',
     product_faq_title: 'Frequently Asked Questions',
     product_cta_secure: 'Secure Purchase',
     product_cta_guarantee: 'We guarantee product quality and full customer support via WhatsApp.',
@@ -497,7 +497,7 @@ export const translations = {
     profile_delivery: 'Shipping to:',
     profile_order_prefix: 'Order #',
     profile_feedback_title: 'What did you think of iFooty? 🗣️',
-    profile_feedback_subtitle: 'Your review helps us grow and helps other Brazilians in Canada!',
+    profile_feedback_subtitle: 'Your review helps us grow and helps other Brazilians in Canada & US!',
     profile_feedback_rating_label: 'Rate your experience:',
     profile_feedback_location_label: 'Where did you buy from? (City, Province)',
     profile_feedback_location_placeholder: 'e.g. Toronto, ON',
@@ -538,7 +538,7 @@ export const translations = {
     checkout_login_title: 'Hold on, striker!',
     checkout_login_text: 'You need to sign in to reserve your jerseys.',
     checkout_login_btn: 'Sign In / Register',
-    checkout_delivery_title: 'Delivery in Canada',
+    checkout_delivery_title: 'Delivery in Canada / US',
     checkout_summary_title: 'Summary',
     checkout_subtotal: 'Subtotal',
     checkout_discount: 'Volume Discount',
@@ -573,7 +573,7 @@ export const translations = {
     success_message_paid: 'We received your paid order. You will receive the tracking code shortly via email.',
     success_support_wa_msg_paid: 'Hi! I just placed a paid order via PayPal and I would like to track the shipment. 😊',
     product_ready_delivery: '⚡ In Stock - 24h Shipping',
-    product_stock_units: 'Only {count} units left in Canada',
+    product_stock_units: 'Only {count} units left in Canada & US',
     product_stock_sizes_available: 'Available in Stock (24h Shipping):',
     product_stock_preorder: 'Pre-order sizes (10-15 days):',
     checkout_title: 'Delivery or Pickup',
@@ -604,10 +604,73 @@ export const translations = {
 
 export const LanguageProvider = ({ children }) => {
   const [language, setLanguage] = useState(localStorage.getItem('preferredLanguage') || 'pt');
+  const [currency, setCurrencyState] = useState(localStorage.getItem('preferredCurrency') || 'CAD');
+  const [exchangeRate, setExchangeRate] = useState(0.73);
+
+  const setCurrency = (curr) => {
+    setCurrencyState(curr);
+    localStorage.setItem('preferredCurrency', curr);
+  };
 
   useEffect(() => {
     localStorage.setItem('preferredLanguage', language);
   }, [language]);
+
+  useEffect(() => {
+    const savedCurrency = localStorage.getItem('preferredCurrency');
+    if (!savedCurrency) {
+      const detectIP = async () => {
+        try {
+          const res = await fetch('https://ipapi.co/json/');
+          if (res.ok) {
+            const data = await res.json();
+            if (data && data.country_code === 'US') {
+              setCurrency('USD');
+            } else {
+              setCurrency('CAD');
+            }
+          }
+        } catch (e) {
+          console.warn("Failed to detect country by IP:", e);
+        }
+      };
+      detectIP();
+    }
+  }, []);
+
+  useEffect(() => {
+    const fetchRate = async () => {
+      try {
+        const res = await fetch('https://open.er-api.com/v6/latest/CAD');
+        if (res.ok) {
+          const data = await res.json();
+          if (data && data.rates && data.rates.USD) {
+            setExchangeRate(data.rates.USD);
+          }
+        }
+      } catch (e) {
+        console.warn("Failed to fetch live exchange rate:", e);
+      }
+    };
+    fetchRate();
+  }, []);
+
+  const convertPrice = (priceInCAD) => {
+    const val = Number(priceInCAD || 0);
+    if (currency === 'USD') {
+      return val * exchangeRate;
+    }
+    return val;
+  };
+
+  const formatPrice = (priceInCAD) => {
+    const converted = convertPrice(priceInCAD);
+    return `$${converted.toFixed(2)} ${currency}`;
+  };
+
+  const toggleCurrency = () => {
+    setCurrency(currency === 'CAD' ? 'USD' : 'CAD');
+  };
 
   const t = (key) => {
     return translations[language][key] || key;
@@ -645,7 +708,7 @@ export const LanguageProvider = ({ children }) => {
   };
 
   return (
-    <LanguageContext.Provider value={{ language, setLanguage, toggleLanguage, t, translateProductDisplay }}>
+    <LanguageContext.Provider value={{ language, setLanguage, toggleLanguage, t, translateProductDisplay, currency, setCurrency, exchangeRate, convertPrice, formatPrice, toggleCurrency }}>
       {children}
     </LanguageContext.Provider>
   );
