@@ -264,6 +264,14 @@ const TrackingModal = ({ isOpen, onClose, initialTrackingNumber = '' }) => {
 
   const daysPassed = trackingData ? getDaysPassedBetween(trackingData.date, deliveredEvent ? (deliveredEvent.date || deliveredEvent.rawDate) : null) : null;
 
+  const cleanStatusText = (status) => {
+    if (!status) return 'Status Indisponível';
+    if (status.toUpperCase().includes('MYMEMORY WARNING')) {
+      return 'Em trânsito / Atualizando detalhes';
+    }
+    return status;
+  };
+
   return (
     <div style={{ position: 'fixed', inset: 0, zIndex: 9999, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(0,0,0,0.8)', backdropFilter: 'blur(5px)', padding: '1rem' }}>
       <div style={{ background: 'var(--surface-color)', width: '100%', maxWidth: '600px', borderRadius: '16px', border: '1px solid var(--border-color)', overflow: 'hidden', display: 'flex', flexDirection: 'column', maxHeight: '90vh' }}>
@@ -509,7 +517,7 @@ const TrackingModal = ({ isOpen, onClose, initialTrackingNumber = '' }) => {
                                   </div>
                                   <p style={{ margin: 0, color: isFirst ? '#fff' : 'var(--text-muted)', fontSize: '0.85rem', lineHeight: '1.4' }}>
                                     {item.location ? <strong style={{ color: isCanada ? '#93c5fd' : 'inherit' }}>[{item.location}] </strong> : ''}
-                                    {item.status || 'Status Indisponível'}
+                                    {cleanStatusText(item.status)}
                                   </p>
                                 </div>
                               </div>

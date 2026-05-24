@@ -68,13 +68,21 @@ async function translateText(text: string): Promise<string> {
     try {
       const res = await fetch(`https://api.mymemory.translated.net/get?q=${encodeURIComponent(clean)}&langpair=zh|pt`);
       const d: any = await res.json();
-      if (d.responseData?.translatedText) return d.responseData.translatedText;
+      if (d.responseData?.translatedText) {
+        const trans = d.responseData.translatedText;
+        if (trans.toUpperCase().includes('MYMEMORY WARNING')) return clean;
+        return trans;
+      }
     } catch { }
   } else if (/^[a-zA-Z\s,.'-]+$/.test(clean) && clean.length > 3) {
     try {
       const res = await fetch(`https://api.mymemory.translated.net/get?q=${encodeURIComponent(clean)}&langpair=en|pt`);
       const d: any = await res.json();
-      if (d.responseData?.translatedText) return d.responseData.translatedText;
+      if (d.responseData?.translatedText) {
+        const trans = d.responseData.translatedText;
+        if (trans.toUpperCase().includes('MYMEMORY WARNING')) return clean;
+        return trans;
+      }
     } catch { }
   }
   return clean;
