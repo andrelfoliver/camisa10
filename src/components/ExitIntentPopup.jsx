@@ -27,6 +27,17 @@ const ExitIntentPopup = () => {
         return () => document.removeEventListener('mouseleave', handleMouseLeave);
     }, [hasBeenShown, isVisible]);
 
+    // Handle ESC key press to close the popup
+    useEffect(() => {
+        const handleKeyDown = (e) => {
+            if (e.key === 'Escape' && isVisible) {
+                setIsVisible(false);
+            }
+        };
+        window.addEventListener('keydown', handleKeyDown);
+        return () => window.removeEventListener('keydown', handleKeyDown);
+    }, [isVisible]);
+
     const handleSubmit = async (e) => {
         e.preventDefault();
         if (!feedback.trim()) return;

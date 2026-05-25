@@ -138,6 +138,21 @@ const TrackingModal = ({ isOpen, onClose, initialTrackingNumber = '' }) => {
     }
   }, [isOpen, initialTrackingNumber]);
 
+  // Handle ESC key press to close the modal
+  React.useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (e.key === 'Escape') {
+        onClose();
+      }
+    };
+    if (isOpen) {
+      window.addEventListener('keydown', handleKeyDown);
+    }
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [isOpen, onClose]);
+
   if (!isOpen) return null;
 
   const saveRecentSearch = (num, fullName) => {

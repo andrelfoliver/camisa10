@@ -102,6 +102,17 @@ const Checkout = () => {
     loadConfig();
   }, []);
 
+  // Handle ESC key to close notification modal
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (e.key === 'Escape' && notification.show) {
+        setNotification(prev => ({ ...prev, show: false }));
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [notification.show]);
+
   const addressInputRef = useRef(null);
 
   // Inicialização Moderna do Google Places (API New)
