@@ -136,7 +136,18 @@ export const CartProvider = ({ children }) => {
   }, []);
 
   const addToCart = (product, size, extras = { nameNumber: false, patch: false, extraCustomization: false }) => {
+    const isKids = product?.category?.toLowerCase().includes('infantil') ||
+      product?.name?.toLowerCase().includes('infantil') ||
+      product?.name?.toLowerCase().includes('kids');
+
     let basePrice = product.price || 69.90;
+    if (isKids) {
+      if (['16', '18', '20', '22'].includes(size)) {
+        basePrice = 49.90;
+      } else if (['24', '26', '28'].includes(size)) {
+        basePrice = 54.90;
+      }
+    }
     
     let addonsPrice = 0;
     if (['2XL', '3XL'].includes(size)) addonsPrice += pricing.size2XL3XL || 7.00;

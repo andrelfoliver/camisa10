@@ -125,7 +125,13 @@ const ProductCard = ({ product }) => {
           {translateProductDisplay(product.name)}
         </h3>
         <span style={{ fontSize: '1.1rem', fontWeight: 700, fontFamily: 'var(--font-display)', marginBottom: '0.75rem' }}>
-          {formatPrice(product.price || 47.90)}
+          {formatPrice(
+            (product.category?.toLowerCase().includes('infantil') ||
+             product.name?.toLowerCase().includes('infantil') ||
+             product.name?.toLowerCase().includes('kids'))
+              ? 49.90
+              : (product.price || 47.90)
+          )}
         </span>
         
         <div style={{ marginTop: 'auto' }}>

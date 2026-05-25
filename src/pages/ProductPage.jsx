@@ -154,7 +154,14 @@ const ProductPage = () => {
     if (buyNow) navigate('/checkout');
   };
 
-  const basePrice = Number(product.price) || 47.90;
+  let basePrice = Number(product.price) || 47.90;
+  if (isKids) {
+    if (['16', '18', '20', '22'].includes(selectedSize)) {
+      basePrice = 49.90;
+    } else if (['24', '26', '28'].includes(selectedSize)) {
+      basePrice = 54.90;
+    }
+  }
   let currentTotal = basePrice;
   if (['2XL', '3XL'].includes(selectedSize)) currentTotal += Number(pricingConfig?.size2XL3XL || 7.00);
   if (selectedSize === '4XL') currentTotal += Number(pricingConfig?.size4XL || 10.00);
