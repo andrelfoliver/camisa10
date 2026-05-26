@@ -21,8 +21,8 @@ const Admin = () => {
   const [isTrackModalOpen, setIsTrackModalOpen] = useState(false);
   const [trackingNumberToView, setTrackingNumberToView] = useState('');
   const OFFICIAL_CATEGORIES = ['Seleções', 'Brasileirão', 'Internacionais', 'Lançamentos', 'Retrô'];
-  const SIZES = ['S', 'M', 'L', 'XL', '2XL', '3XL', '4XL', '16', '18', '20', '22', '24', '26', '28'];
-  const DEFAULT_INVENTORY = { 'S': 0, 'M': 0, 'L': 0, 'XL': 0, '2XL': 0, '3XL': 0, '4XL': 0, '16': 0, '18': 0, '20': 0, '22': 0, '24': 0, '26': 0, '28': 0 };
+  const SIZES = ['S', 'M', 'L', 'XL', '2XL', '3XL', '4XL', '16', '18', '20', '22', '24', '26', '28', '3M', '6M', '9M', '12M'];
+  const DEFAULT_INVENTORY = { 'S': 0, 'M': 0, 'L': 0, 'XL': 0, '2XL': 0, '3XL': 0, '4XL': 0, '16': 0, '18': 0, '20': 0, '22': 0, '24': 0, '26': 0, '28': 0, '3M': 0, '6M': 0, '9M': 0, '12M': 0 };
   const OFFICIAL_LEAGUES = [
     'Seleções',
     'Brasileirão',
@@ -113,6 +113,15 @@ const Admin = () => {
     }
   };
 
+
+  const getProductSizes = (prod) => {
+    if (!prod) return SIZES;
+    const isBaby = prod.version === 'Baby body' || prod.version === 'Baby Body' || (prod.name || '').toLowerCase().includes('baby body') || (prod.name || '').toLowerCase().includes('body de bebê') || (prod.name || '').toLowerCase().includes('body bebê');
+    if (isBaby) return ['3M', '6M', '9M', '12M'];
+    const isKids = prod.category === 'Infantil' || (prod.name || '').toLowerCase().includes('infantil') || (prod.name || '').toLowerCase().includes('kids');
+    if (isKids) return ['16', '18', '20', '22', '24', '26', '28'];
+    return ['S', 'M', 'L', 'XL', '2XL', '3XL', '4XL'];
+  };
 
   // Campo Categoria adicionado!
   const [newProduct, setNewProduct] = useState({ name: '', price: '', image: '', category: '', league: '', team: '', version: '', is_bestseller: false, is_new: false, inventory: { ...DEFAULT_INVENTORY }, unavailable_sizes: [] });
@@ -1386,9 +1395,16 @@ const Admin = () => {
     let updates = {};
 
     // Identifica Versão
-    if (lowerName.includes('jogador') || lowerName.includes('player')) updates.version = 'Jogador';
-    else if (lowerName.includes('retrô') || lowerName.includes('retro')) updates.version = 'Retrô';
-    else updates.version = 'Torcedor';
+    if (lowerName.includes('baby') || lowerName.includes('body')) {
+      updates.version = 'Baby body';
+      updates.price = 43.90;
+    } else if (lowerName.includes('jogador') || lowerName.includes('player')) {
+      updates.version = 'Jogador';
+    } else if (lowerName.includes('retrô') || lowerName.includes('retro')) {
+      updates.version = 'Retrô';
+    } else {
+      updates.version = 'Torcedor';
+    }
 
     // Identifica Time e Liga
     if (teams && teams.length > 0) {
@@ -3907,19 +3923,24 @@ const Admin = () => {
             ) : supplierTab === 'ESTOQUE' ? (() => {
               const adultSizes = ['S', 'M', 'L', 'XL', '2XL', '3XL', '4XL'];
               const kidSizes = ['16', '18', '20', '22', '24', '26', '28'];
-              const currentSizes = stockSubTab === 'ADULTO' ? adultSizes : kidSizes;
+              const babySizes = ['3M', '6M', '9M', '12M'];
+              const currentSizes = stockSubTab === 'ADULTO' ? adultSizes : stockSubTab === 'INFANTIL' ? kidSizes : babySizes;
 
               const productsWithStock = products.filter(p => {
                 const stockValues = Object.values(p.inventory || {});
                 const hasStock = stockValues.some(v => Number(v) > 0);
                 if (!hasStock) return false;
 
-                const isKidProduct = p.category === 'Infantil' || p.name.toLowerCase().includes('infantil') || p.name.toLowerCase().includes('kids');
-                return stockSubTab === 'ADULTO' ? !isKidProduct : isKidProduct;
+                const isBabyProduct = p.version === 'Baby body' || p.version === 'Baby Body' || p.name.toLowerCase().includes('baby body') || p.name.toLowerCase().includes('body de bebê') || p.name.toLowerCase().includes('body bebê');
+                const isKidProduct = !isBabyProduct && (p.category === 'Infantil' || p.name.toLowerCase().includes('infantil') || p.name.toLowerCase().includes('kids'));
+
+                if (stockSubTab === 'BEBE') return isBabyProduct;
+                if (stockSubTab === 'INFANTIL') return isKidProduct;
+                return !isKidProduct && !isBabyProduct;
               });
 
               const totalItems = productsWithStock.reduce((acc, p) => {
-                return acc + Object.values(p.inventory || {}).reduce((sum, v) => sum + Number(v), 0);
+                return acc + currentSizes.reduce((sum, s) => sum + Number(p.inventory?.[s] || 0), 0);
               }, 0);
 
               const filteredProducts = productsWithStock.filter(p => 
@@ -3948,6 +3969,12 @@ const Admin = () => {
                           style={{ padding: '0.5rem 1.5rem', borderRadius: '6px', border: 'none', background: stockSubTab === 'INFANTIL' ? 'var(--accent-color)' : 'transparent', color: stockSubTab === 'INFANTIL' ? '#000' : '#fff', fontWeight: 800, cursor: 'pointer', fontSize: '0.8rem', transition: 'all 0.2s' }}
                         >
                           INFANTIL (16-28)
+                        </button>
+                        <button 
+                          onClick={() => setStockSubTab('BEBE')}
+                          style={{ padding: '0.5rem 1.5rem', borderRadius: '6px', border: 'none', background: stockSubTab === 'BEBE' ? 'var(--accent-color)' : 'transparent', color: stockSubTab === 'BEBE' ? '#000' : '#fff', fontWeight: 800, cursor: 'pointer', fontSize: '0.8rem', transition: 'all 0.2s' }}
+                        >
+                          BEBE (3M-12M)
                         </button>
                       </div>
 
@@ -4207,6 +4234,7 @@ const Admin = () => {
                       <option value="74.90">Jogador Nike (CA$ 74.90)</option>
                       <option value="74.90">Retrô (CA$ 74.90)</option>
                       <option value="59.90">Manga Longa Lisa (CA$ 59.90)</option>
+                      <option value="43.90">Baby Body (CA$ 43.90)</option>
                     </optgroup>
                     <optgroup label="Kits & Conjuntos">
                       <option value="49.90">Kit Infantil 16-22 (CA$ 49.90)</option>
@@ -4234,6 +4262,7 @@ const Admin = () => {
                     <option value="Torcedor">Torcedor</option>
                     <option value="Jogador">Jogador</option>
                     <option value="Retrô">Retrô</option>
+                    <option value="Baby body">Baby body</option>
                   </select>
                 </div>
               </div>
@@ -4304,7 +4333,7 @@ const Admin = () => {
               <div style={{ background: 'rgba(255,255,255,0.02)', padding: '1.2rem', borderRadius: 'var(--radius-sm)', border: '1px solid var(--border-color)' }}>
                 <h3 style={{ fontSize: '0.9rem', color: 'var(--accent-color)', marginBottom: '1rem', fontWeight: 800, textTransform: 'uppercase' }}>⚡ Estoque Pronta Entrega (Canada)</h3>
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(60px, 1fr))', gap: '0.8rem' }}>
-                  {SIZES.map(size => (
+                  {getProductSizes(newProduct).map(size => (
                     <div key={size}>
                       <label style={{ display: 'block', fontSize: '0.75rem', color: 'var(--text-muted)', textAlign: 'center', marginBottom: '0.3rem' }}>{size}</label>
                       <input 
@@ -4328,7 +4357,7 @@ const Admin = () => {
                   <X size={16} /> Bloquear Tamanhos (Fábrica não produz)
                 </h3>
                 <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem' }}>
-                  {SIZES.map(size => {
+                  {getProductSizes(newProduct).map(size => {
                     const isUnavailable = newProduct.unavailable_sizes?.includes(size);
                     return (
                       <button
@@ -4597,6 +4626,7 @@ const Admin = () => {
                       <option value="74.90">Jogador Nike (CA$ 74.90)</option>
                       <option value="74.90">Retrô (CA$ 74.90)</option>
                       <option value="59.90">Manga Longa Lisa (CA$ 59.90)</option>
+                      <option value="43.90">Baby Body (CA$ 43.90)</option>
                     </optgroup>
                     <optgroup label="Kits & Conjuntos">
                       <option value="49.90">Kit Infantil 16-22 (CA$ 49.90)</option>
@@ -4624,6 +4654,7 @@ const Admin = () => {
                     <option value="Torcedor">Torcedor</option>
                     <option value="Jogador">Jogador</option>
                     <option value="Retrô">Retrô</option>
+                    <option value="Baby body">Baby body</option>
                   </select>
                 </div>
                 <div style={{ flex: 1 }}>
@@ -4694,7 +4725,7 @@ const Admin = () => {
               <div style={{ background: 'rgba(255,255,255,0.02)', padding: '1.2rem', borderRadius: 'var(--radius-sm)', border: '1px solid var(--border-color)', marginTop: '0.5rem' }}>
                 <h3 style={{ fontSize: '0.9rem', color: 'var(--accent-color)', marginBottom: '1rem', fontWeight: 800, textTransform: 'uppercase' }}>⚡ Estoque Pronta Entrega (Canada)</h3>
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(60px, 1fr))', gap: '0.8rem' }}>
-                  {SIZES.map(size => (
+                  {getProductSizes(editingProduct).map(size => (
                     <div key={size}>
                       <label style={{ display: 'block', fontSize: '0.75rem', color: 'var(--text-muted)', textAlign: 'center', marginBottom: '0.3rem' }}>{size}</label>
                       <input 
@@ -4718,7 +4749,7 @@ const Admin = () => {
                   <X size={16} /> Bloquear Tamanhos (Fábrica não produz)
                 </h3>
                 <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem' }}>
-                  {SIZES.map(size => {
+                  {getProductSizes(editingProduct).map(size => {
                     const isUnavailable = editingProduct.unavailable_sizes?.includes(size);
                     return (
                       <button

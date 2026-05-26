@@ -50,23 +50,35 @@ const ProductPage = () => {
   const isKids = product?.category?.toLowerCase().includes('infantil') ||
     product?.name?.toLowerCase().includes('infantil') ||
     product?.name?.toLowerCase().includes('kids');
-  const sizes = isKids
-    ? ['16', '18', '20', '22', '24', '26', '28']
-    : ['S', 'M', 'L', 'XL', '2XL', '3XL', '4XL'];
+  
+  const isBaby = product?.version === 'Baby body' ||
+    product?.version === 'Baby Body' ||
+    product?.name?.toLowerCase().includes('baby body') ||
+    product?.name?.toLowerCase().includes('body de bebê') ||
+    product?.name?.toLowerCase().includes('body bebê');
+
+  const sizes = isBaby
+    ? ['3M', '6M', '9M', '12M']
+    : isKids
+      ? ['16', '18', '20', '22', '24', '26', '28']
+      : ['S', 'M', 'L', 'XL', '2XL', '3XL', '4XL'];
 
   const availableSizes = sizes.filter(s => !product?.unavailable_sizes?.includes(s));
 
-  // Ajusta o tamanho selecionado inicial se for infantil ou se o padrão estiver bloqueado
+  // Ajusta o tamanho selecionado inicial se for infantil, bebê ou se o padrão estiver bloqueado
   useEffect(() => {
-    if (isKids && !['16', '18', '20', '22', '24', '26', '28'].includes(selectedSize)) {
+    if (isBaby && !['3M', '6M', '9M', '12M'].includes(selectedSize)) {
+      const firstAvailable = availableSizes[0] || '6M';
+      setSelectedSize(firstAvailable);
+    } else if (isKids && !['16', '18', '20', '22', '24', '26', '28'].includes(selectedSize)) {
       const firstAvailable = availableSizes[0] || '20';
       setSelectedSize(firstAvailable);
     } else if (product?.unavailable_sizes?.includes(selectedSize)) {
       // Se o tamanho padrão estiver bloqueado, pega o primeiro disponível
-      const firstAvailable = availableSizes[0] || (isKids ? '20' : 'M');
+      const firstAvailable = availableSizes[0] || (isBaby ? '6M' : isKids ? '20' : 'M');
       setSelectedSize(firstAvailable);
     }
-  }, [isKids, product]);
+  }, [isBaby, isKids, product]);
 
   const [isCustomized, setIsCustomized] = useState(false);
   const [customName, setCustomName] = useState('');

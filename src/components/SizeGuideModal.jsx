@@ -28,6 +28,7 @@ const SizeGuideModal = ({ isOpen, onClose }) => {
     { id: 'player', label: language === 'pt' ? 'Jogador' : 'Player Edition' },
     { id: 'women', label: language === 'pt' ? 'Feminina' : 'Women' },
     { id: 'kids', label: language === 'pt' ? 'Infantil' : 'Kids' },
+    { id: 'baby', label: language === 'pt' ? 'Bebê' : 'Baby Body' },
     { id: 'special', label: language === 'pt' ? 'Especiais' : 'Plus Size' },
     { id: 'accessories', label: language === 'pt' ? 'Outros' : 'Other' }
   ];
@@ -229,6 +230,52 @@ const SizeGuideModal = ({ isOpen, onClose }) => {
                   ))}
                 </tbody>
               </table>
+            </div>
+          )}
+
+          {activeTab === 'baby' && (
+            <div className="reveal">
+              <h3 style={{ marginBottom: '1.5rem', fontSize: '1.1rem', color: 'var(--accent-color)' }}>🍼 {language === 'pt' ? 'Body de Bebê' : 'Baby Body'}</h3>
+              <div className="table-responsive" style={{ overflowX: 'auto', marginBottom: '1rem' }}>
+                <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: '600px' }}>
+                  <thead>
+                    <tr style={{ background: 'rgba(204, 255, 0, 0.1)' }}>
+                      <th style={{ padding: '1rem 0.5rem', textAlign: 'left', borderBottom: '2px solid var(--accent-color)', fontSize: '0.85rem' }}>{language === 'pt' ? 'Tamanho' : 'Size'}</th>
+                      <th style={{ padding: '1rem 0.5rem', textAlign: 'center', borderBottom: '2px solid var(--accent-color)', fontSize: '0.85rem' }}>{language === 'pt' ? 'Etiqueta' : 'Tag'}</th>
+                      <th style={{ padding: '1rem 0.5rem', textAlign: 'center', borderBottom: '2px solid var(--accent-color)', fontSize: '0.85rem' }}>{language === 'pt' ? 'Comprimento' : 'Length'}</th>
+                      <th style={{ padding: '1rem 0.5rem', textAlign: 'center', borderBottom: '2px solid var(--accent-color)', fontSize: '0.85rem' }}>{language === 'pt' ? 'Largura (Busto)' : 'Width (Bust)'}</th>
+                      <th style={{ padding: '1rem 0.5rem', textAlign: 'center', borderBottom: '2px solid var(--accent-color)', fontSize: '0.85rem' }}>{language === 'pt' ? 'Ombro' : 'Shoulder'}</th>
+                      <th style={{ padding: '1rem 0.5rem', textAlign: 'center', borderBottom: '2px solid var(--accent-color)', fontSize: '0.85rem' }}>{language === 'pt' ? 'Altura Rec.' : 'Height Rec.'}</th>
+                      <th style={{ padding: '1rem 0.5rem', textAlign: 'center', borderBottom: '2px solid var(--accent-color)', fontSize: '0.85rem' }}>{language === 'pt' ? 'Peso Rec.' : 'Weight Rec.'}</th>
+                      <th style={{ padding: '1rem 0.5rem', textAlign: 'center', borderBottom: '2px solid var(--accent-color)', fontSize: '0.85rem' }}>{language === 'pt' ? 'Idade Rec.' : 'Age Rec.'}</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {[
+                      ['3M', '9', '44 cm', '27 cm', '24 cm', '65-75 cm', '7.5-9 kg', language === 'pt' ? '3-12 meses' : '3-12 months'],
+                      ['6M', '9', '44 cm', '27 cm', '24 cm', '65-75 cm', '7.5-9 kg', language === 'pt' ? '3-12 meses' : '3-12 months'],
+                      ['9M', '9', '44 cm', '27 cm', '24 cm', '65-75 cm', '7.5-9 kg', language === 'pt' ? '3-12 meses' : '3-12 months'],
+                      ['12M', '12', '46 cm', '28 cm', '25 cm', '75-85 cm', '9-12 kg', language === 'pt' ? '12-24 meses' : '12-24 months']
+                    ].map(([sz, tag, len, wdt, shld, hgt, wgt, age], i) => (
+                      <tr key={i} style={{ borderBottom: '1px solid var(--border-color)' }}>
+                        <td style={{ padding: '0.8rem 0.5rem', fontWeight: 600 }}>{sz}</td>
+                        <td style={{ padding: '0.8rem 0.5rem', textAlign: 'center', color: 'var(--text-muted)' }}>{tag}</td>
+                        <td style={{ padding: '0.8rem 0.5rem', textAlign: 'center', color: 'var(--text-muted)' }}>{len}</td>
+                        <td style={{ padding: '0.8rem 0.5rem', textAlign: 'center', color: 'var(--text-muted)' }}>{wdt}</td>
+                        <td style={{ padding: '0.8rem 0.5rem', textAlign: 'center', color: 'var(--text-muted)' }}>{shld}</td>
+                        <td style={{ padding: '0.8rem 0.5rem', textAlign: 'center', color: 'var(--text-muted)' }}>{hgt}</td>
+                        <td style={{ padding: '0.8rem 0.5rem', textAlign: 'center', color: 'var(--text-muted)' }}>{wgt}</td>
+                        <td style={{ padding: '0.8rem 0.5rem', textAlign: 'center', color: 'var(--text-muted)' }}>{age}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+              <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', fontStyle: 'italic', marginTop: '0.5rem' }}>
+                💡 {language === 'pt' 
+                  ? 'Medição manual com variação de 1-2 cm. Para bebês mais cheinhos, recomendamos escolher um tamanho maior.' 
+                  : 'Manual measurement with 1-2 cm variation. For chubbier babies, we recommend choosing one size larger.'}
+              </p>
             </div>
           )}
 
