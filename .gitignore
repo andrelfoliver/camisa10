@@ -11,3 +11,4 @@ yupoo_data.json
 # Orçamentos Locais
 orcamento*
 generate_pdf.js
+.env*.local

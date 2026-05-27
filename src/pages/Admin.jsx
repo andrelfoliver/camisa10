@@ -123,8 +123,29 @@ const Admin = () => {
     return ['S', 'M', 'L', 'XL', '2XL', '3XL', '4XL'];
   };
 
+  const getDaysDiff = (startStr, endStr) => {
+    if (!startStr || !endStr) return null;
+    const parseDatePart = (str) => {
+      if (!str) return null;
+      return str.includes(' às ') ? str.split(' às ')[0] : str.split(' ')[0];
+    };
+    const startPart = parseDatePart(startStr);
+    const endPart = parseDatePart(endStr);
+    if (!startPart || !endPart) return null;
+    const startParts = startPart.split('-');
+    const endParts = endPart.split('-');
+    if (startParts.length !== 3 || endParts.length !== 3) return null;
+    const dStart = new Date(parseInt(startParts[0], 10), parseInt(startParts[1], 10) - 1, parseInt(startParts[2], 10));
+    const dEnd = new Date(parseInt(endParts[0], 10), parseInt(endParts[1], 10) - 1, parseInt(endParts[2], 10));
+    if (isNaN(dStart.getTime()) || isNaN(dEnd.getTime())) return null;
+    const diffTime = dEnd - dStart;
+    const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+    return diffDays >= 0 ? diffDays : 0;
+  };
+
   // Campo Categoria adicionado!
   const [newProduct, setNewProduct] = useState({ name: '', price: '', image: '', category: '', league: '', team: '', version: '', is_bestseller: false, is_new: false, inventory: { ...DEFAULT_INVENTORY }, unavailable_sizes: [] });
+  const [trackingCaches, setTrackingCaches] = useState([]);
   const [imageFile, setImageFile] = useState(null);
   const [imagePreview, setImagePreview] = useState(null);
   const [galleryFiles, setGalleryFiles] = useState([]);
@@ -366,6 +387,15 @@ const Admin = () => {
       }
     }
 
+    async function loadTrackingCaches() {
+      try {
+        const { data } = await supabase.from('tracking_cache').select('tracking_number, status_data');
+        if (data) setTrackingCaches(data);
+      } catch (e) {
+        console.error("Erro ao buscar caches de rastreamento:", e);
+      }
+    }
+
     if (isAdmin) {
       loadProducts();
       loadCustomers();
@@ -374,6 +404,7 @@ const Admin = () => {
       loadOrders();
       fetchTeams();
       loadCoupons();
+      loadTrackingCaches();
     }
   }, [isAdmin, user]);
 
@@ -1786,27 +1817,29 @@ const Admin = () => {
           </div>
           <div style={{ display: 'flex', gap: '1.2rem', alignItems: 'center' }}>
             {/* Botão Global de Privacidade */}
-            <button 
-               onClick={() => setShowValues(!showValues)}
-               className="glass-panel"
-               style={{ 
-                 padding: '0.6rem 1.2rem', 
-                 borderRadius: '8px', 
-                 display: 'flex', 
-                 alignItems: 'center', 
-                 gap: '0.5rem', 
-                 fontWeight: 700, 
-                 color: 'var(--accent-color)', 
-                 cursor: 'pointer', 
-                 border: '1px solid rgba(164, 210, 51, 0.3)',
-                 background: 'rgba(164, 210, 51, 0.05)',
-                 transition: 'all 0.2s'
-               }}
-               title={showValues ? "Ocultar Valores" : "Mostrar Valores"}
-             >
-               {showValues ? <EyeOff size={18} /> : <Eye size={18} />}
-               <span style={{ fontSize: '0.8rem' }}>{showValues ? "Ocultar" : "Ver Valores"}</span>
-             </button>
+            {supplierTab !== 'CIDADES' && (
+               <button 
+                  onClick={() => setShowValues(!showValues)}
+                  className="glass-panel"
+                  style={{ 
+                    padding: '0.6rem 1.2rem', 
+                    borderRadius: '8px', 
+                    display: 'flex', 
+                    alignItems: 'center', 
+                    gap: '0.5rem', 
+                    fontWeight: 700, 
+                    color: 'var(--accent-color)', 
+                    cursor: 'pointer', 
+                    border: '1px solid rgba(164, 210, 51, 0.3)',
+                    background: 'rgba(164, 210, 51, 0.05)',
+                    transition: 'all 0.2s'
+                  }}
+                  title={showValues ? "Ocultar Valores" : "Mostrar Valores"}
+                >
+                  {showValues ? <EyeOff size={18} /> : <Eye size={18} />}
+                  <span style={{ fontSize: '0.8rem' }}>{showValues ? "Ocultar" : "Ver Valores"}</span>
+                </button>
+             )}
             {supplierTab === 'TESTIMONIALS' && (
               <button onClick={() => setShowAddTestimonial(true)} className="btn-primary" style={{ background: '#A855F7', color: '#fff' }}>
                 <Plus size={18} /> Novo Histórico (2022)
@@ -2213,18 +2246,62 @@ const Admin = () => {
             const normalizeCity = (c) => (c || 'N/A').split('(')[0].split('/')[0].trim();
 
             const cityStats = orders.reduce((acc, order) => {
+              if (order.status === 'cancelled') return acc;
               const rawCity = order.shipping_address?.city || 'N/A';
               const city = normalizeCity(rawCity);
               const province = order.shipping_address?.province || '';
               const key = `${city}${province ? `, ${province}` : ''}`;
-              if (!acc[key]) acc[key] = { count: 0, revenue: 0 };
+              if (!acc[key]) acc[key] = { count: 0, revenue: 0, deliveryTimes: [], shirts: 0 };
               acc[key].count++;
               acc[key].revenue += Number(order.total_price || 0);
+              const itemCount = Array.isArray(order.items) 
+                ? order.items.reduce((sum, item) => sum + (Number(item.quantity) || 1), 0)
+                : 1;
+              acc[key].shirts += itemCount;
+
+              if (order.tracking_number) {
+                const codes = order.tracking_number.split(/[,;\s]+/).map(t => t.trim()).filter(Boolean);
+                codes.forEach(code => {
+                  const cache = trackingCaches.find(tc => tc.tracking_number?.trim().toUpperCase() === code.toUpperCase());
+                  if (cache && cache.status_data) {
+                    const statusData = cache.status_data;
+                    const history = statusData.history || [];
+                    const trackingData = statusData.trackingData;
+
+                    const deliveredEvent = history.find(item => {
+                      const status = (item.status || '').toLowerCase();
+                      return status.includes('entregue') || status.includes('assinado') || status.includes('delivered');
+                    });
+
+                    if (deliveredEvent) {
+                      const startDate = trackingData?.date || (history.length > 0 ? (history[history.length - 1].date || history[history.length - 1].rawDate) : null);
+                      const endDate = deliveredEvent.date || deliveredEvent.rawDate;
+                      if (startDate && endDate) {
+                        const days = getDaysDiff(startDate, endDate);
+                        if (days !== null) {
+                          acc[key].deliveryTimes.push(days);
+                        }
+                      }
+                    }
+                  }
+                });
+              }
+
               return acc;
             }, {});
 
             const sortedCities = Object.entries(cityStats)
               .sort((a, b) => b[1].count - a[1].count);
+
+            const allTimes = [];
+            Object.values(cityStats).forEach(data => {
+              if (data.deliveryTimes) {
+                allTimes.push(...data.deliveryTimes);
+              }
+            });
+            const globalAvgDays = allTimes.length > 0
+              ? allTimes.reduce((sum, t) => sum + t, 0) / allTimes.length
+              : null;
 
             const uniqueProvinces = new Set(
               Object.keys(cityStats)
@@ -2233,10 +2310,11 @@ const Admin = () => {
             );
             const totalCities = Object.keys(cityStats).length;
             const totalProvinces = uniqueProvinces.size;
-            const totalOrdersCA = Object.values(cityStats).reduce((sum, d) => sum + d.count, 0);
+            const totalShirtsCA = Object.values(cityStats).reduce((sum, d) => sum + d.shirts, 0);
 
             const provCounts = {};
             orders.forEach(o => {
+              if (o.status === 'cancelled') return;
               const prov = normalizeProvince(o.shipping_address?.province);
               if (prov) {
                 const itemCount = Array.isArray(o.items) 
@@ -2265,8 +2343,14 @@ const Admin = () => {
                           <h3 style={{ fontSize: '1.8rem', color: '#fff', margin: 0 }}>{totalCities}</h3>
                         </div>
                         <div className="glass-panel" style={{ flex: 1, padding: '1.2rem', borderRadius: '12px', borderLeft: '4px solid #10B981' }}>
-                          <p style={{ fontSize: '0.65rem', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: 800, margin: '0 0 0.5rem 0' }}>Total Pedidos</p>
-                          <h3 style={{ fontSize: '1.8rem', color: '#fff', margin: 0 }}>{totalOrdersCA}</h3>
+                          <p style={{ fontSize: '0.65rem', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: 800, margin: '0 0 0.5rem 0' }}>Total Camisas</p>
+                          <h3 style={{ fontSize: '1.8rem', color: '#fff', margin: 0 }}>{totalShirtsCA}</h3>
+                        </div>
+                        <div className="glass-panel" style={{ flex: 1, padding: '1.2rem', borderRadius: '12px', borderLeft: '4px solid #8B5CF6' }}>
+                          <p style={{ fontSize: '0.65rem', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: 800, margin: '0 0 0.5rem 0' }}>Prazo Médio Global</p>
+                          <h3 style={{ fontSize: '1.8rem', color: '#fff', margin: 0 }}>
+                            {globalAvgDays !== null ? `${globalAvgDays.toFixed(1)} dias` : 'N/A'}
+                          </h3>
                         </div>
                       </div>
                       <div className="glass-panel" style={{ padding: '1.2rem', borderRadius: '12px', borderLeft: '4px solid #3B82F6' }}>
@@ -2307,22 +2391,30 @@ const Admin = () => {
                   </div>
 
                   <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: '1rem' }}>
-                    {sortedCities.map(([city, data]) => (
-                      <div key={city} className="glass-panel" style={{ padding: '1.2rem', borderRadius: '12px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                        <div>
-                          <h4 style={{ margin: 0, color: '#fff', fontSize: '1rem' }}>{city}</h4>
-                          <p style={{ margin: '0.2rem 0 0 0', fontSize: '0.8rem', color: 'var(--text-muted)' }}>
-                            {data.count} {data.count === 1 ? 'pedido realizado' : 'pedidos realizados'}
-                          </p>
+                    {sortedCities.map(([city, data]) => {
+                      const avgDeliveryTime = data.deliveryTimes && data.deliveryTimes.length > 0
+                        ? data.deliveryTimes.reduce((sum, t) => sum + t, 0) / data.deliveryTimes.length
+                        : null;
+                      return (
+                        <div key={city} className="glass-panel" style={{ padding: '1.2rem', borderRadius: '12px', display: 'flex', alignItems: 'center' }}>
+                          <div>
+                            <h4 style={{ margin: 0, color: '#fff', fontSize: '1rem' }}>{city}</h4>
+                            <p style={{ margin: '0.2rem 0 0 0', fontSize: '0.8rem', color: 'var(--text-muted)' }}>
+                              {data.shirts} {data.shirts === 1 ? 'camisa' : 'camisas'}
+                            </p>
+                            {avgDeliveryTime !== null ? (
+                              <p style={{ margin: '0.2rem 0 0 0', fontSize: '0.8rem', color: '#10B981', display: 'flex', alignItems: 'center', gap: '0.3rem' }}>
+                                <Truck size={14} /> Média de entrega: {avgDeliveryTime.toFixed(1)} dias
+                              </p>
+                            ) : (
+                              <p style={{ margin: '0.2rem 0 0 0', fontSize: '0.8rem', color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: '0.3rem' }}>
+                                <Truck size={14} /> Sem dados de entrega
+                              </p>
+                            )}
+                          </div>
                         </div>
-                        <div style={{ textAlign: 'right' }}>
-                          <span style={{ display: 'block', fontSize: '1.2rem', fontWeight: 800, color: 'var(--accent-color)' }}>
-                            {showValues ? `$${data.revenue.toFixed(2)}` : '****'}
-                          </span>
-                          <span style={{ fontSize: '0.65rem', color: 'var(--text-muted)', textTransform: 'uppercase' }}>Faturamento</span>
-                        </div>
-                      </div>
-                    ))}
+                      );
+                    })}
                   </div>
                 </div>
               </div>
