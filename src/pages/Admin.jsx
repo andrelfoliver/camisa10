@@ -1817,7 +1817,7 @@ const Admin = () => {
           </div>
           <div style={{ display: 'flex', gap: '1.2rem', alignItems: 'center' }}>
             {/* Botão Global de Privacidade */}
-            {supplierTab !== 'CIDADES' && (
+            {['PEDIDOS', 'FINANCEIRO'].includes(supplierTab) && (
                <button 
                   onClick={() => setShowValues(!showValues)}
                   className="glass-panel"
