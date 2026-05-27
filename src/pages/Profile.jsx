@@ -352,19 +352,27 @@ const Profile = () => {
                                <p>{order?.shipping_address?.city || ''}{order?.shipping_address?.province ? ', ' + order.shipping_address.province : ''} {order?.shipping_address?.postalCode || ''}</p>
                             </div>
                          </div>
-                           {order.tracking_number && (
-                             <div style={{ marginTop: '1.5rem' }}>
-                               <button 
-                                 onClick={() => {
-                                   setTrackingNumberToView(order.tracking_number);
-                                   setIsTrackModalOpen(true);
-                                 }}
-                                 className="btn-primary" 
-                                 style={{ width: '100%', justifyContent: 'center', background: 'rgba(255,184,28,0.1)', color: 'var(--accent-color)', border: '1px solid var(--accent-color)', gap: '0.6rem', padding: '0.8rem' }}>
-                                 <Truck size={18} /> RASTREAR MEU PEDIDO
-                               </button>
-                             </div>
-                           )}
+                           {order.tracking_number && (() => {
+                              const trackingCodes = order.tracking_number.split(/[,;\s]+/).map(s => s.trim()).filter(Boolean);
+                              if (trackingCodes.length === 0) return null;
+                              return (
+                                <div style={{ marginTop: '1.5rem', display: 'flex', flexDirection: 'column', gap: '0.8rem' }}>
+                                  {trackingCodes.map((code, idx) => (
+                                    <button 
+                                      key={code}
+                                      onClick={() => {
+                                        setTrackingNumberToView(code);
+                                        setIsTrackModalOpen(true);
+                                      }}
+                                      className="btn-primary" 
+                                      style={{ width: '100%', justifyContent: 'center', background: 'rgba(255,184,28,0.1)', color: 'var(--accent-color)', border: '1px solid var(--accent-color)', gap: '0.6rem', padding: '0.8rem' }}
+                                    >
+                                      <Truck size={18} /> RASTREAR ENVIO {trackingCodes.length > 1 ? `#${idx + 1}` : ''} ({code})
+                                    </button>
+                                  ))}
+                                </div>
+                              );
+                            })()}
                       </div>
                     </div>
                   ))}

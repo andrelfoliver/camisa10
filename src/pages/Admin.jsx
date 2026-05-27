@@ -3737,7 +3737,7 @@ const Admin = () => {
                               <div style={{ display: 'flex', gap: '0.5rem' }}>
                                 <input
                                   type="text"
-                                  placeholder="Código de Rastreio"
+                                  placeholder="Códigos de Rastreio (separe com vírgula)"
                                   defaultValue={order.tracking_number || ''}
                                   id={`track-${order.id}`}
                                   style={{ flex: 1, padding: '0.6rem', background: 'var(--bg-color)', color: '#fff', border: '1px solid var(--border-color)', borderRadius: '6px', fontSize: '0.8rem' }}
@@ -3752,17 +3752,27 @@ const Admin = () => {
                                   <Save size={16} />
                                 </button>
                               </div>
-                              {order.tracking_number && (
-                                <button
-                                  onClick={() => {
-                                    setTrackingNumberToView(order.tracking_number);
-                                    setIsTrackModalOpen(true);
-                                  }}
-                                  style={{ padding: '0.6rem', background: 'rgba(255,255,255,0.05)', color: 'var(--accent-color)', border: '1px solid var(--accent-color)', borderRadius: '6px', fontWeight: 600, cursor: 'pointer', fontSize: '0.75rem', marginTop: '0.3rem' }}
-                                >
-                                  TESTAR RASTREIO
-                                </button>
-                              )}
+                              <p style={{ fontSize: '0.6rem', color: 'var(--text-muted)', marginTop: '0.2rem', marginBottom: '0.5rem' }}>Múltiplos códigos podem ser separados por vírgula ou espaço.</p>
+                              {order.tracking_number && (() => {
+                                const trackingCodes = order.tracking_number.split(/[,;\s]+/).map(s => s.trim()).filter(Boolean);
+                                if (trackingCodes.length === 0) return null;
+                                return (
+                                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.4rem', marginTop: '0.2rem' }}>
+                                    {trackingCodes.map((code, idx) => (
+                                      <button
+                                        key={code}
+                                        onClick={() => {
+                                          setTrackingNumberToView(code);
+                                          setIsTrackModalOpen(true);
+                                        }}
+                                        style={{ padding: '0.5rem 0.8rem', background: 'rgba(255,255,255,0.05)', color: 'var(--accent-color)', border: '1px solid var(--accent-color)', borderRadius: '6px', fontWeight: 600, cursor: 'pointer', fontSize: '0.7rem' }}
+                                      >
+                                        TESTAR RASTREIO {trackingCodes.length > 1 ? `#${idx + 1}` : ''} ({code})
+                                      </button>
+                                    ))}
+                                  </div>
+                                );
+                              })()}
 
                               <p style={{ fontSize: '0.7rem', color: 'var(--text-muted)', fontWeight: 800, textTransform: 'uppercase', marginTop: '1rem' }}>Ações Rápidas (Auto-Sync)</p>
                               {order.items.some(i => {
