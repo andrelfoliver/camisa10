@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from '../services/supabase';
 import { useAuth } from '../context/AuthContext';
-import { Save, Check, Crown, Heart, Database, HardDrive, Star, LogOut, Package, Plus, Trash2, Edit, X, Users, Image, DollarSign, MapPin, RefreshCw, Shield, AlertTriangle, MessageSquare, ChevronDown, ChevronUp, MoreHorizontal, ExternalLink, Settings, Tag, TrendingUp, Truck, BarChart, Eye, EyeOff } from 'lucide-react';
+import { Save, Check, Crown, Heart, Database, HardDrive, Star, LogOut, Package, Plus, Trash2, Edit, X, Users, Image, DollarSign, MapPin, RefreshCw, Shield, AlertTriangle, MessageSquare, ChevronDown, ChevronUp, MoreHorizontal, ExternalLink, Settings, Tag, TrendingUp, Truck, BarChart, Eye, EyeOff, Send } from 'lucide-react';
 import { migrateProductsToSupabase } from '../services/migration';
 import { migrateTeamsToSupabase } from '../services/migration_teams';
 import WhatsAppIcon from '../components/WhatsAppIcon';
@@ -871,6 +871,33 @@ const Admin = () => {
       setOrders(orders.map(o => o.id === orderId ? { ...o, tracking_number: trackingNumber } : o));
       setSaved(true);
       setTimeout(() => setSaved(false), 2000);
+    }
+  };
+
+  const handleSendAbandonedCartEmail = async (customer) => {
+    if (!customer || !customer.email || !customer.cart || customer.cart.length === 0) {
+      showAlert("Erro", "Cliente não possui e-mail ou sacola ativa.");
+      return;
+    }
+    
+    try {
+      const res = await fetch('/api/send-abandoned-cart-email', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          customerName: customer.full_name || 'Cliente',
+          customerEmail: customer.email,
+          cartItems: customer.cart
+        })
+      });
+      const data = await res.json();
+      if (res.ok && data.success) {
+        showAlert("Sucesso!", `E-mail de recuperação enviado para ${customer.email} com sucesso.`);
+      } else {
+        showAlert("Erro no Envio", data.error?.message || data.error || "Ocorreu um erro ao processar o envio do e-mail.");
+      }
+    } catch (err) {
+      showAlert("Falha Técnica", err.message);
     }
   };
 
@@ -4036,7 +4063,33 @@ const Admin = () => {
                                 </div>
                               </div>
 
-                              <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
+                              <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '1rem', alignItems: 'center', flexWrap: 'wrap' }}>
+                                {customer.cart && Array.isArray(customer.cart) && customer.cart.length > 0 && (
+                                  <button
+                                    onClick={async (e) => {
+                                      e.stopPropagation();
+                                      await handleSendAbandonedCartEmail(customer);
+                                    }}
+                                    style={{
+                                      display: 'flex',
+                                      alignItems: 'center',
+                                      gap: '0.5rem',
+                                      background: '#CCFF00',
+                                      color: '#000000',
+                                      border: 'none',
+                                      padding: '0.6rem 1.2rem',
+                                      borderRadius: '6px',
+                                      fontWeight: 800,
+                                      cursor: 'pointer',
+                                      transition: 'all 0.2s',
+                                      boxShadow: '0 4px 15px rgba(204, 255, 0, 0.2)'
+                                    }}
+                                    onMouseEnter={(e) => e.currentTarget.style.opacity = 0.9}
+                                    onMouseLeave={(e) => e.currentTarget.style.opacity = 1}
+                                  >
+                                    <Send size={16} /> Enviar E-mail de Recuperação
+                                  </button>
+                                )}
                                 <button
                                   onClick={(e) => { e.stopPropagation(); setOrderFilter(customer.id); setSupplierTab('PEDIDOS'); }}
                                   style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', background: 'rgba(255,255,255,0.05)', color: '#fff', border: '1px solid var(--border-color)', padding: '0.6rem 1.2rem', borderRadius: '6px', fontWeight: 700, cursor: 'pointer', transition: 'all 0.2s' }}
