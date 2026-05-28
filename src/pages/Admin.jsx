@@ -4080,13 +4080,17 @@ const Admin = () => {
                                   const sentAt = sentRecoveryEmails[customer.id];
                                   return (
                                     <button
-                                      onClick={async (e) => {
+                                      onClick={(e) => {
                                         e.stopPropagation();
                                         if (sentAt) {
-                                          const confirmSend = window.confirm(`Você já enviou um e-mail de recuperação para este cliente em ${sentAt}. Deseja enviar novamente?`);
-                                          if (!confirmSend) return;
+                                          showConfirm(
+                                            "Reenviar E-mail",
+                                            `Você já enviou um e-mail de recuperação para este cliente em ${sentAt}. Deseja enviar novamente?`,
+                                            () => handleSendAbandonedCartEmail(customer)
+                                          );
+                                        } else {
+                                          handleSendAbandonedCartEmail(customer);
                                         }
-                                        await handleSendAbandonedCartEmail(customer);
                                       }}
                                       style={{
                                         display: 'flex',
