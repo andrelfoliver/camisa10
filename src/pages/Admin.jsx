@@ -222,6 +222,14 @@ const Admin = () => {
   const [expandedCustomerId, setExpandedCustomerId] = useState(null);
   const [showValues, setShowValues] = useState(false);
   const [supplierEmail, setSupplierEmail] = useState('');
+  const [sentRecoveryEmails, setSentRecoveryEmails] = useState(() => {
+    try {
+      const saved = localStorage.getItem('ifooty_sent_recovery_emails');
+      return saved ? JSON.parse(saved) : {};
+    } catch (e) {
+      return {};
+    }
+  });
   const [toast, setToast] = useState({ show: false, message: '', type: 'success' });
 
   const showToast = (message, type = 'success') => {
@@ -892,6 +900,10 @@ const Admin = () => {
       });
       const data = await res.json();
       if (res.ok && data.success) {
+        const nowStr = new Date().toLocaleDateString('pt-BR') + ' às ' + new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+        const newSent = { ...sentRecoveryEmails, [customer.id]: nowStr };
+        setSentRecoveryEmails(newSent);
+        localStorage.setItem('ifooty_sent_recovery_emails', JSON.stringify(newSent));
         showAlert("Sucesso!", `E-mail de recuperação enviado para ${customer.email} com sucesso.`);
       } else {
         showAlert("Erro no Envio", data.error?.message || data.error || "Ocorreu um erro ao processar o envio do e-mail.");
@@ -4064,32 +4076,46 @@ const Admin = () => {
                               </div>
 
                               <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '1rem', alignItems: 'center', flexWrap: 'wrap' }}>
-                                {customer.cart && Array.isArray(customer.cart) && customer.cart.length > 0 && (
-                                  <button
-                                    onClick={async (e) => {
-                                      e.stopPropagation();
-                                      await handleSendAbandonedCartEmail(customer);
-                                    }}
-                                    style={{
-                                      display: 'flex',
-                                      alignItems: 'center',
-                                      gap: '0.5rem',
-                                      background: '#CCFF00',
-                                      color: '#000000',
-                                      border: 'none',
-                                      padding: '0.6rem 1.2rem',
-                                      borderRadius: '6px',
-                                      fontWeight: 800,
-                                      cursor: 'pointer',
-                                      transition: 'all 0.2s',
-                                      boxShadow: '0 4px 15px rgba(204, 255, 0, 0.2)'
-                                    }}
-                                    onMouseEnter={(e) => e.currentTarget.style.opacity = 0.9}
-                                    onMouseLeave={(e) => e.currentTarget.style.opacity = 1}
-                                  >
-                                    <Send size={16} /> Enviar E-mail de Recuperação
-                                  </button>
-                                )}
+                                {customer.cart && Array.isArray(customer.cart) && customer.cart.length > 0 && (() => {
+                                  const sentAt = sentRecoveryEmails[customer.id];
+                                  return (
+                                    <button
+                                      onClick={async (e) => {
+                                        e.stopPropagation();
+                                        if (sentAt) {
+                                          const confirmSend = window.confirm(`Você já enviou um e-mail de recuperação para este cliente em ${sentAt}. Deseja enviar novamente?`);
+                                          if (!confirmSend) return;
+                                        }
+                                        await handleSendAbandonedCartEmail(customer);
+                                      }}
+                                      style={{
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        gap: '0.5rem',
+                                        background: sentAt ? 'rgba(255,255,255,0.05)' : '#CCFF00',
+                                        color: sentAt ? 'var(--text-muted)' : '#000000',
+                                        border: sentAt ? '1px solid var(--border-color)' : 'none',
+                                        padding: '0.6rem 1.2rem',
+                                        borderRadius: '6px',
+                                        fontWeight: 800,
+                                        cursor: 'pointer',
+                                        transition: 'all 0.2s',
+                                        boxShadow: sentAt ? 'none' : '0 4px 15px rgba(204, 255, 0, 0.2)'
+                                      }}
+                                      onMouseEnter={(e) => {
+                                        if (sentAt) e.currentTarget.style.background = 'rgba(255,255,255,0.1)';
+                                        else e.currentTarget.style.opacity = 0.9;
+                                      }}
+                                      onMouseLeave={(e) => {
+                                        if (sentAt) e.currentTarget.style.background = 'rgba(255,255,255,0.05)';
+                                        else e.currentTarget.style.opacity = 1;
+                                      }}
+                                    >
+                                      {sentAt ? <Check size={16} color="#10B981" /> : <Send size={16} />}
+                                      {sentAt ? `Recuperação Enviada (${sentAt.split(' às ')[0]})` : 'Enviar E-mail de Recuperação'}
+                                    </button>
+                                  );
+                                })()}
                                 <button
                                   onClick={(e) => { e.stopPropagation(); setOrderFilter(customer.id); setSupplierTab('PEDIDOS'); }}
                                   style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', background: 'rgba(255,255,255,0.05)', color: '#fff', border: '1px solid var(--border-color)', padding: '0.6rem 1.2rem', borderRadius: '6px', fontWeight: 700, cursor: 'pointer', transition: 'all 0.2s' }}
