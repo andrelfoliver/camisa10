@@ -3971,7 +3971,14 @@ const Admin = () => {
                             }}
                           >
                             <img src={customer.avatar_url || 'https://via.placeholder.com/40'} alt="" style={{ width: '32px', height: '32px', borderRadius: '50%', border: '1px solid rgba(255,255,255,0.1)' }} />
-                            <span style={{ fontWeight: 700, color: '#fff' }}>{customer.full_name || 'Usuário'}</span>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap' }}>
+                              <span style={{ fontWeight: 700, color: '#fff' }}>{customer.full_name || 'Usuário'}</span>
+                              {customer.cart && Array.isArray(customer.cart) && customer.cart.length > 0 && (
+                                <span style={{ fontSize: '0.65rem', background: 'rgba(239, 68, 68, 0.15)', color: '#FF4D4D', border: '1px solid rgba(239, 68, 68, 0.3)', padding: '2px 6px', borderRadius: '4px', fontWeight: 800 }} title="Possui produtos no carrinho atualmente">
+                                  Sacola Ativa ({customer.cart.reduce((sum, item) => sum + (item.quantity || 1), 0)})
+                                </span>
+                              )}
+                            </div>
                             <span style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>{customer.email}</span>
                             <div>
                               <span style={{ fontSize: '0.7rem', background: 'var(--accent-color)', color: '#000', padding: '2px 8px', borderRadius: '4px', fontWeight: 900 }}>{customerOrders.length}</span>
@@ -3990,30 +3997,55 @@ const Admin = () => {
                               border: '1px solid var(--accent-color)',
                               borderTop: 'none',
                               display: 'flex',
-                              justifyContent: 'space-between',
-                              alignItems: 'center',
+                              flexDirection: 'column',
+                              gap: '1.5rem',
                               animation: 'slideDown 0.3s ease-out'
                             }}>
-                              <div>
-                                <p style={{ fontSize: '0.7rem', color: 'var(--text-muted)', fontWeight: 800, textTransform: 'uppercase', marginBottom: '0.5rem' }}>Endereço Registrado</p>
-                                {customer.street ? (
-                                  <div style={{ fontSize: '0.85rem', color: '#fff' }}>
-                                    <p>{customer.street}{customer.apartment ? `, Apt ${customer.apartment}` : ''}</p>
-                                    <p>{customer.city}, {customer.province} {customer.postal_code}</p>
-                                  </div>
-                                ) : (
-                                  <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', fontStyle: 'italic' }}>Nenhum endereço cadastrado para este perfil.</p>
-                                )}
+                              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '1.5rem' }}>
+                                <div style={{ flex: 1, minWidth: '250px' }}>
+                                  <p style={{ fontSize: '0.7rem', color: 'var(--text-muted)', fontWeight: 800, textTransform: 'uppercase', marginBottom: '0.5rem' }}>Endereço Registrado</p>
+                                  {customer.street ? (
+                                    <div style={{ fontSize: '0.85rem', color: '#fff' }}>
+                                      <p>{customer.street}{customer.apartment ? `, Apt ${customer.apartment}` : ''}</p>
+                                      <p>{customer.city}, {customer.province} {customer.postal_code}</p>
+                                    </div>
+                                  ) : (
+                                    <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', fontStyle: 'italic' }}>Nenhum endereço cadastrado para este perfil.</p>
+                                  )}
+                                </div>
+
+                                <div style={{ flex: 1, minWidth: '300px' }}>
+                                  <p style={{ fontSize: '0.7rem', color: 'var(--text-muted)', fontWeight: 800, textTransform: 'uppercase', marginBottom: '0.5rem' }}>Sacola / Carrinho Ativo</p>
+                                  {customer.cart && Array.isArray(customer.cart) && customer.cart.length > 0 ? (
+                                    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                                      {customer.cart.map((item, idx) => (
+                                        <div key={idx} style={{ display: 'flex', alignItems: 'center', gap: '0.8rem', background: 'rgba(255,255,255,0.03)', padding: '0.5rem 0.8rem', borderRadius: '6px', border: '1px solid rgba(255,255,255,0.05)' }}>
+                                          <img src={item.image} alt="" style={{ width: '30px', height: '30px', objectFit: 'contain', background: 'rgba(255,255,255,0.05)', borderRadius: '4px' }} />
+                                          <div style={{ flex: 1 }}>
+                                            <p style={{ fontSize: '0.8rem', color: '#fff', fontWeight: 700, margin: 0 }}>{item.name}</p>
+                                            <p style={{ fontSize: '0.7rem', color: 'var(--text-muted)', margin: 0 }}>
+                                              Tam: <span style={{ color: 'var(--accent-color)', fontWeight: 800 }}>{item.size}</span> | Qtd: {item.quantity} | Preço: ${item.price?.toFixed(2)}
+                                            </p>
+                                          </div>
+                                        </div>
+                                      ))}
+                                    </div>
+                                  ) : (
+                                    <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', fontStyle: 'italic' }}>Nenhum produto no carrinho atualmente.</p>
+                                  )}
+                                </div>
                               </div>
 
-                              <button
-                                onClick={(e) => { e.stopPropagation(); setOrderFilter(customer.id); setSupplierTab('PEDIDOS'); }}
-                                style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', background: 'rgba(255,255,255,0.05)', color: '#fff', border: '1px solid var(--border-color)', padding: '0.6rem 1.2rem', borderRadius: '6px', fontWeight: 700, cursor: 'pointer', transition: 'all 0.2s' }}
-                                onMouseEnter={(e) => e.currentTarget.style.background = 'rgba(255,255,255,0.1)'}
-                                onMouseLeave={(e) => e.currentTarget.style.background = 'rgba(255,255,255,0.05)'}
-                              >
-                                <ExternalLink size={16} /> Ver Histórico de Pedidos
-                              </button>
+                              <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
+                                <button
+                                  onClick={(e) => { e.stopPropagation(); setOrderFilter(customer.id); setSupplierTab('PEDIDOS'); }}
+                                  style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', background: 'rgba(255,255,255,0.05)', color: '#fff', border: '1px solid var(--border-color)', padding: '0.6rem 1.2rem', borderRadius: '6px', fontWeight: 700, cursor: 'pointer', transition: 'all 0.2s' }}
+                                  onMouseEnter={(e) => e.currentTarget.style.background = 'rgba(255,255,255,0.1)'}
+                                  onMouseLeave={(e) => e.currentTarget.style.background = 'rgba(255,255,255,0.05)'}
+                                >
+                                  <ExternalLink size={16} /> Ver Histórico de Pedidos
+                                </button>
+                              </div>
                             </div>
                           )}
                         </div>
