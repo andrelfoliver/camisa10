@@ -106,7 +106,7 @@ export const translations = {
       },
       {
         question: 'Posso trocar se o tamanho não servir?',
-        answer: 'Sim, em até 7 dias após o recebimento, desde que a etiqueta esteja fixada e a camisa não tenha sido usada ou lavada. Por ser erro de escolha, os custos de frete (devolução e reenvio) são por conta do comprador. Por isso, confira sempre a tabela de medidas antes de comprar.'
+        answer: 'Não. A troca só acontece por defeito de fábrica. Por ser erro de escolha, a camisa não pode ser trocada. Por isso, confira sempre a tabela de medidas antes de comprar.'
       },
       {
         question: 'E se o produto vier com defeito?',
@@ -404,7 +404,7 @@ export const translations = {
       },
       {
         question: 'Can I exchange it if the size doesn’t fit?',
-        answer: 'Yes, within 7 days of receipt, provided the tag is attached and the jersey has not been used or washed. As it is a choice error, shipping costs (return and resend) are the responsibility of the buyer. Therefore, always check the size guide before buying.'
+        answer: 'No. Exchanges only happen due to manufacturing defects. As it is a choice error, the jersey cannot be exchanged. Therefore, always check the size guide before buying.'
       },
       {
         question: 'What if the product comes with a defect?',
