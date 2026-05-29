@@ -3448,6 +3448,9 @@ const Admin = () => {
               if (statusFilter === 'all') {
                 return o.status !== 'completed' && o.status !== 'cancelled';
               }
+              if (statusFilter === 'pending') {
+                return o.status === 'pending' || o.status === 'paid';
+              }
               return o.status === statusFilter;
             });
 
@@ -3594,15 +3597,7 @@ const Admin = () => {
                     style={{ padding: '0.8rem', borderRadius: '12px', borderLeft: '4px solid #FFB81C', cursor: 'pointer', opacity: statusFilter === 'pending' ? 1 : 0.7 }}
                   >
                     <p style={{ fontSize: '0.6rem', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: 800 }}>Novos</p>
-                    <h3 style={{ fontSize: '1.2rem', color: '#fff', margin: 0 }}>{stats.countPending}</h3>
-                  </div>
-                  <div 
-                    onClick={() => setStatusFilter('paid')}
-                    className="glass-panel" 
-                    style={{ padding: '0.8rem', borderRadius: '12px', borderLeft: '4px solid #0070BA', cursor: 'pointer', opacity: statusFilter === 'paid' ? 1 : 0.7 }}
-                  >
-                    <p style={{ fontSize: '0.6rem', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: 800 }}>Pagos</p>
-                    <h3 style={{ fontSize: '1.2rem', color: '#fff', margin: 0 }}>{stats.countPaid}</h3>
+                    <h3 style={{ fontSize: '1.2rem', color: '#fff', margin: 0 }}>{stats.countPending + stats.countPaid}</h3>
                   </div>
                   <div 
                     onClick={() => setStatusFilter('processing')}
