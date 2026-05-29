@@ -3852,7 +3852,7 @@ const Admin = () => {
                                 style={{ width: '100%', padding: '0.6rem', background: 'var(--bg-color)', color: '#fff', border: '1px solid var(--border-color)', borderRadius: '6px' }}
                               >
                                 <option value="pending">🟡 Pendente</option>
-                                <option value="paid">💳 Pago (PayPal)</option>
+                                <option value="paid">💳 Pago</option>
                                 <option value="processing">🔵 Preparando</option>
                                 <option value="shipped">🟢 Enviado</option>
                                 <option value="completed">✅ Finalizado</option>
