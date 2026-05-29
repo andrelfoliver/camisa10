@@ -125,6 +125,7 @@ const Profile = () => {
   const getStatusLabel = (status) => {
     const map = {
       pending: t('profile_status_pending'),
+      paid: t('profile_status_paid'),
       processing: t('profile_status_processing'),
       shipped: t('profile_status_shipped'),
       completed: t('profile_status_completed'),

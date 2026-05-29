@@ -374,7 +374,7 @@ const Admin = () => {
 
         // Trigger Welcome Popup for Manager
         if (!welcomeTriggered && user?.email === 'camisadez085@gmail.com') {
-          const pendingCount = data.filter(o => o.status === 'pending').length;
+          const pendingCount = data.filter(o => o.status === 'pending' || o.status === 'paid').length;
           if (pendingCount > 0) {
             setShowWelcomePopup(true);
             setWelcomeTriggered(true);
@@ -813,11 +813,13 @@ const Admin = () => {
     }
 
     // 2. Sincronização de Estoque Automática
-    if (newStatus === 'processing' || newStatus === 'cancelled') {
-      const order = orders.find(o => o.id === orderId);
-      if (order && order.items) {
-        const isCancellation = newStatus === 'cancelled';
-        
+    const order = orders.find(o => o.id === orderId);
+    if (order && order.items) {
+      const previousStatus = order.status;
+      const shouldAddStock = previousStatus !== 'cancelled' && newStatus === 'cancelled';
+      const shouldSubtractStock = previousStatus === 'cancelled' && newStatus !== 'cancelled';
+
+      if (shouldAddStock || shouldSubtractStock) {
         for (const item of order.items) {
           try {
             const { data: product, error: fetchError } = await supabase
@@ -829,9 +831,8 @@ const Admin = () => {
             if (!fetchError && product && product.inventory) {
               const currentStock = product.inventory[item.size] || 0;
               
-              // Se for cancelamento, SOMA. Se for preparando, SUBTRAI.
               const qtyChange = (item.quantity || 1);
-              const newStock = isCancellation 
+              const newStock = shouldAddStock 
                 ? currentStock + qtyChange 
                 : Math.max(0, currentStock - qtyChange);
               
@@ -848,7 +849,7 @@ const Admin = () => {
           }
         }
         
-        const msg = isCancellation 
+        const msg = shouldAddStock 
           ? "Pedido cancelado e itens devolvidos ao estoque!" 
           : "Status atualizado e estoque sincronizado!";
         showAlert("Sucesso", msg);
@@ -3474,6 +3475,7 @@ const Admin = () => {
               if (order.status === 'completed') acc.countCompleted++;
               if (order.status === 'cancelled') acc.countCancelled++;
               if (order.status === 'pending') acc.countPending++;
+              if (order.status === 'paid') acc.countPaid++;
               if (order.status === 'processing') acc.countProcessing++;
 
               if (!isCancelled) {
@@ -3506,7 +3508,7 @@ const Admin = () => {
               return acc;
             }, { 
               totalRevenue: 0, totalCostCAD: 0, totalCostUSD: 0, totalJerseys: 0,
-              countShipped: 0, countCompleted: 0, countCancelled: 0, countPending: 0, countProcessing: 0
+              countShipped: 0, countCompleted: 0, countCancelled: 0, countPending: 0, countPaid: 0, countProcessing: 0
             });
 
             const totalProfit = stats.totalRevenue - stats.totalCostCAD;
@@ -3595,6 +3597,14 @@ const Admin = () => {
                     <h3 style={{ fontSize: '1.2rem', color: '#fff', margin: 0 }}>{stats.countPending}</h3>
                   </div>
                   <div 
+                    onClick={() => setStatusFilter('paid')}
+                    className="glass-panel" 
+                    style={{ padding: '0.8rem', borderRadius: '12px', borderLeft: '4px solid #0070BA', cursor: 'pointer', opacity: statusFilter === 'paid' ? 1 : 0.7 }}
+                  >
+                    <p style={{ fontSize: '0.6rem', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: 800 }}>Pagos</p>
+                    <h3 style={{ fontSize: '1.2rem', color: '#fff', margin: 0 }}>{stats.countPaid}</h3>
+                  </div>
+                  <div 
                     onClick={() => setStatusFilter('processing')}
                     className="glass-panel" 
                     style={{ padding: '0.8rem', borderRadius: '12px', borderLeft: '4px solid #3B82F6', cursor: 'pointer', opacity: statusFilter === 'processing' ? 1 : 0.7 }}
@@ -3667,6 +3677,7 @@ const Admin = () => {
                     const isExpanded = expandedOrderId === order.id;
                     const statusColors = {
                       pending: '#FFB81C',
+                      paid: '#0070BA',
                       processing: '#3B82F6',
                       shipped: '#10B981',
                       completed: '#A855F7',
@@ -3674,6 +3685,7 @@ const Admin = () => {
                     };
                     const statusLabels = {
                       pending: 'Pendente',
+                      paid: 'Pago',
                       processing: 'Preparando',
                       shipped: 'Enviado',
                       completed: 'Finalizado',
@@ -3840,6 +3852,7 @@ const Admin = () => {
                                 style={{ width: '100%', padding: '0.6rem', background: 'var(--bg-color)', color: '#fff', border: '1px solid var(--border-color)', borderRadius: '6px' }}
                               >
                                 <option value="pending">🟡 Pendente</option>
+                                <option value="paid">💳 Pago (PayPal)</option>
                                 <option value="processing">🔵 Preparando</option>
                                 <option value="shipped">🟢 Enviado</option>
                                 <option value="completed">✅ Finalizado</option>
@@ -5238,7 +5251,7 @@ const Admin = () => {
             </div>
             <h2 style={{ fontSize: '2rem', marginBottom: '1rem', color: '#fff' }}>Olá, Gestor! 👋</h2>
             <p style={{ color: 'var(--text-muted)', fontSize: '1.1rem', lineHeight: 1.6, marginBottom: '2rem' }}>
-              Identificamos <strong style={{ color: 'var(--accent-color)' }}>{orders.filter(o => o.status === 'pending').length} novos pedidos</strong> aguardando atenção. Vamos despachar esses mantos?
+              Identificamos <strong style={{ color: 'var(--accent-color)' }}>{orders.filter(o => o.status === 'pending' || o.status === 'paid').length} novos pedidos</strong> aguardando atenção. Vamos despachar esses mantos?
             </p>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
               <button
