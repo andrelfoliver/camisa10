@@ -44,6 +44,7 @@ const Admin = () => {
   const [editingProduct, setEditingProduct] = useState(null);
   const [teams, setTeams] = useState([]);
   const [editingTeam, setEditingTeam] = useState(null);
+  const [newTeam, setNewTeam] = useState({ name: '', league: 'Seleções', logo: '' });
   const [editingTestimonial, setEditingTestimonial] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [stockSubTab, setStockSubTab] = useState('ADULTO');
@@ -294,6 +295,32 @@ const Admin = () => {
         }
       }
     );
+  };
+
+  const handleCreateTeam = async (e) => {
+    e.preventDefault();
+    if (!newTeam.name.trim()) return;
+
+    try {
+      const { data, error } = await supabase
+        .from('teams')
+        .insert([{
+          name: newTeam.name.trim(),
+          league: newTeam.league,
+          logo: newTeam.logo.trim() || 'https://via.placeholder.com/150'
+        }])
+        .select();
+
+      if (error) {
+        showAlert('Erro', `Não foi possível cadastrar o time: ${error.message}`);
+      } else {
+        showAlert('Sucesso', `Time "${newTeam.name}" cadastrado com sucesso!`);
+        setTeams(prev => [...prev, data[0]].sort((a, b) => a.name.localeCompare(b.name)));
+        setNewTeam({ name: '', league: 'Seleções', logo: '' });
+      }
+    } catch (err) {
+      showAlert('Erro', `Erro técnico: ${err.message}`);
+    }
   };
 
   useEffect(() => {
@@ -2200,7 +2227,61 @@ const Admin = () => {
 
               {teams.length > 0 && (
                 <>
-                  <div style={{ background: 'rgba(16, 185, 129, 0.1)', padding: '1.5rem', borderRadius: 'var(--radius-md)', border: '1px solid rgba(16, 185, 129, 0.2)', marginBottom: '1rem' }}>
+                  {/* FORM TO ADD NEW TEAM */}
+                  <div className="glass-panel" style={{ padding: '1.5rem', borderRadius: 'var(--radius-md)', border: '1px solid var(--border-color)', marginBottom: '1.5rem' }}>
+                    <h4 style={{ color: '#fff', fontSize: '1.1rem', marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                      <Plus size={18} color="var(--accent-color)" /> Cadastrar Novo Time / Seleção
+                    </h4>
+                    <form onSubmit={handleCreateTeam} style={{ display: 'flex', gap: '1rem', alignItems: 'flex-end', flexWrap: 'wrap' }}>
+                      <div style={{ flex: '1 1 200px' }}>
+                        <label style={{ display: 'block', fontSize: '0.75rem', color: 'var(--text-muted)', marginBottom: '0.4rem' }}>Nome do Time/Seleção</label>
+                        <input
+                          type="text"
+                          required
+                          placeholder="Ex: Colômbia"
+                          value={newTeam.name}
+                          onChange={e => setNewTeam({ ...newTeam, name: e.target.value })}
+                          style={{ width: '100%', padding: '0.6rem', background: '#000', border: '1px solid var(--border-color)', borderRadius: '6px', color: '#fff' }}
+                        />
+                      </div>
+                      <div style={{ flex: '1 1 150px' }}>
+                        <label style={{ display: 'block', fontSize: '0.75rem', color: 'var(--text-muted)', marginBottom: '0.4rem' }}>Liga / Categoria</label>
+                        <select
+                          required
+                          value={newTeam.league}
+                          onChange={e => setNewTeam({ ...newTeam, league: e.target.value })}
+                          style={{ width: '100%', padding: '0.6rem', background: '#000', border: '1px solid var(--border-color)', borderRadius: '6px', color: '#fff' }}
+                        >
+                          <option value="Seleções">Seleções</option>
+                          <option value="Brasileirão">Brasileirão</option>
+                          <option value="La Liga">La Liga</option>
+                          <option value="Premier League">Premier League</option>
+                          <option value="Serie A">Serie A</option>
+                          <option value="Ligue 1">Ligue 1</option>
+                          <option value="Bundesliga">Bundesliga</option>
+                          <option value="Liga Profesional">Liga Profesional</option>
+                          <option value="Saudi Pro League">Saudi Pro League</option>
+                          <option value="MLS">MLS</option>
+                          <option value="Outras Ligas / Outros">Outras Ligas / Outros</option>
+                        </select>
+                      </div>
+                      <div style={{ flex: '2 1 250px' }}>
+                        <label style={{ display: 'block', fontSize: '0.75rem', color: 'var(--text-muted)', marginBottom: '0.4rem' }}>URL do Escudo (Logo)</label>
+                        <input
+                          type="url"
+                          placeholder="https://..."
+                          value={newTeam.logo}
+                          onChange={e => setNewTeam({ ...newTeam, logo: e.target.value })}
+                          style={{ width: '100%', padding: '0.6rem', background: '#000', border: '1px solid var(--border-color)', borderRadius: '6px', color: '#fff' }}
+                        />
+                      </div>
+                      <button type="submit" className="btn-primary" style={{ padding: '0.6rem 1.5rem', background: 'var(--accent-color)', color: '#000', fontWeight: 800, borderRadius: '6px', height: 'fit-content' }}>
+                        Salvar Time
+                      </button>
+                    </form>
+                  </div>
+
+                  <div style={{ background: 'rgba(16, 185, 129, 0.1)', padding: '1.5rem', borderRadius: 'var(--radius-md)', border: '1px solid rgba(16, 185, 129, 0.2)', marginBottom: '1.5rem' }}>
                     <p style={{ color: '#10B981', fontSize: '0.9rem', margin: 0 }}>
                       <strong>Dica Profissional:</strong> Você pode usar URLs da Wikipedia (Wikimedia) ou subir seus próprios logos no Storage. Os logos aqui definidos aparecem nos filtros e carrosséis da loja.
                     </p>

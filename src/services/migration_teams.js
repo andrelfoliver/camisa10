@@ -126,7 +126,16 @@ export async function migrateTeamsToSupabase() {
         { name: 'Espanha', league: 'Seleções', logo: 'https://images.weserv.nl/?url=upload.wikimedia.org/wikipedia/en/thumb/3/31/Spain_National_Football_Team_badge.svg/200px-Spain_National_Football_Team_badge.svg.png' },
         { name: 'Inglaterra', league: 'Seleções', logo: 'https://images.weserv.nl/?url=upload.wikimedia.org/wikipedia/en/thumb/8/8b/England_national_football_team_crest.svg/200px-England_national_football_team_crest.svg.png' },
         { name: 'Itália', league: 'Seleções', logo: 'https://images.weserv.nl/?url=upload.wikimedia.org/wikipedia/en/thumb/1/1c/Italy_national_football_team_crest.svg/200px-Italy_national_football_team_crest.svg.png' },
-        { name: 'Uruguai', league: 'Seleções', logo: 'https://images.weserv.nl/?url=upload.wikimedia.org/wikipedia/en/thumb/c/c1/Uruguay_football_association.svg/200px-Uruguay_football_association.svg.png' }
+        { name: 'Uruguai', league: 'Seleções', logo: 'https://images.weserv.nl/?url=upload.wikimedia.org/wikipedia/en/thumb/c/c1/Uruguay_football_association.svg/200px-Uruguay_football_association.svg.png' },
+        { name: 'Colômbia', league: 'Seleções', logo: 'https://images.weserv.nl/?url=upload.wikimedia.org/wikipedia/commons/thumb/e/e9/FCF-Logo-2023.svg/200px-FCF-Logo-2023.svg.png' },
+        { name: 'Holanda', league: 'Seleções', logo: 'https://images.weserv.nl/?url=upload.wikimedia.org/wikipedia/en/thumb/7/78/Netherlands_national_football_team_crest.svg/200px-Netherlands_national_football_team_crest.svg.png' },
+        { name: 'Bélgica', league: 'Seleções', logo: 'https://images.weserv.nl/?url=upload.wikimedia.org/wikipedia/en/thumb/e/e5/Royal_Belgian_FA_logo.svg/200px-Royal_Belgian_FA_logo.svg.png' },
+        { name: 'Japão', league: 'Seleções', logo: 'https://images.weserv.nl/?url=upload.wikimedia.org/wikipedia/en/thumb/8/8d/Japan_national_football_team_crest.svg/200px-Japan_national_football_team_crest.svg.png' },
+        { name: 'Croácia', league: 'Seleções', logo: 'https://images.weserv.nl/?url=upload.wikimedia.org/wikipedia/en/thumb/e/e5/Croatia_national_football_team_crest.svg/200px-Croatia_national_football_team_crest.svg.png' },
+        { name: 'Marrocos', league: 'Seleções', logo: 'https://images.weserv.nl/?url=upload.wikimedia.org/wikipedia/commons/thumb/c/c2/Morocco_national_football_team_crest.svg/200px-Morocco_national_football_team_crest.svg.png' },
+        { name: 'Estados Unidos', league: 'Seleções', logo: 'https://images.weserv.nl/?url=upload.wikimedia.org/wikipedia/commons/thumb/8/86/U.S._Soccer_federation_logo.svg/200px-U.S._Soccer_federation_logo.svg.png' },
+        { name: 'Canadá', league: 'Seleções', logo: 'https://images.weserv.nl/?url=upload.wikimedia.org/wikipedia/en/thumb/b/b3/Canada_Soccer_logo.svg/200px-Canada_Soccer_logo.svg.png' },
+        { name: 'México', league: 'Seleções', logo: 'https://images.weserv.nl/?url=upload.wikimedia.org/wikipedia/commons/thumb/c/cd/Mexico_national_football_team_crest_2021.svg/200px-Mexico_national_football_team_crest_2021.svg.png' }
     ];
 
     let successCount = 0;
