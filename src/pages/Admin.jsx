@@ -45,6 +45,10 @@ const Admin = () => {
   const [teams, setTeams] = useState([]);
   const [editingTeam, setEditingTeam] = useState(null);
   const [newTeam, setNewTeam] = useState({ name: '', league: 'Seleções', logo: '' });
+  const [newTeamSearch, setNewTeamSearch] = useState('');
+  const [showNewTeamSuggestions, setShowNewTeamSuggestions] = useState(false);
+  const [editTeamSearch, setEditTeamSearch] = useState('');
+  const [showEditTeamSuggestions, setShowEditTeamSuggestions] = useState(false);
   const [editingTestimonial, setEditingTestimonial] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [stockSubTab, setStockSubTab] = useState('ADULTO');
@@ -322,6 +326,26 @@ const Admin = () => {
       showAlert('Erro', `Erro técnico: ${err.message}`);
     }
   };
+
+  useEffect(() => {
+    setNewTeamSearch(newProduct.team || '');
+  }, [newProduct.team]);
+
+  useEffect(() => {
+    setEditTeamSearch(editingProduct?.team || '');
+  }, [editingProduct?.team]);
+
+  const filteredNewTeams = teams.filter(team => {
+    const matchesLeague = !newProduct?.league || team.league === newProduct.league;
+    const matchesSearch = team.name.toLowerCase().includes((newTeamSearch || '').toLowerCase());
+    return matchesLeague && matchesSearch;
+  });
+
+  const filteredEditTeams = teams.filter(team => {
+    const matchesLeague = !editingProduct?.league || team.league === editingProduct.league;
+    const matchesSearch = team.name.toLowerCase().includes((editTeamSearch || '').toLowerCase());
+    return matchesLeague && matchesSearch;
+  });
 
   useEffect(() => {
     // As configurações agora são carregadas via loadSettings() do Supabase
@@ -4596,21 +4620,70 @@ const Admin = () => {
                     ))}
                   </select>
                 </div>
-                <div style={{ flex: 1 }}>
+                <div style={{ flex: 1, position: 'relative' }}>
                   <label style={{ display: 'block', marginBottom: '0.5rem', color: 'var(--text-muted)', fontSize: '0.9rem' }}>Time</label>
-                  <select
-                    value={newProduct.team}
-                    onChange={e => setNewProduct({ ...newProduct, team: e.target.value })}
+                  <input
+                    type="text"
+                    placeholder="Buscar ou digitar time..."
+                    value={newTeamSearch}
+                    onFocus={() => setShowNewTeamSuggestions(true)}
+                    onBlur={() => setTimeout(() => setShowNewTeamSuggestions(false), 200)}
+                    onChange={e => {
+                      setNewTeamSearch(e.target.value);
+                      setNewProduct({ ...newProduct, team: e.target.value });
+                    }}
                     style={{ width: '100%', padding: '0.8rem 1rem', background: 'var(--bg-color)', color: '#fff', border: '1px solid var(--border-color)', borderRadius: 'var(--radius-sm)' }}
-                  >
-                    <option value="">Nacional / Outros</option>
-                    {teams
-                      .filter(team => !newProduct.league || team.league === newProduct.league)
-                      .map(team => (
-                        <option key={team.id} value={team.name}>{team.name}</option>
-                      ))
-                    }
-                  </select>
+                  />
+                  {showNewTeamSuggestions && (
+                    <div style={{
+                      position: 'absolute',
+                      top: '100%',
+                      left: 0,
+                      right: 0,
+                      background: 'var(--surface-color)',
+                      border: '1px solid var(--border-color)',
+                      borderRadius: 'var(--radius-sm)',
+                      maxHeight: '200px',
+                      overflowY: 'auto',
+                      zIndex: 1000,
+                      marginTop: '4px',
+                      boxShadow: '0 10px 25px rgba(0,0,0,0.5)'
+                    }}>
+                      <div
+                        onClick={() => {
+                          setNewTeamSearch('');
+                          setNewProduct({ ...newProduct, team: '' });
+                          setShowNewTeamSuggestions(false);
+                        }}
+                        style={{ padding: '0.8rem 1rem', cursor: 'pointer', borderBottom: '1px solid rgba(255,255,255,0.05)', color: 'var(--text-muted)', transition: 'background 0.2s' }}
+                        onMouseEnter={e => e.currentTarget.style.background = 'rgba(255,255,255,0.05)'}
+                        onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
+                      >
+                        Nacional / Outros (Limpar)
+                      </div>
+                      {filteredNewTeams.map(team => (
+                        <div
+                          key={team.id}
+                          onClick={() => {
+                            setNewTeamSearch(team.name);
+                            setNewProduct({ ...newProduct, team: team.name });
+                            setShowNewTeamSuggestions(false);
+                          }}
+                          style={{ padding: '0.8rem 1rem', cursor: 'pointer', borderBottom: '1px solid rgba(255,255,255,0.05)', color: '#fff', display: 'flex', alignItems: 'center', gap: '0.8rem', transition: 'background 0.2s' }}
+                          onMouseEnter={e => e.currentTarget.style.background = 'rgba(255,255,255,0.05)'}
+                          onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
+                        >
+                          <img src={team.logo} alt="" style={{ width: '20px', height: '20px', objectFit: 'contain' }} />
+                          <span>{team.name}</span>
+                        </div>
+                      ))}
+                      {filteredNewTeams.length === 0 && (
+                        <div style={{ padding: '0.8rem 1rem', color: 'var(--text-muted)', fontStyle: 'italic' }}>
+                          Nenhum time encontrado (será salvo como customizado)
+                        </div>
+                      )}
+                    </div>
+                  )}
                 </div>
               </div>
 
@@ -4988,21 +5061,70 @@ const Admin = () => {
                     ))}
                   </select>
                 </div>
-                <div style={{ flex: 1 }}>
+                <div style={{ flex: 1, position: 'relative' }}>
                   <label style={{ display: 'block', marginBottom: '0.5rem', color: 'var(--text-muted)', fontSize: '0.9rem' }}>Time</label>
-                  <select
-                    value={editingProduct.team}
-                    onChange={e => setEditingProduct({ ...editingProduct, team: e.target.value })}
+                  <input
+                    type="text"
+                    placeholder="Buscar ou digitar time..."
+                    value={editTeamSearch}
+                    onFocus={() => setShowEditTeamSuggestions(true)}
+                    onBlur={() => setTimeout(() => setShowEditTeamSuggestions(false), 200)}
+                    onChange={e => {
+                      setEditTeamSearch(e.target.value);
+                      setEditingProduct({ ...editingProduct, team: e.target.value });
+                    }}
                     style={{ width: '100%', padding: '0.8rem 1rem', background: 'var(--bg-color)', color: '#fff', border: '1px solid var(--border-color)', borderRadius: 'var(--radius-sm)' }}
-                  >
-                    <option value="">Nacional / Outros</option>
-                    {teams
-                      .filter(team => !editingProduct.league || team.league === editingProduct.league)
-                      .map(team => (
-                        <option key={team.id} value={team.name}>{team.name}</option>
-                      ))
-                    }
-                  </select>
+                  />
+                  {showEditTeamSuggestions && (
+                    <div style={{
+                      position: 'absolute',
+                      top: '100%',
+                      left: 0,
+                      right: 0,
+                      background: 'var(--surface-color)',
+                      border: '1px solid var(--border-color)',
+                      borderRadius: 'var(--radius-sm)',
+                      maxHeight: '200px',
+                      overflowY: 'auto',
+                      zIndex: 1000,
+                      marginTop: '4px',
+                      boxShadow: '0 10px 25px rgba(0,0,0,0.5)'
+                    }}>
+                      <div
+                        onClick={() => {
+                          setEditTeamSearch('');
+                          setEditingProduct({ ...editingProduct, team: '' });
+                          setShowEditTeamSuggestions(false);
+                        }}
+                        style={{ padding: '0.8rem 1rem', cursor: 'pointer', borderBottom: '1px solid rgba(255,255,255,0.05)', color: 'var(--text-muted)', transition: 'background 0.2s' }}
+                        onMouseEnter={e => e.currentTarget.style.background = 'rgba(255,255,255,0.05)'}
+                        onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
+                      >
+                        Nacional / Outros (Limpar)
+                      </div>
+                      {filteredEditTeams.map(team => (
+                        <div
+                          key={team.id}
+                          onClick={() => {
+                            setEditTeamSearch(team.name);
+                            setEditingProduct({ ...editingProduct, team: team.name });
+                            setShowEditTeamSuggestions(false);
+                          }}
+                          style={{ padding: '0.8rem 1rem', cursor: 'pointer', borderBottom: '1px solid rgba(255,255,255,0.05)', color: '#fff', display: 'flex', alignItems: 'center', gap: '0.8rem', transition: 'background 0.2s' }}
+                          onMouseEnter={e => e.currentTarget.style.background = 'rgba(255,255,255,0.05)'}
+                          onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
+                        >
+                          <img src={team.logo} alt="" style={{ width: '20px', height: '20px', objectFit: 'contain' }} />
+                          <span>{team.name}</span>
+                        </div>
+                      ))}
+                      {filteredEditTeams.length === 0 && (
+                        <div style={{ padding: '0.8rem 1rem', color: 'var(--text-muted)', fontStyle: 'italic' }}>
+                          Nenhum time encontrado (será salvo como customizado)
+                        </div>
+                      )}
+                    </div>
+                  )}
                 </div>
               </div>
 
