@@ -54,7 +54,7 @@ export function AuthProvider({ children }) {
     if (error) throw error;
   };
 
-  const isAdmin = user?.email === ADMIN_EMAIL;
+  const isAdmin = user?.email?.toLowerCase().trim() === ADMIN_EMAIL.toLowerCase().trim();
 
   return (
     <AuthContext.Provider value={{ session, user, loading, isAdmin, signInWithIdToken, signOut }}>

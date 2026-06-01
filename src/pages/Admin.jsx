@@ -424,7 +424,7 @@ const Admin = () => {
         setOrders(data);
 
         // Trigger Welcome Popup for Manager
-        if (!welcomeTriggered && user?.email === 'camisadez085@gmail.com') {
+        if (!welcomeTriggered && user?.email?.toLowerCase().trim() === 'camisadez085@gmail.com') {
           const pendingCount = data.filter(o => o.status === 'pending' || o.status === 'paid').length;
           if (pendingCount > 0) {
             setShowWelcomePopup(true);
