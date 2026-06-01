@@ -1583,6 +1583,35 @@ const Admin = () => {
       return pCat === catTarget;
     });
 
+  if (authLoading) {
+    return (
+      <div style={{ 
+        height: '100vh', 
+        width: '100vw', 
+        background: '#000', 
+        display: 'flex', 
+        alignItems: 'center', 
+        justifyContent: 'center',
+        color: '#fff',
+        fontFamily: 'sans-serif'
+      }}>
+        <div style={{ textAlign: 'center' }}>
+          <div className="spinner" style={{ 
+            width: '40px', 
+            height: '40px', 
+            border: '3px solid rgba(255,255,255,0.1)', 
+            borderTop: '3px solid var(--accent-color, #ccff00)', 
+            borderRadius: '50%', 
+            animation: 'spin 1s linear infinite',
+            margin: '0 auto 1rem'
+          }}></div>
+          <p style={{ opacity: 0.6, fontSize: '0.9rem' }}>Autenticando...</p>
+        </div>
+        <style>{`@keyframes spin { 100% { transform: rotate(360deg); } }`}</style>
+      </div>
+    );
+  }
+
   if (!isAdmin) {
     if (!user) {
       return <Navigate to="/auth" />;
