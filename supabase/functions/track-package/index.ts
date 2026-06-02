@@ -312,6 +312,36 @@ Deno.serve(async (req: Request) => {
 
     const filteredHistory = allEvents.filter((_, idx) => !toRemove.has(idx));
 
+    // Tenta encontrar a cidade a partir do banco de dados (orders) usando a tracking number
+    let dbCity = null;
+    try {
+      const { data: order } = await supabase
+        .from('orders')
+        .select('shipping_address')
+        .ilike('tracking_number', `%${cleanNum}%`)
+        .limit(1)
+        .maybeSingle();
+      if (order && order.shipping_address && typeof order.shipping_address === 'object') {
+        dbCity = order.shipping_address.city || null;
+      }
+    } catch (dbErr) {
+      console.error("Erro ao buscar cidade do pedido no banco:", dbErr);
+    }
+
+    if (cn.trackingData) {
+      cn.trackingData.city = dbCity;
+    } else if (dbCity) {
+      cn.trackingData = { 
+        referenceNo: '', 
+        trackingNumber: cleanNum, 
+        country: 'CA', 
+        date: '', 
+        lastRecord: '', 
+        consigneeName: '',
+        city: dbCity 
+      };
+    }
+
     const finalData = { 
       trackingData: cn.trackingData, 
       history: filteredHistory.sort((a, b) => {

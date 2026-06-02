@@ -123,6 +123,7 @@ const TrackingModal = ({ isOpen, onClose, initialTrackingNumber = '' }) => {
   const [trackingData, setTrackingData] = useState(null);
   const [history, setHistory] = useState([]);
   const [hasCanadaPostData, setHasCanadaPostData] = useState(false);
+  const [orderCity, setOrderCity] = useState(null);
   const fileInputRef = useRef(null);
 
   // Auto-search if initial number is provided
@@ -135,6 +136,7 @@ const TrackingModal = ({ isOpen, onClose, initialTrackingNumber = '' }) => {
       setTrackingData(null);
       setHistory([]);
       setTrackingNumber('');
+      setOrderCity(null);
     }
   }, [isOpen, initialTrackingNumber]);
 
@@ -193,6 +195,23 @@ const TrackingModal = ({ isOpen, onClose, initialTrackingNumber = '' }) => {
       setTrackingData(data.trackingData);
       setHistory(data.history || []);
       setHasCanadaPostData(data.hasCanadaPostData || false);
+      setOrderCity(null);
+
+      // Tenta buscar a cidade do pedido no banco de dados
+      try {
+        const cleanNum = num.trim();
+        const { data: orderData } = await supabase
+          .from('orders')
+          .select('shipping_address')
+          .ilike('tracking_number', `%${cleanNum}%`)
+          .limit(1);
+
+        if (orderData && orderData.length > 0 && orderData[0].shipping_address?.city) {
+          setOrderCity(orderData[0].shipping_address.city);
+        }
+      } catch (err) {
+        console.warn("Não foi possível buscar a cidade na tabela orders:", err);
+      }
       
       if (data.trackingData || (data.history && data.history.length > 0)) {
         saveRecentSearch(num, data.trackingData?.consigneeName);
@@ -270,6 +289,26 @@ const TrackingModal = ({ isOpen, onClose, initialTrackingNumber = '' }) => {
       setOcrLoading(false);
       event.target.value = '';
     }
+  };
+
+  const getDestinationCity = () => {
+    // 1. Se o próprio trackingData já tiver city (retornado pela Edge Function)
+    if (trackingData?.city) return trackingData.city;
+    
+    // 2. Fallback: Procura nos eventos do Canada Post (carrier === 'CA') por uma localização com cidade
+    if (history && history.length > 0) {
+      const localEvent = history.find(item => item.carrier === 'CA' && item.location);
+      if (localEvent) {
+        const parts = localEvent.location.split(',');
+        if (parts.length > 0) {
+          const cityCandidate = parts[0].replace(/[\[\]]/g, '').trim();
+          if (cityCandidate) {
+            return cityCandidate.charAt(0).toUpperCase() + cityCandidate.slice(1).toLowerCase();
+          }
+        }
+      }
+    }
+    return null;
   };
 
   const deliveredEvent = history.find(item => {
@@ -387,7 +426,14 @@ const TrackingModal = ({ isOpen, onClose, initialTrackingNumber = '' }) => {
                 </div>
                 <div>
                   <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)', textTransform: 'uppercase' }}>Destino</span>
-                  <p style={{ margin: 0, fontWeight: 700, color: '#fff' }}><MapPin size={14} style={{ display: 'inline', marginRight: '4px' }}/>{trackingData.country || 'N/A'}</p>
+                  <p style={{ margin: 0, fontWeight: 700, color: '#fff' }}>
+                    <MapPin size={14} style={{ display: 'inline', marginRight: '4px' }}/>
+                    {(() => {
+                      const city = orderCity || getDestinationCity();
+                      const country = trackingData.country || 'CA';
+                      return city ? `${city}, ${country}` : country;
+                    })()}
+                  </p>
                 </div>
                 <div>
                   <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)', textTransform: 'uppercase' }}>Data de Envio</span>
