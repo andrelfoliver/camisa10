@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from '../services/supabase';
 import { useAuth } from '../context/AuthContext';
-import { Save, Check, Crown, Heart, Database, HardDrive, Star, LogOut, Package, Plus, Trash2, Edit, X, Users, Image, DollarSign, MapPin, RefreshCw, Shield, AlertTriangle, MessageSquare, ChevronDown, ChevronUp, MoreHorizontal, ExternalLink, Settings, Tag, TrendingUp, Truck, BarChart, Eye, EyeOff, Send } from 'lucide-react';
+import { Save, Check, Crown, Heart, Database, HardDrive, Star, LogOut, Package, Plus, Trash2, Edit, X, Users, Image, DollarSign, MapPin, RefreshCw, Shield, AlertTriangle, MessageSquare, ChevronDown, ChevronUp, MoreHorizontal, ExternalLink, Settings, Tag, TrendingUp, Truck, BarChart, Eye, EyeOff, Send, Printer } from 'lucide-react';
 import { migrateProductsToSupabase } from '../services/migration';
 import { migrateTeamsToSupabase } from '../services/migration_teams';
 import WhatsAppIcon from '../components/WhatsAppIcon';
@@ -943,6 +943,210 @@ const Admin = () => {
     } catch (e) {
       return null;
     }
+  };
+
+  const handlePrintInvoice = (title, clientInfo, items) => {
+    const printWindow = window.open('', '_blank');
+    if (!printWindow) {
+      showAlert("Erro", "Bloqueador de pop-ups ativado. Por favor, permita pop-ups para gerar a invoice.");
+      return;
+    }
+    
+    const subtotal = items?.reduce((sum, item) => sum + ((item.price || 0) * (item.quantity || 1)), 0) || 0;
+    const total = subtotal;
+
+    const itemsHtml = items?.map((item) => {
+      let desc = `Tamanho: ${item.size}`;
+      if (item.extras?.nameNumber) {
+        desc += ` | Custom: ${item.extras.customName} / ${item.extras.customNumber}`;
+      }
+      if (item.extras?.extraCustomization && item.extras?.customExtraName) {
+        desc += ` | Extra: ${item.extras.customExtraName}`;
+      }
+      return `
+        <tr>
+          <td style="padding: 12px 10px; border-bottom: 1px solid #e5e7eb; font-size: 13px; color: #111827;">${item.name}</td>
+          <td style="padding: 12px 10px; border-bottom: 1px solid #e5e7eb; font-size: 13px; color: #4b5563;">${desc}</td>
+          <td style="padding: 12px 10px; border-bottom: 1px solid #e5e7eb; font-size: 13px; text-align: center; color: #111827;">${Number(item.quantity || 1).toFixed(1)}</td>
+          <td style="padding: 12px 10px; border-bottom: 1px solid #e5e7eb; font-size: 13px; text-align: right; color: #111827;">$${Number(item.price || 0).toFixed(2)}</td>
+          <td style="padding: 12px 10px; border-bottom: 1px solid #e5e7eb; font-size: 13px; text-align: right; color: #111827; font-weight: 600;">$${((item.price || 0) * (item.quantity || 1)).toFixed(2)}</td>
+        </tr>
+      `;
+    }).join('') || '';
+
+    const html = `
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <title>Invoice - ${clientInfo.invoiceNo}</title>
+        <meta charset="utf-8">
+        <style>
+          body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            color: #1f2937;
+            margin: 40px;
+            line-height: 1.5;
+            background-color: #fff;
+          }
+          table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 30px;
+          }
+          th {
+            background-color: #e5e7eb;
+            color: #1f2937;
+            font-weight: bold;
+            text-align: left;
+            padding: 10px;
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            border-bottom: 2px solid #d1d5db;
+          }
+          .text-right {
+            text-align: right;
+          }
+          .text-center {
+            text-align: center;
+          }
+          .header-table td {
+            padding: 0;
+            vertical-align: top;
+          }
+          p {
+            margin: 0;
+            font-size: 14px;
+          }
+          .invoice-details-table td {
+            padding: 6px 8px;
+            font-size: 13px;
+          }
+          .invoice-details-table tr.amount-due td {
+            background-color: #e5e7eb;
+            font-weight: bold;
+            font-size: 14px;
+            border-top: 1px solid #d1d5db;
+            border-bottom: 1px solid #d1d5db;
+          }
+          @media print {
+            body {
+              margin: 20px;
+            }
+            .no-print {
+              display: none;
+            }
+          }
+        </style>
+      </head>
+      <body>
+        <div class="no-print" style="margin-bottom: 30px; display: flex; justify-content: flex-end; gap: 10px;">
+          <button onclick="window.close()" style="padding: 10px 20px; background-color: #f3f4f6; color: #1f2937; border: 1px solid #d1d5db; border-radius: 6px; font-weight: 600; cursor: pointer;">Fechar</button>
+          <button onclick="window.print()" style="padding: 10px 20px; background-color: #90d62a; color: #000; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; box-shadow: 0 4px 6px -1px rgba(144, 214, 42, 0.2);">Imprimir / PDF</button>
+        </div>
+
+        <table class="header-table" style="width: 100%; border: none; margin-bottom: 60px;">
+          <tr>
+            <td style="width: 50%;">
+              <h3 style="margin: 0 0 8px 0; text-transform: uppercase; font-size: 12px; color: #4b5563; letter-spacing: 0.05em; font-weight: 700;">Bill From:</h3>
+              <p style="font-weight: 800; font-size: 18px; color: #111827; margin-bottom: 4px;">iFooty.ca</p>
+              <p style="color: #4b5563;">1521-265 Wolf Willow boulevard SE</p>
+              <p style="color: #4b5563; margin-top: 2px;">Calgary, AB, T2x3z8</p>
+              <p style="color: #4b5563; margin-top: 2px;">Canada</p>
+              <p style="color: #111827; font-weight: 600; margin-top: 4px;">ifootyc@gmail.com</p>
+            </td>
+            <td style="width: 50%; text-align: right;">
+              <!-- Espaço reservado para manter a estrutura limpa -->
+            </td>
+          </tr>
+        </table>
+
+        <table class="header-table" style="width: 100%; border: none; margin-bottom: 50px;">
+          <tr>
+            <td style="width: 55%;">
+              <h3 style="margin: 0 0 8px 0; text-transform: uppercase; font-size: 12px; color: #4b5563; letter-spacing: 0.05em; font-weight: 700;">Bill To:</h3>
+              <p style="font-weight: 800; font-size: 16px; color: #111827; margin-bottom: 4px;">${clientInfo.name}</p>
+              <p style="color: #4b5563;">${clientInfo.street || ''}</p>
+              <p style="color: #4b5563; margin-top: 2px;">${clientInfo.cityProvince || ''}</p>
+              <p style="color: #4b5563; margin-top: 2px;">${clientInfo.country || 'Canada'}</p>
+              <p style="color: #111827; font-weight: 600; margin-top: 4px;">${clientInfo.email || ''}</p>
+            </td>
+            <td style="width: 45%;">
+              <table class="invoice-details-table" style="width: 100%; margin: 0;">
+                <tr>
+                  <td style="font-weight: bold; text-transform: uppercase; color: #4b5563;">Invoice #</td>
+                  <td style="text-align: right; color: #111827; font-weight: 600;">${clientInfo.invoiceNo}</td>
+                </tr>
+                <tr>
+                  <td style="font-weight: bold; text-transform: uppercase; color: #4b5563;">Invoice Date</td>
+                  <td style="text-align: right; color: #111827;">${clientInfo.date}</td>
+                </tr>
+                <tr class="amount-due">
+                  <td style="text-transform: uppercase; color: #111827; padding-top: 10px; padding-bottom: 10px;">Amount Due</td>
+                  <td style="text-align: right; color: #111827; font-size: 16px; padding-top: 10px; padding-bottom: 10px;">$${total.toFixed(2)}</td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+        </table>
+
+        <table>
+          <thead>
+            <tr>
+              <th style="width: 25%; padding: 12px 10px;">Item</th>
+              <th style="width: 40%; padding: 12px 10px;">Description</th>
+              <th style="width: 10%; padding: 12px 10px; text-align: center;">Quantity</th>
+              <th style="width: 12%; padding: 12px 10px; text-align: right;">Unit Cost</th>
+              <th style="width: 13%; padding: 12px 10px; text-align: right;">Line Total</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${itemsHtml}
+          </tbody>
+        </table>
+
+        <table style="width: 40%; margin-left: auto; margin-top: 40px;">
+          <tr>
+            <td style="padding: 8px 10px; font-weight: 600; text-transform: uppercase; font-size: 12px; color: #4b5563;">Subtotal</td>
+            <td style="padding: 8px 10px; text-align: right; font-size: 14px; color: #111827; font-weight: 600;">$${subtotal.toFixed(2)}</td>
+          </tr>
+          <tr style="background-color: #e5e7eb; font-weight: bold; border-top: 2px solid #d1d5db;">
+            <td style="padding: 12px 10px; text-transform: uppercase; font-size: 13px; color: #111827;">Total</td>
+            <td style="padding: 12px 10px; text-align: right; font-size: 16px; color: #111827;">$${total.toFixed(2)}</td>
+          </tr>
+        </table>
+      </body>
+      </html>
+    `;
+
+    printWindow.document.write(html);
+    printWindow.document.close();
+  };
+
+  const handlePrintOrderInvoice = (order) => {
+    const clientInfo = {
+      name: order.customer_name || 'Cliente',
+      street: `${order.shipping_address?.street || ''}${order.shipping_address?.apartment ? `, Apt ${order.shipping_address.apartment}` : ''}`,
+      cityProvince: `${order.shipping_address?.city || ''}, ${order.shipping_address?.province || ''} ${order.shipping_address?.postalCode || ''}`,
+      country: order.shipping_address?.country || 'Canada',
+      email: order.customer_email || '',
+      invoiceNo: String(order.id).substring(0, 8).toUpperCase(),
+      date: new Date(order.created_at).toISOString().split('T')[0]
+    };
+    handlePrintInvoice('INVOICE', clientInfo, order.items);
+  };
+
+  const handlePrintCartInvoice = (customer) => {
+    const clientInfo = {
+      name: customer.full_name || 'Cliente',
+      street: `${customer.street || ''}${customer.apartment ? `, Apt ${customer.apartment}` : ''}`,
+      cityProvince: `${customer.city || ''}, ${customer.province || ''} ${customer.postal_code || ''}`,
+      country: 'Canada',
+      email: customer.email || '',
+      invoiceNo: `CART-${String(customer.id).substring(0, 5).toUpperCase()}`,
+      date: new Date().toISOString().split('T')[0]
+    };
+    handlePrintInvoice('INVOICE', clientInfo, customer.cart);
   };
 
   const handleSendAbandonedCartEmail = async (customer) => {
@@ -4075,6 +4279,12 @@ const Admin = () => {
                                 </button>
                               )}
                               <button
+                                onClick={() => handlePrintOrderInvoice(order)}
+                                style={{ padding: '0.6rem', borderRadius: '4px', background: 'rgba(144, 214, 42, 0.15)', color: 'var(--accent-color)', border: '1px solid var(--accent-color)', fontWeight: 700, cursor: 'pointer', fontSize: '0.8rem' }}
+                              >
+                                📄 GERAR INVOICE
+                              </button>
+                              <button
                                 onClick={() => sendToSupplier(order)}
                                 style={{ padding: '0.6rem', borderRadius: '4px', background: 'rgba(234, 179, 8, 0.1)', color: '#EAB308', border: '1px solid #EAB308', fontWeight: 700, cursor: 'pointer', fontSize: '0.8rem' }}
                               >
@@ -4273,6 +4483,19 @@ const Admin = () => {
                                     </button>
                                   );
                                 })()}
+                                {customer.cart && Array.isArray(customer.cart) && customer.cart.length > 0 && (
+                                  <button
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      handlePrintCartInvoice(customer);
+                                    }}
+                                    style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', background: 'rgba(144, 214, 42, 0.15)', color: 'var(--accent-color)', border: '1px solid var(--accent-color)', padding: '0.6rem 1.2rem', borderRadius: '6px', fontWeight: 700, cursor: 'pointer', transition: 'all 0.2s' }}
+                                    onMouseEnter={(e) => e.currentTarget.style.background = 'rgba(144, 214, 42, 0.25)'}
+                                    onMouseLeave={(e) => e.currentTarget.style.background = 'rgba(144, 214, 42, 0.15)'}
+                                  >
+                                    <Printer size={16} /> Gerar Invoice
+                                  </button>
+                                )}
                                 <button
                                   onClick={(e) => { e.stopPropagation(); setOrderFilter(customer.id); setSupplierTab('PEDIDOS'); }}
                                   style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', background: 'rgba(255,255,255,0.05)', color: '#fff', border: '1px solid var(--border-color)', padding: '0.6rem 1.2rem', borderRadius: '6px', fontWeight: 700, cursor: 'pointer', transition: 'all 0.2s' }}
