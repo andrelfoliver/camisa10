@@ -28,7 +28,8 @@ const Admin = () => {
     country: 'Canada',
     email: '',
     invoiceNo: '',
-    date: new Date().toISOString().split('T')[0]
+    date: new Date().toISOString().split('T')[0],
+    discount: ''
   });
   const [manualInvoiceItems, setManualInvoiceItems] = useState([
     { name: '', size: 'M', quantity: 1, price: 47.90, extras: { nameNumber: false, customName: '', customNumber: '', extraCustomization: false, customExtraName: '' } }
@@ -966,7 +967,8 @@ const Admin = () => {
     }
     
     const subtotal = items?.reduce((sum, item) => sum + ((item.price || 0) * (item.quantity || 1)), 0) || 0;
-    const total = subtotal;
+    const total = clientInfo.total !== undefined ? clientInfo.total : subtotal;
+    const diff = subtotal - total;
 
     const itemsHtml = items?.map((item) => {
       let desc = `Tamanho: ${item.size}`;
@@ -1123,6 +1125,18 @@ const Admin = () => {
             <td style="padding: 8px 10px; font-weight: 600; text-transform: uppercase; font-size: 12px; color: #4b5563;">Subtotal</td>
             <td style="padding: 8px 10px; text-align: right; font-size: 14px; color: #111827; font-weight: 600;">$${subtotal.toFixed(2)}</td>
           </tr>
+          ${diff > 0.005 ? `
+          <tr>
+            <td style="padding: 8px 10px; font-weight: 600; text-transform: uppercase; font-size: 12px; color: #10B981;">Discount</td>
+            <td style="padding: 8px 10px; text-align: right; font-size: 14px; color: #10B981; font-weight: 600;">-$${diff.toFixed(2)}</td>
+          </tr>
+          ` : ''}
+          ${diff < -0.005 ? `
+          <tr>
+            <td style="padding: 8px 10px; font-weight: 600; text-transform: uppercase; font-size: 12px; color: #4b5563;">Shipping / Fees</td>
+            <td style="padding: 8px 10px; text-align: right; font-size: 14px; color: #111827; font-weight: 600;">$${Math.abs(diff).toFixed(2)}</td>
+          </tr>
+          ` : ''}
           <tr style="background-color: #e5e7eb; font-weight: bold; border-top: 2px solid #d1d5db;">
             <td style="padding: 12px 10px; text-transform: uppercase; font-size: 13px; color: #111827;">Total</td>
             <td style="padding: 12px 10px; text-align: right; font-size: 16px; color: #111827;">$${total.toFixed(2)}</td>
@@ -1144,7 +1158,8 @@ const Admin = () => {
       country: order.shipping_address?.country || 'Canada',
       email: order.customer_email || '',
       invoiceNo: String(order.id).substring(0, 8).toUpperCase(),
-      date: new Date(order.created_at).toISOString().split('T')[0]
+      date: new Date(order.created_at).toISOString().split('T')[0],
+      total: Number(order.total_price || 0)
     };
     handlePrintInvoice('INVOICE', clientInfo, order.items);
   };
@@ -1170,7 +1185,8 @@ const Admin = () => {
       country: 'Canada',
       email: '',
       invoiceNo: String(Math.floor(100000 + Math.random() * 900000)),
-      date: new Date().toISOString().split('T')[0]
+      date: new Date().toISOString().split('T')[0],
+      discount: ''
     });
     setManualInvoiceItems([
       { name: '', size: 'M', quantity: 1, price: 47.90, extras: { nameNumber: false, customName: '', customNumber: '', extraCustomization: false, customExtraName: '' } }
@@ -5898,26 +5914,35 @@ const Admin = () => {
                       style={{ width: '100%', padding: '0.6rem', background: '#000', border: '1px solid var(--border-color)', borderRadius: '6px', color: '#fff', fontSize: '0.85rem' }}
                     />
                   </div>
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.5rem' }}>
-                    <div>
-                      <label style={{ display: 'block', fontSize: '0.75rem', color: 'var(--text-muted)', marginBottom: '0.3rem' }}>Invoice #</label>
-                      <input 
-                        type="text" 
-                        value={manualInvoiceCustomer.invoiceNo} 
-                        onChange={e => setManualInvoiceCustomer({ ...manualInvoiceCustomer, invoiceNo: e.target.value })}
-                        placeholder="Ex: 001"
-                        style={{ width: '100%', padding: '0.6rem', background: '#000', border: '1px solid var(--border-color)', borderRadius: '6px', color: '#fff', fontSize: '0.85rem' }}
-                      />
-                    </div>
-                    <div>
-                      <label style={{ display: 'block', fontSize: '0.75rem', color: 'var(--text-muted)', marginBottom: '0.3rem' }}>Data</label>
-                      <input 
-                        type="date" 
-                        value={manualInvoiceCustomer.date} 
-                        onChange={e => setManualInvoiceCustomer({ ...manualInvoiceCustomer, date: e.target.value })}
-                        style={{ width: '100%', padding: '0.6rem', background: '#000', border: '1px solid var(--border-color)', borderRadius: '6px', color: '#fff', fontSize: '0.85rem' }}
-                      />
-                    </div>
+                  <div>
+                    <label style={{ display: 'block', fontSize: '0.75rem', color: 'var(--text-muted)', marginBottom: '0.3rem' }}>Desconto ($)</label>
+                    <input 
+                      type="number" 
+                      step="0.01"
+                      value={manualInvoiceCustomer.discount} 
+                      onChange={e => setManualInvoiceCustomer({ ...manualInvoiceCustomer, discount: e.target.value })}
+                      placeholder="Ex: 10.00"
+                      style={{ width: '100%', padding: '0.6rem', background: '#000', border: '1px solid var(--border-color)', borderRadius: '6px', color: '#fff', fontSize: '0.85rem' }}
+                    />
+                  </div>
+                  <div>
+                    <label style={{ display: 'block', fontSize: '0.75rem', color: 'var(--text-muted)', marginBottom: '0.3rem' }}>Invoice #</label>
+                    <input 
+                      type="text" 
+                      value={manualInvoiceCustomer.invoiceNo} 
+                      onChange={e => setManualInvoiceCustomer({ ...manualInvoiceCustomer, invoiceNo: e.target.value })}
+                      placeholder="Ex: 001"
+                      style={{ width: '100%', padding: '0.6rem', background: '#000', border: '1px solid var(--border-color)', borderRadius: '6px', color: '#fff', fontSize: '0.85rem' }}
+                    />
+                  </div>
+                  <div>
+                    <label style={{ display: 'block', fontSize: '0.75rem', color: 'var(--text-muted)', marginBottom: '0.3rem' }}>Data</label>
+                    <input 
+                      type="date" 
+                      value={manualInvoiceCustomer.date} 
+                      onChange={e => setManualInvoiceCustomer({ ...manualInvoiceCustomer, date: e.target.value })}
+                      style={{ width: '100%', padding: '0.6rem', background: '#000', border: '1px solid var(--border-color)', borderRadius: '6px', color: '#fff', fontSize: '0.85rem' }}
+                    />
                   </div>
                 </div>
               </div>
@@ -6073,7 +6098,13 @@ const Admin = () => {
                     showAlert("Atenção", "Por favor, preencha o nome de todos os itens.");
                     return;
                   }
-                  handlePrintInvoice('INVOICE', manualInvoiceCustomer, manualInvoiceItems);
+                  const itemsSubtotal = manualInvoiceItems?.reduce((sum, item) => sum + ((item.price || 0) * (item.quantity || 1)), 0) || 0;
+                  const discountVal = Number(manualInvoiceCustomer.discount || 0);
+                  const clientInfo = {
+                    ...manualInvoiceCustomer,
+                    total: itemsSubtotal - discountVal
+                  };
+                  handlePrintInvoice('INVOICE', clientInfo, manualInvoiceItems);
                   setIsManualInvoiceModalOpen(false);
                 }} 
                 className="btn-primary"
