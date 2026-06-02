@@ -39,7 +39,6 @@ const Auth = () => {
       console.log("Login no Supabase concluído com sucesso");
     } catch (err) {
       console.error("Erro no sign-in:", err);
-      alert(`ERRO SIGN-IN: ${err.message || JSON.stringify(err)}`);
       setError(`Erro no Login: ${err.message || 'Erro desconhecido'}`);
       setLoading(false);
     }
@@ -95,9 +94,6 @@ const Auth = () => {
   }, [handleGoogleCallback]);
 
   if (user) {
-    // ALERTA TEMPORÁRIO DE DEBBUG PARA DESCOBRIR O PROBLEMA NO CELULAR
-    alert(`LOGADO! Email: "${user.email}" | Admin: ${isAdmin}`);
-    
     let redirectTo = null;
     try {
       redirectTo =

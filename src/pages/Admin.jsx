@@ -1616,7 +1616,6 @@ const Admin = () => {
     if (!user) {
       return <Navigate to="/auth" />;
     } else {
-      alert(`ADMIN BLOCK: User Email: "${user.email}" | isAdmin: ${isAdmin}`);
       return <Navigate to="/perfil" />;
     }
   }
