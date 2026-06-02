@@ -934,6 +934,17 @@ const Admin = () => {
     }
   };
 
+  const formatCartItemDate = (dateStr) => {
+    if (!dateStr) return null;
+    try {
+      const d = new Date(dateStr);
+      if (isNaN(d.getTime())) return null;
+      return d.toLocaleDateString('pt-BR') + ' às ' + d.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+    } catch (e) {
+      return null;
+    }
+  };
+
   const handleSendAbandonedCartEmail = async (customer) => {
     if (!customer || !customer.email || !customer.cart || customer.cart.length === 0) {
       showAlert("Erro", "Cliente não possui e-mail ou sacola ativa.");
@@ -4205,7 +4216,7 @@ const Admin = () => {
                                           <div style={{ flex: 1 }}>
                                             <p style={{ fontSize: '0.8rem', color: '#fff', fontWeight: 700, margin: 0 }}>{item.name}</p>
                                             <p style={{ fontSize: '0.7rem', color: 'var(--text-muted)', margin: 0 }}>
-                                              Tam: <span style={{ color: 'var(--accent-color)', fontWeight: 800 }}>{item.size}</span> | Qtd: {item.quantity} | Preço: ${item.price?.toFixed(2)}
+                                              Tam: <span style={{ color: 'var(--accent-color)', fontWeight: 800 }}>{item.size}</span> | Qtd: {item.quantity} | Preço: ${item.price?.toFixed(2)}{item.addedAt && ` | Adicionado em: ${formatCartItemDate(item.addedAt)}`}
                                             </p>
                                           </div>
                                         </div>

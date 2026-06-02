@@ -168,7 +168,17 @@ export const CartProvider = ({ children }) => {
             : item
         );
       }
-      return [...prev, { ...product, cartId, size, extras, addonsPrice, basePrice, quantity: 1, price: finalPrice }];
+      return [...prev, { 
+        ...product, 
+        cartId, 
+        size, 
+        extras, 
+        addonsPrice, 
+        basePrice, 
+        quantity: 1, 
+        price: finalPrice,
+        addedAt: new Date().toISOString()
+      }];
     });
     setIsCartOpen(true);
   };
