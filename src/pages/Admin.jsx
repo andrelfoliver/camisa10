@@ -20,6 +20,19 @@ const Admin = () => {
   const [loading, setLoading] = useState(true);
   const [isTrackModalOpen, setIsTrackModalOpen] = useState(false);
   const [trackingNumberToView, setTrackingNumberToView] = useState('');
+  const [isManualInvoiceModalOpen, setIsManualInvoiceModalOpen] = useState(false);
+  const [manualInvoiceCustomer, setManualInvoiceCustomer] = useState({
+    name: '',
+    street: '',
+    cityProvince: '',
+    country: 'Canada',
+    email: '',
+    invoiceNo: '',
+    date: new Date().toISOString().split('T')[0]
+  });
+  const [manualInvoiceItems, setManualInvoiceItems] = useState([
+    { name: '', size: 'M', quantity: 1, price: 47.90, extras: { nameNumber: false, customName: '', customNumber: '', extraCustomization: false, customExtraName: '' } }
+  ]);
   const OFFICIAL_CATEGORIES = ['Seleções', 'Brasileirão', 'Internacionais', 'Lançamentos', 'Retrô'];
   const SIZES = ['S', 'M', 'L', 'XL', '2XL', '3XL', '4XL', '16', '18', '20', '22', '24', '26', '28', '3M', '6M', '9M', '12M'];
   const DEFAULT_INVENTORY = { 'S': 0, 'M': 0, 'L': 0, 'XL': 0, '2XL': 0, '3XL': 0, '4XL': 0, '16': 0, '18': 0, '20': 0, '22': 0, '24': 0, '26': 0, '28': 0, '3M': 0, '6M': 0, '9M': 0, '12M': 0 };
@@ -1147,6 +1160,22 @@ const Admin = () => {
       date: new Date().toISOString().split('T')[0]
     };
     handlePrintInvoice('INVOICE', clientInfo, customer.cart);
+  };
+
+  const handleOpenManualInvoice = () => {
+    setManualInvoiceCustomer({
+      name: '',
+      street: '',
+      cityProvince: '',
+      country: 'Canada',
+      email: '',
+      invoiceNo: String(Math.floor(100000 + Math.random() * 900000)),
+      date: new Date().toISOString().split('T')[0]
+    });
+    setManualInvoiceItems([
+      { name: '', size: 'M', quantity: 1, price: 47.90, extras: { nameNumber: false, customName: '', customNumber: '', extraCustomization: false, customExtraName: '' } }
+    ]);
+    setIsManualInvoiceModalOpen(true);
   };
 
   const handleSendAbandonedCartEmail = async (customer) => {
@@ -3869,6 +3898,13 @@ const Admin = () => {
               <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem', maxWidth: '1200px' }}>
                 <div style={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'center', gap: '1rem', marginBottom: '-0.5rem' }}>
                    <button 
+                     onClick={handleOpenManualInvoice}
+                     className="btn-primary" 
+                     style={{ padding: '0.8rem 1.5rem', borderRadius: '8px', display: 'flex', alignItems: 'center', gap: '0.5rem', fontWeight: 700, background: 'rgba(144, 214, 42, 0.15)', color: 'var(--accent-color)', border: '1px solid var(--accent-color)' }}
+                   >
+                     <Printer size={20} /> Criar Invoice Manual
+                   </button>
+                   <button 
                      onClick={() => setIsTrackModalOpen(true)}
                      className="btn-primary" 
                      style={{ padding: '0.8rem 1.5rem', borderRadius: '8px', display: 'flex', alignItems: 'center', gap: '0.5rem', fontWeight: 700 }}
@@ -5789,6 +5825,264 @@ const Admin = () => {
                 {modal.type === 'confirm' ? 'Confirmar' : 'Entendido'}
               </button>
             </div>
+          </div>
+        </div>
+      )}
+      {/* MANUAL INVOICE CREATOR MODAL */}
+      {isManualInvoiceModalOpen && (
+        <div style={{ position: 'fixed', inset: 0, zIndex: 9999, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(0,0,0,0.8)', backdropFilter: 'blur(5px)', padding: '1rem' }}>
+          <div style={{ background: 'var(--surface-color)', width: '100%', maxWidth: '850px', borderRadius: '16px', border: '1px solid var(--border-color)', overflow: 'hidden', display: 'flex', flexDirection: 'column', maxHeight: '90vh' }}>
+            
+            {/* Header */}
+            <div style={{ padding: '1.5rem', borderBottom: '1px solid var(--border-color)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <h2 style={{ margin: 0, fontSize: '1.2rem', color: '#fff', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                <Printer size={20} color="var(--accent-color)" /> Criador de Invoice Manual
+              </h2>
+              <button onClick={() => setIsManualInvoiceModalOpen(false)} style={{ background: 'transparent', border: 'none', color: 'var(--text-muted)', cursor: 'pointer' }}><X size={24} /></button>
+            </div>
+
+            {/* Body */}
+            <div style={{ padding: '1.5rem', overflowY: 'auto', flex: 1, display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+              
+              {/* Customer Info Section */}
+              <div>
+                <h3 style={{ fontSize: '0.9rem', color: 'var(--accent-color)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '1rem', borderBottom: '1px solid rgba(255,255,255,0.05)', paddingBottom: '0.3rem' }}>Dados do Cliente</h3>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+                  <div>
+                    <label style={{ display: 'block', fontSize: '0.75rem', color: 'var(--text-muted)', marginBottom: '0.3rem' }}>Nome / Empresa</label>
+                    <input 
+                      type="text" 
+                      value={manualInvoiceCustomer.name} 
+                      onChange={e => setManualInvoiceCustomer({ ...manualInvoiceCustomer, name: e.target.value })}
+                      placeholder="Ex: Brazilian Minas Steakhouse"
+                      style={{ width: '100%', padding: '0.6rem', background: '#000', border: '1px solid var(--border-color)', borderRadius: '6px', color: '#fff', fontSize: '0.85rem' }}
+                    />
+                  </div>
+                  <div>
+                    <label style={{ display: 'block', fontSize: '0.75rem', color: 'var(--text-muted)', marginBottom: '0.3rem' }}>E-mail</label>
+                    <input 
+                      type="email" 
+                      value={manualInvoiceCustomer.email} 
+                      onChange={e => setManualInvoiceCustomer({ ...manualInvoiceCustomer, email: e.target.value })}
+                      placeholder="Ex: chefjosemontes@gmail.com"
+                      style={{ width: '100%', padding: '0.6rem', background: '#000', border: '1px solid var(--border-color)', borderRadius: '6px', color: '#fff', fontSize: '0.85rem' }}
+                    />
+                  </div>
+                  <div>
+                    <label style={{ display: 'block', fontSize: '0.75rem', color: 'var(--text-muted)', marginBottom: '0.3rem' }}>Endereço (Rua e Nº)</label>
+                    <input 
+                      type="text" 
+                      value={manualInvoiceCustomer.street} 
+                      onChange={e => setManualInvoiceCustomer({ ...manualInvoiceCustomer, street: e.target.value })}
+                      placeholder="Ex: 136 2 street southwest"
+                      style={{ width: '100%', padding: '0.6rem', background: '#000', border: '1px solid var(--border-color)', borderRadius: '6px', color: '#fff', fontSize: '0.85rem' }}
+                    />
+                  </div>
+                  <div>
+                    <label style={{ display: 'block', fontSize: '0.75rem', color: 'var(--text-muted)', marginBottom: '0.3rem' }}>Cidade, Província e CEP</label>
+                    <input 
+                      type="text" 
+                      value={manualInvoiceCustomer.cityProvince} 
+                      onChange={e => setManualInvoiceCustomer({ ...manualInvoiceCustomer, cityProvince: e.target.value })}
+                      placeholder="Ex: Calgary, AB, T2P0S7"
+                      style={{ width: '100%', padding: '0.6rem', background: '#000', border: '1px solid var(--border-color)', borderRadius: '6px', color: '#fff', fontSize: '0.85rem' }}
+                    />
+                  </div>
+                  <div>
+                    <label style={{ display: 'block', fontSize: '0.75rem', color: 'var(--text-muted)', marginBottom: '0.3rem' }}>País</label>
+                    <input 
+                      type="text" 
+                      value={manualInvoiceCustomer.country} 
+                      onChange={e => setManualInvoiceCustomer({ ...manualInvoiceCustomer, country: e.target.value })}
+                      placeholder="Ex: Canada"
+                      style={{ width: '100%', padding: '0.6rem', background: '#000', border: '1px solid var(--border-color)', borderRadius: '6px', color: '#fff', fontSize: '0.85rem' }}
+                    />
+                  </div>
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.5rem' }}>
+                    <div>
+                      <label style={{ display: 'block', fontSize: '0.75rem', color: 'var(--text-muted)', marginBottom: '0.3rem' }}>Invoice #</label>
+                      <input 
+                        type="text" 
+                        value={manualInvoiceCustomer.invoiceNo} 
+                        onChange={e => setManualInvoiceCustomer({ ...manualInvoiceCustomer, invoiceNo: e.target.value })}
+                        placeholder="Ex: 001"
+                        style={{ width: '100%', padding: '0.6rem', background: '#000', border: '1px solid var(--border-color)', borderRadius: '6px', color: '#fff', fontSize: '0.85rem' }}
+                      />
+                    </div>
+                    <div>
+                      <label style={{ display: 'block', fontSize: '0.75rem', color: 'var(--text-muted)', marginBottom: '0.3rem' }}>Data</label>
+                      <input 
+                        type="date" 
+                        value={manualInvoiceCustomer.date} 
+                        onChange={e => setManualInvoiceCustomer({ ...manualInvoiceCustomer, date: e.target.value })}
+                        style={{ width: '100%', padding: '0.6rem', background: '#000', border: '1px solid var(--border-color)', borderRadius: '6px', color: '#fff', fontSize: '0.85rem' }}
+                      />
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Items List Section */}
+              <div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem', borderBottom: '1px solid rgba(255,255,255,0.05)', paddingBottom: '0.3rem' }}>
+                  <h3 style={{ fontSize: '0.9rem', color: 'var(--accent-color)', textTransform: 'uppercase', letterSpacing: '0.05em', margin: 0 }}>Itens da Invoice</h3>
+                  <button 
+                    onClick={() => setManualInvoiceItems([...manualInvoiceItems, { name: '', size: 'M', quantity: 1, price: 47.90, extras: { nameNumber: false, customName: '', customNumber: '', extraCustomization: false, customExtraName: '' } }])}
+                    className="btn-primary"
+                    style={{ padding: '0.4rem 0.8rem', fontSize: '0.75rem', display: 'flex', alignItems: 'center', gap: '0.3rem', borderRadius: '4px' }}
+                  >
+                    <Plus size={14} /> Adicionar Item
+                  </button>
+                </div>
+
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.8rem' }}>
+                  {manualInvoiceItems.map((item, index) => (
+                    <div key={index} style={{ display: 'flex', gap: '0.5rem', background: 'rgba(255,255,255,0.02)', padding: '0.8rem', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.05)', alignItems: 'flex-start' }}>
+                      <div style={{ flex: 2 }}>
+                        <label style={{ display: 'block', fontSize: '0.65rem', color: 'var(--text-muted)', marginBottom: '0.2rem' }}>Nome do Item</label>
+                        <input 
+                          type="text" 
+                          value={item.name} 
+                          onChange={e => {
+                            const newItems = [...manualInvoiceItems];
+                            newItems[index].name = e.target.value;
+                            setManualInvoiceItems(newItems);
+                          }}
+                          placeholder="Ex: Camisa Brasil 2026"
+                          style={{ width: '100%', padding: '0.5rem', background: '#000', border: '1px solid var(--border-color)', borderRadius: '4px', color: '#fff', fontSize: '0.8rem' }}
+                        />
+                      </div>
+                      
+                      <div style={{ width: '80px' }}>
+                        <label style={{ display: 'block', fontSize: '0.65rem', color: 'var(--text-muted)', marginBottom: '0.2rem' }}>Tam / Desc</label>
+                        <input 
+                          type="text" 
+                          value={item.size} 
+                          onChange={e => {
+                            const newItems = [...manualInvoiceItems];
+                            newItems[index].size = e.target.value;
+                            setManualInvoiceItems(newItems);
+                          }}
+                          placeholder="Ex: M"
+                          style={{ width: '100%', padding: '0.5rem', background: '#000', border: '1px solid var(--border-color)', borderRadius: '4px', color: '#fff', fontSize: '0.8rem', textAlign: 'center' }}
+                        />
+                      </div>
+
+                      <div style={{ width: '70px' }}>
+                        <label style={{ display: 'block', fontSize: '0.65rem', color: 'var(--text-muted)', marginBottom: '0.2rem' }}>Qtd</label>
+                        <input 
+                          type="number" 
+                          value={item.quantity} 
+                          onChange={e => {
+                            const newItems = [...manualInvoiceItems];
+                            newItems[index].quantity = Number(e.target.value);
+                            setManualInvoiceItems(newItems);
+                          }}
+                          style={{ width: '100%', padding: '0.5rem', background: '#000', border: '1px solid var(--border-color)', borderRadius: '4px', color: '#fff', fontSize: '0.8rem', textAlign: 'center' }}
+                        />
+                      </div>
+
+                      <div style={{ width: '95px' }}>
+                        <label style={{ display: 'block', fontSize: '0.65rem', color: 'var(--text-muted)', marginBottom: '0.2rem' }}>Preço Unitário</label>
+                        <input 
+                          type="number" 
+                          step="0.01"
+                          value={item.price} 
+                          onChange={e => {
+                            const newItems = [...manualInvoiceItems];
+                            newItems[index].price = Number(e.target.value);
+                            setManualInvoiceItems(newItems);
+                          }}
+                          style={{ width: '100%', padding: '0.5rem', background: '#000', border: '1px solid var(--border-color)', borderRadius: '4px', color: '#fff', fontSize: '0.8rem', textAlign: 'right' }}
+                        />
+                      </div>
+
+                      {/* Customization details */}
+                      <div style={{ flex: 2, display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', marginTop: '1.25rem' }}>
+                          <input 
+                            type="checkbox" 
+                            id={`cust-${index}`}
+                            checked={item.extras?.nameNumber} 
+                            onChange={e => {
+                              const newItems = [...manualInvoiceItems];
+                              newItems[index].extras = { ...newItems[index].extras, nameNumber: e.target.checked };
+                              setManualInvoiceItems(newItems);
+                            }}
+                          />
+                          <label htmlFor={`cust-${index}`} style={{ fontSize: '0.7rem', color: '#fff', cursor: 'pointer' }}>Personalizado</label>
+                        </div>
+                        {item.extras?.nameNumber && (
+                          <div style={{ display: 'flex', gap: '0.3rem' }}>
+                            <input 
+                              type="text" 
+                              placeholder="Nome"
+                              value={item.extras.customName}
+                              onChange={e => {
+                                const newItems = [...manualInvoiceItems];
+                                newItems[index].extras.customName = e.target.value;
+                                setManualInvoiceItems(newItems);
+                              }}
+                              style={{ width: '60%', padding: '0.3rem', background: '#000', border: '1px solid var(--border-color)', borderRadius: '4px', color: '#fff', fontSize: '0.75rem' }}
+                            />
+                            <input 
+                              type="text" 
+                              placeholder="Nº"
+                              value={item.extras.customNumber}
+                              onChange={e => {
+                                const newItems = [...manualInvoiceItems];
+                                newItems[index].extras.customNumber = e.target.value;
+                                setManualInvoiceItems(newItems);
+                              }}
+                              style={{ width: '40%', padding: '0.3rem', background: '#000', border: '1px solid var(--border-color)', borderRadius: '4px', color: '#fff', fontSize: '0.75rem', textAlign: 'center' }}
+                            />
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Delete row button */}
+                      <button 
+                        onClick={() => setManualInvoiceItems(manualInvoiceItems.filter((_, i) => i !== index))}
+                        disabled={manualInvoiceItems.length <= 1}
+                        style={{ background: 'transparent', border: 'none', color: '#EF4444', cursor: 'pointer', marginTop: '1.25rem', opacity: manualInvoiceItems.length <= 1 ? 0.3 : 1 }}
+                      >
+                        <Trash2 size={16} />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+            </div>
+
+            {/* Footer */}
+            <div style={{ padding: '1.5rem', borderTop: '1px solid var(--border-color)', display: 'flex', justifyContent: 'flex-end', gap: '1rem' }}>
+              <button 
+                onClick={() => setIsManualInvoiceModalOpen(false)} 
+                style={{ padding: '0.6rem 1.2rem', background: 'transparent', border: '1px solid var(--border-color)', borderRadius: '6px', color: 'var(--text-muted)', cursor: 'pointer', fontWeight: 600 }}
+              >
+                Cancelar
+              </button>
+              <button 
+                onClick={() => {
+                  if (!manualInvoiceCustomer.name) {
+                    showAlert("Atenção", "Por favor, preencha o nome do cliente.");
+                    return;
+                  }
+                  if (manualInvoiceItems.some(i => !i.name)) {
+                    showAlert("Atenção", "Por favor, preencha o nome de todos os itens.");
+                    return;
+                  }
+                  handlePrintInvoice('INVOICE', manualInvoiceCustomer, manualInvoiceItems);
+                  setIsManualInvoiceModalOpen(false);
+                }} 
+                className="btn-primary"
+                style={{ padding: '0.6rem 1.5rem', borderRadius: '6px', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '0.5rem' }}
+              >
+                <Printer size={16} /> Gerar Invoice
+              </button>
+            </div>
+
           </div>
         </div>
       )}
