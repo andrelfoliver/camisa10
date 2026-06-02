@@ -265,9 +265,11 @@ export default async function handler(req, res) {
                     <strong>Province:</strong> ${order.shipping_address.province}<br/>
                     <strong>City:</strong> ${order.shipping_address.city}<br/>
                     <strong>District:</strong> ${order.shipping_address.district || 'N/A'}<br/>
-                    <strong>Address:</strong> ${order.shipping_address.street}${order.shipping_address.apartment ? ' (Unit ' + order.shipping_address.apartment + ')' : ''}<br/>
+                    <strong>Address:</strong> ${order.shipping_address.street}<br/>
                     <strong>Address number:</strong> ${order.shipping_address.number}<br/>
-                    <strong>Phone:</strong> ${order.customer_phone}
+                    <strong>Unit:</strong> ${order.shipping_address.apartment || 'N/A'}<br/>
+                    <strong>Phone:</strong> ${order.customer_phone}<br/>
+                    <strong>Instructions:</strong> ${order.shipping_address.instructions || 'N/A'}
                   `}
                 </div>
                 ${supplierItemsHtml}
@@ -375,9 +377,11 @@ export default async function handler(req, res) {
                     <strong>Country:</strong> ${order.shipping_address.country || 'Canada'}<br/>
                     <strong>Province:</strong> ${order.shipping_address.province}<br/>
                     <strong>City:</strong> ${order.shipping_address.city}<br/>
-                    <strong>Address:</strong> ${order.shipping_address.street}${order.shipping_address.apartment ? ' (Unit ' + order.shipping_address.apartment + ')' : ''}<br/>
+                    <strong>Address:</strong> ${order.shipping_address.street}<br/>
                     <strong>Address number:</strong> ${order.shipping_address.number || 'N/A'}<br/>
-                    <strong>Phone:</strong> ${order.customer_phone}
+                    <strong>Unit:</strong> ${order.shipping_address.apartment || 'N/A'}<br/>
+                    <strong>Phone:</strong> ${order.customer_phone}<br/>
+                    <strong>Instructions:</strong> ${order.shipping_address.instructions || 'N/A'}
                   `}
                 </div>
               </div>
