@@ -429,6 +429,21 @@ const ProductPage = () => {
                 })}
               </div>
 
+              {!isKids && !isBaby && (
+                <div style={{
+                  marginTop: '0.8rem',
+                  padding: '0.75rem 1rem',
+                  background: 'rgba(255, 255, 255, 0.03)',
+                  border: '1px dashed rgba(255, 255, 255, 0.15)',
+                  borderRadius: '6px',
+                  fontSize: '0.8rem',
+                  lineHeight: '1.4',
+                  color: 'var(--text-muted)'
+                }}>
+                  {t('product_size_tip')}
+                </div>
+              )}
+
               {/* Stock Summary */}
               {Object.values(product.inventory || {}).some(v => v > 0) && (
                 <div style={{ marginTop: '1.5rem', background: 'rgba(255,255,255,0.02)', padding: '1rem', borderRadius: '8px', border: '1px solid var(--border-color)' }}>
