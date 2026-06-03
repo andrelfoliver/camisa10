@@ -89,7 +89,7 @@ const SalesPopup = () => {
         name: order.customer_name ? order.customer_name.split(' ')[0] : 'Alguém',
         city: (order.shipping_address && order.shipping_address.city) || 'Canadá',
         productName: item ? item.name : (products[0]?.name || 'Camisa iFooty'),
-        image: productInfo ? productInfo.image : (products.find(p => p.image)?.image || null),
+        image: item?.image || productInfo?.image || null,
         time: getRelativeTime(order.created_at),
         isReal: true
       };
