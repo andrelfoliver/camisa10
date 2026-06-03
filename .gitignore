@@ -12,3 +12,7 @@ yupoo_data.json
 orcamento*
 generate_pdf.js
 .env*.local
+
+# Temporary scratch directory
+scratch/
+
