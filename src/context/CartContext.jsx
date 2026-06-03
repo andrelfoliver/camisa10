@@ -13,16 +13,45 @@ export const useCart = () => {
 const GUEST_KEY = 'ifooty_cart_guest';
 const getCartKey = (user) => user ? `ifooty_cart_${user?.id}` : GUEST_KEY;
 
+// Função auxiliar para obter o ID do usuário do localStorage de forma robusta e síncrona
+const getUserIdFromLocalStorage = () => {
+  try {
+    for (let i = 0; i < localStorage.length; i++) {
+      const key = localStorage.key(i);
+      if (key && key.startsWith('sb-') && key.endsWith('-auth-token')) {
+        const val = localStorage.getItem(key);
+        if (val) {
+          const parsed = JSON.parse(val);
+          const userId = parsed?.user?.id;
+          if (userId) return userId;
+        }
+      }
+    }
+  } catch (e) {
+    console.error("Erro ao recuperar userId do localStorage:", e);
+  }
+  return null;
+};
+
 export const CartProvider = ({ children }) => {
-  const { user } = useAuth();
+  const { user, loading: authLoading } = useAuth();
   
   // Inicialização síncrona imediata baseada no localStorage
   const [cartItems, setCartItems] = useState(() => {
     try {
-      // Aqui usamos o user SE ele já estiver disponível no mount (o que acontece se AuthContext estiver pronto)
-      const key = getCartKey(user);
-      return JSON.parse(localStorage.getItem(key) || '[]');
-    } catch { return []; }
+      // 1. Tenta usar o ID do usuário do contexto de autenticação
+      let userId = user?.id;
+      
+      // 2. Se não estiver no contexto, tenta extrair da chave do Supabase v2 no localStorage
+      if (!userId) {
+        userId = getUserIdFromLocalStorage();
+      }
+      
+      const key = userId ? `ifooty_cart_${userId}` : GUEST_KEY;
+      return JSON.parse(localStorage.getItem(key) || localStorage.getItem(GUEST_KEY) || '[]');
+    } catch { 
+      return []; 
+    }
   });
   
   const [isCartOpen, setIsCartOpen] = useState(false);
@@ -38,6 +67,8 @@ export const CartProvider = ({ children }) => {
   // 1. Efeito de Carregamento e Sincronização (Login/Logout/Refresh)
   useEffect(() => {
     const initializeCart = async () => {
+      if (authLoading) return; // ESPERA O LOGIN CONCLUIR
+      
       setCartReady(false); // Bloqueia salvamento enquanto inicializa
       
       if (!user) {
@@ -60,6 +91,7 @@ export const CartProvider = ({ children }) => {
           
         let cloudItems = profile?.cart || [];
         const guestItems = JSON.parse(localStorage.getItem(GUEST_KEY) || '[]');
+        const localItems = JSON.parse(localStorage.getItem(getCartKey(user)) || '[]');
         
         let merged = [...cloudItems];
 
@@ -75,14 +107,33 @@ export const CartProvider = ({ children }) => {
           });
           localStorage.removeItem(GUEST_KEY);
           toast.success("Sacola sincronizada com sua conta! ⚽");
+        } else if (cloudItems.length === 0 && localItems.length > 0) {
+          // Se a nuvem está vazia mas o local tem itens, mantemos o local (evita reset por delay/falha de sync)
+          merged = localItems;
         } else if (cloudItems.length > 0) {
+          // Se ambos possuem itens, mesclamos para garantir que nada seja perdido
+          if (localItems.length > 0) {
+            localItems.forEach(l => {
+              const exists = merged.find(m => m.cartId === l.cartId);
+              if (!exists) {
+                merged.push(l);
+              } else {
+                exists.quantity = Math.max(exists.quantity, l.quantity);
+              }
+            });
+          }
           toast.success("Sua sacola foi recuperada! 🛒");
         }
         
         setCartItems(merged);
       } catch (err) {
         console.error("Erro ao sincronizar cesta:", err);
-        // Em caso de erro, mantemos o que já estava no state (carregado via localStorage no mount)
+        // Fallback: tenta recuperar o carrinho do localStorage caso a requisição falhe
+        try {
+          const key = `ifooty_cart_${user.id}`;
+          const localSaved = JSON.parse(localStorage.getItem(key) || '[]');
+          if (localSaved.length > 0) setCartItems(localSaved);
+        } catch (e) {}
       } finally {
         setIsSyncing(false);
         setCartReady(true); // LIBERA O SALVAMENTO APENAS AQUI
@@ -90,7 +141,7 @@ export const CartProvider = ({ children }) => {
     };
 
     initializeCart();
-  }, [user]);
+  }, [user, authLoading]);
 
   // 2. Efeito de Salvamento (Backup Local e Nuvem)
   const dbSyncTimeout = useRef(null);
