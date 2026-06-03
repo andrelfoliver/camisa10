@@ -51,8 +51,12 @@ const Checkout = () => {
     ? (subtotal - discount) * (1 - appliedCoupon.discount_percent / 100) + (currentShipping || 0)
     : (subtotal - discount + (currentShipping || 0));
 
-  const paypalFee = paymentMethod === 'paypal' ? baseFinalTotal * 0.03 : 0;
-  const finalTotal = baseFinalTotal + paypalFee;
+  const finalTotal = paymentMethod === 'paypal'
+    ? Number(((baseFinalTotal + 0.30) / 0.971).toFixed(2))
+    : baseFinalTotal;
+  const paypalFee = paymentMethod === 'paypal'
+    ? Number((finalTotal - baseFinalTotal).toFixed(2))
+    : 0;
 
   // CÁLCULO DOS TOTAIS CONVERTIDOS PARA EXIBIÇÃO E CHECKOUT
   const displaySubtotal = convertPrice(subtotal);
@@ -62,8 +66,12 @@ const Checkout = () => {
     : 0;
   const displayShipping = convertPrice(currentShipping);
   const displayBaseFinalTotal = displaySubtotal - displayDiscount - displayCouponDiscount + displayShipping;
-  const displayPaypalFee = paymentMethod === 'paypal' ? displayBaseFinalTotal * 0.03 : 0;
-  const displayFinalTotal = displayBaseFinalTotal + displayPaypalFee;
+  const displayFinalTotal = paymentMethod === 'paypal'
+    ? Number(((displayBaseFinalTotal + 0.30) / 0.971).toFixed(2))
+    : displayBaseFinalTotal;
+  const displayPaypalFee = paymentMethod === 'paypal'
+    ? Number((displayFinalTotal - displayBaseFinalTotal).toFixed(2))
+    : 0;
 
   // Memoize PayPal options to avoid re-rendering, recalculating when currency changes
   const initialPayPalOptions = useMemo(() => ({
@@ -837,7 +845,7 @@ const Checkout = () => {
 
               {paymentMethod === 'paypal' && (
                 <div style={{ display: 'flex', justifyContent: 'space-between', color: '#EAB308', fontWeight: 600, marginTop: '0.4rem' }}>
-                  <span>Taxa PayPal (3%)</span>
+                  <span>Taxa PayPal (2.9% + $0.30)</span>
                   <span>+ ${displayPaypalFee.toFixed(2)}</span>
                 </div>
               )}
