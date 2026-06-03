@@ -2702,10 +2702,16 @@ const Admin = () => {
                     const history = statusData.history || [];
                     const trackingData = statusData.trackingData;
 
-                    const deliveredEvent = history.find(item => {
+                    let deliveredEvent = history.find(item => {
                       const status = (item.status || '').toLowerCase();
                       return status.includes('entregue') || status.includes('assinado') || status.includes('delivered');
                     });
+
+                    // Fallback: se o pedido está Concluído (completed) e não há evento explícito de entrega,
+                    // usamos o último evento da timeline como a data de entrega (pois a baixa foi manual).
+                    if (!deliveredEvent && order.status === 'completed' && history.length > 0) {
+                      deliveredEvent = history[0]; // history[0] é o evento mais recente
+                    }
 
                     if (deliveredEvent) {
                       const startDate = trackingData?.date || (history.length > 0 ? (history[history.length - 1].date || history[history.length - 1].rawDate) : null);
