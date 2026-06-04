@@ -75,8 +75,9 @@ const CartSidebar = () => {
                   <span style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>{language === 'pt' ? 'Tam' : 'Size'}: {item.size} • {formatPrice(item.price)}</span>
                   
                   {/* Extras Tags */}
-                  {(item.extras?.nameNumber || item.extras?.patch || item.extras?.extraCustomization) && (
+                  {(item.extras?.nameNumber || item.extras?.patch || item.extras?.extraCustomization || item.extras?.onlyShirt) && (
                     <div style={{ display: 'flex', gap: '0.3rem', flexWrap: 'wrap', marginTop: '0.3rem' }}>
+                      {item.extras.onlyShirt && <span style={{fontSize: '0.7rem', padding: '2px 6px', background: 'rgba(204,255,0,0.2)', color: 'var(--accent-color)', borderRadius: '2px'}}>{t('product_composition_only_shirt') || 'Apenas Camisa'}</span>}
                       {item.extras.nameNumber && <span style={{fontSize: '0.7rem', padding: '2px 6px', background: 'rgba(255,184,28,0.2)', color: 'var(--accent-color)', borderRadius: '2px'}}>+ {language === 'pt' ? 'Nome/Num' : 'Name/Num'}</span>}
                       {item.extras.patch && <span style={{fontSize: '0.7rem', padding: '2px 6px', background: 'rgba(255,184,28,0.2)', color: 'var(--accent-color)', borderRadius: '2px'}}>+ Patch</span>}
                       {item.extras.extraCustomization && <span style={{fontSize: '0.7rem', padding: '2px 6px', background: 'rgba(239,68,68,0.2)', color: '#f87171', borderRadius: '2px'}}>+ Extra (+ {formatPrice(6.90)})</span>}

@@ -263,6 +263,9 @@ const Checkout = () => {
     message += `🛒 ITENS DO PEDIDO:\n`;
     cartItems.forEach(item => {
       message += `- ${item.quantity}x ${item.name} (${item.size})`;
+      if (item.extras?.onlyShirt) {
+        message += ` [Apenas Camisa]`;
+      }
       if (item.extras?.nameNumber) {
         message += ` [Estampa: ${item.extras.customName} (${item.extras.customNumber})]`;
       }
@@ -768,6 +771,11 @@ const Checkout = () => {
                     <span style={{ fontWeight: 600 }}>{item.quantity}x {item.name} ({item.size})</span>
                     <span>${(convertPrice(item.price) * item.quantity).toFixed(2)}</span>
                   </div>
+                  {item.extras?.onlyShirt && (
+                    <div style={{ fontSize: '0.75rem', color: 'var(--accent-color)', paddingLeft: '1rem', fontWeight: 600 }}>
+                      👕 {t('product_composition_only_shirt') || 'Apenas Camisa'}
+                    </div>
+                  )}
                   {item.extras?.nameNumber && (
                     <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', paddingLeft: '1rem' }}>
                       ✍️ {item.extras.customName} ({item.extras.customNumber})

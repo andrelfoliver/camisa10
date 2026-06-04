@@ -86,8 +86,10 @@ const ProductPage = () => {
   const [isExtraCustomized, setIsExtraCustomized] = useState(false);
   const [customExtraName, setCustomExtraName] = useState('');
   const [quantity, setQuantity] = useState(1);
+  const [onlyShirt, setOnlyShirt] = useState(false);
 
   useEffect(() => {
+    setOnlyShirt(false);
     async function loadData() {
       // Logic for dummy product IDs (preserved)
       if (id.startsWith('q')) {
@@ -160,7 +162,8 @@ const ProductPage = () => {
         customName,
         customNumber,
         extraCustomization: isExtraCustomized,
-        customExtraName
+        customExtraName,
+        onlyShirt: isKids ? onlyShirt : false
       });
     }
     if (buyNow) navigate('/checkout');
@@ -168,10 +171,18 @@ const ProductPage = () => {
 
   let basePrice = Number(product.price) || 47.90;
   if (isKids) {
-    if (['16', '18', '20', '22'].includes(selectedSize)) {
-      basePrice = 49.90;
-    } else if (['24', '26', '28'].includes(selectedSize)) {
-      basePrice = 54.90;
+    if (onlyShirt) {
+      if (['16', '18', '20', '22'].includes(selectedSize)) {
+        basePrice = 37.90;
+      } else if (['24', '26', '28'].includes(selectedSize)) {
+        basePrice = 42.90;
+      }
+    } else {
+      if (['16', '18', '20', '22'].includes(selectedSize)) {
+        basePrice = 49.90;
+      } else if (['24', '26', '28'].includes(selectedSize)) {
+        basePrice = 54.90;
+      }
     }
   }
   let currentTotal = basePrice;
@@ -476,6 +487,41 @@ const ProductPage = () => {
                 </p>
               )}
             </div>
+
+            {/* Composição Toggle (Apenas para Infantil) */}
+            {isKids && (
+              <div style={{ marginBottom: '1.5rem' }}>
+                <p style={{ fontWeight: 700, marginBottom: '0.8rem', fontSize: '0.9rem', textTransform: 'uppercase' }}>
+                  {t('product_composition') || 'Itens Inclusos'}
+                </p>
+                <div style={{ display: 'flex', gap: '0.5rem' }}>
+                  <button
+                    onClick={() => setOnlyShirt(false)}
+                    style={{
+                      flex: 1, border: `1px solid ${!onlyShirt ? 'var(--accent-color)' : 'var(--border-color)'}`,
+                      background: !onlyShirt ? 'rgba(204, 255, 0, 0.05)' : 'transparent',
+                      padding: '0.75rem', color: !onlyShirt ? 'var(--accent-color)' : 'var(--text-main)',
+                      borderRadius: '4px', cursor: 'pointer', fontWeight: 700, fontSize: '0.85rem',
+                      transition: 'all 0.2s'
+                    }}
+                  >
+                    {t('product_composition_full') || 'Kit Completo (Camisa + Calção)'}
+                  </button>
+                  <button
+                    onClick={() => setOnlyShirt(true)}
+                    style={{
+                      flex: 1, border: `1px solid ${onlyShirt ? 'var(--accent-color)' : 'var(--border-color)'}`,
+                      background: onlyShirt ? 'rgba(204, 255, 0, 0.05)' : 'transparent',
+                      padding: '0.75rem', color: onlyShirt ? 'var(--accent-color)' : 'var(--text-main)',
+                      borderRadius: '4px', cursor: 'pointer', fontWeight: 700, fontSize: '0.85rem',
+                      transition: 'all 0.2s'
+                    }}
+                  >
+                    {t('product_composition_only_shirt') || 'Apenas Camisa'}
+                  </button>
+                </div>
+              </div>
+            )}
 
             {/* Customization Toggle */}
             <div style={{ marginBottom: '1.5rem' }}>

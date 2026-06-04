@@ -186,17 +186,25 @@ export const CartProvider = ({ children }) => {
     loadPricing();
   }, []);
 
-  const addToCart = (product, size, extras = { nameNumber: false, patch: false, extraCustomization: false }) => {
+  const addToCart = (product, size, extras = { nameNumber: false, patch: false, extraCustomization: false, onlyShirt: false }) => {
     const isKids = product?.category?.toLowerCase().includes('infantil') ||
       product?.name?.toLowerCase().includes('infantil') ||
       product?.name?.toLowerCase().includes('kids');
 
     let basePrice = product.price || 69.90;
     if (isKids) {
-      if (['16', '18', '20', '22'].includes(size)) {
-        basePrice = 49.90;
-      } else if (['24', '26', '28'].includes(size)) {
-        basePrice = 54.90;
+      if (extras.onlyShirt) {
+        if (['16', '18', '20', '22'].includes(size)) {
+          basePrice = 37.90;
+        } else if (['24', '26', '28'].includes(size)) {
+          basePrice = 42.90;
+        }
+      } else {
+        if (['16', '18', '20', '22'].includes(size)) {
+          basePrice = 49.90;
+        } else if (['24', '26', '28'].includes(size)) {
+          basePrice = 54.90;
+        }
       }
     }
     
@@ -208,7 +216,7 @@ export const CartProvider = ({ children }) => {
     if (extras.extraCustomization) addonsPrice += 6.90;
 
     const finalPrice = basePrice + addonsPrice;
-    const cartId = `${product.id}-${size}-${extras.nameNumber ? 'yes' : 'no'}-${extras.patch ? 'yes' : 'no'}-${extras.extraCustomization ? 'yes' : 'no'}-${extras.customName || ''}-${extras.customNumber || ''}-${extras.customExtraName || ''}`;
+    const cartId = `${product.id}-${size}-${extras.nameNumber ? 'yes' : 'no'}-${extras.patch ? 'yes' : 'no'}-${extras.extraCustomization ? 'yes' : 'no'}-${extras.onlyShirt ? 'yes' : 'no'}-${extras.customName || ''}-${extras.customNumber || ''}-${extras.customExtraName || ''}`;
 
     setCartItems(prev => {
       const existing = prev.find(item => item.cartId === cartId);
