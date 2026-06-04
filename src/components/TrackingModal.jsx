@@ -112,94 +112,112 @@ const getDaysPassedBetween = (startDateStr, endDateStr) => {
   return diffDays >= 0 ? diffDays : 0;
 };
 
-// Helper for Eastern Time Daylight Saving Time (DST)
-const isEasternDST = (date) => {
-  if (isNaN(date.getTime())) return false;
-  const year = date.getFullYear();
-  
-  // DST starts on second Sunday of March
-  const getSecondSundayOfMarch = (y) => {
-    const march1 = new Date(y, 2, 1);
-    const dayOfWeek = march1.getDay();
-    const firstSunday = 1 + (7 - dayOfWeek) % 7;
-    return firstSunday + 7;
-  };
-
-  // DST ends on first Sunday of November
-  const getFirstSundayOfNovember = (y) => {
-    const nov1 = new Date(y, 10, 1);
-    const dayOfWeek = nov1.getDay();
-    return 1 + (7 - dayOfWeek) % 7;
-  };
-
-  const startDST = new Date(year, 2, getSecondSundayOfMarch(year), 2, 0, 0); // 2:00 AM EST
-  const endDST = new Date(year, 10, getFirstSundayOfNovember(year), 2, 0, 0); // 2:00 AM EDT
-
-  return date >= startDST && date < endDST;
-};
-
-// Parse a raw date from carrier to a valid local JavaScript Date object
-const parseToUTCDate = (rawDate, carrier) => {
+// Force parsing a raw carrier time to a standard JS Date object
+const parseCarrierTimeToDate = (rawDate, carrier) => {
   if (!rawDate) return new Date(0);
   
-  // If it already has ISO timezone formatting (contains T or offset +/- or ends with Z)
   const hasTimezone = rawDate.includes('T') || /[-+]\d{2}:?\d{2}$/.test(rawDate) || rawDate.endsWith('Z');
   if (hasTimezone) {
     return new Date(rawDate);
   }
   
-  // Fallback for raw date formats without timezone
   const formattedRaw = rawDate.trim().replace(' ', 'T');
-  if (carrier === 'CN') {
-    // Chinese events are always Beijing Time (UTC+8)
-    return new Date(formattedRaw + '+08:00');
-  } else {
-    // Canada Post events are in Eastern Time (Toronto / Mississauga, UTC-4/UTC-5)
-    const tempDate = new Date(formattedRaw + '-05:00'); // EST fallback
-    const isDST = isEasternDST(tempDate);
-    const offset = isDST ? '-04:00' : '-05:00';
-    return new Date(formattedRaw + offset);
-  }
-};
-
-const getLocalTimezoneName = () => {
+  const tz = carrier === 'CN' ? 'Asia/Shanghai' : 'America/Toronto';
+  
   try {
-    const tzString = new Date().toLocaleTimeString('en-US', { timeZoneName: 'short' });
-    const parts = tzString.split(' ');
-    return parts[parts.length - 1]; // E.g. "MDT"
-  } catch {
-    return "";
+    const utcDate = new Date(formattedRaw + 'Z'); // Parse as UTC first
+    if (isNaN(utcDate.getTime())) return new Date(rawDate);
+
+    // Format the UTC date in the source timezone to find the offset
+    const formatter = new Intl.DateTimeFormat('en-US', {
+      timeZone: tz,
+      year: 'numeric', month: 'numeric', day: 'numeric',
+      hour: 'numeric', minute: 'numeric', second: 'numeric',
+      hour12: false
+    });
+    
+    const parts = formatter.formatToParts(utcDate);
+    const getPart = (type) => {
+      const p = parts.find(x => x.type === type);
+      return p ? parseInt(p.value, 10) : 0;
+    };
+    
+    const year = getPart('year');
+    const month = getPart('month');
+    const day = getPart('day');
+    let hour = getPart('hour');
+    if (hour === 24) hour = 0;
+    const minute = getPart('minute');
+    const second = getPart('second');
+    
+    const tzDate = Date.UTC(year, month - 1, day, hour, minute, second);
+    const offsetMs = utcDate.getTime() - tzDate;
+    
+    return new Date(utcDate.getTime() + offsetMs);
+  } catch (e) {
+    console.error("Error parsing carrier time:", e);
+    return new Date(rawDate);
   }
 };
 
-// Formats a date object to YYYY-MM-DD in the local timezone of the client
-const formatLocalDatePart = (dateObj) => {
+const getCalgaryTimezoneLabel = (dateObj = new Date()) => {
+  try {
+    const formatter = new Intl.DateTimeFormat('en-US', {
+      timeZone: 'America/Edmonton',
+      timeZoneName: 'short'
+    });
+    const parts = formatter.formatToParts(dateObj);
+    return parts.find(p => p.type === 'timeZoneName')?.value || 'MDT';
+  } catch {
+    return 'MDT';
+  }
+};
+
+// Formats a date object to YYYY-MM-DD in Calgary timezone (America/Edmonton)
+const formatCalgaryDatePart = (dateObj) => {
   if (isNaN(dateObj.getTime())) return 'Indisponível';
-  const year = dateObj.getFullYear();
-  const month = String(dateObj.getMonth() + 1).padStart(2, '0');
-  const day = String(dateObj.getDate()).padStart(2, '0');
-  return `${year}-${month}-${day}`;
+  
+  const formatter = new Intl.DateTimeFormat('en-US', {
+    timeZone: 'America/Edmonton',
+    year: 'numeric', month: '2-digit', day: '2-digit',
+    hour12: false
+  });
+  
+  const parts = formatter.formatToParts(dateObj);
+  const getPart = (type) => parts.find(p => p.type === type)?.value || '';
+  
+  return `${getPart('year')}-${getPart('month')}-${getPart('day')}`;
 };
 
-// Formats a date object to HH:MM:SS AM/PM in the local timezone of the client
-const formatLocalTimePart = (dateObj) => {
+// Formats a date object to HH:MM:SS AM/PM in Calgary timezone (America/Edmonton)
+const formatCalgaryTimePart = (dateObj) => {
   if (isNaN(dateObj.getTime())) return '';
-  let hours = dateObj.getHours();
-  const minutes = String(dateObj.getMinutes()).padStart(2, '0');
-  const seconds = String(dateObj.getSeconds()).padStart(2, '0');
-  const ampm = hours >= 12 ? 'PM' : 'AM';
-  hours = hours % 12 || 12;
-  return `${String(hours).padStart(2, '0')}:${minutes}:${seconds} ${ampm}`;
+  
+  const formatter = new Intl.DateTimeFormat('en-US', {
+    timeZone: 'America/Edmonton',
+    hour: 'numeric', minute: '2-digit', second: '2-digit',
+    hour12: false
+  });
+  
+  const parts = formatter.formatToParts(dateObj);
+  let hour = parseInt(parts.find(p => p.type === 'hour')?.value || '0', 10);
+  const minute = parts.find(p => p.type === 'minute')?.value || '00';
+  const second = parts.find(p => p.type === 'second')?.value || '00';
+  
+  const ampm = hour >= 12 ? 'PM' : 'AM';
+  hour = hour % 12 || 12;
+  
+  return `${String(hour).padStart(2, '0')}:${minute}:${second} ${ampm}`;
 };
 
-const formatShippingDate = (dateStr, history) => {
+const formatCalgaryShippingDate = (dateStr, history) => {
   if (!dateStr) return 'N/A';
   try {
     if (history && history.length > 0) {
       const oldestEvent = history[history.length - 1];
-      const dateObj = parseToUTCDate(oldestEvent.rawDate || oldestEvent.date, oldestEvent.carrier);
+      const dateObj = parseCarrierTimeToDate(oldestEvent.rawDate || oldestEvent.date, oldestEvent.carrier);
       if (!isNaN(dateObj.getTime())) {
-        return `${formatLocalDatePart(dateObj)} às ${formatLocalTimePart(dateObj)}`;
+        return `${formatCalgaryDatePart(dateObj)} às ${formatCalgaryTimePart(dateObj)}`;
       }
     }
   } catch (e) {
@@ -535,7 +553,7 @@ const TrackingModal = ({ isOpen, onClose, initialTrackingNumber = '' }) => {
                   <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)', textTransform: 'uppercase' }}>Data de Envio</span>
                   <p style={{ margin: 0, fontWeight: 700, color: '#fff' }}>
                     <Calendar size={14} style={{ display: 'inline', marginRight: '4px' }}/>
-                    {formatShippingDate(trackingData.date, history)}
+                    {formatCalgaryShippingDate(trackingData.date, history)}
                   </p>
                 </div>
                 
@@ -596,7 +614,7 @@ const TrackingModal = ({ isOpen, onClose, initialTrackingNumber = '' }) => {
               <div style={{ marginTop: '2rem' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid var(--border-color)', paddingBottom: '0.5rem', marginBottom: '1rem' }}>
                   <h3 style={{ fontSize: '1rem', margin: 0, color: '#fff' }}>
-                    Histórico (Timeline) - Horário Local ({getLocalTimezoneName()})
+                    Histórico (Timeline) - Horário de Calgary ({getCalgaryTimezoneLabel()})
                   </h3>
                   <div style={{ display: 'flex', gap: '0.5rem' }}>
                     <span style={{ fontSize: '0.65rem', background: 'rgba(220,50,50,0.15)', border: '1px solid rgba(220,50,50,0.3)', borderRadius: '4px', padding: '2px 6px', color: '#ff8080' }}>🇨🇳 China</span>
@@ -620,19 +638,19 @@ const TrackingModal = ({ isOpen, onClose, initialTrackingNumber = '' }) => {
                     
                     {history.length > 0 ? (() => {
                       const sortedHistory = [...history].sort((a, b) => {
-                        const timeA = parseToUTCDate(a.rawDate || a.date, a.carrier).getTime();
-                        const timeB = parseToUTCDate(b.rawDate || b.date, b.carrier).getTime();
+                        const timeA = parseCarrierTimeToDate(a.rawDate || a.date, a.carrier).getTime();
+                        const timeB = parseCarrierTimeToDate(b.rawDate || b.date, b.carrier).getTime();
                         return timeB - timeA;
                       });
 
                       const groups = {};
                       sortedHistory.forEach(item => {
-                        const dateObj = parseToUTCDate(item.rawDate || item.date, item.carrier);
-                        const datePart = formatLocalDatePart(dateObj);
+                        const dateObj = parseCarrierTimeToDate(item.rawDate || item.date, item.carrier);
+                        const datePart = formatCalgaryDatePart(dateObj);
                         if (!groups[datePart]) groups[datePart] = [];
                         groups[datePart].push({
                           ...item,
-                          _localTime: formatLocalTimePart(dateObj)
+                          _localTime: formatCalgaryTimePart(dateObj)
                         });
                       });
 
