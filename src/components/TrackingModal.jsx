@@ -112,6 +112,102 @@ const getDaysPassedBetween = (startDateStr, endDateStr) => {
   return diffDays >= 0 ? diffDays : 0;
 };
 
+// Helper for Eastern Time Daylight Saving Time (DST)
+const isEasternDST = (date) => {
+  if (isNaN(date.getTime())) return false;
+  const year = date.getFullYear();
+  
+  // DST starts on second Sunday of March
+  const getSecondSundayOfMarch = (y) => {
+    const march1 = new Date(y, 2, 1);
+    const dayOfWeek = march1.getDay();
+    const firstSunday = 1 + (7 - dayOfWeek) % 7;
+    return firstSunday + 7;
+  };
+
+  // DST ends on first Sunday of November
+  const getFirstSundayOfNovember = (y) => {
+    const nov1 = new Date(y, 10, 1);
+    const dayOfWeek = nov1.getDay();
+    return 1 + (7 - dayOfWeek) % 7;
+  };
+
+  const startDST = new Date(year, 2, getSecondSundayOfMarch(year), 2, 0, 0); // 2:00 AM EST
+  const endDST = new Date(year, 10, getFirstSundayOfNovember(year), 2, 0, 0); // 2:00 AM EDT
+
+  return date >= startDST && date < endDST;
+};
+
+// Parse a raw date from carrier to a valid local JavaScript Date object
+const parseToUTCDate = (rawDate, carrier) => {
+  if (!rawDate) return new Date(0);
+  
+  // If it already has ISO timezone formatting (contains T or offset +/- or ends with Z)
+  const hasTimezone = rawDate.includes('T') || /[-+]\d{2}:?\d{2}$/.test(rawDate) || rawDate.endsWith('Z');
+  if (hasTimezone) {
+    return new Date(rawDate);
+  }
+  
+  // Fallback for raw date formats without timezone
+  const formattedRaw = rawDate.trim().replace(' ', 'T');
+  if (carrier === 'CN') {
+    // Chinese events are always Beijing Time (UTC+8)
+    return new Date(formattedRaw + '+08:00');
+  } else {
+    // Canada Post events are in Eastern Time (Toronto / Mississauga, UTC-4/UTC-5)
+    const tempDate = new Date(formattedRaw + '-05:00'); // EST fallback
+    const isDST = isEasternDST(tempDate);
+    const offset = isDST ? '-04:00' : '-05:00';
+    return new Date(formattedRaw + offset);
+  }
+};
+
+const getLocalTimezoneName = () => {
+  try {
+    const tzString = new Date().toLocaleTimeString('en-US', { timeZoneName: 'short' });
+    const parts = tzString.split(' ');
+    return parts[parts.length - 1]; // E.g. "MDT"
+  } catch {
+    return "";
+  }
+};
+
+// Formats a date object to YYYY-MM-DD in the local timezone of the client
+const formatLocalDatePart = (dateObj) => {
+  if (isNaN(dateObj.getTime())) return 'Indisponível';
+  const year = dateObj.getFullYear();
+  const month = String(dateObj.getMonth() + 1).padStart(2, '0');
+  const day = String(dateObj.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+};
+
+// Formats a date object to HH:MM:SS AM/PM in the local timezone of the client
+const formatLocalTimePart = (dateObj) => {
+  if (isNaN(dateObj.getTime())) return '';
+  let hours = dateObj.getHours();
+  const minutes = String(dateObj.getMinutes()).padStart(2, '0');
+  const seconds = String(dateObj.getSeconds()).padStart(2, '0');
+  const ampm = hours >= 12 ? 'PM' : 'AM';
+  hours = hours % 12 || 12;
+  return `${String(hours).padStart(2, '0')}:${minutes}:${seconds} ${ampm}`;
+};
+
+const formatShippingDate = (dateStr, history) => {
+  if (!dateStr) return 'N/A';
+  try {
+    if (history && history.length > 0) {
+      const oldestEvent = history[history.length - 1];
+      const dateObj = parseToUTCDate(oldestEvent.rawDate || oldestEvent.date, oldestEvent.carrier);
+      if (!isNaN(dateObj.getTime())) {
+        return `${formatLocalDatePart(dateObj)} às ${formatLocalTimePart(dateObj)}`;
+      }
+    }
+  } catch (e) {
+    console.error("Erro ao formatar data de envio:", e);
+  }
+  return dateStr;
+};
+
 const TrackingModal = ({ isOpen, onClose, initialTrackingNumber = '' }) => {
   const [trackingNumber, setTrackingNumber] = useState(initialTrackingNumber);
   const [recentSearches, setRecentSearches] = useState(() => {
@@ -437,7 +533,10 @@ const TrackingModal = ({ isOpen, onClose, initialTrackingNumber = '' }) => {
                 </div>
                 <div>
                   <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)', textTransform: 'uppercase' }}>Data de Envio</span>
-                  <p style={{ margin: 0, fontWeight: 700, color: '#fff' }}><Calendar size={14} style={{ display: 'inline', marginRight: '4px' }}/>{trackingData.date || 'N/A'}</p>
+                  <p style={{ margin: 0, fontWeight: 700, color: '#fff' }}>
+                    <Calendar size={14} style={{ display: 'inline', marginRight: '4px' }}/>
+                    {formatShippingDate(trackingData.date, history)}
+                  </p>
                 </div>
                 
                 {daysPassed !== null && (
@@ -496,7 +595,9 @@ const TrackingModal = ({ isOpen, onClose, initialTrackingNumber = '' }) => {
               {/* Timeline */}
               <div style={{ marginTop: '2rem' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid var(--border-color)', paddingBottom: '0.5rem', marginBottom: '1rem' }}>
-                  <h3 style={{ fontSize: '1rem', margin: 0, color: '#fff' }}>Histórico (Timeline)</h3>
+                  <h3 style={{ fontSize: '1rem', margin: 0, color: '#fff' }}>
+                    Histórico (Timeline) - Horário Local ({getLocalTimezoneName()})
+                  </h3>
                   <div style={{ display: 'flex', gap: '0.5rem' }}>
                     <span style={{ fontSize: '0.65rem', background: 'rgba(220,50,50,0.15)', border: '1px solid rgba(220,50,50,0.3)', borderRadius: '4px', padding: '2px 6px', color: '#ff8080' }}>🇨🇳 China</span>
                     {hasCanadaPostData && (
@@ -518,11 +619,21 @@ const TrackingModal = ({ isOpen, onClose, initialTrackingNumber = '' }) => {
                     <div style={{ position: 'absolute', left: '7px', top: '10px', bottom: '10px', width: '2px', background: 'var(--border-color)' }}></div>
                     
                     {history.length > 0 ? (() => {
+                      const sortedHistory = [...history].sort((a, b) => {
+                        const timeA = parseToUTCDate(a.rawDate || a.date, a.carrier).getTime();
+                        const timeB = parseToUTCDate(b.rawDate || b.date, b.carrier).getTime();
+                        return timeB - timeA;
+                      });
+
                       const groups = {};
-                      history.forEach(item => {
-                        const datePart = item.date ? item.date.split(' às ')[0] : 'Indisponível';
+                      sortedHistory.forEach(item => {
+                        const dateObj = parseToUTCDate(item.rawDate || item.date, item.carrier);
+                        const datePart = formatLocalDatePart(dateObj);
                         if (!groups[datePart]) groups[datePart] = [];
-                        groups[datePart].push(item);
+                        groups[datePart].push({
+                          ...item,
+                          _localTime: formatLocalTimePart(dateObj)
+                        });
                       });
 
                       return Object.entries(groups).map(([date, items], gIdx) => (
@@ -562,7 +673,7 @@ const TrackingModal = ({ isOpen, onClose, initialTrackingNumber = '' }) => {
                                 <div>
                                   <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
                                     <span style={{ fontSize: '0.7rem', color: isFirst ? '#fff' : 'var(--text-muted)', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '4px' }}>
-                                      <Clock size={10} /> {item.date ? item.date.split(' às ')[1] : ''}
+                                      <Clock size={10} /> {item._localTime || (item.date ? item.date.split(' às ')[1] : '')}
                                     </span>
                                     <span style={{ 
                                       fontSize: '0.55rem', 
