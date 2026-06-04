@@ -189,25 +189,24 @@ const formatCalgaryDatePart = (dateObj) => {
   return `${getPart('year')}-${getPart('month')}-${getPart('day')}`;
 };
 
-// Formats a date object to HH:MM:SS AM/PM in Calgary timezone (America/Edmonton)
+// Formats a date object to HH:MM:SS (24-hour) in Calgary timezone (America/Edmonton)
 const formatCalgaryTimePart = (dateObj) => {
   if (isNaN(dateObj.getTime())) return '';
   
   const formatter = new Intl.DateTimeFormat('en-US', {
     timeZone: 'America/Edmonton',
-    hour: 'numeric', minute: '2-digit', second: '2-digit',
+    hour: '2-digit', minute: '2-digit', second: '2-digit',
     hour12: false
   });
   
   const parts = formatter.formatToParts(dateObj);
-  let hour = parseInt(parts.find(p => p.type === 'hour')?.value || '0', 10);
+  let hour = parts.find(p => p.type === 'hour')?.value || '00';
   const minute = parts.find(p => p.type === 'minute')?.value || '00';
   const second = parts.find(p => p.type === 'second')?.value || '00';
   
-  const ampm = hour >= 12 ? 'PM' : 'AM';
-  hour = hour % 12 || 12;
+  if (hour === '24') hour = '00';
   
-  return `${String(hour).padStart(2, '0')}:${minute}:${second} ${ampm}`;
+  return `${hour}:${minute}:${second}`;
 };
 
 const formatCalgaryShippingDate = (dateStr, history) => {
