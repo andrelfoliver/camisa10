@@ -20,6 +20,7 @@ import NotFound from './pages/NotFound';
 import WhatsAppIcon from './components/WhatsAppIcon';
 import SalesPopup from './components/SalesPopup';
 import ExitIntentPopup from './components/ExitIntentPopup';
+import FunkPlayer from './components/FunkPlayer';
 
 const ScrollToTop = () => {
   const { pathname } = useLocation();
@@ -123,6 +124,9 @@ const AppLayout = () => {
 
       {/* Exit Intent Feedback Popup - Enabled on all pages except to avoid blocking navigation */}
       {!isAdminPage && <ExitIntentPopup />}
+
+      {/* Funk Player */}
+      {!isAdminPage && <FunkPlayer />}
     </div>
   );
 };
