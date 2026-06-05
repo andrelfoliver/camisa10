@@ -109,7 +109,8 @@ const Admin = () => {
         unavailable_sizes: rest.unavailable_sizes || [],
         description: rest.description,
         is_bestseller: !!rest.is_bestseller,
-        is_new: !!rest.is_new
+        is_new: !!rest.is_new,
+        coming_soon: !!rest.coming_soon
       };
 
       const { error } = await supabase.from('products').update(sanitizedData).eq('id', id);
@@ -163,7 +164,7 @@ const Admin = () => {
   };
 
   // Campo Categoria adicionado!
-  const [newProduct, setNewProduct] = useState({ name: '', price: '', image: '', category: '', league: '', team: '', version: '', is_bestseller: false, is_new: false, inventory: { ...DEFAULT_INVENTORY }, unavailable_sizes: [] });
+  const [newProduct, setNewProduct] = useState({ name: '', price: '', image: '', category: '', league: '', team: '', version: '', is_bestseller: false, is_new: false, coming_soon: false, inventory: { ...DEFAULT_INVENTORY }, unavailable_sizes: [] });
   const [trackingCaches, setTrackingCaches] = useState([]);
   const [imageFile, setImageFile] = useState(null);
   const [imagePreview, setImagePreview] = useState(null);
@@ -178,6 +179,7 @@ const Admin = () => {
   const [customers, setCustomers] = useState([]);
   const [orders, setOrders] = useState([]);
   const [testimonials, setTestimonials] = useState([]);
+  const [interests, setInterests] = useState([]);
   const [heroUrl, setHeroUrl] = useState('');
   const [heroImageFile, setHeroImageFile] = useState(null);
   const [heroImagePreview, setHeroImagePreview] = useState(null);
@@ -460,6 +462,18 @@ const Admin = () => {
       }
     }
 
+    async function loadInterests() {
+      try {
+        const { data, error } = await supabase.from('product_interests').select('*').order('created_at', { ascending: false });
+        if (data) setInterests(data);
+        if (error && error.code === '42P01') {
+          console.warn("Tabela 'product_interests' não encontrada. O usuário precisa executar o SQL de migração.");
+        }
+      } catch (e) {
+        console.error("Erro ao buscar interesses:", e);
+      }
+    }
+
     async function loadTrackingCaches() {
       try {
         const { data } = await supabase.from('tracking_cache').select('tracking_number, status_data');
@@ -478,6 +492,7 @@ const Admin = () => {
       fetchTeams();
       loadCoupons();
       loadTrackingCaches();
+      loadInterests();
     }
   }, [isAdmin, user]);
 
@@ -752,6 +767,16 @@ const Admin = () => {
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleDeleteInterest = async (id) => {
+    showConfirm("Excluir Registro", "Tem certeza que deseja remover este interesse?", async () => {
+      const { error } = await supabase.from('product_interests').delete().eq('id', id);
+      if (error) showAlert("Erro", error.message);
+      else {
+        setInterests(interests.filter(i => i.id !== id));
+      }
+    });
   };
 
   const handleDeleteCoupon = async (id) => {
@@ -1597,7 +1622,8 @@ const Admin = () => {
         unavailable_sizes: newProduct.unavailable_sizes || [],
         description: newProduct.description,
         is_bestseller: !!newProduct.is_bestseller,
-        is_new: !!newProduct.is_new
+        is_new: !!newProduct.is_new,
+        coming_soon: !!newProduct.coming_soon
       };
 
       const { data, error } = await supabase.from('products').insert([sanitizedData]).select();
@@ -1620,6 +1646,7 @@ const Admin = () => {
           version: '', 
           is_bestseller: false, 
           is_new: false, 
+          coming_soon: false, 
           description: '', 
           inventory: { ...DEFAULT_INVENTORY } 
         });
@@ -2094,12 +2121,20 @@ const Admin = () => {
             <HardDrive size={18} /> ESTOQUE
           </button>
 
-          <button
+           <button
             onClick={() => setSupplierTab('CLIENTES')}
             className={supplierTab === 'CLIENTES' ? 'active-tab' : ''}
             style={{ padding: '0.8rem 1.5rem', background: supplierTab === 'CLIENTES' ? 'var(--accent-color)' : 'transparent', color: supplierTab === 'CLIENTES' ? '#000' : 'var(--text-muted)', border: 'none', borderRadius: '4px', cursor: 'pointer', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '0.5rem' }}
           >
             <Users size={18} /> CLIENTES
+          </button>
+
+          <button
+            onClick={() => setSupplierTab('INTERESSES')}
+            className={supplierTab === 'INTERESSES' ? 'active-tab' : ''}
+            style={{ padding: '0.8rem 1.5rem', background: supplierTab === 'INTERESSES' ? 'var(--accent-color)' : 'transparent', color: supplierTab === 'INTERESSES' ? '#000' : 'var(--text-muted)', border: 'none', borderRadius: '4px', cursor: 'pointer', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '0.5rem' }}
+          >
+            <Heart size={18} /> INTERESSES / PRÉ-VENDA
           </button>
 
           <button
@@ -2181,16 +2216,17 @@ const Admin = () => {
               <h1 className="admin-header-title" style={{ fontSize: '1.8rem', color: '#fff', fontWeight: 800, margin: 0 }}>
                 {
                   supplierTab === 'CLIENTES' ? 'Gestão de Clientes' :
-                    supplierTab === 'CONFIG' ? 'Configuração de Interface' :
-                      supplierTab === 'PRICING' ? 'Tabela de Preços Globais' :
-                        supplierTab === 'TESTIMONIALS' ? 'Gestão de Depoimentos' :
-                          supplierTab === 'TEAMS' ? 'Gestão de Escudos Oficiais' :
-                            supplierTab === 'CLOUD_ALL' ? 'Todo o Banco na Nuvem' :
-                              supplierTab === 'ESTOQUE' ? 'Gestão de Estoque' :
-                                supplierTab === 'AGENTS' ? 'Agentes & Vendas' :
-                                  supplierTab === 'CIDADES' ? 'Distribuição Geográfica' :
-                                    supplierTab === 'FINANCEIRO' ? 'Resumo Financeiro Executivo' :
-                                      `${supplierTab.replace('CAT_', '')}`}
+                    supplierTab === 'INTERESSES' ? 'Interesses de Lançamento / Pré-venda' :
+                      supplierTab === 'CONFIG' ? 'Configuração de Interface' :
+                        supplierTab === 'PRICING' ? 'Tabela de Preços Globais' :
+                          supplierTab === 'TESTIMONIALS' ? 'Gestão de Depoimentos' :
+                            supplierTab === 'TEAMS' ? 'Gestão de Escudos Oficiais' :
+                              supplierTab === 'CLOUD_ALL' ? 'Todo o Banco na Nuvem' :
+                                supplierTab === 'ESTOQUE' ? 'Gestão de Estoque' :
+                                  supplierTab === 'AGENTS' ? 'Agentes & Vendas' :
+                                    supplierTab === 'CIDADES' ? 'Distribuição Geográfica' :
+                                      supplierTab === 'FINANCEIRO' ? 'Resumo Financeiro Executivo' :
+                                        `${supplierTab.replace('CAT_', '')}`}
               </h1>
               <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem', marginTop: '0.2rem' }} className="hide-mobile">Painel Central de Gerenciamento iFooty.</p>
             </div>
@@ -4423,6 +4459,119 @@ const Admin = () => {
               </div>
             );
           })()
+            : supplierTab === 'INTERESSES' ? (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', maxWidth: '1000px' }}>
+                {interests.length === 0 ? (
+                  <div style={{ textAlign: 'center', padding: '4rem 2rem', background: 'var(--surface-color)', borderRadius: 'var(--radius-lg)', border: '1px dashed var(--border-color)' }}>
+                    <Heart size={48} color="var(--text-muted)" style={{ marginBottom: '1rem' }} />
+                    <h3 style={{ color: '#fff', marginBottom: '0.5rem' }}>Nenhum interesse registrado</h3>
+                    <p style={{ color: 'var(--text-muted)' }}>Os registros de interesse em novos lançamentos/pré-vendas aparecerão aqui.</p>
+                  </div>
+                ) : (
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1rem', marginBottom: '1rem' }}>
+                      <div className="glass-panel" style={{ padding: '1.25rem', borderRadius: '12px', background: 'rgba(31, 41, 55, 0.4)', border: '1px solid rgba(255,255,255,0.05)' }}>
+                        <p style={{ margin: 0, fontSize: '0.8rem', color: 'var(--text-muted)', fontWeight: 700, textTransform: 'uppercase' }}>Total de Interesses</p>
+                        <h3 style={{ margin: '0.2rem 0 0 0', fontSize: '1.8rem', color: '#fff', fontWeight: 900 }}>{interests.length}</h3>
+                      </div>
+                      <div className="glass-panel" style={{ padding: '1.25rem', borderRadius: '12px', background: 'rgba(31, 41, 55, 0.4)', border: '1px solid rgba(255,255,255,0.05)' }}>
+                        <p style={{ margin: 0, fontSize: '0.8rem', color: 'var(--text-muted)', fontWeight: 700, textTransform: 'uppercase' }}>Modelos com Interesse</p>
+                        <h3 style={{ margin: '0.2rem 0 0 0', fontSize: '1.8rem', color: 'var(--accent-color)', fontWeight: 900 }}>
+                          {new Set(interests.map(i => i.product_id)).size}
+                        </h3>
+                      </div>
+                    </div>
+
+                    <div style={{ display: 'grid', gridTemplateColumns: '1.2fr 1fr 1fr 80px 1.2fr 80px', padding: '0.8rem 1.5rem', color: 'var(--text-muted)', fontSize: '0.7rem', fontWeight: 800, textTransform: 'uppercase' }}>
+                      <span>Manto</span>
+                      <span>Cliente</span>
+                      <span>WhatsApp</span>
+                      <span>Tamanho</span>
+                      <span>Data</span>
+                      <span style={{ textAlign: 'center' }}>Ações</span>
+                    </div>
+
+                    {interests.map(interest => {
+                      const prod = products.find(p => p.id === interest.product_id) || {};
+                      const formattedDate = interest.created_at ? new Date(interest.created_at).toLocaleString('pt-BR', { timeZone: 'America/Edmonton' }) : 'N/A';
+                      const cleanWhatsApp = interest.whatsapp.replace(/\D/g, '');
+                      const whatsappText = `Olá ${interest.name}! Você registrou interesse no lançamento da camisa ${prod.name || 'Manto'} no tamanho ${interest.size}. Ela acabou de chegar em estoque! Gostaria de garantir a sua?`;
+                      
+                      return (
+                        <div
+                          key={interest.id}
+                          className="glass-panel"
+                          style={{
+                            display: 'grid',
+                            gridTemplateColumns: '1.2fr 1fr 1fr 80px 1.2fr 80px',
+                            alignItems: 'center',
+                            padding: '1rem 1.5rem',
+                            borderRadius: '8px',
+                            background: 'rgba(255, 255, 255, 0.02)',
+                            border: '1px solid var(--border-color)'
+                          }}
+                        >
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '0.8rem' }}>
+                            <img
+                              src={prod.image || '/placeholder.png'}
+                              alt=""
+                              style={{ width: '40px', height: '40px', objectFit: 'contain', background: 'rgba(255,255,255,0.05)', borderRadius: '4px' }}
+                            />
+                            <span style={{ fontWeight: 700, color: '#fff', fontSize: '0.9rem' }}>
+                              {prod.name || `Produto #${interest.product_id}`}
+                            </span>
+                          </div>
+
+                          <div style={{ color: 'var(--text-main)', fontWeight: 600 }}>
+                            {interest.name}
+                          </div>
+
+                          <div>
+                            <a
+                              href={`https://wa.me/${cleanWhatsApp}`}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              style={{ color: 'var(--accent-color)', textDecoration: 'none', fontWeight: 700 }}
+                            >
+                              {interest.whatsapp}
+                            </a>
+                          </div>
+
+                          <div style={{ color: '#fff', fontWeight: 700 }}>
+                            <span style={{ background: 'rgba(255,255,255,0.05)', padding: '0.2rem 0.5rem', borderRadius: '4px' }}>
+                              {interest.size}
+                            </span>
+                          </div>
+
+                          <div style={{ color: 'var(--text-muted)', fontSize: '0.8rem' }}>
+                            {formattedDate}
+                          </div>
+
+                          <div style={{ display: 'flex', gap: '0.5rem', justifyContent: 'center' }}>
+                            <button
+                              onClick={() => {
+                                window.open(`https://wa.me/${cleanWhatsApp}?text=${encodeURIComponent(whatsappText)}`, '_blank');
+                              }}
+                              title="Notificar via WhatsApp"
+                              style={{ background: '#25D366', color: '#fff', border: 'none', borderRadius: '4px', width: '32px', height: '32px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}
+                            >
+                              💬
+                            </button>
+                            <button
+                              onClick={() => handleDeleteInterest(interest.id)}
+                              title="Remover"
+                              style={{ background: '#EF4444', color: '#fff', border: 'none', borderRadius: '4px', width: '32px', height: '32px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}
+                            >
+                              <Trash2 size={16} />
+                            </button>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+            )
             : supplierTab === 'CLIENTES' ? (
               <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', maxWidth: '1000px' }}>
                 {customers.length === 0 ? (
@@ -5061,6 +5210,15 @@ const Admin = () => {
                   />
                   Novo ⭐
                 </label>
+                <label style={{ display: 'flex', alignItems: 'center', gap: '0.8rem', cursor: 'pointer', color: '#fff', fontSize: '0.95rem', fontWeight: 600 }}>
+                  <input
+                    type="checkbox"
+                    checked={newProduct.coming_soon}
+                    onChange={e => setNewProduct({ ...newProduct, coming_soon: e.target.checked })}
+                    style={{ width: '1.2rem', height: '1.2rem', accentColor: '#00d8f6' }}
+                  />
+                  Em Breve (Pré-venda) 🚀
+                </label>
               </div>
 
               {/* === ESTOQUE POR TAMANHO === */}
@@ -5501,6 +5659,15 @@ const Admin = () => {
                     style={{ width: '1.2rem', height: '1.2rem', accentColor: '#FFB81C' }}
                   />
                   Novo ⭐
+                </label>
+                <label style={{ display: 'flex', alignItems: 'center', gap: '0.8rem', cursor: 'pointer', color: '#fff', fontSize: '0.95rem', fontWeight: 600 }}>
+                  <input
+                    type="checkbox"
+                    checked={editingProduct.coming_soon || false}
+                    onChange={e => setEditingProduct({ ...editingProduct, coming_soon: e.target.checked })}
+                    style={{ width: '1.2rem', height: '1.2rem', accentColor: '#00d8f6' }}
+                  />
+                  Em Breve (Pré-venda) 🚀
                 </label>
               </div>
 

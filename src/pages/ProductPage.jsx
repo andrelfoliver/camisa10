@@ -101,6 +101,12 @@ const ProductPage = () => {
   const [quantity, setQuantity] = useState(1);
   const [onlyShirt, setOnlyShirt] = useState(false);
 
+  const [isInterestModalOpen, setIsInterestModalOpen] = useState(false);
+  const [interestName, setInterestName] = useState('');
+  const [interestWhatsapp, setInterestWhatsapp] = useState('');
+  const [interestSuccess, setInterestSuccess] = useState(false);
+  const [isSubmittingInterest, setIsSubmittingInterest] = useState(false);
+
   useEffect(() => {
     setOnlyShirt(false);
     async function loadData() {
@@ -157,6 +163,41 @@ const ProductPage = () => {
   if (loading) return <div style={{ textAlign: 'center', padding: '5rem', fontSize: '1.5rem', color: 'var(--text-muted)' }}>{t('product_loading')}</div>;
   if (!product) return <div style={{ textAlign: 'center', padding: '5rem' }}>{t('product_not_found')}</div>;
 
+
+  const handleInterestSubmit = async (e) => {
+    e.preventDefault();
+    if (!interestName || !interestWhatsapp) return;
+
+    setIsSubmittingInterest(true);
+    try {
+      const { error } = await supabase.from('product_interests').insert({
+        product_id: product.id,
+        name: interestName,
+        whatsapp: interestWhatsapp,
+        size: selectedSize
+      });
+
+      if (error) {
+        console.error("Error saving pre-order interest:", error);
+      }
+      
+      setInterestSuccess(true);
+    } catch (err) {
+      console.error("Unexpected error saving pre-order interest:", err);
+      setInterestSuccess(true);
+    } finally {
+      setIsSubmittingInterest(false);
+    }
+  };
+
+  const handleInterestWhatsAppClick = () => {
+    const waNumber = pricingConfig?.whatsAppNumber || '17788061419';
+    const text = language === 'pt'
+      ? `Olá! Tenho interesse no lançamento da camisa ${product.name} no tamanho ${selectedSize} na pré-venda. Meu nome é ${interestName}.`
+      : `Hello! I'm interested in the pre-order of the jersey ${product.name} in size ${selectedSize}. My name is ${interestName}.`;
+    
+    window.open(`https://wa.me/${String(waNumber).replace(/\D/g, '')}?text=${encodeURIComponent(text)}`, '_blank');
+  };
 
   const handleAdd = (buyNow = false) => {
     // Busca a primeira imagem que NÃO seja vídeo para usar como thumbnail na sacola
@@ -291,6 +332,26 @@ const ProductPage = () => {
 
             <div className="mobile-only">
               <div className="mobile-breadcrumbs">{t('category_home')} &gt; {product.category || t('footer_catalog')} &gt; {translateProductDisplay(product.name)}</div>
+              {product.coming_soon && (
+                <div style={{ 
+                  display: 'inline-flex', 
+                  alignItems: 'center', 
+                  gap: '0.4rem', 
+                  background: 'rgba(0, 216, 246, 0.1)', 
+                  border: '1px solid rgba(0, 216, 246, 0.3)', 
+                  padding: '0.3rem 0.6rem', 
+                  borderRadius: '4px', 
+                  color: '#00d8f6', 
+                  fontWeight: 800, 
+                  fontSize: '0.75rem',
+                  textTransform: 'uppercase',
+                  marginBottom: '0.6rem',
+                  boxShadow: '0 0 10px rgba(0, 216, 246, 0.1)',
+                  alignSelf: 'flex-start'
+                }}>
+                  <span>🚀</span> {language === 'pt' ? 'Lançamento / Pré-Venda' : 'New Release / Pre-Order'}
+                </div>
+              )}
               <h1 className="mobile-product-title">{translateProductDisplay(product.name)}</h1>
               <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginBottom: '0.5rem' }}>SKU: {product.id}</div>
 
@@ -331,6 +392,26 @@ const ProductPage = () => {
               <div style={{ background: '#1f2937', color: '#fff', padding: '0.8rem 1rem', borderRadius: '4px', textAlign: 'center', fontWeight: 600, fontSize: '0.9rem', marginBottom: '1.5rem', width: '100%', lineHeight: 1.4 }}>
                 {t('product_volume_promo')}
               </div>
+              {product.coming_soon && (
+                <div style={{ 
+                  display: 'inline-flex', 
+                  alignItems: 'center', 
+                  gap: '0.5rem', 
+                  background: 'rgba(0, 216, 246, 0.1)', 
+                  border: '1px solid rgba(0, 216, 246, 0.3)', 
+                  padding: '0.4rem 0.8rem', 
+                  borderRadius: '6px', 
+                  color: '#00d8f6', 
+                  fontWeight: 800, 
+                  fontSize: '0.85rem',
+                  textTransform: 'uppercase',
+                  marginBottom: '0.8rem',
+                  boxShadow: '0 0 12px rgba(0, 216, 246, 0.15)',
+                  alignSelf: 'flex-start'
+                }}>
+                  <span>🚀</span> {language === 'pt' ? 'Lançamento / Pré-Venda' : 'New Release / Pre-Order'}
+                </div>
+              )}
               <h1 style={{ fontSize: '2.5rem', marginBottom: '0.5rem', lineHeight: 1.2, fontWeight: 800 }}>{translateProductDisplay(product.name)}</h1>
 
               {(() => {
@@ -370,7 +451,7 @@ const ProductPage = () => {
             </div>
 
             {/* Stock Badge - Pronta Entrega */}
-            {product.inventory?.[selectedSize] > 0 && (
+            {product.inventory?.[selectedSize] > 0 && !product.coming_soon && (
               <div
                 className="pulse-soft"
                 style={{
@@ -469,7 +550,7 @@ const ProductPage = () => {
               )}
 
               {/* Stock Summary */}
-              {Object.values(product.inventory || {}).some(v => v > 0) && (
+              {Object.values(product.inventory || {}).some(v => v > 0) && !product.coming_soon && (
                 <div style={{ marginTop: '1.5rem', background: 'rgba(255,255,255,0.02)', padding: '1rem', borderRadius: '8px', border: '1px solid var(--border-color)' }}>
                   <div style={{ marginBottom: '0.8rem' }}>
                     <p style={{ margin: 0, fontSize: '0.8rem', fontWeight: 800, color: 'var(--accent-color)', textTransform: 'uppercase', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
@@ -537,120 +618,150 @@ const ProductPage = () => {
             )}
 
             {/* Customization Toggle */}
-            <div style={{ marginBottom: '1.5rem' }}>
-              <p style={{ fontWeight: 700, marginBottom: '0.8rem', fontSize: '0.9rem', textTransform: 'uppercase' }}>{t('product_customization')}</p>
-              <div style={{ display: 'flex', gap: '0.5rem' }}>
-                <button
-                  onClick={() => setIsCustomized(false)}
-                  style={{
-                    flex: 1, border: `1px solid ${!isCustomized ? 'var(--accent-color)' : 'var(--border-color)'}`,
-                    background: !isCustomized ? 'rgba(204, 255, 0, 0.05)' : 'transparent',
-                    padding: '0.75rem', color: !isCustomized ? 'var(--accent-color)' : 'var(--text-main)',
-                    borderRadius: '4px', cursor: 'pointer', fontWeight: 700, fontSize: '0.85rem'
-                  }}
-                >
-                  {t('product_customization_none')}
-                </button>
-                <button
-                  onClick={() => setIsCustomized(true)}
-                  style={{
-                    flex: 1, border: `1px solid ${isCustomized ? 'var(--accent-color)' : 'var(--border-color)'}`,
-                    background: isCustomized ? 'rgba(204, 255, 0, 0.05)' : 'transparent',
-                    padding: '0.75rem', color: isCustomized ? 'var(--accent-color)' : 'var(--text-main)',
-                    borderRadius: '4px', cursor: 'pointer', fontWeight: 700, fontSize: '0.85rem'
-                  }}
-                >
-                  {t('product_customization_yes')}
-                </button>
-              </div>
-            </div>
+            {!product.coming_soon && (
+              <>
+                <div style={{ marginBottom: '1.5rem' }}>
+                  <p style={{ fontWeight: 700, marginBottom: '0.8rem', fontSize: '0.9rem', textTransform: 'uppercase' }}>{t('product_customization')}</p>
+                  <div style={{ display: 'flex', gap: '0.5rem' }}>
+                    <button
+                      onClick={() => setIsCustomized(false)}
+                      style={{
+                        flex: 1, border: `1px solid ${!isCustomized ? 'var(--accent-color)' : 'var(--border-color)'}`,
+                        background: !isCustomized ? 'rgba(204, 255, 0, 0.05)' : 'transparent',
+                        padding: '0.75rem', color: !isCustomized ? 'var(--accent-color)' : 'var(--text-main)',
+                        borderRadius: '4px', cursor: 'pointer', fontWeight: 700, fontSize: '0.85rem'
+                      }}
+                    >
+                      {t('product_customization_none')}
+                    </button>
+                    <button
+                      onClick={() => setIsCustomized(true)}
+                      style={{
+                        flex: 1, border: `1px solid ${isCustomized ? 'var(--accent-color)' : 'var(--border-color)'}`,
+                        background: isCustomized ? 'rgba(204, 255, 0, 0.05)' : 'transparent',
+                        padding: '0.75rem', color: isCustomized ? 'var(--accent-color)' : 'var(--text-main)',
+                        borderRadius: '4px', cursor: 'pointer', fontWeight: 700, fontSize: '0.85rem'
+                      }}
+                    >
+                      {t('product_customization_yes')}
+                    </button>
+                  </div>
+                </div>
 
-            {/* Conditional Inputs */}
-            {isCustomized && (
-              <div style={{ marginBottom: '2.5rem', background: 'var(--surface-color)', padding: '1.2rem', borderRadius: '8px', border: '1px solid var(--border-color)' }}>
-                <div style={{ marginBottom: '1rem' }}>
-                  <label style={{ fontSize: '0.8rem', fontWeight: 800, color: 'var(--text-muted)', display: 'block', marginBottom: '0.4rem', textTransform: 'uppercase' }}>{t('product_custom_name')}</label>
-                  <input
-                    type="text"
-                    placeholder="Ex: NEYMAR JR"
-                    value={customName}
-                    onChange={e => setCustomName(e.target.value.toUpperCase())}
-                    style={{ width: '100%', padding: '0.8rem', border: '1px solid var(--border-color)', borderRadius: '4px', background: 'rgba(255,255,255,0.02)', color: '#fff', fontSize: '1rem', outline: 'none' }}
-                  />
+                {/* Conditional Inputs */}
+                {isCustomized && (
+                  <div style={{ marginBottom: '2.5rem', background: 'var(--surface-color)', padding: '1.2rem', borderRadius: '8px', border: '1px solid var(--border-color)' }}>
+                    <div style={{ marginBottom: '1rem' }}>
+                      <label style={{ fontSize: '0.8rem', fontWeight: 800, color: 'var(--text-muted)', display: 'block', marginBottom: '0.4rem', textTransform: 'uppercase' }}>{t('product_custom_name')}</label>
+                      <input
+                        type="text"
+                        placeholder="Ex: NEYMAR JR"
+                        value={customName}
+                        onChange={e => setCustomName(e.target.value.toUpperCase())}
+                        style={{ width: '100%', padding: '0.8rem', border: '1px solid var(--border-color)', borderRadius: '4px', background: 'rgba(255,255,255,0.02)', color: '#fff', fontSize: '1rem', outline: 'none' }}
+                      />
+                    </div>
+                    <div>
+                      <label style={{ fontSize: '0.8rem', fontWeight: 800, color: 'var(--text-muted)', display: 'block', marginBottom: '0.4rem', textTransform: 'uppercase' }}>{t('product_custom_number')}</label>
+                      <input
+                        type="text"
+                        placeholder="10"
+                        maxLength="2"
+                        value={customNumber}
+                        onChange={e => setCustomNumber(e.target.value)}
+                        style={{ width: '100%', padding: '0.8rem', border: '1px solid var(--border-color)', borderRadius: '4px', background: 'rgba(255,255,255,0.02)', color: '#fff', fontSize: '1rem', outline: 'none' }}
+                      />
+                    </div>
+                  </div>
+                )}
+
+                {/* Extra Customization Toggle */}
+                <div style={{ marginBottom: '1.5rem', marginTop: '1rem' }}>
+                  <p style={{ fontWeight: 700, marginBottom: '0.8rem', fontSize: '0.9rem', textTransform: 'uppercase' }}>
+                    Personalização Extra (+ $6.90)
+                  </p>
+                  <div style={{ display: 'flex', gap: '0.5rem' }}>
+                    <button
+                      onClick={() => setIsExtraCustomized(false)}
+                      style={{
+                        flex: 1, border: `1px solid ${!isExtraCustomized ? 'var(--accent-color)' : 'var(--border-color)'}`,
+                        background: !isExtraCustomized ? 'rgba(204, 255, 0, 0.05)' : 'transparent',
+                        padding: '0.75rem', color: !isExtraCustomized ? 'var(--accent-color)' : 'var(--text-main)',
+                        borderRadius: '4px', cursor: 'pointer', fontWeight: 700, fontSize: '0.85rem'
+                      }}
+                    >
+                      Não
+                    </button>
+                    <button
+                      onClick={() => setIsExtraCustomized(true)}
+                      style={{
+                        flex: 1, border: `1px solid ${isExtraCustomized ? 'var(--accent-color)' : 'var(--border-color)'}`,
+                        background: isExtraCustomized ? 'rgba(204, 255, 0, 0.05)' : 'transparent',
+                        padding: '0.75rem', color: isExtraCustomized ? 'var(--accent-color)' : 'var(--text-main)',
+                        borderRadius: '4px', cursor: 'pointer', fontWeight: 700, fontSize: '0.85rem'
+                      }}
+                    >
+                      Sim
+                    </button>
+                  </div>
                 </div>
-                <div>
-                  <label style={{ fontSize: '0.8rem', fontWeight: 800, color: 'var(--text-muted)', display: 'block', marginBottom: '0.4rem', textTransform: 'uppercase' }}>{t('product_custom_number')}</label>
-                  <input
-                    type="text"
-                    placeholder="10"
-                    maxLength="2"
-                    value={customNumber}
-                    onChange={e => setCustomNumber(e.target.value)}
-                    style={{ width: '100%', padding: '0.8rem', border: '1px solid var(--border-color)', borderRadius: '4px', background: 'rgba(255,255,255,0.02)', color: '#fff', fontSize: '1rem', outline: 'none' }}
-                  />
-                </div>
-              </div>
+
+                {isExtraCustomized && (
+                  <div style={{ marginBottom: '2.5rem', background: 'var(--surface-color)', padding: '1.2rem', borderRadius: '8px', border: '1px solid var(--border-color)' }}>
+                    <div>
+                      <label style={{ fontSize: '0.8rem', fontWeight: 800, color: 'var(--text-muted)', display: 'block', marginBottom: '0.4rem', textTransform: 'uppercase' }}>
+                        Nome Extra (Ex: iFooty Canadá)
+                      </label>
+                      <input
+                        type="text"
+                        placeholder="Ex: IFOOTY CANADA"
+                        value={customExtraName}
+                        onChange={e => setCustomExtraName(e.target.value.toUpperCase())}
+                        style={{ width: '100%', padding: '0.8rem', border: '1px solid var(--border-color)', borderRadius: '4px', background: 'rgba(255,255,255,0.02)', color: '#fff', fontSize: '1rem', outline: 'none' }}
+                      />
+                    </div>
+                  </div>
+                )}
+              </>
             )}
 
-            {/* Extra Customization Toggle */}
-            <div style={{ marginBottom: '1.5rem', marginTop: '1rem' }}>
-              <p style={{ fontWeight: 700, marginBottom: '0.8rem', fontSize: '0.9rem', textTransform: 'uppercase' }}>
-                Personalização Extra (+ $6.90)
-              </p>
-              <div style={{ display: 'flex', gap: '0.5rem' }}>
-                <button
-                  onClick={() => setIsExtraCustomized(false)}
-                  style={{
-                    flex: 1, border: `1px solid ${!isExtraCustomized ? 'var(--accent-color)' : 'var(--border-color)'}`,
-                    background: !isExtraCustomized ? 'rgba(204, 255, 0, 0.05)' : 'transparent',
-                    padding: '0.75rem', color: !isExtraCustomized ? 'var(--accent-color)' : 'var(--text-main)',
-                    borderRadius: '4px', cursor: 'pointer', fontWeight: 700, fontSize: '0.85rem'
+            {/* Qty and Buy OR Pre-Order Button */}
+            {product.coming_soon ? (
+              <div style={{ display: 'flex', gap: '0.8rem', marginBottom: '2.5rem' }}>
+                <button 
+                  className="btn-primary" 
+                  onClick={() => setIsInterestModalOpen(true)} 
+                  style={{ 
+                    flex: 1, 
+                    fontWeight: 900, 
+                    fontSize: '1.1rem', 
+                    height: '56px', 
+                    borderRadius: '4px', 
+                    textTransform: 'uppercase', 
+                    letterSpacing: '1px',
+                    background: 'linear-gradient(135deg, #00d8f6 0%, #00b0ff 100%)',
+                    color: '#000',
+                    border: 'none',
+                    boxShadow: '0 0 20px rgba(0, 216, 246, 0.4)',
+                    transition: 'all 0.3s ease',
+                    cursor: 'pointer'
                   }}
                 >
-                  Não
-                </button>
-                <button
-                  onClick={() => setIsExtraCustomized(true)}
-                  style={{
-                    flex: 1, border: `1px solid ${isExtraCustomized ? 'var(--accent-color)' : 'var(--border-color)'}`,
-                    background: isExtraCustomized ? 'rgba(204, 255, 0, 0.05)' : 'transparent',
-                    padding: '0.75rem', color: isExtraCustomized ? 'var(--accent-color)' : 'var(--text-main)',
-                    borderRadius: '4px', cursor: 'pointer', fontWeight: 700, fontSize: '0.85rem'
-                  }}
-                >
-                  Sim
+                  {t('product_coming_soon') || 'Tenho Interesse (Pré-Venda)'}
                 </button>
               </div>
-            </div>
-
-            {isExtraCustomized && (
-              <div style={{ marginBottom: '2.5rem', background: 'var(--surface-color)', padding: '1.2rem', borderRadius: '8px', border: '1px solid var(--border-color)' }}>
-                <div>
-                  <label style={{ fontSize: '0.8rem', fontWeight: 800, color: 'var(--text-muted)', display: 'block', marginBottom: '0.4rem', textTransform: 'uppercase' }}>
-                    Nome Extra (Ex: iFooty Canadá)
-                  </label>
-                  <input
-                    type="text"
-                    placeholder="Ex: IFOOTY CANADA"
-                    value={customExtraName}
-                    onChange={e => setCustomExtraName(e.target.value.toUpperCase())}
-                    style={{ width: '100%', padding: '0.8rem', border: '1px solid var(--border-color)', borderRadius: '4px', background: 'rgba(255,255,255,0.02)', color: '#fff', fontSize: '1rem', outline: 'none' }}
-                  />
+            ) : (
+              <div style={{ display: 'flex', gap: '0.8rem', marginBottom: '2.5rem' }}>
+                <div style={{ display: 'flex', alignItems: 'center', border: '1px solid var(--border-color)', borderRadius: '4px', overflow: 'hidden' }}>
+                  <button onClick={() => setQuantity(Math.max(1, quantity - 1))} style={{ width: '40px', height: '56px', background: 'transparent', color: '#fff', fontSize: '1.2rem' }}>-</button>
+                  <span style={{ width: '30px', textAlign: 'center', fontWeight: 700 }}>{quantity}</span>
+                  <button onClick={() => setQuantity(quantity + 1)} style={{ width: '40px', height: '56px', background: 'transparent', color: '#fff', fontSize: '1.2rem' }}>+</button>
                 </div>
+                <button className="btn-primary" onClick={() => handleAdd(true)} style={{ flex: 1, fontWeight: 900, fontSize: '1rem', height: '56px', borderRadius: '4px', textTransform: 'uppercase', letterSpacing: '1px' }}>
+                  {t('product_buy_now')}
+                </button>
               </div>
             )}
-
-            {/* Qty and Buy */}
-            <div style={{ display: 'flex', gap: '0.8rem', marginBottom: '2.5rem' }}>
-              <div style={{ display: 'flex', alignItems: 'center', border: '1px solid var(--border-color)', borderRadius: '4px', overflow: 'hidden' }}>
-                <button onClick={() => setQuantity(Math.max(1, quantity - 1))} style={{ width: '40px', height: '56px', background: 'transparent', color: '#fff', fontSize: '1.2rem' }}>-</button>
-                <span style={{ width: '30px', textAlign: 'center', fontWeight: 700 }}>{quantity}</span>
-                <button onClick={() => setQuantity(quantity + 1)} style={{ width: '40px', height: '56px', background: 'transparent', color: '#fff', fontSize: '1.2rem' }}>+</button>
-              </div>
-              <button className="btn-primary" onClick={() => handleAdd(true)} style={{ flex: 1, fontWeight: 900, fontSize: '1rem', height: '56px', borderRadius: '4px', textTransform: 'uppercase', letterSpacing: '1px' }}>
-                {t('product_buy_now')}
-              </button>
-            </div>
 
 
           </div>
@@ -713,6 +824,148 @@ const ProductPage = () => {
           <p className="text-muted" style={{ fontSize: '1.2rem' }}>{t('product_cta_guarantee')}</p>
         </div>
       </section>
+
+      {/* Launch Interest Modal */}
+      {isInterestModalOpen && (
+        <div style={{
+          position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
+          background: 'rgba(0,0,0,0.85)', zIndex: 1000,
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          padding: '1.5rem', backdropFilter: 'blur(8px)'
+        }}>
+          <div className="glass-panel" style={{
+            width: '100%', maxWidth: '480px', padding: '2rem',
+            borderRadius: '16px', background: 'rgba(31, 41, 55, 0.95)',
+            border: '1px solid rgba(0, 216, 246, 0.3)',
+            boxShadow: '0 10px 30px rgba(0,0,0,0.5), 0 0 20px rgba(0, 216, 246, 0.1)',
+            position: 'relative',
+            animation: 'fadeInUp 0.3s forwards'
+          }}>
+            <button
+              onClick={() => {
+                setIsInterestModalOpen(false);
+                setInterestSuccess(false);
+              }}
+              style={{
+                position: 'absolute', top: '1rem', right: '1rem',
+                background: 'transparent', border: 'none', color: 'var(--text-muted)',
+                cursor: 'pointer', fontSize: '1.2rem'
+              }}
+            >
+              ✕
+            </button>
+
+            {!interestSuccess ? (
+              <form onSubmit={handleInterestSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1.2rem' }}>
+                <h3 style={{ fontSize: '1.5rem', fontWeight: 800, color: '#fff', margin: 0, borderBottom: '1px solid rgba(255,255,255,0.05)', paddingBottom: '0.8rem' }}>
+                  {t('interest_modal_title')}
+                </h3>
+                <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', lineHeight: '1.4', margin: 0 }}>
+                  {t('interest_modal_subtitle')}
+                </p>
+
+                <div>
+                  <label style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--text-muted)', display: 'block', marginBottom: '0.4rem', textTransform: 'uppercase' }}>
+                    {t('interest_name_label')}
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    placeholder={language === 'pt' ? 'Seu nome completo' : 'Your full name'}
+                    value={interestName}
+                    onChange={e => setInterestName(e.target.value)}
+                    style={{ width: '100%', padding: '0.8rem', border: '1px solid var(--border-color)', borderRadius: '4px', background: 'rgba(255,255,255,0.02)', color: '#fff', fontSize: '1rem', outline: 'none' }}
+                  />
+                </div>
+
+                <div>
+                  <label style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--text-muted)', display: 'block', marginBottom: '0.4rem', textTransform: 'uppercase' }}>
+                    {t('interest_whatsapp_label')}
+                  </label>
+                  <input
+                    type="tel"
+                    required
+                    placeholder="+1 403 123 4567"
+                    value={interestWhatsapp}
+                    onChange={e => setInterestWhatsapp(e.target.value)}
+                    style={{ width: '100%', padding: '0.8rem', border: '1px solid var(--border-color)', borderRadius: '4px', background: 'rgba(255,255,255,0.02)', color: '#fff', fontSize: '1rem', outline: 'none' }}
+                  />
+                </div>
+
+                <div>
+                  <label style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--text-muted)', display: 'block', marginBottom: '0.4rem', textTransform: 'uppercase' }}>
+                    {t('interest_size_label')}
+                  </label>
+                  <select
+                    value={selectedSize}
+                    onChange={e => setSelectedSize(e.target.value)}
+                    style={{ width: '100%', padding: '0.8rem', border: '1px solid var(--border-color)', borderRadius: '4px', background: 'rgba(31, 41, 55, 0.95)', color: '#fff', fontSize: '1rem', outline: 'none' }}
+                  >
+                    {availableSizes.map(s => (
+                      <option key={s} value={s}>{s}</option>
+                    ))}
+                  </select>
+                </div>
+
+                <button
+                  type="submit"
+                  disabled={isSubmittingInterest}
+                  className="btn-primary"
+                  style={{
+                    width: '100%', padding: '1rem', fontWeight: 900,
+                    background: 'linear-gradient(135deg, #00d8f6 0%, #00b0ff 100%)',
+                    color: '#000', border: 'none', borderRadius: '4px', cursor: 'pointer',
+                    textTransform: 'uppercase', letterSpacing: '1px', fontSize: '0.95rem'
+                  }}
+                >
+                  {isSubmittingInterest ? (language === 'pt' ? 'Enviando...' : 'Submitting...') : t('interest_submit')}
+                </button>
+              </form>
+            ) : (
+              <div style={{ textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '1.2rem', padding: '1rem 0' }}>
+                <div style={{ width: '60px', height: '60px', borderRadius: '50%', background: 'rgba(16, 185, 129, 0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#10B981' }}>
+                  <CheckCircle2 size={40} />
+                </div>
+                <h3 style={{ fontSize: '1.6rem', fontWeight: 800, color: '#fff', margin: 0 }}>
+                  {t('interest_success_title')}
+                </h3>
+                <p style={{ color: 'var(--text-muted)', lineHeight: '1.5', margin: 0, fontSize: '0.95rem' }}>
+                  {t('interest_success_msg')}
+                </p>
+
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.8rem', width: '100%', marginTop: '0.5rem' }}>
+                  <button
+                    onClick={handleInterestWhatsAppClick}
+                    className="btn-primary"
+                    style={{
+                      width: '100%', padding: '1rem', fontWeight: 900,
+                      background: '#25D366', color: '#fff', border: 'none', borderRadius: '4px', cursor: 'pointer',
+                      display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem',
+                      textTransform: 'uppercase', letterSpacing: '1px', fontSize: '0.9rem'
+                    }}
+                  >
+                    💬 {t('interest_success_whatsapp')}
+                  </button>
+                  
+                  <button
+                    onClick={() => {
+                      setIsInterestModalOpen(false);
+                      setInterestSuccess(false);
+                    }}
+                    style={{
+                      width: '100%', padding: '0.8rem', background: 'transparent',
+                      color: 'var(--text-muted)', border: '1px solid var(--border-color)',
+                      borderRadius: '4px', cursor: 'pointer', fontWeight: 700, fontSize: '0.85rem'
+                    }}
+                  >
+                    {language === 'pt' ? 'Fechar' : 'Close'}
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
 
     </div>
   );

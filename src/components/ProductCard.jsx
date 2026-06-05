@@ -50,12 +50,17 @@ const ProductCard = ({ product }) => {
         zIndex: 20,
         pointerEvents: 'none' 
       }}>
-        {product.is_bestseller && (
+        {product.coming_soon && (
+          <div className="badge pulse-glow" style={{ position: 'relative', top: 0, left: 0, background: '#00d8f6', color: '#000', fontWeight: 900, boxShadow: '0 0 15px rgba(0, 216, 246, 0.4)', border: '1px solid rgba(255,255,255,0.2)' }}>
+            {language === 'pt' ? 'EM BREVE' : 'COMING SOON'}
+          </div>
+        )}
+        {product.is_bestseller && !product.coming_soon && (
           <div className="badge" style={{ position: 'relative', top: 0, left: 0, background: '#EF4444', color: '#fff', boxShadow: '0 0 15px rgba(239, 68, 68, 0.4)', border: '1px solid rgba(255,255,255,0.2)' }}>
             {t('section_best_seller')}
           </div>
         )}
-        {product.is_new && !product.is_bestseller && (
+        {product.is_new && !product.is_bestseller && !product.coming_soon && (
           <div className="badge" style={{ position: 'relative', top: 0, left: 0, background: '#FFB81C', color: '#000' }}>
             {t('section_new')}
           </div>
@@ -136,10 +141,20 @@ const ProductCard = ({ product }) => {
         <div style={{ marginTop: 'auto' }}>
           <button 
             className="btn-primary" 
-            style={{ width: '100%', justifyContent: 'center' }}
+            style={{ 
+              width: '100%', 
+              justifyContent: 'center',
+              background: product.coming_soon ? 'linear-gradient(135deg, #00d8f6 0%, #00b0ff 100%)' : 'var(--accent-color)',
+              color: '#000',
+              boxShadow: product.coming_soon ? '0 0 15px rgba(0, 216, 246, 0.3)' : 'none',
+              border: product.coming_soon ? 'none' : '1px solid transparent'
+            }}
             onClick={handleView}
           >
-            {t('product_buy_now')}
+            {product.coming_soon 
+              ? (language === 'pt' ? 'TENHO INTERESSE' : 'I\'M INTERESTED')
+              : t('product_buy_now')
+            }
           </button>
         </div>
       </div>
