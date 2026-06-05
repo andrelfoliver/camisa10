@@ -295,7 +295,18 @@ const Home = () => {
         const counts = {};
         citiesData.forEach(o => {
           let city = o.shipping_address?.city;
+          let province = o.shipping_address?.province || '';
+          
           if (city && typeof city === 'string' && city.trim() !== '') {
+            // Normalizar Winnipeg e Charlottetown
+            if (city.toUpperCase() === 'N') {
+              city = 'Winnipeg';
+              province = 'MB';
+            } else if (city.toLowerCase().includes('charlottetown')) {
+              city = 'Charlottetown';
+              province = 'PE';
+            }
+
             // Pega apenas a primeira parte antes de qualquer vírgula, barra ou parênteses (sem cortar o hífen!)
             city = city.split(',')[0].split('/')[0].split('(')[0].trim();
             
@@ -310,7 +321,6 @@ const Home = () => {
             if (city.length >= 3 && city.length <= 25) {
               // Capitaliza cada palavra separadamente e preserva hífens
               const normalizedCity = city.split(/([\s-])/).map(w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()).join('');
-              const province = o.shipping_address?.province;
               
               let finalName = normalizedCity;
               if (province && typeof province === 'string' && province.trim().length >= 2) {
@@ -325,7 +335,9 @@ const Home = () => {
         });
         const sorted = Object.entries(counts).sort((a,b) => b[1] - a[1]).map(e => e[0]);
         if (sorted.length > 0) {
-          setTopCities(sorted.slice(0, 10)); // Top 10 cidades para a animação
+          // Embaralhar as cidades de forma randômica
+          const shuffled = [...sorted].sort(() => Math.random() - 0.5);
+          setTopCities(shuffled);
         }
       }
 
