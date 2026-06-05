@@ -3012,7 +3012,7 @@ const Admin = () => {
                       <h3 style={{ fontSize: '1.8rem', color: 'var(--accent-color)', margin: '0 0 0.2rem 0', fontWeight: 800 }}>
                         {showValues ? `$${totals.revenue.toFixed(2)}` : '****'}
                       </h3>
-                      <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>Língido de taxas PayPal</span>
+                      <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>Receita após taxas PayPal</span>
                     </div>
 
                     <div className="glass-panel" style={{ padding: '1.2rem', borderRadius: '12px', borderLeft: '4px solid #ef4444' }}>
