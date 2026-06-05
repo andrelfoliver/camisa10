@@ -73,7 +73,7 @@ const HeroSection = () => {
             <div className="avatar-more">+</div>
           </div>
           <div className="social-proof-content">
-            <span className="social-proof-number">+<StatCounter target={300} variant="simple" duration={2000} /></span>
+            <span className="social-proof-number">+<StatCounter target={350} variant="simple" duration={2000} /></span>
             <span className="social-proof-label">{t('stats_clients')}</span>
           </div>
         </div>

@@ -427,7 +427,7 @@ const Home = () => {
                 </div>
               </div>
               <h3 style={{ fontSize: '1.6rem', fontWeight: 800, color: 'var(--accent-color)', marginBottom: '0.25rem' }}>
-                <StatCounter target={300} variant="simple" suffix="+" delay={0} />
+                <StatCounter target={350} variant="simple" suffix="+" delay={0} />
               </h3>
               <p style={{ color: 'var(--text-main)', opacity: 0.8, fontWeight: 500, fontSize: '0.8rem', textTransform: 'uppercase' }}>{t('stats_clients')}</p>
             </div>
