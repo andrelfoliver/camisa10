@@ -2677,13 +2677,30 @@ const Admin = () => {
             </div>
           ) : supplierTab === 'CIDADES' ? (() => {
             // Normalização de cidade para evitar duplicidade
-            const normalizeCity = (c) => (c || 'N/A').split('(')[0].split('/')[0].trim();
+            const normalizeCity = (c) => {
+              let city = (c || 'N/A').split('(')[0].split('/')[0].trim();
+              if (city.toUpperCase() === 'N') {
+                return 'Winnipeg';
+              }
+              if (city.toLowerCase().includes('charlottetown')) {
+                return 'Charlottetown';
+              }
+              return city;
+            };
 
             const cityStats = orders.reduce((acc, order) => {
               if (order.status === 'cancelled') return acc;
               const rawCity = order.shipping_address?.city || 'N/A';
               const city = normalizeCity(rawCity);
-              const province = order.shipping_address?.province || '';
+              let province = order.shipping_address?.province || '';
+              if (province.toUpperCase() === 'N/A') province = '';
+              
+              if (city === 'Winnipeg' && (!province || province.trim() === '')) {
+                province = 'MB';
+              }
+              if (city === 'Charlottetown' && (!province || province.trim() === '' || province.trim() === 'N/A')) {
+                province = 'PE';
+              }
               const key = `${city}${province ? `, ${province}` : ''}`;
               if (!acc[key]) acc[key] = { count: 0, revenue: 0, deliveryTimes: [], shirts: 0 };
               acc[key].count++;
@@ -3855,12 +3872,29 @@ const Admin = () => {
             });
 
             // Normalização de cidade para evitar duplicidade
-            const normalizeCity = (c) => (c || 'N/A').split('(')[0].split('/')[0].trim();
+            const normalizeCity = (c) => {
+              let city = (c || 'N/A').split('(')[0].split('/')[0].trim();
+              if (city.toUpperCase() === 'N') {
+                return 'Winnipeg';
+              }
+              if (city.toLowerCase().includes('charlottetown')) {
+                return 'Charlottetown';
+              }
+              return city;
+            };
 
             const cityStats = ordersForStats.reduce((acc, order) => {
               const rawCity = order.shipping_address?.city || 'N/A';
               const city = normalizeCity(rawCity);
-              const province = order.shipping_address?.province || '';
+              let province = order.shipping_address?.province || '';
+              if (province.toUpperCase() === 'N/A') province = '';
+              
+              if (city === 'Winnipeg' && (!province || province.trim() === '')) {
+                province = 'MB';
+              }
+              if (city === 'Charlottetown' && (!province || province.trim() === '' || province.trim() === 'N/A')) {
+                province = 'PE';
+              }
               const key = `${city}${province ? `, ${province}` : ''}`;
               if (!acc[key]) acc[key] = { count: 0, revenue: 0 };
               acc[key].count++;
