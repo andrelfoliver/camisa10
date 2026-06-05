@@ -57,11 +57,21 @@ const ProductPage = () => {
     product?.name?.toLowerCase().includes('body de bebê') ||
     product?.name?.toLowerCase().includes('body bebê');
 
+  const isFemale = product?.category?.toLowerCase().includes('feminina') ||
+    product?.category?.toLowerCase().includes('womens') ||
+    product?.name?.toLowerCase().includes('feminina') ||
+    product?.name?.toLowerCase().includes('womens') ||
+    product?.version?.toLowerCase().includes('feminina') ||
+    product?.version?.toLowerCase().includes('womens') ||
+    product?.version?.toLowerCase().includes('women');
+
   const sizes = isBaby
     ? ['3M', '6M', '9M', '12M']
     : isKids
       ? ['16', '18', '20', '22', '24', '26', '28']
-      : ['S', 'M', 'L', 'XL', '2XL', '3XL', '4XL'];
+      : isFemale
+        ? ['S', 'M', 'L', 'XL', '2XL']
+        : ['S', 'M', 'L', 'XL', '2XL', '3XL', '4XL'];
 
   const availableSizes = sizes.filter(s => !product?.unavailable_sizes?.includes(s));
 
@@ -73,12 +83,15 @@ const ProductPage = () => {
     } else if (isKids && !['16', '18', '20', '22', '24', '26', '28'].includes(selectedSize)) {
       const firstAvailable = availableSizes[0] || '20';
       setSelectedSize(firstAvailable);
+    } else if (isFemale && !['S', 'M', 'L', 'XL', '2XL'].includes(selectedSize)) {
+      const firstAvailable = availableSizes[0] || 'M';
+      setSelectedSize(firstAvailable);
     } else if (product?.unavailable_sizes?.includes(selectedSize)) {
       // Se o tamanho padrão estiver bloqueado, pega o primeiro disponível
       const firstAvailable = availableSizes[0] || (isBaby ? '6M' : isKids ? '20' : 'M');
       setSelectedSize(firstAvailable);
     }
-  }, [isBaby, isKids, product]);
+  }, [isBaby, isKids, isFemale, product]);
 
   const [isCustomized, setIsCustomized] = useState(false);
   const [customName, setCustomName] = useState('');
