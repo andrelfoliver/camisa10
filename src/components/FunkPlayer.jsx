@@ -200,7 +200,9 @@ const FunkPlayer = () => {
                 </div>
                 <div>
                   <h4 style={{ margin: 0, fontSize: '0.95rem', fontWeight: 800, color: '#fff' }}>Funk do iFooty 🇧🇷🔥</h4>
-                  <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Mantra oficial da iFooty</span>
+                  <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
+                    {language === 'pt' ? 'Jingle oficial da iFooty' : 'Official iFooty Jingle'}
+                  </span>
                 </div>
               </div>
 
