@@ -722,9 +722,17 @@ const Checkout = () => {
                   </div>
 
                   <div style={{ marginTop: '1rem' }}>
-                    <label style={{ display: 'block', marginBottom: '0.5rem', color: 'var(--text-muted)' }}>Instruções de Entrega (Opcional)</label>
+                    <label style={{ display: 'block', marginBottom: '0.5rem', color: 'var(--text-muted)' }}>
+                      {language === 'pt' ? 'Instruções de Entrega (Opcional - ' : 'Delivery Instructions (Optional - '}
+                      <span style={{ color: '#EF4444', fontWeight: 800 }}>
+                        {language === 'pt' ? 'APENAS EM INGLÊS' : 'IN ENGLISH ONLY'}
+                      </span>
+                      )
+                    </label>
                     <textarea
-                      placeholder="Ex: Deixar na porta, código do interfone 1234, etc."
+                      placeholder={language === 'pt'
+                        ? 'Ex: Leave at front door, buzzer code 1234, etc. (Escreva em inglês para a transportadora)'
+                        : 'Ex: Leave at front door, buzzer code 1234, etc. (Write in English for the courier)'}
                       value={formData.instructions} onChange={e => setFormData({ ...formData, instructions: e.target.value })}
                       style={{ width: '100%', padding: '0.75rem', borderRadius: 'var(--radius-sm)', background: 'var(--bg-color)', border: '1px solid var(--border-color)', color: 'var(--text-main)', fontSize: '1rem', minHeight: '80px', resize: 'vertical' }}
                     />
