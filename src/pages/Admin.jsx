@@ -2134,7 +2134,7 @@ const Admin = () => {
             className={supplierTab === 'INTERESSES' ? 'active-tab' : ''}
             style={{ padding: '0.8rem 1.5rem', background: supplierTab === 'INTERESSES' ? 'var(--accent-color)' : 'transparent', color: supplierTab === 'INTERESSES' ? '#000' : 'var(--text-muted)', border: 'none', borderRadius: '4px', cursor: 'pointer', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '0.5rem' }}
           >
-            <Heart size={18} /> INTERESSES / PRÉ-VENDA
+            <Heart size={18} /> PRÉ-VENDA
           </button>
 
           <button
