@@ -93,15 +93,23 @@ const AppLayout = () => {
       {!isAdminPage && <Footer />}
 
       {/* Floating WhatsApp */}
-      <a
-        href={`https://wa.me/${waNumber.replace(/\D/g, '')}`}
-        target="_blank"
-        rel="noopener noreferrer"
-        className="whatsapp-float"
-        title="Fale Conosco"
-      >
-        <WhatsAppIcon size={32} />
-      </a>
+      <div className="whatsapp-float-wrapper">
+        {!isAdminPage && (
+          <div className="whatsapp-badge-bubble">
+            <span className="whatsapp-badge-dot"></span>
+            Plantão Especial Copa do Mundo
+          </div>
+        )}
+        <a
+          href={`https://wa.me/${waNumber.replace(/\D/g, '')}`}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="whatsapp-float"
+          title="Fale Conosco"
+        >
+          <WhatsAppIcon size={32} />
+        </a>
+      </div>
 
       {/* WhatsApp Group Vertical Banner */}
       {!isAdminPage && (
