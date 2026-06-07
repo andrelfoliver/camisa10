@@ -2991,6 +2991,16 @@ const Admin = () => {
             const averageMargin = totals.revenue > 0 ? (totals.profit / totals.revenue) * 100 : 0;
             const averageTicket = totals.orderCount > 0 ? totals.revenue / totals.orderCount : 0;
 
+            // Meta Mensal (90 camisas)
+            const currentDate = new Date();
+            const currentMonthKey = `${currentDate.getMonth() + 1}-${currentDate.getFullYear()}`;
+            const fallbackLabelRaw = currentDate.toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' });
+            const fallbackLabel = fallbackLabelRaw.charAt(0).toUpperCase() + fallbackLabelRaw.slice(1);
+            const currentMonthData = monthlyStats[currentMonthKey] || { shirtCount: 0, label: fallbackLabel };
+            const currentMonthShirts = currentMonthData.shirtCount;
+            const targetGoal = 90;
+            const goalPercent = Math.min(100, (currentMonthShirts / targetGoal) * 100);
+
             return (
               <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem', maxWidth: '1000px' }}>
                 <div style={{ background: 'rgba(255,255,255,0.03)', padding: '2rem', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.05)' }}>
@@ -3031,6 +3041,24 @@ const Admin = () => {
                       <span style={{ fontSize: '0.7rem', color: '#22c55e', fontWeight: 700 }}>
                         {showValues ? `${averageMargin.toFixed(1)}% Margem` : '****'}
                       </span>
+                    </div>
+
+                    <div className="glass-panel" style={{ padding: '1.2rem', borderRadius: '12px', borderLeft: '4px solid #f59e0b' }}>
+                      <p style={{ fontSize: '0.65rem', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: 800, margin: '0 0 0.5rem 0' }}>Meta Mensal ({currentMonthData.label})</p>
+                      <h3 style={{ fontSize: '1.8rem', color: '#f59e0b', margin: '0 0 0.2rem 0', fontWeight: 800 }}>
+                        {currentMonthShirts} <span style={{ fontSize: '1rem', color: 'var(--text-muted)' }}>/ {targetGoal} camisas</span>
+                      </h3>
+                      <div style={{ width: '100%', height: '6px', background: 'rgba(255,255,255,0.05)', borderRadius: '3px', margin: '0.5rem 0 0.4rem 0', overflow: 'hidden' }}>
+                        <div style={{ width: `${goalPercent}%`, height: '100%', background: 'linear-gradient(90deg, #f59e0b, #ffb81c)', borderRadius: '3px', transition: 'width 0.5s ease' }}></div>
+                      </div>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.65rem', color: 'var(--text-muted)' }}>
+                        <span>Progresso: {goalPercent.toFixed(0)}%</span>
+                        {goalPercent >= 100 ? (
+                          <span style={{ color: '#22c55e', fontWeight: 700 }}>Concluída! 🎉</span>
+                        ) : (
+                          <span>Faltam {targetGoal - currentMonthShirts}</span>
+                        )}
+                      </div>
                     </div>
 
                     <div className="glass-panel" style={{ padding: '1.2rem', borderRadius: '12px', borderLeft: '4px solid #3B82F6' }}>
