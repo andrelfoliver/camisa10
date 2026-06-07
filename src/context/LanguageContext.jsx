@@ -108,7 +108,7 @@ export const translations = {
       },
       {
         question: 'Quanto tempo demora pra chegar?',
-        answer: '10 a 15 dias úteis para o Canadá & EUA após a confirmação do pagamento. Camisas personalizadas podem levar 1-2 dias a mais. Você recebe código de rastreio por email assim que o pedido é despachado.'
+        answer: '10 a 15 dias corridos após o envio da mercadoria'
       },
       {
         question: 'Entregam em todo o Canadá e Estados Unidos?',
@@ -422,7 +422,7 @@ export const translations = {
       },
       {
         question: 'How long does it take to arrive?',
-        answer: '10 to 15 business days across Canada & US after payment confirmation. Customized jerseys may take 1-2 days longer. You will receive a tracking code by email as soon as the order is shipped.'
+        answer: '10 to 15 calendar days after the order is shipped'
       },
       {
         question: 'Do you deliver to all provinces in Canada and states in the US?',
