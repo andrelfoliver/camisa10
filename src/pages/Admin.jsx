@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from '../services/supabase';
 import { useAuth } from '../context/AuthContext';
-import { Save, Check, Crown, Heart, Database, HardDrive, Star, LogOut, Package, Plus, Trash2, Edit, X, Users, Image, DollarSign, MapPin, RefreshCw, Shield, AlertTriangle, MessageSquare, ChevronDown, ChevronUp, MoreHorizontal, ExternalLink, Settings, Tag, TrendingUp, Truck, BarChart, Eye, EyeOff, Send, Printer } from 'lucide-react';
+import { Save, Check, Crown, Heart, Database, HardDrive, Star, LogOut, Package, Plus, Trash2, Edit, X, Users, Image, DollarSign, MapPin, RefreshCw, Shield, AlertTriangle, MessageSquare, ChevronDown, ChevronUp, MoreHorizontal, ExternalLink, Settings, Tag, TrendingUp, Truck, BarChart, Eye, EyeOff, Send, Printer, Search } from 'lucide-react';
 import { migrateProductsToSupabase } from '../services/migration';
 import { migrateTeamsToSupabase } from '../services/migration_teams';
 import WhatsAppIcon from '../components/WhatsAppIcon';
@@ -177,6 +177,11 @@ const Admin = () => {
   const [editGalleryPreviews, setEditGalleryPreviews] = useState([]);
 
   const [customers, setCustomers] = useState([]);
+  const [customerSearch, setCustomerSearch] = useState('');
+  const [customerFilter, setCustomerFilter] = useState('all'); // 'all', 'active_cart', 'has_orders', 'no_orders'
+  const [customerSort, setCustomerSort] = useState('recent'); // 'recent', 'oldest', 'name', 'orders'
+  const [customerPage, setCustomerPage] = useState(1);
+  const customersPerPage = 15;
   const [orders, setOrders] = useState([]);
   const [testimonials, setTestimonials] = useState([]);
   const [interests, setInterests] = useState([]);
@@ -4600,189 +4605,351 @@ const Admin = () => {
                 )}
               </div>
             )
-            : supplierTab === 'CLIENTES' ? (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', maxWidth: '1000px' }}>
-                {customers.length === 0 ? (
-                  <div style={{ textAlign: 'center', padding: '4rem 2rem', background: 'var(--surface-color)', borderRadius: 'var(--radius-lg)', border: '1px dashed var(--border-color)' }}>
-                    <Users size={48} color="var(--text-muted)" style={{ marginBottom: '1rem' }} />
-                    <h3 style={{ color: '#fff', marginBottom: '0.5rem' }}>Nenhum usuário espelhado</h3>
-                    <p style={{ color: 'var(--text-muted)' }}>Os clientes cadastrados via Google demoram alguns minutos para serem sincronizados.</p>
-                  </div>
-                ) : (
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-                    {/* HEADER */}
-                    <div style={{ display: 'grid', gridTemplateColumns: '60px 1.5fr 1.5fr 100px 40px', padding: '0.8rem 1.5rem', color: 'var(--text-muted)', fontSize: '0.7rem', fontWeight: 800, textTransform: 'uppercase' }}>
-                      <span></span>
-                      <span>Nome Completo</span>
-                      <span>E-mail</span>
-                      <span>Pedidos</span>
-                      <span></span>
+            : supplierTab === 'CLIENTES' ? (() => {
+                const filteredAndSortedCustomers = (() => {
+                  let result = [...customers];
+                  
+                  // 1. Filtro de pesquisa
+                  if (customerSearch.trim()) {
+                    const query = customerSearch.toLowerCase().trim();
+                    result = result.filter(c => 
+                      (c.full_name || '').toLowerCase().includes(query) || 
+                      (c.email || '').toLowerCase().includes(query)
+                    );
+                  }
+                  
+                  // 2. Filtro de segmento
+                  if (customerFilter !== 'all') {
+                    result = result.filter(c => {
+                      const hasActiveCart = c.cart && Array.isArray(c.cart) && c.cart.length > 0;
+                      const hasOrders = orders.some(o => o.user_id === c.id);
+                      if (customerFilter === 'active_cart') return hasActiveCart;
+                      if (customerFilter === 'has_orders') return hasOrders;
+                      if (customerFilter === 'no_orders') return !hasOrders;
+                      return true;
+                    });
+                  }
+                  
+                  // 3. Ordenação
+                  result.sort((a, b) => {
+                    if (customerSort === 'name') {
+                      return (a.full_name || '').localeCompare(b.full_name || '');
+                    }
+                    if (customerSort === 'oldest') {
+                      return new Date(a.created_at || 0) - new Date(b.created_at || 0);
+                    }
+                    if (customerSort === 'orders') {
+                      const aCount = orders.filter(o => o.user_id === a.id).length;
+                      const bCount = orders.filter(o => o.user_id === b.id).length;
+                      return bCount - aCount;
+                    }
+                    // default 'recent'
+                    return new Date(b.created_at || 0) - new Date(a.created_at || 0);
+                  });
+                  
+                  return result;
+                })();
+
+                const totalFilteredCustomers = filteredAndSortedCustomers.length;
+                const totalPages = Math.ceil(totalFilteredCustomers / customersPerPage) || 1;
+                const validPage = Math.min(customerPage, totalPages);
+                const startIndex = (validPage - 1) * customersPerPage;
+                const paginatedCustomers = filteredAndSortedCustomers.slice(startIndex, startIndex + customersPerPage);
+
+                return (
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', maxWidth: '1000px' }}>
+                    {/* BARRA DE PESQUISA, SEGMENTAÇÃO E ORDENAÇÃO */}
+                    <div className="glass-panel" style={{ padding: '1rem', borderRadius: '12px', display: 'flex', flexWrap: 'wrap', gap: '0.8rem', alignItems: 'center', border: '1px solid rgba(255,255,255,0.05)' }}>
+                      <div style={{ position: 'relative', flex: '1 1 250px' }}>
+                        <input
+                          type="text"
+                          placeholder="Buscar por nome ou e-mail..."
+                          value={customerSearch}
+                          onChange={(e) => {
+                            setCustomerSearch(e.target.value);
+                            setCustomerPage(1);
+                          }}
+                          style={{
+                            width: '100%',
+                            padding: '0.6rem 1rem 0.6rem 2.2rem',
+                            background: 'rgba(255,255,255,0.03)',
+                            border: '1px solid var(--border-color)',
+                            borderRadius: '8px',
+                            color: '#fff',
+                            fontSize: '0.85rem'
+                          }}
+                        />
+                        <Search size={16} color="var(--text-muted)" style={{ position: 'absolute', left: '0.8rem', top: '50%', transform: 'translateY(-50%)' }} />
+                      </div>
+                      
+                      <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.8rem', flex: '1 1 auto', justifyContent: 'flex-end' }}>
+                        <select
+                          value={customerFilter}
+                          onChange={(e) => {
+                            setCustomerFilter(e.target.value);
+                            setCustomerPage(1);
+                          }}
+                          style={{
+                            padding: '0.6rem 1.8rem 0.6rem 1rem',
+                            background: 'var(--surface-color)',
+                            border: '1px solid var(--border-color)',
+                            borderRadius: '8px',
+                            color: '#fff',
+                            fontSize: '0.85rem',
+                            cursor: 'pointer'
+                          }}
+                        >
+                          <option value="all">Todos os Segmentos</option>
+                          <option value="active_cart">Sacola Ativa (No Carrinho)</option>
+                          <option value="has_orders">Com Compras Realizadas</option>
+                          <option value="no_orders">Sem Compras Realizadas</option>
+                        </select>
+
+                        <select
+                          value={customerSort}
+                          onChange={(e) => {
+                            setCustomerSort(e.target.value);
+                            setCustomerPage(1);
+                          }}
+                          style={{
+                            padding: '0.6rem 1.8rem 0.6rem 1rem',
+                            background: 'var(--surface-color)',
+                            border: '1px solid var(--border-color)',
+                            borderRadius: '8px',
+                            color: '#fff',
+                            fontSize: '0.85rem',
+                            cursor: 'pointer'
+                          }}
+                        >
+                          <option value="recent">Mais Recentes</option>
+                          <option value="oldest">Mais Antigos</option>
+                          <option value="name">Ordem Alfabética (A-Z)</option>
+                          <option value="orders">Volume de Pedidos</option>
+                        </select>
+                      </div>
                     </div>
 
-                    {customers.map(customer => {
-                      const isExpanded = expandedCustomerId === customer.id;
-                      const customerOrders = orders.filter(o => o.user_id === customer.id);
+                    {customers.length === 0 ? (
+                      <div style={{ textAlign: 'center', padding: '4rem 2rem', background: 'var(--surface-color)', borderRadius: 'var(--radius-lg)', border: '1px dashed var(--border-color)' }}>
+                        <Users size={48} color="var(--text-muted)" style={{ marginBottom: '1rem' }} />
+                        <h3 style={{ color: '#fff', marginBottom: '0.5rem' }}>Nenhum usuário espelhado</h3>
+                        <p style={{ color: 'var(--text-muted)' }}>Os clientes cadastrados via Google demoram alguns minutos para serem sincronizados.</p>
+                      </div>
+                    ) : totalFilteredCustomers === 0 ? (
+                      <div style={{ textAlign: 'center', padding: '3rem 2rem', background: 'var(--surface-color)', borderRadius: '12px', border: '1px dashed var(--border-color)' }}>
+                        <p style={{ color: 'var(--text-muted)', margin: 0 }}>Nenhum cliente atende aos critérios de busca ou filtros selecionados.</p>
+                      </div>
+                    ) : (
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                        {/* HEADER */}
+                        <div style={{ display: 'grid', gridTemplateColumns: '60px 1.5fr 1.5fr 100px 40px', padding: '0.8rem 1.5rem', color: 'var(--text-muted)', fontSize: '0.7rem', fontWeight: 800, textTransform: 'uppercase' }}>
+                          <span></span>
+                          <span>Nome Completo</span>
+                          <span>E-mail</span>
+                          <span>Pedidos</span>
+                          <span></span>
+                        </div>
 
-                      return (
-                        <div key={customer.id} style={{ display: 'flex', flexDirection: 'column' }}>
-                          {/* SUMMARY ROW */}
-                          <div
-                            onClick={() => setExpandedCustomerId(isExpanded ? null : customer.id)}
-                            style={{
-                              display: 'grid',
-                              gridTemplateColumns: '60px 1.5fr 1.5fr 100px 40px',
-                              padding: '1rem 1.5rem',
-                              background: isExpanded ? 'rgba(255,255,255,0.05)' : 'var(--surface-color)',
-                              borderRadius: '8px',
-                              alignItems: 'center',
-                              cursor: 'pointer',
-                              border: isExpanded ? '1px solid var(--accent-color)' : '1px solid var(--border-color)',
-                              transition: 'background 0.2s, border-color 0.2s, transform 0.2s',
-                              marginBottom: isExpanded ? '0' : '0.2rem'
-                            }}
-                          >
-                            <img src={customer.avatar_url || 'https://via.placeholder.com/40'} alt="" style={{ width: '32px', height: '32px', borderRadius: '50%', border: '1px solid rgba(255,255,255,0.1)' }} />
-                            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap' }}>
-                              <span style={{ fontWeight: 700, color: '#fff' }}>{customer.full_name || 'Usuário'}</span>
-                              {customer.cart && Array.isArray(customer.cart) && customer.cart.length > 0 && (
-                                <span style={{ fontSize: '0.65rem', background: 'rgba(239, 68, 68, 0.15)', color: '#FF4D4D', border: '1px solid rgba(239, 68, 68, 0.3)', padding: '2px 6px', borderRadius: '4px', fontWeight: 800 }} title="Possui produtos no carrinho atualmente">
-                                  Sacola Ativa ({customer.cart.reduce((sum, item) => sum + (item.quantity || 1), 0)})
-                                </span>
+                        {paginatedCustomers.map(customer => {
+                          const isExpanded = expandedCustomerId === customer.id;
+                          const customerOrders = orders.filter(o => o.user_id === customer.id);
+
+                          return (
+                            <div key={customer.id} style={{ display: 'flex', flexDirection: 'column' }}>
+                              {/* SUMMARY ROW */}
+                              <div
+                                onClick={() => setExpandedCustomerId(isExpanded ? null : customer.id)}
+                                style={{
+                                  display: 'grid',
+                                  gridTemplateColumns: '60px 1.5fr 1.5fr 100px 40px',
+                                  padding: '1rem 1.5rem',
+                                  background: isExpanded ? 'rgba(255,255,255,0.05)' : 'var(--surface-color)',
+                                  borderRadius: '8px',
+                                  alignItems: 'center',
+                                  cursor: 'pointer',
+                                  border: isExpanded ? '1px solid var(--accent-color)' : '1px solid var(--border-color)',
+                                  transition: 'background 0.2s, border-color 0.2s, transform 0.2s',
+                                  marginBottom: isExpanded ? '0' : '0.2rem'
+                                }}
+                              >
+                                <img src={customer.avatar_url || 'https://via.placeholder.com/40'} alt="" style={{ width: '32px', height: '32px', borderRadius: '50%', border: '1px solid rgba(255,255,255,0.1)' }} />
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap' }}>
+                                  <span style={{ fontWeight: 700, color: '#fff' }}>{customer.full_name || 'Usuário'}</span>
+                                  {customer.cart && Array.isArray(customer.cart) && customer.cart.length > 0 && (
+                                    <span style={{ fontSize: '0.65rem', background: 'rgba(239, 68, 68, 0.15)', color: '#FF4D4D', border: '1px solid rgba(239, 68, 68, 0.3)', padding: '2px 6px', borderRadius: '4px', fontWeight: 800 }} title="Possui produtos no carrinho atualmente">
+                                      Sacola Ativa ({customer.cart.reduce((sum, item) => sum + (item.quantity || 1), 0)})
+                                    </span>
+                                  )}
+                                </div>
+                                <span style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>{customer.email}</span>
+                                <div>
+                                  <span style={{ fontSize: '0.7rem', background: 'var(--accent-color)', color: '#000', padding: '2px 8px', borderRadius: '4px', fontWeight: 900 }}>{customerOrders.length}</span>
+                                </div>
+                                <div style={{ color: 'var(--text-muted)' }}>
+                                  {isExpanded ? <ChevronUp size={18} /> : <ChevronDown size={18} />}
+                                </div>
+                              </div>
+
+                              {/* EXPANDED CONTENT */}
+                              {isExpanded && (
+                                <div style={{
+                                  background: 'rgba(0,0,0,0.2)',
+                                  padding: '1.5rem',
+                                  borderRadius: '0 0 8px 8px',
+                                  border: '1px solid var(--accent-color)',
+                                  borderTop: 'none',
+                                  display: 'flex',
+                                  flexDirection: 'column',
+                                  gap: '1.5rem',
+                                  animation: 'slideDown 0.3s ease-out'
+                                }}>
+                                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '1.5rem' }}>
+                                    <div style={{ flex: 1, minWidth: '250px' }}>
+                                      <p style={{ fontSize: '0.7rem', color: 'var(--text-muted)', fontWeight: 800, textTransform: 'uppercase', marginBottom: '0.5rem' }}>Endereço Registrado</p>
+                                      {customer.street ? (
+                                        <div style={{ fontSize: '0.85rem', color: '#fff' }}>
+                                          <p>{customer.street}{customer.apartment ? `, Apt ${customer.apartment}` : ''}</p>
+                                          <p>{customer.city}, {customer.province} {customer.postal_code}</p>
+                                        </div>
+                                      ) : (
+                                        <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', fontStyle: 'italic' }}>Nenhum endereço cadastrado para este perfil.</p>
+                                      )}
+                                    </div>
+
+                                    <div style={{ flex: 1, minWidth: '300px' }}>
+                                      <p style={{ fontSize: '0.7rem', color: 'var(--text-muted)', fontWeight: 800, textTransform: 'uppercase', marginBottom: '0.5rem' }}>Sacola / Carrinho Ativo</p>
+                                      {customer.cart && Array.isArray(customer.cart) && customer.cart.length > 0 ? (
+                                        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                                          {customer.cart.map((item, idx) => (
+                                            <div key={idx} style={{ display: 'flex', alignItems: 'center', gap: '0.8rem', background: 'rgba(255,255,255,0.03)', padding: '0.5rem 0.8rem', borderRadius: '6px', border: '1px solid rgba(255,255,255,0.05)' }}>
+                                              <img src={item.image} alt="" style={{ width: '30px', height: '30px', objectFit: 'contain', background: 'rgba(255,255,255,0.05)', borderRadius: '4px' }} />
+                                              <div style={{ flex: 1 }}>
+                                                <p style={{ fontSize: '0.8rem', color: '#fff', fontWeight: 700, margin: 0 }}>{item.name}</p>
+                                                <p style={{ fontSize: '0.7rem', color: 'var(--text-muted)', margin: 0 }}>
+                                                  Tam: <span style={{ color: 'var(--accent-color)', fontWeight: 800 }}>{item.size}</span> | Qtd: {item.quantity} | Preço: ${item.price?.toFixed(2)}{item.addedAt && ` | Adicionado em: ${formatCartItemDate(item.addedAt)}`}
+                                                </p>
+                                              </div>
+                                            </div>
+                                          ))}
+                                        </div>
+                                      ) : (
+                                        <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', fontStyle: 'italic' }}>Nenhum produto no carrinho atualmente.</p>
+                                      )}
+                                    </div>
+                                  </div>
+
+                                  <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '1rem', alignItems: 'center', flexWrap: 'wrap' }}>
+                                    {customer.cart && Array.isArray(customer.cart) && customer.cart.length > 0 && (() => {
+                                      const sentAt = sentRecoveryEmails[customer.id];
+                                      return (
+                                        <button
+                                          onClick={(e) => {
+                                            e.stopPropagation();
+                                            if (sentAt) {
+                                              showConfirm(
+                                                "Reenviar E-mail",
+                                                `Você já enviou um e-mail de recuperação para este cliente em ${sentAt}. Deseja enviar novamente?`,
+                                                () => handleSendAbandonedCartEmail(customer)
+                                              );
+                                            } else {
+                                              handleSendAbandonedCartEmail(customer);
+                                            }
+                                          }}
+                                          style={{
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            gap: '0.5rem',
+                                            background: sentAt ? 'rgba(255,255,255,0.05)' : '#CCFF00',
+                                            color: sentAt ? 'var(--text-muted)' : '#000000',
+                                            border: sentAt ? '1px solid var(--border-color)' : 'none',
+                                            padding: '0.6rem 1.2rem',
+                                            borderRadius: '6px',
+                                            fontWeight: 800,
+                                            cursor: 'pointer',
+                                            transition: 'all 0.2s',
+                                            boxShadow: sentAt ? 'none' : '0 4px 15px rgba(204, 255, 0, 0.2)'
+                                          }}
+                                          onMouseEnter={(e) => {
+                                            if (sentAt) e.currentTarget.style.background = 'rgba(255,255,255,0.1)';
+                                            else e.currentTarget.style.opacity = 0.9;
+                                          }}
+                                          onMouseLeave={(e) => {
+                                            if (sentAt) e.currentTarget.style.background = 'rgba(255,255,255,0.05)';
+                                            else e.currentTarget.style.opacity = 1;
+                                          }}
+                                        >
+                                          {sentAt ? <Check size={16} color="#10B981" /> : <Send size={16} />}
+                                          {sentAt ? `Recuperação Enviada (${sentAt.split(' às ')[0]})` : 'Enviar E-mail de Recuperação'}
+                                        </button>
+                                      );
+                                    })()}
+                                    {customer.cart && Array.isArray(customer.cart) && customer.cart.length > 0 && (
+                                      <button
+                                        onClick={(e) => {
+                                          e.stopPropagation();
+                                          handlePrintCartInvoice(customer);
+                                        }}
+                                        style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', background: 'rgba(144, 214, 42, 0.15)', color: 'var(--accent-color)', border: '1px solid var(--accent-color)', padding: '0.6rem 1.2rem', borderRadius: '6px', fontWeight: 700, cursor: 'pointer', transition: 'all 0.2s' }}
+                                        onMouseEnter={(e) => e.currentTarget.style.background = 'rgba(144, 214, 42, 0.25)'}
+                                        onMouseLeave={(e) => e.currentTarget.style.background = 'rgba(144, 214, 42, 0.15)'}
+                                      >
+                                        <Printer size={16} /> Gerar Invoice
+                                      </button>
+                                    )}
+                                    <button
+                                      onClick={(e) => { e.stopPropagation(); setOrderFilter(customer.id); setSupplierTab('PEDIDOS'); }}
+                                      style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', background: 'rgba(255,255,255,0.05)', color: '#fff', border: '1px solid var(--border-color)', padding: '0.6rem 1.2rem', borderRadius: '6px', fontWeight: 700, cursor: 'pointer', transition: 'all 0.2s' }}
+                                      onMouseEnter={(e) => e.currentTarget.style.background = 'rgba(255,255,255,0.1)'}
+                                      onMouseLeave={(e) => e.currentTarget.style.background = 'rgba(255,255,255,0.05)'}
+                                    >
+                                      <ExternalLink size={16} /> Ver Histórico de Pedidos
+                                    </button>
+                                  </div>
+                                </div>
                               )}
                             </div>
-                            <span style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>{customer.email}</span>
-                            <div>
-                              <span style={{ fontSize: '0.7rem', background: 'var(--accent-color)', color: '#000', padding: '2px 8px', borderRadius: '4px', fontWeight: 900 }}>{customerOrders.length}</span>
-                            </div>
-                            <div style={{ color: 'var(--text-muted)' }}>
-                              {isExpanded ? <ChevronUp size={18} /> : <ChevronDown size={18} />}
-                            </div>
-                          </div>
+                          );
+                        })}
+                      </div>
+                    )}
 
-                          {/* EXPANDED CONTENT */}
-                          {isExpanded && (
-                            <div style={{
-                              background: 'rgba(0,0,0,0.2)',
-                              padding: '1.5rem',
-                              borderRadius: '0 0 8px 8px',
-                              border: '1px solid var(--accent-color)',
-                              borderTop: 'none',
-                              display: 'flex',
-                              flexDirection: 'column',
-                              gap: '1.5rem',
-                              animation: 'slideDown 0.3s ease-out'
-                            }}>
-                              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '1.5rem' }}>
-                                <div style={{ flex: 1, minWidth: '250px' }}>
-                                  <p style={{ fontSize: '0.7rem', color: 'var(--text-muted)', fontWeight: 800, textTransform: 'uppercase', marginBottom: '0.5rem' }}>Endereço Registrado</p>
-                                  {customer.street ? (
-                                    <div style={{ fontSize: '0.85rem', color: '#fff' }}>
-                                      <p>{customer.street}{customer.apartment ? `, Apt ${customer.apartment}` : ''}</p>
-                                      <p>{customer.city}, {customer.province} {customer.postal_code}</p>
-                                    </div>
-                                  ) : (
-                                    <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', fontStyle: 'italic' }}>Nenhum endereço cadastrado para este perfil.</p>
-                                  )}
-                                </div>
-
-                                <div style={{ flex: 1, minWidth: '300px' }}>
-                                  <p style={{ fontSize: '0.7rem', color: 'var(--text-muted)', fontWeight: 800, textTransform: 'uppercase', marginBottom: '0.5rem' }}>Sacola / Carrinho Ativo</p>
-                                  {customer.cart && Array.isArray(customer.cart) && customer.cart.length > 0 ? (
-                                    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-                                      {customer.cart.map((item, idx) => (
-                                        <div key={idx} style={{ display: 'flex', alignItems: 'center', gap: '0.8rem', background: 'rgba(255,255,255,0.03)', padding: '0.5rem 0.8rem', borderRadius: '6px', border: '1px solid rgba(255,255,255,0.05)' }}>
-                                          <img src={item.image} alt="" style={{ width: '30px', height: '30px', objectFit: 'contain', background: 'rgba(255,255,255,0.05)', borderRadius: '4px' }} />
-                                          <div style={{ flex: 1 }}>
-                                            <p style={{ fontSize: '0.8rem', color: '#fff', fontWeight: 700, margin: 0 }}>{item.name}</p>
-                                            <p style={{ fontSize: '0.7rem', color: 'var(--text-muted)', margin: 0 }}>
-                                              Tam: <span style={{ color: 'var(--accent-color)', fontWeight: 800 }}>{item.size}</span> | Qtd: {item.quantity} | Preço: ${item.price?.toFixed(2)}{item.addedAt && ` | Adicionado em: ${formatCartItemDate(item.addedAt)}`}
-                                            </p>
-                                          </div>
-                                        </div>
-                                      ))}
-                                    </div>
-                                  ) : (
-                                    <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', fontStyle: 'italic' }}>Nenhum produto no carrinho atualmente.</p>
-                                  )}
-                                </div>
-                              </div>
-
-                              <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '1rem', alignItems: 'center', flexWrap: 'wrap' }}>
-                                {customer.cart && Array.isArray(customer.cart) && customer.cart.length > 0 && (() => {
-                                  const sentAt = sentRecoveryEmails[customer.id];
-                                  return (
-                                    <button
-                                      onClick={(e) => {
-                                        e.stopPropagation();
-                                        if (sentAt) {
-                                          showConfirm(
-                                            "Reenviar E-mail",
-                                            `Você já enviou um e-mail de recuperação para este cliente em ${sentAt}. Deseja enviar novamente?`,
-                                            () => handleSendAbandonedCartEmail(customer)
-                                          );
-                                        } else {
-                                          handleSendAbandonedCartEmail(customer);
-                                        }
-                                      }}
-                                      style={{
-                                        display: 'flex',
-                                        alignItems: 'center',
-                                        gap: '0.5rem',
-                                        background: sentAt ? 'rgba(255,255,255,0.05)' : '#CCFF00',
-                                        color: sentAt ? 'var(--text-muted)' : '#000000',
-                                        border: sentAt ? '1px solid var(--border-color)' : 'none',
-                                        padding: '0.6rem 1.2rem',
-                                        borderRadius: '6px',
-                                        fontWeight: 800,
-                                        cursor: 'pointer',
-                                        transition: 'all 0.2s',
-                                        boxShadow: sentAt ? 'none' : '0 4px 15px rgba(204, 255, 0, 0.2)'
-                                      }}
-                                      onMouseEnter={(e) => {
-                                        if (sentAt) e.currentTarget.style.background = 'rgba(255,255,255,0.1)';
-                                        else e.currentTarget.style.opacity = 0.9;
-                                      }}
-                                      onMouseLeave={(e) => {
-                                        if (sentAt) e.currentTarget.style.background = 'rgba(255,255,255,0.05)';
-                                        else e.currentTarget.style.opacity = 1;
-                                      }}
-                                    >
-                                      {sentAt ? <Check size={16} color="#10B981" /> : <Send size={16} />}
-                                      {sentAt ? `Recuperação Enviada (${sentAt.split(' às ')[0]})` : 'Enviar E-mail de Recuperação'}
-                                    </button>
-                                  );
-                                })()}
-                                {customer.cart && Array.isArray(customer.cart) && customer.cart.length > 0 && (
-                                  <button
-                                    onClick={(e) => {
-                                      e.stopPropagation();
-                                      handlePrintCartInvoice(customer);
-                                    }}
-                                    style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', background: 'rgba(144, 214, 42, 0.15)', color: 'var(--accent-color)', border: '1px solid var(--accent-color)', padding: '0.6rem 1.2rem', borderRadius: '6px', fontWeight: 700, cursor: 'pointer', transition: 'all 0.2s' }}
-                                    onMouseEnter={(e) => e.currentTarget.style.background = 'rgba(144, 214, 42, 0.25)'}
-                                    onMouseLeave={(e) => e.currentTarget.style.background = 'rgba(144, 214, 42, 0.15)'}
-                                  >
-                                    <Printer size={16} /> Gerar Invoice
-                                  </button>
-                                )}
-                                <button
-                                  onClick={(e) => { e.stopPropagation(); setOrderFilter(customer.id); setSupplierTab('PEDIDOS'); }}
-                                  style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', background: 'rgba(255,255,255,0.05)', color: '#fff', border: '1px solid var(--border-color)', padding: '0.6rem 1.2rem', borderRadius: '6px', fontWeight: 700, cursor: 'pointer', transition: 'all 0.2s' }}
-                                  onMouseEnter={(e) => e.currentTarget.style.background = 'rgba(255,255,255,0.1)'}
-                                  onMouseLeave={(e) => e.currentTarget.style.background = 'rgba(255,255,255,0.05)'}
-                                >
-                                  <ExternalLink size={16} /> Ver Histórico de Pedidos
-                                </button>
-                              </div>
-                            </div>
-                          )}
-                        </div>
-                      );
-                    })}
+                    {/* PAGINAÇÃO */}
+                    {totalPages > 1 && (
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '1.5rem', padding: '1rem', background: 'var(--surface-color)', borderRadius: '8px', border: '1px solid var(--border-color)' }}>
+                        <button
+                          disabled={validPage === 1}
+                          onClick={() => setCustomerPage(p => Math.max(1, p - 1))}
+                          className="btn-secondary"
+                          style={{
+                            padding: '0.5rem 1.2rem',
+                            fontSize: '0.85rem',
+                            opacity: validPage === 1 ? 0.5 : 1,
+                            cursor: validPage === 1 ? 'not-allowed' : 'pointer'
+                          }}
+                        >
+                          Anterior
+                        </button>
+                        <span style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>
+                          Página <strong>{validPage}</strong> de <strong>{totalPages}</strong> ({totalFilteredCustomers} clientes)
+                        </span>
+                        <button
+                          disabled={validPage === totalPages}
+                          onClick={() => setCustomerPage(p => Math.min(totalPages, p + 1))}
+                          className="btn-secondary"
+                          style={{
+                            padding: '0.5rem 1.2rem',
+                            fontSize: '0.85rem',
+                            opacity: validPage === totalPages ? 0.5 : 1,
+                            cursor: validPage === totalPages ? 'not-allowed' : 'pointer'
+                          }}
+                        >
+                          Próximo
+                        </button>
+                      </div>
+                    )}
                   </div>
-                )}
-              </div>
-            ) : supplierTab === 'ESTOQUE' ? (() => {
+                );
+              })() : supplierTab === 'ESTOQUE' ? (() => {
               const adultSizes = ['S', 'M', 'L', 'XL', '2XL', '3XL', '4XL'];
               const kidSizes = ['16', '18', '20', '22', '24', '26', '28'];
               const babySizes = ['3M', '6M', '9M', '12M'];
