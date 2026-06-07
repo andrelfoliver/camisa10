@@ -39,7 +39,7 @@ export default async function handler(req, res) {
       <p style="color: #4a5568; line-height: 1.6; font-size: 1.05rem;">Olá, <strong>${firstName}</strong>!</p>
       <p style="color: #4a5568; line-height: 1.6; font-size: 1.05rem;">O seu manto já está na estrada! Seu pedido <strong>#${orderIdShort}</strong> acaba de ser despachado e está a caminho do seu endereço.</p>
       ${order.tracking_number ? `<div style="background: #f7fafc; padding: 15px; border-left: 4px solid #CCFF00; margin: 20px 0;"><strong>Seu Código de Rastreamento:</strong> ${order.tracking_number}</div>` : ''}
-      <p style="color: #4a5568; line-height: 1.6; font-size: 1.05rem;">Você também pode acompanhar a evolução da entrega a qualquer momento fazendo login na sua área "Minha Conta" em nosso site.</p>
+      <p style="color: #4a5568; line-height: 1.6; font-size: 1.05rem;">Você também pode acompanhar a evolução da entrega a qualquer momento fazendo login em nosso site, acessando a aba <strong>"Minha Conta" &gt; "Pedidos"</strong> e clicando no botão <strong>"Rastrear Envio"</strong> para ver todas as atualizações em tempo real sem precisar sair da loja.</p>
       <p style="color: #4a5568; line-height: 1.6; font-size: 1.05rem; margin-top: 20px;">Logo você estará com sua camisa em mãos!</p>
     `;
   } else if (newStatus === 'completed') {
