@@ -162,7 +162,7 @@ export const translations = {
     product_loading: 'Carregando produto...',
     product_not_found: 'Produto não encontrado.',
     product_free_shipping: 'Frete grátis para todo o Canadá e EUA',
-    product_volume_promo: '🚀 Desconto progressive: na compra de 2 ou mais camisas você economiza! 🚀',
+    product_volume_promo: '🚀 Desconto progressivo: na compra de 2 ou mais camisas você economiza! 🚀',
     product_reviews_count: 'Avaliações',
     product_questions_count: 'Perguntas',
     product_ask_question: 'Tirar dúvidas',
