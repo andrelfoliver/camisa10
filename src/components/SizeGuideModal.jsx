@@ -426,24 +426,25 @@ const SizeGuideModal = ({ isOpen, onClose, isShoes, isNba }) => {
                     <tr style={{ background: 'rgba(204, 255, 0, 0.1)' }}>
                       <th style={{ padding: '1rem', textAlign: 'left', borderBottom: '2px solid var(--accent-color)' }}>{language === 'pt' ? 'Tamanho' : 'Size'}</th>
                       <th style={{ padding: '1rem', textAlign: 'center', borderBottom: '2px solid var(--accent-color)' }}>{language === 'pt' ? 'Comprimento' : 'Length'}</th>
-                      <th style={{ padding: '1rem', textAlign: 'center', borderBottom: '2px solid var(--accent-color)' }}>{language === 'pt' ? 'Busto (Largura)' : 'Bust (Width)'}</th>
-                      <th style={{ padding: '1rem', textAlign: 'center', borderBottom: '2px solid var(--accent-color)' }}>{language === 'pt' ? 'Altura Recomendada' : 'Recommended Height'}</th>
+                      <th style={{ padding: '1rem', textAlign: 'center', borderBottom: '2px solid var(--accent-color)' }}>{language === 'pt' ? 'Busto' : 'Bust'}</th>
+                      <th style={{ padding: '1rem', textAlign: 'center', borderBottom: '2px solid var(--accent-color)' }}>{language === 'pt' ? 'Ombro' : 'Shoulder'}</th>
+                      <th style={{ padding: '1rem', textAlign: 'center', borderBottom: '2px solid var(--accent-color)' }}>{language === 'pt' ? 'Altura & Peso Recomendados' : 'Recommended Height & Weight'}</th>
                     </tr>
                   </thead>
                   <tbody>
                     {[
-                      ['S (P)', '74-76', '50-52', '165-175'],
-                      ['M', '76-78', '52-54', '175-180'],
-                      ['L (G)', '78-80', '54-56', '180-185'],
-                      ['XL (GG)', '80-82', '56-58', '185-190'],
-                      ['2XL (XXL)', '82-84', '58-60', '190-195'],
-                      ['3XL (XXXL)', '84-86', '60-62', '195-200']
-                    ].map(([s, h, w, alt], i) => (
+                      ['S (P)', '70', '98 cm (49 cm)', '35', '160-170 cm | 40-52 kg (90-115 lbs)'],
+                      ['M', '72', '106 cm (53 cm)', '37', '168-175 cm | 52-61 kg (115-135 lbs)'],
+                      ['L (G)', '75', '112 cm (56 cm)', '39', '172-180 cm | 61-75 kg (135-165 lbs)'],
+                      ['XL (GG)', '77', '120 cm (60 cm)', '41', '178-185 cm | 75-84 kg (165-185 lbs)'],
+                      ['2XL (XXL)', '80', '130 cm (65 cm)', '44', '183-200 cm | 82-95 kg (180-210 lbs)']
+                    ].map(([s, h, w, shld, rec], i) => (
                       <tr key={i} style={{ borderBottom: '1px solid var(--border-color)' }}>
                         <td style={{ padding: '0.8rem', fontWeight: 600 }}>{s}</td>
                         <td style={{ padding: '0.8rem', textAlign: 'center', color: 'var(--text-muted)' }}>{h} cm</td>
-                        <td style={{ padding: '0.8rem', textAlign: 'center', color: 'var(--text-muted)' }}>{w} cm</td>
-                        <td style={{ padding: '0.8rem', textAlign: 'center', color: 'var(--text-muted)' }}>{alt} cm</td>
+                        <td style={{ padding: '0.8rem', textAlign: 'center', color: 'var(--text-muted)' }}>{w}</td>
+                        <td style={{ padding: '0.8rem', textAlign: 'center', color: 'var(--text-muted)' }}>{shld} cm</td>
+                        <td style={{ padding: '0.8rem', textAlign: 'center', color: 'var(--text-muted)' }}>{rec}</td>
                       </tr>
                     ))}
                   </tbody>
