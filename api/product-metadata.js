@@ -37,7 +37,7 @@ export default async function handler(req, res) {
       const numericId = parseInt(id);
       const { data, error } = await supabase
         .from('products')
-        .select('name, image, category, description')
+        .select('name, image, gallery, category, description')
         .eq('id', isNaN(numericId) ? id : numericId)
         .single();
       
@@ -66,9 +66,16 @@ export default async function handler(req, res) {
     const title = `${product.name} | iFooty`.replace(/"/g, '&quot;');
     const description = `${product.category || 'Catálogo'} - ${product.description || 'Qualidade premium e envio rápido para todo o Canadá.'}`.replace(/"/g, '&quot;');
     let imageUrl = product.image;
+    let isVideo = imageUrl && imageUrl.toLowerCase().endsWith('.mp4');
 
-    // Check for video
-    const isVideo = imageUrl && imageUrl.toLowerCase().endsWith('.mp4');
+    // Se a imagem principal for um vídeo, busca a primeira imagem estática na galeria do produto
+    if (isVideo && product.gallery && Array.isArray(product.gallery)) {
+      const firstStaticImage = product.gallery.find(img => img && !img.toLowerCase().endsWith('.mp4'));
+      if (firstStaticImage) {
+        imageUrl = firstStaticImage;
+        isVideo = false;
+      }
+    }
     
     // Ensure absolute image URL
     if (imageUrl && !imageUrl.startsWith('http')) {
