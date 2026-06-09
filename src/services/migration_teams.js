@@ -135,29 +135,73 @@ export async function migrateTeamsToSupabase() {
         { name: 'Marrocos', league: 'Seleções', logo: 'https://images.weserv.nl/?url=upload.wikimedia.org/wikipedia/commons/thumb/c/c2/Morocco_national_football_team_crest.svg/200px-Morocco_national_football_team_crest.svg.png' },
         { name: 'Estados Unidos', league: 'Seleções', logo: 'https://images.weserv.nl/?url=upload.wikimedia.org/wikipedia/commons/thumb/8/86/U.S._Soccer_federation_logo.svg/200px-U.S._Soccer_federation_logo.svg.png' },
         { name: 'Canadá', league: 'Seleções', logo: 'https://images.weserv.nl/?url=upload.wikimedia.org/wikipedia/en/thumb/b/b3/Canada_Soccer_logo.svg/200px-Canada_Soccer_logo.svg.png' },
-        { name: 'México', league: 'Seleções', logo: 'https://images.weserv.nl/?url=upload.wikimedia.org/wikipedia/commons/thumb/c/cd/Mexico_national_football_team_crest_2021.svg/200px-Mexico_national_football_team_crest_2021.svg.png' }
+        { name: 'México', league: 'Seleções', logo: 'https://images.weserv.nl/?url=upload.wikimedia.org/wikipedia/commons/thumb/c/cd/Mexico_national_football_team_crest_2021.svg/200px-Mexico_national_football_team_crest_2021.svg.png' },
+
+        // NBA (Thumbnails Wikimedia via proxy)
+        { name: 'Atlanta Hawks', league: 'NBA', logo: 'https://images.weserv.nl/?url=upload.wikimedia.org/wikipedia/en/thumb/2/24/Atlanta_Hawks_logo.svg/200px-Atlanta_Hawks_logo.svg.png' },
+        { name: 'Boston Celtics', league: 'NBA', logo: 'https://images.weserv.nl/?url=upload.wikimedia.org/wikipedia/en/thumb/8/8f/Boston_Celtics.svg/200px-Boston_Celtics.svg.png' },
+        { name: 'Brooklyn Nets', league: 'NBA', logo: 'https://images.weserv.nl/?url=upload.wikimedia.org/wikipedia/commons/thumb/4/44/Brooklyn_Nets_newlogo.svg/200px-Brooklyn_Nets_newlogo.svg.png' },
+        { name: 'Charlotte Hornets', league: 'NBA', logo: 'https://images.weserv.nl/?url=upload.wikimedia.org/wikipedia/en/thumb/c/c4/Charlotte_Hornets_%282014%29.svg/200px-Charlotte_Hornets_%282014%29.svg.png' },
+        { name: 'Chicago Bulls', league: 'NBA', logo: 'https://images.weserv.nl/?url=upload.wikimedia.org/wikipedia/en/thumb/6/67/Chicago_Bulls_logo.svg/200px-Chicago_Bulls_logo.svg.png' },
+        { name: 'Cleveland Cavaliers', league: 'NBA', logo: 'https://images.weserv.nl/?url=upload.wikimedia.org/wikipedia/commons/thumb/4/4b/Cleveland_Cavaliers_logo.svg/200px-Cleveland_Cavaliers_logo.svg.png' },
+        { name: 'Dallas Mavericks', league: 'NBA', logo: 'https://images.weserv.nl/?url=upload.wikimedia.org/wikipedia/en/thumb/9/97/Dallas_Mavericks_logo.svg/200px-Dallas_Mavericks_logo.svg.png' },
+        { name: 'Denver Nuggets', league: 'NBA', logo: 'https://images.weserv.nl/?url=upload.wikimedia.org/wikipedia/en/thumb/7/76/Denver_Nuggets.svg/200px-Denver_Nuggets.svg.png' },
+        { name: 'Detroit Pistons', league: 'NBA', logo: 'https://images.weserv.nl/?url=upload.wikimedia.org/wikipedia/commons/thumb/c/c9/Detroit_Pistons_logo.svg/200px-Detroit_Pistons_logo.svg.png' },
+        { name: 'Golden State Warriors', league: 'NBA', logo: 'https://images.weserv.nl/?url=upload.wikimedia.org/wikipedia/en/thumb/0/01/Golden_State_Warriors_logo.svg/200px-Golden_State_Warriors_logo.svg.png' },
+        { name: 'Houston Rockets', league: 'NBA', logo: 'https://images.weserv.nl/?url=upload.wikimedia.org/wikipedia/en/thumb/2/28/Houston_Rockets.svg/200px-Houston_Rockets.svg.png' },
+        { name: 'Indiana Pacers', league: 'NBA', logo: 'https://images.weserv.nl/?url=upload.wikimedia.org/wikipedia/en/thumb/1/1b/Indiana_Pacers.svg/200px-Indiana_Pacers.svg.png' },
+        { name: 'Los Angeles Clippers', league: 'NBA', logo: 'https://images.weserv.nl/?url=upload.wikimedia.org/wikipedia/commons/thumb/b/bb/Los_Angeles_Clippers_logo_2024.svg/200px-Los_Angeles_Clippers_logo_2024.svg.png' },
+        { name: 'Los Angeles Lakers', league: 'NBA', logo: 'https://images.weserv.nl/?url=upload.wikimedia.org/wikipedia/commons/thumb/3/3c/Los_Angeles_Lakers_logo.svg/200px-Los_Angeles_Lakers_logo.svg.png' },
+        { name: 'Memphis Grizzlies', league: 'NBA', logo: 'https://images.weserv.nl/?url=upload.wikimedia.org/wikipedia/en/thumb/f/f1/Memphis_Grizzlies.svg/200px-Memphis_Grizzlies.svg.png' },
+        { name: 'Miami Heat', league: 'NBA', logo: 'https://images.weserv.nl/?url=upload.wikimedia.org/wikipedia/en/thumb/1/1c/Miami_Heat_logo.svg/200px-Miami_Heat_logo.svg.png' },
+        { name: 'Milwaukee Bucks', league: 'NBA', logo: 'https://images.weserv.nl/?url=upload.wikimedia.org/wikipedia/en/thumb/4/4a/Milwaukee_Bucks_logo.svg/200px-Milwaukee_Bucks_logo.svg.png' },
+        { name: 'Minnesota Timberwolves', league: 'NBA', logo: 'https://images.weserv.nl/?url=upload.wikimedia.org/wikipedia/en/thumb/c/c2/Minnesota_Timberwolves_logo.svg/200px-Minnesota_Timberwolves_logo.svg.png' },
+        { name: 'New Orleans Pelicans', league: 'NBA', logo: 'https://images.weserv.nl/?url=upload.wikimedia.org/wikipedia/en/thumb/1/11/New_Orleans_Pelicans.svg/200px-New_Orleans_Pelicans.svg.png' },
+        { name: 'New York Knicks', league: 'NBA', logo: 'https://images.weserv.nl/?url=upload.wikimedia.org/wikipedia/en/thumb/2/25/New_York_Knicks_logo.svg/200px-New_York_Knicks_logo.svg.png' },
+        { name: 'Oklahoma City Thunder', league: 'NBA', logo: 'https://images.weserv.nl/?url=upload.wikimedia.org/wikipedia/en/thumb/5/5d/Oklahoma_City_Thunder.svg/200px-Oklahoma_City_Thunder.svg.png' },
+        { name: 'Orlando Magic', league: 'NBA', logo: 'https://images.weserv.nl/?url=upload.wikimedia.org/wikipedia/en/thumb/1/10/Orlando_Magic_logo.svg/200px-Orlando_Magic_logo.svg.png' },
+        { name: 'Philadelphia 76ers', league: 'NBA', logo: 'https://images.weserv.nl/?url=upload.wikimedia.org/wikipedia/en/thumb/0/0e/Philadelphia_76ers_logo.svg/200px-Philadelphia_76ers_logo.svg.png' },
+        { name: 'Phoenix Suns', league: 'NBA', logo: 'https://images.weserv.nl/?url=upload.wikimedia.org/wikipedia/en/thumb/c/c4/Phoenix_Suns_logo.svg/200px-Phoenix_Suns_logo.svg.png' },
+        { name: 'Portland Trail Blazers', league: 'NBA', logo: 'https://images.weserv.nl/?url=upload.wikimedia.org/wikipedia/en/thumb/2/21/Portland_Trail_Blazers_logo.svg/200px-Portland_Trail_Blazers_logo.svg.png' },
+        { name: 'Sacramento Kings', league: 'NBA', logo: 'https://images.weserv.nl/?url=upload.wikimedia.org/wikipedia/en/thumb/c/c7/Sacramento_Kings_logo.svg/200px-Sacramento_Kings_logo.svg.png' },
+        { name: 'San Antonio Spurs', league: 'NBA', logo: 'https://images.weserv.nl/?url=upload.wikimedia.org/wikipedia/en/thumb/a/a4/San_Antonio_Spurs.svg/200px-San_Antonio_Spurs.svg.png' },
+        { name: 'Toronto Raptors', league: 'NBA', logo: 'https://images.weserv.nl/?url=upload.wikimedia.org/wikipedia/en/thumb/3/36/Toronto_Raptors_logo.svg/200px-Toronto_Raptors_logo.svg.png' },
+        { name: 'Utah Jazz', league: 'NBA', logo: 'https://images.weserv.nl/?url=upload.wikimedia.org/wikipedia/commons/thumb/c/c2/Utah_Jazz_primary_logo_2022-present.svg/200px-Utah_Jazz_primary_logo_2022-present.svg.png' },
+        { name: 'Washington Wizards', league: 'NBA', logo: 'https://images.weserv.nl/?url=upload.wikimedia.org/wikipedia/en/thumb/0/02/Washington_Wizards_logo.svg/200px-Washington_Wizards_logo.svg.png' }
     ];
 
     let successCount = 0;
     
+    // 1. Buscar times já existentes no banco de dados para evitar sobrescrever customizações do usuário
+    const { data: existingTeams } = await supabase.from('teams').select('name, logo');
+    const existingMap = new Map(existingTeams?.map(t => [t.name, t.logo]) || []);
+
     // 2. Loop para atualizar ou inserir cada time padrão
     for (const team of highQualityTeams) {
-        // Tenta update pelo nome (que é nossa chave de negócio no e-commerce)
-        const { error } = await supabase
-            .from('teams')
-            .update({ logo: team.logo, league: team.league })
-            .eq('name', team.name);
+        if (existingMap.has(team.name)) {
+            const currentLogo = existingMap.get(team.name);
+            // Só atualiza se o logo atual estiver vazio, nulo ou for um placeholder genérico
+            const isPlaceholder = !currentLogo || currentLogo.includes('placeholder') || currentLogo === '';
             
-        if (!error) successCount++;
-        else {
-            // Se falhar (time não existe), faz o upsert
-            await supabase.from('teams').upsert(team, { onConflict: 'name' });
-            successCount++;
+            if (isPlaceholder) {
+                const { error } = await supabase
+                    .from('teams')
+                    .update({ logo: team.logo, league: team.league })
+                    .eq('name', team.name);
+                if (!error) successCount++;
+            } else {
+                // Já possui um escudo customizado, preservamos a escolha do usuário
+                successCount++;
+            }
+        } else {
+            // Time novo (como os da NBA), insere no banco
+            const { error } = await supabase.from('teams').insert(team);
+            if (!error) successCount++;
         }
     }
 
     return { 
         successCount, 
-        message: `Sincronização concluída! ${successCount} escudos atualizados. Dados de produtos normalizados e duplicatas removidas.` 
+        message: `Sincronização concluída! ${successCount} escudos processados. Times novos adicionados e customizações de logos preservadas.` 
     };
 }
