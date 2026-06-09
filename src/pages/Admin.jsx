@@ -5276,7 +5276,7 @@ const Admin = () => {
                       <option value="99.90">Tênis Standard (CA$ 99.90)</option>
                       <option value="109.90">Tênis Intermediário (CA$ 109.90)</option>
                       <option value="119.90">Tênis Premium (CA$ 119.90)</option>
-                      <option value="129.90">Tênis Deluxe (CA$ 129.90)</option>
+                      <option value="179.90">Tênis Deluxe (CA$ 179.90)</option>
                     </optgroup>
                     <optgroup label="Camisas">
                       <option value="47.90">Fã Lisa (CA$ 47.90)</option>
@@ -5752,7 +5752,7 @@ const Admin = () => {
                       <option value="99.90">Tênis Standard (CA$ 99.90)</option>
                       <option value="109.90">Tênis Intermediário (CA$ 109.90)</option>
                       <option value="119.90">Tênis Premium (CA$ 119.90)</option>
-                      <option value="129.90">Tênis Deluxe (CA$ 129.90)</option>
+                      <option value="179.90">Tênis Deluxe (CA$ 179.90)</option>
                     </optgroup>
                     <optgroup label="Camisas">
                       <option value="47.90">Fã Lisa (CA$ 47.90)</option>
