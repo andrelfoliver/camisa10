@@ -2,17 +2,19 @@ import React, { useState } from 'react';
 import { X, Ruler, ChevronRight } from 'lucide-react';
 import { useLanguage } from '../context/LanguageContext';
 
-const SizeGuideModal = ({ isOpen, onClose, isShoes }) => {
+const SizeGuideModal = ({ isOpen, onClose, isShoes, isNba }) => {
   const { t, language } = useLanguage();
   const [activeTab, setActiveTab] = useState('fan');
 
   React.useEffect(() => {
     if (isShoes) {
       setActiveTab('shoes');
+    } else if (isNba) {
+      setActiveTab('nba');
     } else {
       setActiveTab('fan');
     }
-  }, [isShoes, isOpen]);
+  }, [isShoes, isNba, isOpen]);
 
   // Handle ESC key press to close the modal
   React.useEffect(() => {
@@ -39,6 +41,7 @@ const SizeGuideModal = ({ isOpen, onClose, isShoes }) => {
     { id: 'baby', label: language === 'pt' ? 'Bebê' : 'Baby Body' },
     { id: 'special', label: language === 'pt' ? 'Especiais' : 'Plus Size' },
     { id: 'shoes', label: language === 'pt' ? 'Tênis' : 'Shoes' },
+    { id: 'nba', label: 'NBA' },
     { id: 'accessories', label: language === 'pt' ? 'Outros' : 'Other' }
   ];
 
@@ -408,6 +411,53 @@ const SizeGuideModal = ({ isOpen, onClose, isShoes }) => {
                 <ul style={{ margin: 0, paddingLeft: '1.2rem', color: 'var(--text-muted)', fontSize: '0.85rem', lineHeight: '1.6' }}>
                   <li>{language === 'pt' ? 'Chuteiras geralmente têm meio número maior.' : 'Cleats generally run half a size larger.'}</li>
                   <li>{language === 'pt' ? 'Escolha meio número acima se você tiver pés largos ou grossos.' : 'Choose half a size up if you have wide or thick feet.'}</li>
+                </ul>
+              </div>
+            </div>
+          )}
+
+          {activeTab === 'nba' && (
+            <div className="reveal">
+              <h3 style={{ marginBottom: '1.5rem', fontSize: '1.1rem', color: 'var(--accent-color)', textTransform: 'uppercase' }}>🏀 {language === 'pt' ? 'Regatas NBA (Swingman / Authentic)' : 'NBA Jerseys (Swingman / Authentic)'}</h3>
+              
+              <div className="table-responsive" style={{ marginBottom: '2.5rem' }}>
+                <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+                  <thead>
+                    <tr style={{ background: 'rgba(204, 255, 0, 0.1)' }}>
+                      <th style={{ padding: '1rem', textAlign: 'left', borderBottom: '2px solid var(--accent-color)' }}>{language === 'pt' ? 'Tamanho' : 'Size'}</th>
+                      <th style={{ padding: '1rem', textAlign: 'center', borderBottom: '2px solid var(--accent-color)' }}>{language === 'pt' ? 'Comprimento' : 'Length'}</th>
+                      <th style={{ padding: '1rem', textAlign: 'center', borderBottom: '2px solid var(--accent-color)' }}>{language === 'pt' ? 'Busto (Largura)' : 'Bust (Width)'}</th>
+                      <th style={{ padding: '1rem', textAlign: 'center', borderBottom: '2px solid var(--accent-color)' }}>{language === 'pt' ? 'Altura Recomendada' : 'Recommended Height'}</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {[
+                      ['S (P)', '74-76', '50-52', '165-175'],
+                      ['M', '76-78', '52-54', '175-180'],
+                      ['L (G)', '78-80', '54-56', '180-185'],
+                      ['XL (GG)', '80-82', '56-58', '185-190'],
+                      ['2XL (XXL)', '82-84', '58-60', '190-195'],
+                      ['3XL (XXXL)', '84-86', '60-62', '195-200']
+                    ].map(([s, h, w, alt], i) => (
+                      <tr key={i} style={{ borderBottom: '1px solid var(--border-color)' }}>
+                        <td style={{ padding: '0.8rem', fontWeight: 600 }}>{s}</td>
+                        <td style={{ padding: '0.8rem', textAlign: 'center', color: 'var(--text-muted)' }}>{h} cm</td>
+                        <td style={{ padding: '0.8rem', textAlign: 'center', color: 'var(--text-muted)' }}>{w} cm</td>
+                        <td style={{ padding: '0.8rem', textAlign: 'center', color: 'var(--text-muted)' }}>{alt} cm</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+
+              {/* Dicas */}
+              <div style={{ background: 'rgba(204, 255, 0, 0.03)', border: '1px dashed var(--accent-color)', borderRadius: '8px', padding: '1rem' }}>
+                <h4 style={{ margin: '0 0 0.6rem 0', color: 'var(--accent-color)', fontSize: '0.9rem', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                  💡 {language === 'pt' ? 'Dicas de Ajuste para Regatas NBA:' : 'NBA Jersey Sizing Tips:'}
+                </h4>
+                <ul style={{ margin: 0, paddingLeft: '1.2rem', color: 'var(--text-muted)', fontSize: '0.85rem', lineHeight: '1.6' }}>
+                  <li>{language === 'pt' ? 'As regatas de basquete possuem um corte ligeiramente mais longo e folgado em comparação com as camisas de futebol padrão.' : 'Basketball jerseys have a slightly longer and looser fit compared to standard soccer jerseys.'}</li>
+                  <li>{language === 'pt' ? 'Se você planeja usar a regata por cima de um moletom ou camiseta (estilo streetwear), recomendamos comprar o seu tamanho normal ou um tamanho acima.' : 'If you plan to wear the jersey over a hoodie or t-shirt (streetwear style), we recommend buying your regular size or one size up.'}</li>
                 </ul>
               </div>
             </div>

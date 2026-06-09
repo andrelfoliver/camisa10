@@ -24,7 +24,8 @@ const CategoryPage = () => {
       'internacionais': 'Internacionais',
       'retro': 'Retrô',
       'lancamentos': 'Lançamentos',
-      'tenis': 'Tênis'
+      'tenis': 'Tênis',
+      'nba': 'NBA'
     },
     en: {
       'brasileirao': 'Brazilian League',
@@ -32,7 +33,8 @@ const CategoryPage = () => {
       'internacionais': 'International',
       'retro': 'Retro',
       'lancamentos': 'New Arrivals',
-      'tenis': 'Shoes'
+      'tenis': 'Shoes',
+      'nba': 'NBA'
     }
   };
 
@@ -55,10 +57,11 @@ const CategoryPage = () => {
         const pLeague = (p.league || '').toLowerCase();
 
         const isTenis = cat === 'tênis' || cat === 'tenis' || cat === 'shoes' || pName.includes('tênis') || pName.includes('tenis') || pName.includes('sneaker');
-        const isBrasileirao = (cat === 'brasileirão' || cat === 'brasileirao' || cat.includes('brasileiro') || pLeague === 'brasileirão') && !isTenis;
-        const isSelecao = (cat === 'seleções' || cat === 'selecoes' || pName.includes('seleção') || pName.includes('selecao') || pLeague === 'seleções') && !isTenis;
-        const isRetro = (cat === 'retrô' || cat.includes('retro') || (p.version || '').toLowerCase().includes('retrô') || pName.includes('retrô')) && !isTenis;
-        const isInternacional = (cat === 'internacionais' || cat.includes('europa') || cat.includes('europe') || (pLeague !== '' && pLeague !== 'brasileirão' && pLeague !== 'seleções')) && !isSelecao && !isBrasileirao && !isTenis;
+        const isNba = cat === 'nba' || cat === 'basquete' || pLeague === 'nba' || pName.includes('nba') || pName.includes('basquete') || pName.includes('basketball') || pName.includes('jersey nba');
+        const isBrasileirao = (cat === 'brasileirão' || cat === 'brasileirao' || cat.includes('brasileiro') || pLeague === 'brasileirão') && !isTenis && !isNba;
+        const isSelecao = (cat === 'seleções' || cat === 'selecoes' || pName.includes('seleção') || pName.includes('selecao') || pLeague === 'seleções') && !isTenis && !isNba;
+        const isRetro = (cat === 'retrô' || cat.includes('retro') || (p.version || '').toLowerCase().includes('retrô') || pName.includes('retrô')) && !isTenis && !isNba;
+        const isInternacional = (cat === 'internacionais' || cat.includes('europa') || cat.includes('europe') || (pLeague !== '' && pLeague !== 'brasileirão' && pLeague !== 'seleções' && pLeague !== 'nba')) && !isSelecao && !isBrasileirao && !isTenis && !isNba;
 
         if (category_id === 'brasileirao') return isBrasileirao;
         if (category_id === 'selecoes') return isSelecao;
@@ -66,6 +69,7 @@ const CategoryPage = () => {
         if (category_id === 'internacionais') return isInternacional;
         if (category_id === 'lancamentos') return p.is_new || cat === 'lançamentos' || cat.includes('lançament');
         if (category_id === 'tenis') return isTenis;
+        if (category_id === 'nba') return isNba;
         
         // Fallback para slugs dinâmicos de ligas específicas
         return pLeague === category_id.toLowerCase() || cat === category_id.toLowerCase();
@@ -121,7 +125,7 @@ const CategoryPage = () => {
       <div className="container category-page-wrapper">
         
         {/* Sidebar Desktop */}
-        {category_id !== 'tenis' && (
+        {category_id !== 'tenis' && category_id !== 'nba' && (
           <aside style={{ width: '250px', display: 'none' }} className="desktop-filters">
             <div style={{ position: 'sticky', top: '100px' }}>
               <h3 style={{ marginBottom: '1rem', borderBottom: '1px solid var(--border-color)', paddingBottom: '0.5rem' }}>{t('category_filters')}</h3>
@@ -154,7 +158,7 @@ const CategoryPage = () => {
         )}
 
         {/* Mobile Filter Toggle */}
-        {category_id !== 'tenis' && (
+        {category_id !== 'tenis' && category_id !== 'nba' && (
           <div className="mobile-filter-toggle" style={{ width: '100%', marginBottom: '1rem', display: 'none' }}>
              <button onClick={() => setMobileFilterOpen(true)} className="btn-secondary" style={{ width: '100%', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '0.5rem' }}>
                <Filter size={20} /> {t('category_filter_btn')}

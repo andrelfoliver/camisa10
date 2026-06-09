@@ -34,7 +34,7 @@ const Admin = () => {
   const [manualInvoiceItems, setManualInvoiceItems] = useState([
     { name: '', size: 'M', quantity: 1, price: 47.90, extras: { nameNumber: false, customName: '', customNumber: '', extraCustomization: false, customExtraName: '' } }
   ]);
-  const OFFICIAL_CATEGORIES = ['Seleções', 'Brasileirão', 'Internacionais', 'Lançamentos', 'Retrô', 'Tênis'];
+  const OFFICIAL_CATEGORIES = ['Seleções', 'Brasileirão', 'Internacionais', 'Lançamentos', 'Retrô', 'Tênis', 'NBA'];
   const SHOE_SIZES = ['US 6.5 (BR 37)', 'US 7 (BR 38)', 'US 8 (BR 39)', 'US 8.5 (BR 40)', 'US 9.5 (BR 41)', 'US 10 (BR 42)', 'US 11 (BR 43)', 'US 12 (BR 44)'];
   const SIZES = ['S', 'M', 'L', 'XL', '2XL', '3XL', '4XL', '16', '18', '20', '22', '24', '26', '28', '3M', '6M', '9M', '12M', ...SHOE_SIZES];
   const DEFAULT_INVENTORY = { 'S': 0, 'M': 0, 'L': 0, 'XL': 0, '2XL': 0, '3XL': 0, '4XL': 0, '16': 0, '18': 0, '20': 0, '22': 0, '24': 0, '26': 0, '28': 0, '3M': 0, '6M': 0, '9M': 0, '12M': 0, 'US 6.5 (BR 37)': 0, 'US 7 (BR 38)': 0, 'US 8 (BR 39)': 0, 'US 8.5 (BR 40)': 0, 'US 9.5 (BR 41)': 0, 'US 10 (BR 42)': 0, 'US 11 (BR 43)': 0, 'US 12 (BR 44)': 0 };
@@ -49,6 +49,7 @@ const Admin = () => {
     'Liga Profesional',
     'Saudi Pro League',
     'MLS',
+    'NBA',
     'Outras Ligas / Outros'
   ];
   const [supplierTab, setSupplierTab] = useState('PEDIDOS');
@@ -1875,6 +1876,10 @@ const Admin = () => {
         return pCat === 'lançamentos' || pCat === 'lancamentos';
       }
 
+      if (catTarget === 'nba') {
+        return pCat === 'nba' || pCat === 'basquete' || (p.league && p.league.toLowerCase() === 'nba') || pName.includes('nba') || pName.includes('basquete') || pName.includes('basketball') || pName.includes('jersey nba');
+      }
+
       return pCat === catTarget;
     });
 
@@ -2269,7 +2274,7 @@ const Admin = () => {
                 <Plus size={18} /> Novo Histórico (2022)
               </button>
             )}
-            {(supplierTab.startsWith('CAT_') || supplierTab === 'CLOUD_ALL') && (
+             {(supplierTab.startsWith('CAT_') || supplierTab === 'CLOUD_ALL') && (
               <button
                 onClick={() => {
                   const currentCat = supplierTab.startsWith('CAT_') ? supplierTab.replace('CAT_', '') : '';
@@ -2279,7 +2284,7 @@ const Admin = () => {
                 className="btn-primary"
                 style={{ background: '#10B981', color: '#fff', boxShadow: '0 4px 15px rgba(16, 185, 129, 0.3)' }}
               >
-                <Plus size={18} /> {supplierTab === 'CAT_Tênis' ? 'Novo Tênis' : 'Nova Camisa'}
+                <Plus size={18} /> {supplierTab === 'CAT_Tênis' ? 'Novo Tênis' : (supplierTab === 'CAT_NBA' ? 'Novo Produto NBA' : 'Nova Camisa')}
               </button>
             )}
             {supplierTab === 'TEAMS' && (
@@ -5220,14 +5225,14 @@ const Admin = () => {
                     onMouseLeave={(e) => { e.currentTarget.style.borderColor = 'var(--border-color)'; e.currentTarget.style.color = 'var(--text-muted)'; }}
                   >
                     <Plus size={40} style={{ marginBottom: '1rem' }} />
-                    <h3 style={{ fontSize: '1.2rem', fontWeight: 600 }}>{supplierTab === 'CAT_Tênis' ? 'Novo Tênis' : 'Nova Camisa'}</h3>
+                    <h3 style={{ fontSize: '1.2rem', fontWeight: 600 }}>{supplierTab === 'CAT_Tênis' ? 'Novo Tênis' : (supplierTab === 'CAT_NBA' ? 'Novo Produto NBA' : 'Nova Camisa')}</h3>
                     <p style={{ fontSize: '0.85rem', marginTop: '0.5rem', textAlign: 'center' }}>Adicionar a este catálogo</p>
                   </div>
                 )}
 
                 {displayProducts.length === 0 && (
                   <div style={{ gridColumn: '1 / -1', padding: '2rem 1rem', textAlign: 'center', color: 'var(--text-muted)' }}>
-                    {supplierTab === 'CAT_Tênis' ? 'A lista está vazia. Adicione novos tênis pelo botão acima.' : 'A lista está vazia. Adicione novas camisas pelo botão ao lado.'}
+                    {supplierTab === 'CAT_Tênis' ? 'A lista está vazia. Adicione novos tênis pelo botão acima.' : (supplierTab === 'CAT_NBA' ? 'A lista está vazia. Adicione novos produtos NBA pelo botão acima.' : 'A lista está vazia. Adicione novas camisas pelo botão ao lado.')}
                   </div>
                 )}
               </div>
@@ -5277,6 +5282,11 @@ const Admin = () => {
                       <option value="109.90">Tênis Intermediário (CA$ 109.90)</option>
                       <option value="119.90">Tênis Premium (CA$ 119.90)</option>
                       <option value="179.90">Tênis Deluxe (CA$ 179.90)</option>
+                    </optgroup>
+                    <optgroup label="NBA / Basquete">
+                      <option value="59.90">NBA Swingman Standard (CA$ 59.90)</option>
+                      <option value="69.90">NBA Swingman Custom (CA$ 69.90)</option>
+                      <option value="79.90">NBA Authentic Premium (CA$ 79.90)</option>
                     </optgroup>
                     <optgroup label="Camisas">
                       <option value="47.90">Fã Lisa (CA$ 47.90)</option>
@@ -5753,6 +5763,11 @@ const Admin = () => {
                       <option value="109.90">Tênis Intermediário (CA$ 109.90)</option>
                       <option value="119.90">Tênis Premium (CA$ 119.90)</option>
                       <option value="179.90">Tênis Deluxe (CA$ 179.90)</option>
+                    </optgroup>
+                    <optgroup label="NBA / Basquete">
+                      <option value="59.90">NBA Swingman Standard (CA$ 59.90)</option>
+                      <option value="69.90">NBA Swingman Custom (CA$ 69.90)</option>
+                      <option value="79.90">NBA Authentic Premium (CA$ 79.90)</option>
                     </optgroup>
                     <optgroup label="Camisas">
                       <option value="47.90">Fã Lisa (CA$ 47.90)</option>

@@ -56,17 +56,25 @@ const ProductPage = () => {
     product?.name?.toLowerCase().includes('shoe') ||
     product?.name?.toLowerCase().includes('sneaker');
 
-  const isKids = !isShoes && (product?.category?.toLowerCase().includes('infantil') ||
+  const isNba = product?.category?.toLowerCase() === 'nba' ||
+    product?.category?.toLowerCase() === 'basquete' ||
+    product?.league?.toLowerCase() === 'nba' ||
+    product?.name?.toLowerCase().includes('nba') ||
+    product?.name?.toLowerCase().includes('basquete') ||
+    product?.name?.toLowerCase().includes('basketball') ||
+    product?.name?.toLowerCase().includes('jersey nba');
+
+  const isKids = !isShoes && !isNba && (product?.category?.toLowerCase().includes('infantil') ||
     product?.name?.toLowerCase().includes('infantil') ||
     product?.name?.toLowerCase().includes('kids'));
   
-  const isBaby = !isShoes && (product?.version === 'Baby body' ||
+  const isBaby = !isShoes && !isNba && (product?.version === 'Baby body' ||
     product?.version === 'Baby Body' ||
     product?.name?.toLowerCase().includes('baby body') ||
     product?.name?.toLowerCase().includes('body de bebê') ||
     product?.name?.toLowerCase().includes('body bebê'));
 
-  const isFemale = !isShoes && (product?.category?.toLowerCase().includes('feminina') ||
+  const isFemale = !isShoes && !isNba && (product?.category?.toLowerCase().includes('feminina') ||
     product?.category?.toLowerCase().includes('womens') ||
     product?.name?.toLowerCase().includes('feminina') ||
     product?.name?.toLowerCase().includes('womens') ||
@@ -594,7 +602,7 @@ const ProductPage = () => {
                 })}
               </div>
 
-              {!isKids && !isBaby && !isShoes && (
+              {!isKids && !isBaby && !isShoes && !isNba && (
                 <div style={{
                   marginTop: '0.8rem',
                   padding: '0.75rem 1rem',
@@ -852,6 +860,7 @@ const ProductPage = () => {
         isOpen={isSizeGuideOpen}
         onClose={() => setIsSizeGuideOpen(false)}
         isShoes={isShoes}
+        isNba={isNba}
       />
 
       {/* 8. PROVA SOCIAL */}

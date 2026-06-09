@@ -143,7 +143,8 @@ const Home = () => {
     'Internacionais': [],
     'Lançamentos': [],
     'Retrô': [],
-    'Tênis': []
+    'Tênis': [],
+    'NBA': []
   });
 
   const sortProductsList = (list) => {
@@ -240,24 +241,28 @@ const Home = () => {
         'Internacionais': [],
         'Lançamentos': [],
         'Retrô': [],
-        'Tênis': []
+        'Tênis': [],
+        'NBA': []
       };
 
       allUnified.forEach(p => {
         const cat = (p.category || '').toLowerCase();
         const pName = (p.name || '').toLowerCase();
         const pTeam = (p.team || '').toLowerCase();
+        const pLeague = (p.league || '').toLowerCase();
 
         const isClub = (teamsData || []).some(t => t.name.toLowerCase() === pTeam);
         const isTenis = cat === 'tênis' || cat === 'tenis' || cat === 'shoes' || pName.includes('tênis') || pName.includes('tenis') || pName.includes('sneaker');
-        const isBrasileirao = (cat === 'brasileirão' || cat === 'brasileirao' || cat.includes('brasileiro') || (p.league && p.league.toLowerCase() === 'brasileirão')) && !isTenis;
-        const isSelecao = (cat === 'seleções' || cat === 'selecoes' || pName.includes('seleção') || pName.includes('selecao') || (p.league && p.league.toLowerCase() === 'seleções')) && !isTenis;
-        const isRetro = (cat === 'retrô' || cat.includes('retro') || (p.version || '').toLowerCase().includes('retrô') || pName.includes('retrô')) && !isTenis;
-        const isInternacional = (cat === 'internacionais' || cat.includes('europa') || cat.includes('europe') || (p.league && p.league !== 'Brasileirão' && p.league !== 'Seleções')) && !isSelecao && !isBrasileirao && !isTenis;
+        const isNba = cat === 'nba' || cat === 'basquete' || pLeague === 'nba' || pName.includes('nba') || pName.includes('basquete') || pName.includes('basketball') || pName.includes('jersey nba');
+        const isBrasileirao = (cat === 'brasileirão' || cat === 'brasileirao' || cat.includes('brasileiro') || (p.league && p.league.toLowerCase() === 'brasileirão')) && !isTenis && !isNba;
+        const isSelecao = (cat === 'seleções' || cat === 'selecoes' || pName.includes('seleção') || pName.includes('selecao') || (p.league && p.league.toLowerCase() === 'seleções')) && !isTenis && !isNba;
+        const isRetro = (cat === 'retrô' || cat.includes('retro') || (p.version || '').toLowerCase().includes('retrô') || pName.includes('retrô')) && !isTenis && !isNba;
+        const isInternacional = (cat === 'internacionais' || cat.includes('europa') || cat.includes('europe') || (p.league && p.league !== 'Brasileirão' && p.league !== 'Seleções' && p.league !== 'nba' && p.league !== 'NBA')) && !isSelecao && !isBrasileirao && !isTenis && !isNba;
 
         // Permitir que um produto apareça em mais de uma sessão na Home
         let added = false;
         if (isTenis) { mapCat['Tênis'].push(p); added = true; }
+        if (isNba) { mapCat['NBA'].push(p); added = true; }
         if (isBrasileirao) { mapCat['Brasileirão'].push(p); added = true; }
         if (isSelecao) { mapCat['Seleções'].push(p); added = true; }
         if (isInternacional && !isSelecao && !isBrasileirao) { mapCat['Internacionais'].push(p); added = true; }
