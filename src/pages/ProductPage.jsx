@@ -270,11 +270,15 @@ const ProductPage = () => {
   if (isCustomized) currentTotal += Number(pricingConfig?.nameNumber || 12.00);
   if (isExtraCustomized) currentTotal += 6.90;
 
+  // Encontra a primeira imagem estática (não .mp4) para usar de miniatura no SEO/og:image do WhatsApp/redes sociais
+  const seoImage = [product.image, ...(product.gallery || [])]
+    .filter(img => img && !img.toLowerCase().endsWith('.mp4'))[0] || product.image;
+
   const schemaOrgJSONLD = {
     "@context": "http://schema.org",
     "@type": "Product",
     "name": translateProductDisplay(product.name),
-    "image": product.image,
+    "image": seoImage,
     "description": product.description || `Adquira a ${translateProductDisplay(product.name)} na iFooty. Qualidade premium, pronta entrega no Canadá.`,
     "offers": {
       "@type": "Offer",
@@ -290,7 +294,7 @@ const ProductPage = () => {
       <SEO
         title={`${translateProductDisplay(product.name)} | Camisas de Futebol no Canadá`}
         description={product.description || `Compre a ${translateProductDisplay(product.name)} versão ${product.version || 'Torcedor/Jogador'} na iFooty. Camisa de futebol premium em tecido dry-fit. Pronta entrega com envio rápido para brasileiros no Canadá!`}
-        image={product.image}
+        image={seoImage}
         url={`https://ifooty.ca/produto/${product.id}`}
         type="product"
       />
