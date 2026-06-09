@@ -324,6 +324,7 @@ const Navbar = () => {
             <Link to="/colecao/internacionais" onClick={() => handleNav('/colecao/internacionais')} style={{ fontWeight: 600, fontSize: scrolled ? '0.78rem' : '0.85rem', textTransform: 'uppercase', letterSpacing: '1px', transition: 'all 0.2s', color: 'var(--text-main)' }}>{t('nav_intl')}</Link>
             <Link to="/colecao/lancamentos" onClick={() => handleNav('/colecao/lancamentos')} style={{ fontWeight: 600, fontSize: scrolled ? '0.78rem' : '0.85rem', textTransform: 'uppercase', letterSpacing: '1px', transition: 'all 0.2s', color: 'var(--accent-color)' }}>{language === 'pt' ? 'Lançamentos' : 'New Drops'} 🔥</Link>
             <Link to="/colecao/retro" onClick={() => handleNav('/colecao/retro')} style={{ fontWeight: 600, fontSize: scrolled ? '0.78rem' : '0.85rem', textTransform: 'uppercase', letterSpacing: '1px', transition: 'all 0.2s', color: 'var(--text-main)' }}>{t('nav_retro')}</Link>
+            <Link to="/colecao/tenis" onClick={() => handleNav('/colecao/tenis')} style={{ fontWeight: 600, fontSize: scrolled ? '0.78rem' : '0.85rem', textTransform: 'uppercase', letterSpacing: '1px', transition: 'all 0.2s', color: 'var(--text-main)' }}>{language === 'pt' ? 'Tênis' : 'Shoes'}</Link>
             <Link to="/afiliados" onClick={() => handleNav('/afiliados')} style={{ fontWeight: 600, fontSize: scrolled ? '0.78rem' : '0.85rem', textTransform: 'uppercase', letterSpacing: '1px', transition: 'all 0.2s', color: 'var(--text-main)', opacity: 0.8 }}>{language === 'pt' ? 'Afiliados' : 'Affiliates'}</Link>
           </div>
         </div>
@@ -356,6 +357,7 @@ const Navbar = () => {
             <Link to="/colecao/internacionais" onClick={() => handleNav('/colecao/internacionais')}>{t('nav_intl')}</Link>
             <Link to="/colecao/lancamentos" onClick={() => handleNav('/colecao/lancamentos')} style={{ color: 'var(--accent-color)' }}>{language === 'pt' ? 'Lançamentos' : 'New Drops'} 🔥</Link>
             <Link to="/colecao/retro" onClick={() => handleNav('/colecao/retro')}>{t('nav_retro')}</Link>
+            <Link to="/colecao/tenis" onClick={() => handleNav('/colecao/tenis')}>{language === 'pt' ? 'Tênis' : 'Shoes'}</Link>
             <Link to="/afiliados" onClick={() => handleNav('/afiliados')}>{language === 'pt' ? 'Programa de Afiliados' : 'Affiliate Program'}</Link>
           </div>
         )}

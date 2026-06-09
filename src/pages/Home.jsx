@@ -142,7 +142,8 @@ const Home = () => {
     'Brasileirão': [],
     'Internacionais': [],
     'Lançamentos': [],
-    'Retrô': []
+    'Retrô': [],
+    'Tênis': []
   });
 
   const sortProductsList = (list) => {
@@ -238,7 +239,8 @@ const Home = () => {
         'Brasileirão': [],
         'Internacionais': [],
         'Lançamentos': [],
-        'Retrô': []
+        'Retrô': [],
+        'Tênis': []
       };
 
       allUnified.forEach(p => {
@@ -247,13 +249,15 @@ const Home = () => {
         const pTeam = (p.team || '').toLowerCase();
 
         const isClub = (teamsData || []).some(t => t.name.toLowerCase() === pTeam);
-        const isBrasileirao = cat === 'brasileirão' || cat === 'brasileirao' || cat.includes('brasileiro') || (p.league && p.league.toLowerCase() === 'brasileirão');
-        const isSelecao = cat === 'seleções' || cat === 'selecoes' || pName.includes('seleção') || pName.includes('selecao') || (p.league && p.league.toLowerCase() === 'seleções');
-        const isRetro = cat === 'retrô' || cat.includes('retro') || (p.version || '').toLowerCase().includes('retrô') || pName.includes('retrô');
-        const isInternacional = cat === 'internacionais' || cat.includes('europa') || cat.includes('europe') || (p.league && p.league !== 'Brasileirão' && p.league !== 'Seleções');
+        const isTenis = cat === 'tênis' || cat === 'tenis' || cat === 'shoes' || pName.includes('tênis') || pName.includes('tenis') || pName.includes('sneaker');
+        const isBrasileirao = (cat === 'brasileirão' || cat === 'brasileirao' || cat.includes('brasileiro') || (p.league && p.league.toLowerCase() === 'brasileirão')) && !isTenis;
+        const isSelecao = (cat === 'seleções' || cat === 'selecoes' || pName.includes('seleção') || pName.includes('selecao') || (p.league && p.league.toLowerCase() === 'seleções')) && !isTenis;
+        const isRetro = (cat === 'retrô' || cat.includes('retro') || (p.version || '').toLowerCase().includes('retrô') || pName.includes('retrô')) && !isTenis;
+        const isInternacional = (cat === 'internacionais' || cat.includes('europa') || cat.includes('europe') || (p.league && p.league !== 'Brasileirão' && p.league !== 'Seleções')) && !isSelecao && !isBrasileirao && !isTenis;
 
-        // Permitir que uma camisa apareça em mais de uma sessão na Home
+        // Permitir que um produto apareça em mais de uma sessão na Home
         let added = false;
+        if (isTenis) { mapCat['Tênis'].push(p); added = true; }
         if (isBrasileirao) { mapCat['Brasileirão'].push(p); added = true; }
         if (isSelecao) { mapCat['Seleções'].push(p); added = true; }
         if (isInternacional && !isSelecao && !isBrasileirao) { mapCat['Internacionais'].push(p); added = true; }
@@ -568,7 +572,7 @@ const Home = () => {
                   {t('home_best_options')} {t(`nav_${catName.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace('brasileirao', 'br').replace('internacionais', 'intl').replace('retro', 'retro')}`).toLowerCase()}
                 </p>
               </div>
-              <a href={`/colecao/${catName.toLowerCase().replace('ç', 'c').replace('õ', 'o').replace('ã', 'a')}`} style={{ color: 'var(--accent-color)', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '0.5rem' }}>{t('home_view_all')} <ChevronRight size={16} /></a>
+              <a href={`/colecao/${catName.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "")}`} style={{ color: 'var(--accent-color)', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '0.5rem' }}>{t('home_view_all')} <ChevronRight size={16} /></a>
             </div>
 
             <div className="hide-scrollbar" style={{ display: 'flex', overflowX: 'auto', gap: '1.5rem', paddingBottom: '1.5rem' }}>

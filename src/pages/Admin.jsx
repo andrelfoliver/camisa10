@@ -34,9 +34,10 @@ const Admin = () => {
   const [manualInvoiceItems, setManualInvoiceItems] = useState([
     { name: '', size: 'M', quantity: 1, price: 47.90, extras: { nameNumber: false, customName: '', customNumber: '', extraCustomization: false, customExtraName: '' } }
   ]);
-  const OFFICIAL_CATEGORIES = ['Seleções', 'Brasileirão', 'Internacionais', 'Lançamentos', 'Retrô'];
-  const SIZES = ['S', 'M', 'L', 'XL', '2XL', '3XL', '4XL', '16', '18', '20', '22', '24', '26', '28', '3M', '6M', '9M', '12M'];
-  const DEFAULT_INVENTORY = { 'S': 0, 'M': 0, 'L': 0, 'XL': 0, '2XL': 0, '3XL': 0, '4XL': 0, '16': 0, '18': 0, '20': 0, '22': 0, '24': 0, '26': 0, '28': 0, '3M': 0, '6M': 0, '9M': 0, '12M': 0 };
+  const OFFICIAL_CATEGORIES = ['Seleções', 'Brasileirão', 'Internacionais', 'Lançamentos', 'Retrô', 'Tênis'];
+  const SHOE_SIZES = ['US 6.5 (BR 37)', 'US 7 (BR 38)', 'US 8 (BR 39)', 'US 8.5 (BR 40)', 'US 9.5 (BR 41)', 'US 10 (BR 42)', 'US 11 (BR 43)', 'US 12 (BR 44)'];
+  const SIZES = ['S', 'M', 'L', 'XL', '2XL', '3XL', '4XL', '16', '18', '20', '22', '24', '26', '28', '3M', '6M', '9M', '12M', ...SHOE_SIZES];
+  const DEFAULT_INVENTORY = { 'S': 0, 'M': 0, 'L': 0, 'XL': 0, '2XL': 0, '3XL': 0, '4XL': 0, '16': 0, '18': 0, '20': 0, '22': 0, '24': 0, '26': 0, '28': 0, '3M': 0, '6M': 0, '9M': 0, '12M': 0, 'US 6.5 (BR 37)': 0, 'US 7 (BR 38)': 0, 'US 8 (BR 39)': 0, 'US 8.5 (BR 40)': 0, 'US 9.5 (BR 41)': 0, 'US 10 (BR 42)': 0, 'US 11 (BR 43)': 0, 'US 12 (BR 44)': 0 };
   const OFFICIAL_LEAGUES = [
     'Seleções',
     'Brasileirão',
@@ -136,6 +137,8 @@ const Admin = () => {
 
   const getProductSizes = (prod) => {
     if (!prod) return SIZES;
+    const isShoes = (prod.category || '').toLowerCase().includes('tênis') || (prod.category || '').toLowerCase().includes('tenis') || (prod.category || '').toLowerCase().includes('shoes') || (prod.name || '').toLowerCase().includes('tênis') || (prod.name || '').toLowerCase().includes('tenis') || (prod.name || '').toLowerCase().includes('sapato') || (prod.name || '').toLowerCase().includes('shoe') || (prod.name || '').toLowerCase().includes('sneaker');
+    if (isShoes) return SHOE_SIZES;
     const isBaby = prod.version === 'Baby body' || prod.version === 'Baby Body' || (prod.name || '').toLowerCase().includes('baby body') || (prod.name || '').toLowerCase().includes('body de bebê') || (prod.name || '').toLowerCase().includes('body bebê');
     if (isBaby) return ['3M', '6M', '9M', '12M'];
     const isKids = prod.category === 'Infantil' || (prod.name || '').toLowerCase().includes('infantil') || (prod.name || '').toLowerCase().includes('kids');
@@ -2267,8 +2270,16 @@ const Admin = () => {
               </button>
             )}
             {(supplierTab.startsWith('CAT_') || supplierTab === 'CLOUD_ALL') && (
-              <button onClick={() => setShowAddForm(true)} className="btn-primary" style={{ background: '#10B981', color: '#fff', boxShadow: '0 4px 15px rgba(16, 185, 129, 0.3)' }}>
-                <Plus size={18} /> Nova Camisa
+              <button
+                onClick={() => {
+                  const currentCat = supplierTab.startsWith('CAT_') ? supplierTab.replace('CAT_', '') : '';
+                  setNewProduct(prev => ({ ...prev, category: currentCat, league: '', team: '', version: '' }));
+                  setShowAddForm(true);
+                }}
+                className="btn-primary"
+                style={{ background: '#10B981', color: '#fff', boxShadow: '0 4px 15px rgba(16, 185, 129, 0.3)' }}
+              >
+                <Plus size={18} /> {supplierTab === 'CAT_Tênis' ? 'Novo Tênis' : 'Nova Camisa'}
               </button>
             )}
             {supplierTab === 'TEAMS' && (
@@ -5186,7 +5197,11 @@ const Admin = () => {
                 {/* CARTÃO DE ADICIONAR (SOLICITADO) */}
                 {(supplierTab.startsWith('CAT_') || supplierTab === 'CLOUD_ALL') && (
                   <div
-                    onClick={() => setShowAddForm(true)}
+                    onClick={() => {
+                      const currentCat = supplierTab.startsWith('CAT_') ? supplierTab.replace('CAT_', '') : '';
+                      setNewProduct(prev => ({ ...prev, category: currentCat, league: '', team: '', version: '' }));
+                      setShowAddForm(true);
+                    }}
                     style={{
                       background: 'rgba(255,255,255,0.02)',
                       border: '1px dashed var(--border-color)',
@@ -5205,14 +5220,14 @@ const Admin = () => {
                     onMouseLeave={(e) => { e.currentTarget.style.borderColor = 'var(--border-color)'; e.currentTarget.style.color = 'var(--text-muted)'; }}
                   >
                     <Plus size={40} style={{ marginBottom: '1rem' }} />
-                    <h3 style={{ fontSize: '1.2rem', fontWeight: 600 }}>Nova Camisa</h3>
+                    <h3 style={{ fontSize: '1.2rem', fontWeight: 600 }}>{supplierTab === 'CAT_Tênis' ? 'Novo Tênis' : 'Nova Camisa'}</h3>
                     <p style={{ fontSize: '0.85rem', marginTop: '0.5rem', textAlign: 'center' }}>Adicionar a este catálogo</p>
                   </div>
                 )}
 
                 {displayProducts.length === 0 && (
                   <div style={{ gridColumn: '1 / -1', padding: '2rem 1rem', textAlign: 'center', color: 'var(--text-muted)' }}>
-                    A lista está vazia. Adicione novas camisas pelo botão ao lado.
+                    {supplierTab === 'CAT_Tênis' ? 'A lista está vazia. Adicione novos tênis pelo botão acima.' : 'A lista está vazia. Adicione novas camisas pelo botão ao lado.'}
                   </div>
                 )}
               </div>
@@ -5226,7 +5241,7 @@ const Admin = () => {
           <div style={{ background: 'var(--surface-color)', padding: '2.5rem', borderRadius: 'var(--radius-lg)', border: '1px solid var(--border-color)', width: '100%', maxWidth: '550px', maxHeight: '90vh', overflowY: 'auto', boxShadow: '0 20px 50px rgba(0,0,0,0.5)' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
               <h2 style={{ fontSize: '1.5rem', display: 'flex', alignItems: 'center', gap: '0.5rem', color: '#fff' }}>
-                <Database color="#10B981" /> Nova Camisa no Supabase
+                <Database color="#10B981" /> {newProduct.category === 'Tênis' ? 'Novo Tênis no Supabase' : 'Nova Camisa no Supabase'}
               </h2>
               <button onClick={() => setShowAddForm(false)} style={{ background: 'rgba(255,255,255,0.05)', border: 'none', color: '#fff', cursor: 'pointer', padding: '0.5rem', borderRadius: '50%' }}><X size={20} /></button>
             </div>
@@ -5234,7 +5249,7 @@ const Admin = () => {
             <form onSubmit={handleAddProduct} style={{ display: 'flex', flexDirection: 'column', gap: '1.2rem' }}>
               <div>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
-                  <label style={{ margin: 0, color: 'var(--text-muted)', fontSize: '0.9rem' }}>Nome da Camisa *</label>
+                  <label style={{ margin: 0, color: 'var(--text-muted)', fontSize: '0.9rem' }}>{newProduct.category === 'Tênis' ? 'Nome do Tênis *' : 'Nome da Camisa *'}</label>
                   <button
                     type="button"
                     onClick={() => handleAutoFill(newProduct, setNewProduct)}
@@ -5243,7 +5258,7 @@ const Admin = () => {
                     🪄 Autopreencher Info
                   </button>
                 </div>
-                <input required type="text" value={newProduct.name} onChange={e => setNewProduct({ ...newProduct, name: e.target.value })} placeholder="Ex: Flamengo Titular 24/25" style={{ width: '100%', padding: '0.8rem 1rem', background: 'var(--bg-color)', color: '#fff', border: '1px solid var(--border-color)', borderRadius: 'var(--radius-sm)' }} />
+                <input required type="text" value={newProduct.name} onChange={e => setNewProduct({ ...newProduct, name: e.target.value })} placeholder={newProduct.category === 'Tênis' ? 'Ex: Nike Air Jordan Retro 1' : 'Ex: Flamengo Titular 24/25'} style={{ width: '100%', padding: '0.8rem 1rem', background: 'var(--bg-color)', color: '#fff', border: '1px solid var(--border-color)', borderRadius: 'var(--radius-sm)' }} />
               </div>
 
               <div style={{ display: 'flex', gap: '1rem' }}>
@@ -5257,6 +5272,12 @@ const Admin = () => {
                     style={{ width: '100%', padding: '0.8rem 1rem', background: 'rgba(255,255,255,0.05)', color: '#10B981', border: '1px solid var(--border-color)', borderRadius: 'var(--radius-sm)' }}
                   >
                     <option value="">-- Autopreencher Preço --</option>
+                    <optgroup label="Tênis / Calçados">
+                      <option value="99.90">Tênis Standard (CA$ 99.90)</option>
+                      <option value="109.90">Tênis Intermediário (CA$ 109.90)</option>
+                      <option value="119.90">Tênis Premium (CA$ 119.90)</option>
+                      <option value="129.90">Tênis Deluxe (CA$ 129.90)</option>
+                    </optgroup>
                     <optgroup label="Camisas">
                       <option value="47.90">Fã Lisa (CA$ 47.90)</option>
                       <option value="69.90">Jogador Adidas (CA$ 69.90)</option>
@@ -5283,107 +5304,127 @@ const Admin = () => {
                 </div>
               </div>
 
-              <div style={{ display: 'flex', gap: '1rem' }}>
-                <div style={{ flex: 1 }}>
-                  <label style={{ display: 'block', marginBottom: '0.5rem', color: 'var(--text-muted)', fontSize: '0.9rem' }}>Versão *</label>
-                  <select required value={newProduct.version} onChange={e => setNewProduct({ ...newProduct, version: e.target.value })} style={{ width: '100%', padding: '0.8rem 1rem', background: 'var(--bg-color)', color: '#fff', border: '1px solid var(--border-color)', borderRadius: 'var(--radius-sm)' }}>
-                    <option value="">Selecione...</option>
-                    <option value="Torcedor">Torcedor</option>
-                    <option value="Jogador">Jogador</option>
-                    <option value="Retrô">Retrô</option>
-                    <option value="Baby body">Baby body</option>
-                  </select>
+              {newProduct.category !== 'Tênis' && (
+                <div style={{ display: 'flex', gap: '1rem' }}>
+                  <div style={{ flex: 1 }}>
+                    <label style={{ display: 'block', marginBottom: '0.5rem', color: 'var(--text-muted)', fontSize: '0.9rem' }}>Versão *</label>
+                    <select required={newProduct.category !== 'Tênis'} value={newProduct.version} onChange={e => setNewProduct({ ...newProduct, version: e.target.value })} style={{ width: '100%', padding: '0.8rem 1rem', background: 'var(--bg-color)', color: '#fff', border: '1px solid var(--border-color)', borderRadius: 'var(--radius-sm)' }}>
+                      <option value="">Selecione...</option>
+                      <option value="Torcedor">Torcedor</option>
+                      <option value="Jogador">Jogador</option>
+                      <option value="Retrô">Retrô</option>
+                      <option value="Baby body">Baby body</option>
+                    </select>
+                  </div>
                 </div>
-              </div>
+              )}
 
               <div style={{ display: 'flex', gap: '1rem' }}>
                 <div style={{ flex: 1 }}>
                   <label style={{ display: 'block', marginBottom: '0.5rem', color: 'var(--text-muted)', fontSize: '0.9rem' }}>Categoria *</label>
-                  <select required value={newProduct.category} onChange={e => setNewProduct({ ...newProduct, category: e.target.value })} style={{ width: '100%', padding: '0.8rem 1rem', background: 'var(--bg-color)', color: '#fff', border: '1px solid var(--border-color)', borderRadius: 'var(--radius-sm)' }}>
+                  <select
+                    required
+                    value={newProduct.category}
+                    onChange={e => {
+                      const cat = e.target.value;
+                      const updates = { category: cat };
+                      if (cat === 'Tênis') {
+                        updates.league = '';
+                        updates.team = '';
+                        updates.version = '';
+                      }
+                      setNewProduct({ ...newProduct, ...updates });
+                    }}
+                    style={{ width: '100%', padding: '0.8rem 1rem', background: 'var(--bg-color)', color: '#fff', border: '1px solid var(--border-color)', borderRadius: 'var(--radius-sm)' }}
+                  >
                     <option value="">Selecione...</option>
                     {OFFICIAL_CATEGORIES.map(cat => (
                       <option key={cat} value={cat}>{cat}</option>
                     ))}
                   </select>
                 </div>
-                <div style={{ flex: 1 }}>
-                  <label style={{ display: 'block', marginBottom: '0.5rem', color: 'var(--text-muted)', fontSize: '0.9rem' }}>Liga</label>
-                  <select
-                    value={newProduct.league}
-                    onChange={e => setNewProduct({ ...newProduct, league: e.target.value })}
-                    style={{ width: '100%', padding: '0.8rem 1rem', background: 'var(--bg-color)', color: '#fff', border: '1px solid var(--border-color)', borderRadius: 'var(--radius-sm)' }}
-                  >
-                    <option value="">Selecione a Liga...</option>
-                    {OFFICIAL_LEAGUES.map(league => (
-                      <option key={league} value={league}>{league}</option>
-                    ))}
-                  </select>
-                </div>
-                <div style={{ flex: 1, position: 'relative' }}>
-                  <label style={{ display: 'block', marginBottom: '0.5rem', color: 'var(--text-muted)', fontSize: '0.9rem' }}>Time</label>
-                  <input
-                    type="text"
-                    placeholder="Buscar ou digitar time..."
-                    value={newTeamSearch}
-                    onFocus={() => setShowNewTeamSuggestions(true)}
-                    onBlur={() => setTimeout(() => setShowNewTeamSuggestions(false), 200)}
-                    onChange={e => {
-                      setNewTeamSearch(e.target.value);
-                      setNewProduct({ ...newProduct, team: e.target.value });
-                    }}
-                    style={{ width: '100%', padding: '0.8rem 1rem', background: 'var(--bg-color)', color: '#fff', border: '1px solid var(--border-color)', borderRadius: 'var(--radius-sm)' }}
-                  />
-                  {showNewTeamSuggestions && (
-                    <div style={{
-                      position: 'absolute',
-                      top: '100%',
-                      left: 0,
-                      right: 0,
-                      background: 'var(--surface-color)',
-                      border: '1px solid var(--border-color)',
-                      borderRadius: 'var(--radius-sm)',
-                      maxHeight: '200px',
-                      overflowY: 'auto',
-                      zIndex: 1000,
-                      marginTop: '4px',
-                      boxShadow: '0 10px 25px rgba(0,0,0,0.5)'
-                    }}>
-                      <div
-                        onClick={() => {
-                          setNewTeamSearch('');
-                          setNewProduct({ ...newProduct, team: '' });
-                          setShowNewTeamSuggestions(false);
-                        }}
-                        style={{ padding: '0.8rem 1rem', cursor: 'pointer', borderBottom: '1px solid rgba(255,255,255,0.05)', color: 'var(--text-muted)', transition: 'background 0.2s' }}
-                        onMouseEnter={e => e.currentTarget.style.background = 'rgba(255,255,255,0.05)'}
-                        onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
+                {newProduct.category !== 'Tênis' && (
+                  <>
+                    <div style={{ flex: 1 }}>
+                      <label style={{ display: 'block', marginBottom: '0.5rem', color: 'var(--text-muted)', fontSize: '0.9rem' }}>Liga</label>
+                      <select
+                        value={newProduct.league}
+                        onChange={e => setNewProduct({ ...newProduct, league: e.target.value })}
+                        style={{ width: '100%', padding: '0.8rem 1rem', background: 'var(--bg-color)', color: '#fff', border: '1px solid var(--border-color)', borderRadius: 'var(--radius-sm)' }}
                       >
-                        Nacional / Outros (Limpar)
-                      </div>
-                      {filteredNewTeams.map(team => (
-                        <div
-                          key={team.id}
-                          onClick={() => {
-                            setNewTeamSearch(team.name);
-                            setNewProduct({ ...newProduct, team: team.name });
-                            setShowNewTeamSuggestions(false);
-                          }}
-                          style={{ padding: '0.8rem 1rem', cursor: 'pointer', borderBottom: '1px solid rgba(255,255,255,0.05)', color: '#fff', display: 'flex', alignItems: 'center', gap: '0.8rem', transition: 'background 0.2s' }}
-                          onMouseEnter={e => e.currentTarget.style.background = 'rgba(255,255,255,0.05)'}
-                          onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
-                        >
-                          <img src={team.logo} alt="" style={{ width: '20px', height: '20px', objectFit: 'contain' }} />
-                          <span>{team.name}</span>
-                        </div>
-                      ))}
-                      {filteredNewTeams.length === 0 && (
-                        <div style={{ padding: '0.8rem 1rem', color: 'var(--text-muted)', fontStyle: 'italic' }}>
-                          Nenhum time encontrado (será salvo como customizado)
+                        <option value="">Selecione a Liga...</option>
+                        {OFFICIAL_LEAGUES.map(league => (
+                          <option key={league} value={league}>{league}</option>
+                        ))}
+                      </select>
+                    </div>
+                    <div style={{ flex: 1, position: 'relative' }}>
+                      <label style={{ display: 'block', marginBottom: '0.5rem', color: 'var(--text-muted)', fontSize: '0.9rem' }}>Time</label>
+                      <input
+                        type="text"
+                        placeholder="Buscar ou digitar time..."
+                        value={newTeamSearch}
+                        onFocus={() => setShowNewTeamSuggestions(true)}
+                        onBlur={() => setTimeout(() => setShowNewTeamSuggestions(false), 200)}
+                        onChange={e => {
+                          setNewTeamSearch(e.target.value);
+                          setNewProduct({ ...newProduct, team: e.target.value });
+                        }}
+                        style={{ width: '100%', padding: '0.8rem 1rem', background: 'var(--bg-color)', color: '#fff', border: '1px solid var(--border-color)', borderRadius: 'var(--radius-sm)' }}
+                      />
+                      {showNewTeamSuggestions && (
+                        <div style={{
+                          position: 'absolute',
+                          top: '100%',
+                          left: 0,
+                          right: 0,
+                          background: 'var(--surface-color)',
+                          border: '1px solid var(--border-color)',
+                          borderRadius: 'var(--radius-sm)',
+                          maxHeight: '200px',
+                          overflowY: 'auto',
+                          zIndex: 1000,
+                          marginTop: '4px',
+                          boxShadow: '0 10px 25px rgba(0,0,0,0.5)'
+                        }}>
+                          <div
+                            onClick={() => {
+                              setNewTeamSearch('');
+                              setNewProduct({ ...newProduct, team: '' });
+                              setShowNewTeamSuggestions(false);
+                            }}
+                            style={{ padding: '0.8rem 1rem', cursor: 'pointer', borderBottom: '1px solid rgba(255,255,255,0.05)', color: 'var(--text-muted)', transition: 'background 0.2s' }}
+                            onMouseEnter={e => e.currentTarget.style.background = 'rgba(255,255,255,0.05)'}
+                            onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
+                          >
+                            Nacional / Outros (Limpar)
+                          </div>
+                          {filteredNewTeams.map(team => (
+                            <div
+                              key={team.id}
+                              onClick={() => {
+                                setNewTeamSearch(team.name);
+                                setNewProduct({ ...newProduct, team: team.name });
+                                setShowNewTeamSuggestions(false);
+                              }}
+                              style={{ padding: '0.8rem 1rem', cursor: 'pointer', borderBottom: '1px solid rgba(255,255,255,0.05)', color: '#fff', display: 'flex', alignItems: 'center', gap: '0.8rem', transition: 'background 0.2s' }}
+                              onMouseEnter={e => e.currentTarget.style.background = 'rgba(255,255,255,0.05)'}
+                              onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
+                            >
+                              <img src={team.logo} alt="" style={{ width: '20px', height: '20px', objectFit: 'contain' }} />
+                              <span>{team.name}</span>
+                            </div>
+                          ))}
+                          {filteredNewTeams.length === 0 && (
+                            <div style={{ padding: '0.8rem 1rem', color: 'var(--text-muted)', fontStyle: 'italic' }}>
+                              Nenhum time encontrado (será salvo como customizado)
+                            </div>
+                          )}
                         </div>
                       )}
                     </div>
-                  )}
-                </div>
+                  </>
+                )}
               </div>
 
               <div style={{ display: 'flex', gap: '1.5rem', background: 'rgba(255,255,255,0.02)', padding: '1rem', borderRadius: 'var(--radius-sm)', border: '1px solid var(--border-color)' }}>
@@ -5676,7 +5717,7 @@ const Admin = () => {
           <div style={{ background: 'var(--surface-color)', padding: '2.5rem', borderRadius: 'var(--radius-lg)', border: '1px solid var(--border-color)', width: '100%', maxWidth: '550px', maxHeight: '90vh', overflowY: 'auto', boxShadow: '0 20px 50px rgba(0,0,0,0.5)' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
               <h2 style={{ fontSize: '1.5rem', display: 'flex', alignItems: 'center', gap: '0.5rem', color: '#fff' }}>
-                <Database color="#3B82F6" /> Editar Camisa
+                <Database color="#3B82F6" /> {editingProduct.category === 'Tênis' ? 'Editar Tênis' : 'Editar Camisa'}
               </h2>
               <button onClick={() => setEditingProduct(null)} style={{ background: 'rgba(255,255,255,0.05)', border: 'none', color: '#fff', cursor: 'pointer', padding: '0.5rem', borderRadius: '50%' }}><X size={20} /></button>
             </div>
@@ -5684,7 +5725,7 @@ const Admin = () => {
             <form onSubmit={handleUpdateProduct} style={{ display: 'flex', flexDirection: 'column', gap: '1.2rem' }}>
               <div>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
-                  <label style={{ margin: 0, color: 'var(--text-muted)', fontSize: '0.9rem' }}>Nome da Camisa *</label>
+                  <label style={{ margin: 0, color: 'var(--text-muted)', fontSize: '0.9rem' }}>{editingProduct.category === 'Tênis' ? 'Nome do Tênis *' : 'Nome da Camisa *'}</label>
                   <button
                     type="button"
                     onClick={() => handleAutoFill(editingProduct, setEditingProduct)}
@@ -5707,6 +5748,12 @@ const Admin = () => {
                     style={{ width: '100%', padding: '0.8rem 1rem', background: 'rgba(255,255,255,0.05)', color: '#3B82F6', border: '1px solid var(--border-color)', borderRadius: 'var(--radius-sm)' }}
                   >
                     <option value="">-- Autopreencher Preço --</option>
+                    <optgroup label="Tênis / Calçados">
+                      <option value="99.90">Tênis Standard (CA$ 99.90)</option>
+                      <option value="109.90">Tênis Intermediário (CA$ 109.90)</option>
+                      <option value="119.90">Tênis Premium (CA$ 119.90)</option>
+                      <option value="129.90">Tênis Deluxe (CA$ 129.90)</option>
+                    </optgroup>
                     <optgroup label="Camisas">
                       <option value="47.90">Fã Lisa (CA$ 47.90)</option>
                       <option value="69.90">Jogador Adidas (CA$ 69.90)</option>
@@ -5734,19 +5781,35 @@ const Admin = () => {
               </div>
 
               <div style={{ display: 'flex', gap: '1rem' }}>
-                <div style={{ flex: 1 }}>
-                  <label style={{ display: 'block', marginBottom: '0.5rem', color: 'var(--text-muted)', fontSize: '0.9rem' }}>Versão *</label>
-                  <select required value={editingProduct.version} onChange={e => setEditingProduct({ ...editingProduct, version: e.target.value })} style={{ width: '100%', padding: '0.8rem 1rem', background: 'var(--bg-color)', color: '#fff', border: '1px solid var(--border-color)', borderRadius: 'var(--radius-sm)' }}>
-                    <option value="">Selecione...</option>
-                    <option value="Torcedor">Torcedor</option>
-                    <option value="Jogador">Jogador</option>
-                    <option value="Retrô">Retrô</option>
-                    <option value="Baby body">Baby body</option>
-                  </select>
-                </div>
+                {editingProduct.version !== 'Tênis' && editingProduct.category !== 'Tênis' && (
+                  <div style={{ flex: 1 }}>
+                    <label style={{ display: 'block', marginBottom: '0.5rem', color: 'var(--text-muted)', fontSize: '0.9rem' }}>Versão *</label>
+                    <select required={editingProduct.category !== 'Tênis'} value={editingProduct.version} onChange={e => setEditingProduct({ ...editingProduct, version: e.target.value })} style={{ width: '100%', padding: '0.8rem 1rem', background: 'var(--bg-color)', color: '#fff', border: '1px solid var(--border-color)', borderRadius: 'var(--radius-sm)' }}>
+                      <option value="">Selecione...</option>
+                      <option value="Torcedor">Torcedor</option>
+                      <option value="Jogador">Jogador</option>
+                      <option value="Retrô">Retrô</option>
+                      <option value="Baby body">Baby body</option>
+                    </select>
+                  </div>
+                )}
                 <div style={{ flex: 1 }}>
                   <label style={{ display: 'block', marginBottom: '0.5rem', color: 'var(--text-muted)', fontSize: '0.9rem' }}>Categoria *</label>
-                  <select required value={editingProduct.category} onChange={e => setEditingProduct({ ...editingProduct, category: e.target.value })} style={{ width: '100%', padding: '0.8rem 1rem', background: 'var(--bg-color)', color: '#fff', border: '1px solid var(--border-color)', borderRadius: 'var(--radius-sm)' }}>
+                  <select
+                    required
+                    value={editingProduct.category}
+                    onChange={e => {
+                      const cat = e.target.value;
+                      const updates = { category: cat };
+                      if (cat === 'Tênis') {
+                        updates.league = '';
+                        updates.team = '';
+                        updates.version = '';
+                      }
+                      setEditingProduct({ ...editingProduct, ...updates });
+                    }}
+                    style={{ width: '100%', padding: '0.8rem 1rem', background: 'var(--bg-color)', color: '#fff', border: '1px solid var(--border-color)', borderRadius: 'var(--radius-sm)' }}
+                  >
                     <option value="">Selecione...</option>
                     {OFFICIAL_CATEGORIES.map(cat => (
                       <option key={cat} value={cat}>{cat}</option>
@@ -5755,86 +5818,88 @@ const Admin = () => {
                 </div>
               </div>
 
-              <div style={{ display: 'flex', gap: '1rem' }}>
-                <div style={{ flex: 1 }}>
-                  <label style={{ display: 'block', marginBottom: '0.5rem', color: 'var(--text-muted)', fontSize: '0.9rem' }}>Liga</label>
-                  <select
-                    value={editingProduct.league}
-                    onChange={e => setEditingProduct({ ...editingProduct, league: e.target.value })}
-                    style={{ width: '100%', padding: '0.8rem 1rem', background: 'var(--bg-color)', color: '#fff', border: '1px solid var(--border-color)', borderRadius: 'var(--radius-sm)' }}
-                  >
-                    <option value="">Selecione a Liga...</option>
-                    {OFFICIAL_LEAGUES.map(league => (
-                      <option key={league} value={league}>{league}</option>
-                    ))}
-                  </select>
-                </div>
-                <div style={{ flex: 1, position: 'relative' }}>
-                  <label style={{ display: 'block', marginBottom: '0.5rem', color: 'var(--text-muted)', fontSize: '0.9rem' }}>Time</label>
-                  <input
-                    type="text"
-                    placeholder="Buscar ou digitar time..."
-                    value={editTeamSearch}
-                    onFocus={() => setShowEditTeamSuggestions(true)}
-                    onBlur={() => setTimeout(() => setShowEditTeamSuggestions(false), 200)}
-                    onChange={e => {
-                      setEditTeamSearch(e.target.value);
-                      setEditingProduct({ ...editingProduct, team: e.target.value });
-                    }}
-                    style={{ width: '100%', padding: '0.8rem 1rem', background: 'var(--bg-color)', color: '#fff', border: '1px solid var(--border-color)', borderRadius: 'var(--radius-sm)' }}
-                  />
-                  {showEditTeamSuggestions && (
-                    <div style={{
-                      position: 'absolute',
-                      top: '100%',
-                      left: 0,
-                      right: 0,
-                      background: 'var(--surface-color)',
-                      border: '1px solid var(--border-color)',
-                      borderRadius: 'var(--radius-sm)',
-                      maxHeight: '200px',
-                      overflowY: 'auto',
-                      zIndex: 1000,
-                      marginTop: '4px',
-                      boxShadow: '0 10px 25px rgba(0,0,0,0.5)'
-                    }}>
-                      <div
-                        onClick={() => {
-                          setEditTeamSearch('');
-                          setEditingProduct({ ...editingProduct, team: '' });
-                          setShowEditTeamSuggestions(false);
-                        }}
-                        style={{ padding: '0.8rem 1rem', cursor: 'pointer', borderBottom: '1px solid rgba(255,255,255,0.05)', color: 'var(--text-muted)', transition: 'background 0.2s' }}
-                        onMouseEnter={e => e.currentTarget.style.background = 'rgba(255,255,255,0.05)'}
-                        onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
-                      >
-                        Nacional / Outros (Limpar)
-                      </div>
-                      {filteredEditTeams.map(team => (
+              {editingProduct.category !== 'Tênis' && (
+                <div style={{ display: 'flex', gap: '1rem' }}>
+                  <div style={{ flex: 1 }}>
+                    <label style={{ display: 'block', marginBottom: '0.5rem', color: 'var(--text-muted)', fontSize: '0.9rem' }}>Liga</label>
+                    <select
+                      value={editingProduct.league}
+                      onChange={e => setEditingProduct({ ...editingProduct, league: e.target.value })}
+                      style={{ width: '100%', padding: '0.8rem 1rem', background: 'var(--bg-color)', color: '#fff', border: '1px solid var(--border-color)', borderRadius: 'var(--radius-sm)' }}
+                    >
+                      <option value="">Selecione a Liga...</option>
+                      {OFFICIAL_LEAGUES.map(league => (
+                        <option key={league} value={league}>{league}</option>
+                      ))}
+                    </select>
+                  </div>
+                  <div style={{ flex: 1, position: 'relative' }}>
+                    <label style={{ display: 'block', marginBottom: '0.5rem', color: 'var(--text-muted)', fontSize: '0.9rem' }}>Time</label>
+                    <input
+                      type="text"
+                      placeholder="Buscar ou digitar time..."
+                      value={editTeamSearch}
+                      onFocus={() => setShowEditTeamSuggestions(true)}
+                      onBlur={() => setTimeout(() => setShowEditTeamSuggestions(false), 200)}
+                      onChange={e => {
+                        setEditTeamSearch(e.target.value);
+                        setEditingProduct({ ...editingProduct, team: e.target.value });
+                      }}
+                      style={{ width: '100%', padding: '0.8rem 1rem', background: 'var(--bg-color)', color: '#fff', border: '1px solid var(--border-color)', borderRadius: 'var(--radius-sm)' }}
+                    />
+                    {showEditTeamSuggestions && (
+                      <div style={{
+                        position: 'absolute',
+                        top: '100%',
+                        left: 0,
+                        right: 0,
+                        background: 'var(--surface-color)',
+                        border: '1px solid var(--border-color)',
+                        borderRadius: 'var(--radius-sm)',
+                        maxHeight: '200px',
+                        overflowY: 'auto',
+                        zIndex: 1000,
+                        marginTop: '4px',
+                        boxShadow: '0 10px 25px rgba(0,0,0,0.5)'
+                      }}>
                         <div
-                          key={team.id}
                           onClick={() => {
-                            setEditTeamSearch(team.name);
-                            setEditingProduct({ ...editingProduct, team: team.name });
+                            setEditTeamSearch('');
+                            setEditingProduct({ ...editingProduct, team: '' });
                             setShowEditTeamSuggestions(false);
                           }}
-                          style={{ padding: '0.8rem 1rem', cursor: 'pointer', borderBottom: '1px solid rgba(255,255,255,0.05)', color: '#fff', display: 'flex', alignItems: 'center', gap: '0.8rem', transition: 'background 0.2s' }}
+                          style={{ padding: '0.8rem 1rem', cursor: 'pointer', borderBottom: '1px solid rgba(255,255,255,0.05)', color: 'var(--text-muted)', transition: 'background 0.2s' }}
                           onMouseEnter={e => e.currentTarget.style.background = 'rgba(255,255,255,0.05)'}
                           onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
                         >
-                          <img src={team.logo} alt="" style={{ width: '20px', height: '20px', objectFit: 'contain' }} />
-                          <span>{team.name}</span>
+                          Nacional / Outros (Limpar)
                         </div>
-                      ))}
-                      {filteredEditTeams.length === 0 && (
-                        <div style={{ padding: '0.8rem 1rem', color: 'var(--text-muted)', fontStyle: 'italic' }}>
-                          Nenhum time encontrado (será salvo como customizado)
-                        </div>
-                      )}
-                    </div>
-                  )}
+                        {filteredEditTeams.map(team => (
+                          <div
+                            key={team.id}
+                            onClick={() => {
+                              setEditTeamSearch(team.name);
+                              setEditingProduct({ ...editingProduct, team: team.name });
+                              setShowEditTeamSuggestions(false);
+                            }}
+                            style={{ padding: '0.8rem 1rem', cursor: 'pointer', borderBottom: '1px solid rgba(255,255,255,0.05)', color: '#fff', display: 'flex', alignItems: 'center', gap: '0.8rem', transition: 'background 0.2s' }}
+                            onMouseEnter={e => e.currentTarget.style.background = 'rgba(255,255,255,0.05)'}
+                            onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
+                          >
+                            <img src={team.logo} alt="" style={{ width: '20px', height: '20px', objectFit: 'contain' }} />
+                            <span>{team.name}</span>
+                          </div>
+                        ))}
+                        {filteredEditTeams.length === 0 && (
+                          <div style={{ padding: '0.8rem 1rem', color: 'var(--text-muted)', fontStyle: 'italic' }}>
+                            Nenhum time encontrado (será salvo como customizado)
+                          </div>
+                        )}
+                      </div>
+                    )}
+                  </div>
                 </div>
-              </div>
+              )}
 
               <div style={{ display: 'flex', gap: '1.5rem', background: 'rgba(255,255,255,0.02)', padding: '1rem', borderRadius: 'var(--radius-sm)', border: '1px solid var(--border-color)', marginBottom: '1.2rem' }}>
                 <label style={{ display: 'flex', alignItems: 'center', gap: '0.8rem', cursor: 'pointer', color: '#fff', fontSize: '0.95rem', fontWeight: 600 }}>

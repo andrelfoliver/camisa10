@@ -23,14 +23,16 @@ const CategoryPage = () => {
       'selecoes': 'Seleções',
       'internacionais': 'Internacionais',
       'retro': 'Retrô',
-      'lancamentos': 'Lançamentos'
+      'lancamentos': 'Lançamentos',
+      'tenis': 'Tênis'
     },
     en: {
       'brasileirao': 'Brazilian League',
       'selecoes': 'National Teams',
       'internacionais': 'International',
       'retro': 'Retro',
-      'lancamentos': 'New Arrivals'
+      'lancamentos': 'New Arrivals',
+      'tenis': 'Shoes'
     }
   };
 
@@ -52,16 +54,18 @@ const CategoryPage = () => {
         const pName = (p.name || '').toLowerCase();
         const pLeague = (p.league || '').toLowerCase();
 
-        const isBrasileirao = cat === 'brasileirão' || cat === 'brasileirao' || cat.includes('brasileiro') || pLeague === 'brasileirão';
-        const isSelecao = cat === 'seleções' || cat === 'selecoes' || pName.includes('seleção') || pName.includes('selecao') || pLeague === 'seleções';
-        const isRetro = cat === 'retrô' || cat.includes('retro') || (p.version || '').toLowerCase().includes('retrô') || pName.includes('retrô');
-        const isInternacional = cat === 'internacionais' || cat.includes('europa') || cat.includes('europe') || (pLeague !== '' && pLeague !== 'brasileirão' && pLeague !== 'seleções');
+        const isTenis = cat === 'tênis' || cat === 'tenis' || cat === 'shoes' || pName.includes('tênis') || pName.includes('tenis') || pName.includes('sneaker');
+        const isBrasileirao = (cat === 'brasileirão' || cat === 'brasileirao' || cat.includes('brasileiro') || pLeague === 'brasileirão') && !isTenis;
+        const isSelecao = (cat === 'seleções' || cat === 'selecoes' || pName.includes('seleção') || pName.includes('selecao') || pLeague === 'seleções') && !isTenis;
+        const isRetro = (cat === 'retrô' || cat.includes('retro') || (p.version || '').toLowerCase().includes('retrô') || pName.includes('retrô')) && !isTenis;
+        const isInternacional = (cat === 'internacionais' || cat.includes('europa') || cat.includes('europe') || (pLeague !== '' && pLeague !== 'brasileirão' && pLeague !== 'seleções')) && !isSelecao && !isBrasileirao && !isTenis;
 
         if (category_id === 'brasileirao') return isBrasileirao;
         if (category_id === 'selecoes') return isSelecao;
         if (category_id === 'retro') return isRetro;
-        if (category_id === 'internacionais') return isInternacional && !isSelecao && !isBrasileirao;
+        if (category_id === 'internacionais') return isInternacional;
         if (category_id === 'lancamentos') return p.is_new || cat === 'lançamentos' || cat.includes('lançament');
+        if (category_id === 'tenis') return isTenis;
         
         // Fallback para slugs dinâmicos de ligas específicas
         return pLeague === category_id.toLowerCase() || cat === category_id.toLowerCase();
@@ -117,42 +121,46 @@ const CategoryPage = () => {
       <div className="container category-page-wrapper">
         
         {/* Sidebar Desktop */}
-        <aside style={{ width: '250px', display: 'none' }} className="desktop-filters">
-          <div style={{ position: 'sticky', top: '100px' }}>
-            <h3 style={{ marginBottom: '1rem', borderBottom: '1px solid var(--border-color)', paddingBottom: '0.5rem' }}>{t('category_filters')}</h3>
-            
-            <div style={{ marginBottom: '2rem' }}>
-              <h4 style={{ color: 'var(--text-muted)', marginBottom: '0.8rem', fontSize: '0.9rem', textTransform: 'uppercase' }}>{t('category_jersey_version')}</h4>
-              {[
-                { labelKey: 'category_filter_fan', value: 'Torcedor' },
-                { labelKey: 'category_filter_player', value: 'Jogador' },
-                { labelKey: 'category_filter_retro', value: 'Retrô' }
-              ].map(ver => (
-                <label key={ver.value} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.5rem', cursor: 'pointer' }}>
-                  <input
-                    type="checkbox"
-                    checked={versionFilters.includes(ver.value)}
-                    onChange={() => toggleVersion(ver.value)}
-                    style={{ accentColor: 'var(--accent-color)', width: '16px', height: '16px' }}
-                  />
-                  <span style={{ color: versionFilters.includes(ver.value) ? 'var(--accent-color)' : 'var(--text-main)', fontWeight: versionFilters.includes(ver.value) ? 600 : 400 }}>
-                    {t(ver.labelKey)}
-                  </span>
-                </label>
-              ))}
-              {versionFilters.length > 0 && (
-                <button onClick={() => setVersionFilters([])} style={{ marginTop: '0.5rem', background: 'transparent', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', fontSize: '0.85rem', textDecoration: 'underline' }}>{t('category_clear_filters')}</button>
-              )}
+        {category_id !== 'tenis' && (
+          <aside style={{ width: '250px', display: 'none' }} className="desktop-filters">
+            <div style={{ position: 'sticky', top: '100px' }}>
+              <h3 style={{ marginBottom: '1rem', borderBottom: '1px solid var(--border-color)', paddingBottom: '0.5rem' }}>{t('category_filters')}</h3>
+              
+              <div style={{ marginBottom: '2rem' }}>
+                <h4 style={{ color: 'var(--text-muted)', marginBottom: '0.8rem', fontSize: '0.9rem', textTransform: 'uppercase' }}>{t('category_jersey_version')}</h4>
+                {[
+                  { labelKey: 'category_filter_fan', value: 'Torcedor' },
+                  { labelKey: 'category_filter_player', value: 'Jogador' },
+                  { labelKey: 'category_filter_retro', value: 'Retrô' }
+                ].map(ver => (
+                  <label key={ver.value} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.5rem', cursor: 'pointer' }}>
+                    <input
+                      type="checkbox"
+                      checked={versionFilters.includes(ver.value)}
+                      onChange={() => toggleVersion(ver.value)}
+                      style={{ accentColor: 'var(--accent-color)', width: '16px', height: '16px' }}
+                    />
+                    <span style={{ color: versionFilters.includes(ver.value) ? 'var(--accent-color)' : 'var(--text-main)', fontWeight: versionFilters.includes(ver.value) ? 600 : 400 }}>
+                      {t(ver.labelKey)}
+                    </span>
+                  </label>
+                ))}
+                {versionFilters.length > 0 && (
+                  <button onClick={() => setVersionFilters([])} style={{ marginTop: '0.5rem', background: 'transparent', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', fontSize: '0.85rem', textDecoration: 'underline' }}>{t('category_clear_filters')}</button>
+                )}
+              </div>
             </div>
-          </div>
-        </aside>
+          </aside>
+        )}
 
         {/* Mobile Filter Toggle */}
-        <div className="mobile-filter-toggle" style={{ width: '100%', marginBottom: '1rem', display: 'none' }}>
-           <button onClick={() => setMobileFilterOpen(true)} className="btn-secondary" style={{ width: '100%', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '0.5rem' }}>
-             <Filter size={20} /> {t('category_filter_btn')}
-           </button>
-        </div>
+        {category_id !== 'tenis' && (
+          <div className="mobile-filter-toggle" style={{ width: '100%', marginBottom: '1rem', display: 'none' }}>
+             <button onClick={() => setMobileFilterOpen(true)} className="btn-secondary" style={{ width: '100%', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '0.5rem' }}>
+               <Filter size={20} /> {t('category_filter_btn')}
+             </button>
+          </div>
+        )}
 
         {/* Main Content */}
         <main style={{ flex: 1 }}>

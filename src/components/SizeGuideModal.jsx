@@ -2,9 +2,17 @@ import React, { useState } from 'react';
 import { X, Ruler, ChevronRight } from 'lucide-react';
 import { useLanguage } from '../context/LanguageContext';
 
-const SizeGuideModal = ({ isOpen, onClose }) => {
+const SizeGuideModal = ({ isOpen, onClose, isShoes }) => {
   const { t, language } = useLanguage();
   const [activeTab, setActiveTab] = useState('fan');
+
+  React.useEffect(() => {
+    if (isShoes) {
+      setActiveTab('shoes');
+    } else {
+      setActiveTab('fan');
+    }
+  }, [isShoes, isOpen]);
 
   // Handle ESC key press to close the modal
   React.useEffect(() => {
@@ -30,6 +38,7 @@ const SizeGuideModal = ({ isOpen, onClose }) => {
     { id: 'kids', label: language === 'pt' ? 'Infantil' : 'Kids' },
     { id: 'baby', label: language === 'pt' ? 'Bebê' : 'Baby Body' },
     { id: 'special', label: language === 'pt' ? 'Especiais' : 'Plus Size' },
+    { id: 'shoes', label: language === 'pt' ? 'Tênis' : 'Shoes' },
     { id: 'accessories', label: language === 'pt' ? 'Outros' : 'Other' }
   ];
 
@@ -294,6 +303,113 @@ const SizeGuideModal = ({ isOpen, onClose }) => {
                   ))}
                 </tbody>
               </table>
+            </div>
+          )}
+
+          {activeTab === 'shoes' && (
+            <div className="reveal">
+              <h3 style={{ marginBottom: '1.5rem', fontSize: '1.1rem', color: 'var(--accent-color)' }}>
+                👟 {language === 'pt' ? 'Tabela de Tamanhos de Chuteiras' : 'Cleats Size Chart'}
+              </h3>
+              
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '1.5rem', marginBottom: '1.5rem' }}>
+                {/* Masculino */}
+                <div style={{ background: 'rgba(255, 255, 255, 0.02)', padding: '1rem', borderRadius: '8px', border: '1px solid var(--border-color)' }}>
+                  <h4 style={{ color: 'var(--text-main)', marginBottom: '0.8rem', borderBottom: '1px solid var(--accent-color)', paddingBottom: '0.4rem', fontSize: '0.95rem', display: 'flex', alignItems: 'center', gap: '0.5rem', fontWeight: 600 }}>
+                    👨 {language === 'pt' ? 'Masculino' : "Men's"}
+                  </h4>
+                  <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+                    <thead>
+                      <tr style={{ background: 'rgba(204, 255, 0, 0.05)' }}>
+                        <th style={{ padding: '0.5rem', textAlign: 'left', borderBottom: '2px solid var(--accent-color)', fontSize: '0.8rem' }}>EUR (EU)</th>
+                        <th style={{ padding: '0.5rem', textAlign: 'center', borderBottom: '2px solid var(--accent-color)', fontSize: '0.8rem' }}>US (EUA)</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {[
+                        ['39', '6.5'],
+                        ['40', '7'],
+                        ['41', '8'],
+                        ['42', '9'],
+                        ['43', '10'],
+                        ['44', '11'],
+                        ['45', '12']
+                      ].map(([eu, us], idx) => (
+                        <tr key={idx} style={{ borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
+                          <td style={{ padding: '0.4rem 0.5rem', fontWeight: 600, fontSize: '0.85rem' }}>{eu}</td>
+                          <td style={{ padding: '0.4rem 0.5rem', textAlign: 'center', color: 'var(--text-muted)', fontSize: '0.85rem' }}>{us}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+
+                {/* Feminino */}
+                <div style={{ background: 'rgba(255, 255, 255, 0.02)', padding: '1rem', borderRadius: '8px', border: '1px solid var(--border-color)' }}>
+                  <h4 style={{ color: 'var(--text-main)', marginBottom: '0.8rem', borderBottom: '1px solid var(--accent-color)', paddingBottom: '0.4rem', fontSize: '0.95rem', display: 'flex', alignItems: 'center', gap: '0.5rem', fontWeight: 600 }}>
+                    👩 {language === 'pt' ? 'Feminino' : "Women's"}
+                  </h4>
+                  <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+                    <thead>
+                      <tr style={{ background: 'rgba(204, 255, 0, 0.05)' }}>
+                        <th style={{ padding: '0.5rem', textAlign: 'left', borderBottom: '2px solid var(--accent-color)', fontSize: '0.8rem' }}>EUR (EU)</th>
+                        <th style={{ padding: '0.5rem', textAlign: 'center', borderBottom: '2px solid var(--accent-color)', fontSize: '0.8rem' }}>US (EUA)</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {[
+                        ['35', '5'],
+                        ['36', '6'],
+                        ['37', '7'],
+                        ['38', '8'],
+                        ['39', '9'],
+                        ['40', '10']
+                      ].map(([eu, us], idx) => (
+                        <tr key={idx} style={{ borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
+                          <td style={{ padding: '0.4rem 0.5rem', fontWeight: 600, fontSize: '0.85rem' }}>{eu}</td>
+                          <td style={{ padding: '0.4rem 0.5rem', textAlign: 'center', color: 'var(--text-muted)', fontSize: '0.85rem' }}>{us}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+
+                {/* Juvenil */}
+                <div style={{ background: 'rgba(255, 255, 255, 0.02)', padding: '1rem', borderRadius: '8px', border: '1px solid var(--border-color)' }}>
+                  <h4 style={{ color: 'var(--text-main)', marginBottom: '0.8rem', borderBottom: '1px solid var(--accent-color)', paddingBottom: '0.4rem', fontSize: '0.95rem', display: 'flex', alignItems: 'center', gap: '0.5rem', fontWeight: 600 }}>
+                    👶 {language === 'pt' ? 'Juvenil (Filhos)' : 'Youth (Kids)'}
+                  </h4>
+                  <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+                    <thead>
+                      <tr style={{ background: 'rgba(204, 255, 0, 0.05)' }}>
+                        <th style={{ padding: '0.5rem', textAlign: 'left', borderBottom: '2px solid var(--accent-color)', fontSize: '0.8rem' }}>EUR (EU)</th>
+                        <th style={{ padding: '0.5rem', textAlign: 'center', borderBottom: '2px solid var(--accent-color)', fontSize: '0.8rem' }}>US (EUA)</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {[
+                        ['31-35', '13C - 3Y']
+                      ].map(([eu, us], idx) => (
+                        <tr key={idx} style={{ borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
+                          <td style={{ padding: '0.4rem 0.5rem', fontWeight: 600, fontSize: '0.85rem' }}>{eu}</td>
+                          <td style={{ padding: '0.4rem 0.5rem', textAlign: 'center', color: 'var(--text-muted)', fontSize: '0.85rem' }}>{us}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+
+              {/* Dicas */}
+              <div style={{ background: 'rgba(204, 255, 0, 0.03)', border: '1px dashed var(--accent-color)', borderRadius: '8px', padding: '1rem', marginTop: '1.2rem' }}>
+                <h4 style={{ margin: '0 0 0.6rem 0', color: 'var(--accent-color)', fontSize: '0.9rem', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                  💡 {language === 'pt' ? 'Dicas de Ajuste:' : 'Sizing Tips:'}
+                </h4>
+                <ul style={{ margin: 0, paddingLeft: '1.2rem', color: 'var(--text-muted)', fontSize: '0.85rem', lineHeight: '1.6' }}>
+                  <li>{language === 'pt' ? 'Chuteiras geralmente têm meio número maior.' : 'Cleats generally run half a size larger.'}</li>
+                  <li>{language === 'pt' ? 'Escolha meio número acima se você tiver pés largos ou grossos.' : 'Choose half a size up if you have wide or thick feet.'}</li>
+                </ul>
+              </div>
             </div>
           )}
 

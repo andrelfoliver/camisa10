@@ -6,7 +6,7 @@ import { useLanguage } from '../context/LanguageContext';
 
 import { brasil2025Products } from '../data/brasil2025';
 import {
-  ShieldCheck, Truck, Star, CheckCircle2, ChevronDown, ChevronUp, Quote
+  ShieldCheck, Truck, Star, CheckCircle2, ChevronDown, ChevronUp, Quote, Play
 } from 'lucide-react';
 import SizeGuideModal from '../components/SizeGuideModal';
 import ProductMedia from '../components/ProductMedia';
@@ -47,37 +47,53 @@ const ProductPage = () => {
   const [selectedSize, setSelectedSize] = useState('M');
 
   // Lógica dinâmica para definir quais tamanhos exibir
-  const isKids = product?.category?.toLowerCase().includes('infantil') ||
+  const isShoes = product?.category?.toLowerCase().includes('tênis') ||
+    product?.category?.toLowerCase().includes('tenis') ||
+    product?.category?.toLowerCase().includes('shoes') ||
+    product?.name?.toLowerCase().includes('tênis') ||
+    product?.name?.toLowerCase().includes('tenis') ||
+    product?.name?.toLowerCase().includes('sapato') ||
+    product?.name?.toLowerCase().includes('shoe') ||
+    product?.name?.toLowerCase().includes('sneaker');
+
+  const isKids = !isShoes && (product?.category?.toLowerCase().includes('infantil') ||
     product?.name?.toLowerCase().includes('infantil') ||
-    product?.name?.toLowerCase().includes('kids');
+    product?.name?.toLowerCase().includes('kids'));
   
-  const isBaby = product?.version === 'Baby body' ||
+  const isBaby = !isShoes && (product?.version === 'Baby body' ||
     product?.version === 'Baby Body' ||
     product?.name?.toLowerCase().includes('baby body') ||
     product?.name?.toLowerCase().includes('body de bebê') ||
-    product?.name?.toLowerCase().includes('body bebê');
+    product?.name?.toLowerCase().includes('body bebê'));
 
-  const isFemale = product?.category?.toLowerCase().includes('feminina') ||
+  const isFemale = !isShoes && (product?.category?.toLowerCase().includes('feminina') ||
     product?.category?.toLowerCase().includes('womens') ||
     product?.name?.toLowerCase().includes('feminina') ||
     product?.name?.toLowerCase().includes('womens') ||
     product?.version?.toLowerCase().includes('feminina') ||
     product?.version?.toLowerCase().includes('womens') ||
-    product?.version?.toLowerCase().includes('women');
+    product?.version?.toLowerCase().includes('women'));
 
-  const sizes = isBaby
-    ? ['3M', '6M', '9M', '12M']
-    : isKids
-      ? ['16', '18', '20', '22', '24', '26', '28']
-      : isFemale
-        ? ['S', 'M', 'L', 'XL', '2XL']
-        : ['S', 'M', 'L', 'XL', '2XL', '3XL', '4XL'];
+  const SHOE_SIZES = ['US 6.5 (BR 37)', 'US 7 (BR 38)', 'US 8 (BR 39)', 'US 8.5 (BR 40)', 'US 9.5 (BR 41)', 'US 10 (BR 42)', 'US 11 (BR 43)', 'US 12 (BR 44)'];
+
+  const sizes = isShoes
+    ? SHOE_SIZES
+    : isBaby
+      ? ['3M', '6M', '9M', '12M']
+      : isKids
+        ? ['16', '18', '20', '22', '24', '26', '28']
+        : isFemale
+          ? ['S', 'M', 'L', 'XL', '2XL']
+          : ['S', 'M', 'L', 'XL', '2XL', '3XL', '4XL'];
 
   const availableSizes = sizes.filter(s => !product?.unavailable_sizes?.includes(s));
 
   // Ajusta o tamanho selecionado inicial se for infantil, bebê ou se o padrão estiver bloqueado
   useEffect(() => {
-    if (isBaby && !['3M', '6M', '9M', '12M'].includes(selectedSize)) {
+    if (isShoes && !SHOE_SIZES.includes(selectedSize)) {
+      const firstAvailable = availableSizes[0] || 'US 8.5 (BR 40)';
+      setSelectedSize(firstAvailable);
+    } else if (isBaby && !['3M', '6M', '9M', '12M'].includes(selectedSize)) {
       const firstAvailable = availableSizes[0] || '6M';
       setSelectedSize(firstAvailable);
     } else if (isKids && !['16', '18', '20', '22', '24', '26', '28'].includes(selectedSize)) {
@@ -88,10 +104,10 @@ const ProductPage = () => {
       setSelectedSize(firstAvailable);
     } else if (product?.unavailable_sizes?.includes(selectedSize)) {
       // Se o tamanho padrão estiver bloqueado, pega o primeiro disponível
-      const firstAvailable = availableSizes[0] || (isBaby ? '6M' : isKids ? '20' : 'M');
+      const firstAvailable = availableSizes[0] || (isShoes ? 'US 8.5 (BR 40)' : isBaby ? '6M' : isKids ? '20' : 'M');
       setSelectedSize(firstAvailable);
     }
-  }, [isBaby, isKids, isFemale, product]);
+  }, [isBaby, isKids, isFemale, isShoes, product, availableSizes, selectedSize, SHOE_SIZES]);
 
   const [isCustomized, setIsCustomized] = useState(false);
   const [customName, setCustomName] = useState('');
@@ -110,38 +126,47 @@ const ProductPage = () => {
   useEffect(() => {
     setOnlyShirt(false);
     async function loadData() {
-      // Logic for dummy product IDs (preserved)
-      if (id.startsWith('q')) {
-        const p = {
-          q1: { id: 'q1', name: 'Brasil Titular 25/26 (Torcedor)', category: 'Seleção Brasileira', price: 44.90, image: '/catalog/shirt_188.jpg', gallery: ['/catalog/shirt_188.jpg'] },
-          q2: { id: 'q2', name: 'Brasil Titular 25/26 (Jogador)', category: 'Seleção Brasileira', price: 69.90, image: '/catalog/shirt_183.jpg', gallery: ['/catalog/shirt_183.jpg'] },
-          q3: { id: 'q3', name: 'Brasil Reserva 25/26', category: 'Seleção Brasileira', price: 44.90, image: '/catalog/shirt_165.jpg', gallery: ['/catalog/shirt_165.jpg'] },
-          q4: { id: 'q4', name: 'Brasil Feminina Titular/Reserva', category: 'Feminina', price: 44.90, image: '/catalog/shirt_344.jpg', gallery: ['/catalog/shirt_344.jpg'] }
-        }[id];
-        setProduct(p);
-        setActiveImage(p.image);
-        setLoading(false);
-        return;
-      }
-
-      if (id.startsWith('geral_')) {
-        const idx = parseInt(id.replace('geral_', ''));
-        const p = {
-          id: `geral_${idx}`,
-          name: `Camisa Torcedor/Geral #${idx}`,
-          image: `/camisas/@carinhacriativo (${idx}).png`,
-          gallery: [`/camisas/@carinhacriativo (${idx}).png`],
-          price: 69.90
-        };
-        setProduct(p);
-        setActiveImage(p.image);
+      // Se for um id do mock (ex: 'q1', '1', etc.)
+      const isMockId = id.startsWith('q') || id.startsWith('geral_');
+      if (isMockId) {
+        let p;
+        if (id.startsWith('q')) {
+          p = {
+            q1: { id: 'q1', name: 'Brasil Titular 25/26 (Torcedor)', category: 'Seleção Brasileira', price: 44.90, image: '/catalog/shirt_188.jpg', gallery: ['/catalog/shirt_188.jpg'] },
+            q2: { id: 'q2', name: 'Brasil Titular 25/26 (Jogador)', category: 'Seleção Brasileira', price: 69.90, image: '/catalog/shirt_183.jpg', gallery: ['/catalog/shirt_183.jpg'] },
+            q3: { id: 'q3', name: 'Brasil Reserva 25/26', category: 'Seleção Brasileira', price: 44.90, image: '/catalog/shirt_165.jpg', gallery: ['/catalog/shirt_165.jpg'] },
+            q4: { id: 'q4', name: 'Brasil Feminina Titular/Reserva', category: 'Feminina', price: 44.90, image: '/catalog/shirt_344.jpg', gallery: ['/catalog/shirt_344.jpg'] }
+          }[id];
+        } else if (id.startsWith('geral_')) {
+          const idx = parseInt(id.replace('geral_', ''));
+          p = {
+            id: `geral_${idx}`,
+            name: `Camisa Torcedor/Geral #${idx}`,
+            image: `/camisas/@carinhacriativo (${idx}).png`,
+            gallery: [`/camisas/@carinhacriativo (${idx}).png`],
+            price: 69.90
+          };
+        }
+        
+        if (p) {
+          const galleryWithMain = [
+            p.image,
+            ...(p.gallery || [])
+          ].filter((val, idx, self) => val && self.indexOf(val) === idx);
+          setProduct({ ...p, gallery: galleryWithMain });
+          setActiveImage(p.image);
+        }
         setLoading(false);
         return;
       }
 
       const { data } = await supabase.from('products').select('*').eq('id', id).single();
       if (data) {
-        setProduct({ ...data, gallery: data.gallery && data.gallery.length > 0 ? data.gallery : [data.image] });
+        const galleryWithMain = [
+          data.image,
+          ...(data.gallery || [])
+        ].filter((val, idx, self) => val && self.indexOf(val) === idx);
+        setProduct({ ...data, gallery: galleryWithMain });
         setActiveImage(data.image);
       }
       setLoading(false);
@@ -279,19 +304,49 @@ const ProductPage = () => {
           {/* Lado Esquerdo - Galeria */}
           <div className="gallery-layout" style={{ position: 'relative' }}>
             <div className="gallery-thumbs desktop-only">
-              {product.gallery?.map((img, i) => (
-                <ProductMedia
-                  key={i}
-                  src={img}
-                  alt={`Gallery ${i}`}
-                  style={{
-                    width: '80px', height: '80px', objectFit: 'cover', cursor: 'pointer',
-                    border: activeImage === img ? '2px solid var(--accent-color)' : '1px solid var(--border-color)',
-                    borderRadius: '8px', background: 'var(--surface-color)'
-                  }}
-                  onClick={() => setActiveImage(img)}
-                />
-              ))}
+              {product.gallery?.map((img, i) => {
+                const isVid = img?.toLowerCase().endsWith('.mp4');
+                return (
+                  <div 
+                    key={i} 
+                    style={{ position: 'relative', width: '80px', height: '80px', cursor: 'pointer' }}
+                    onClick={() => setActiveImage(img)}
+                  >
+                    <ProductMedia
+                      src={img}
+                      alt={`Gallery ${i}`}
+                      style={{
+                        width: '100%', height: '100%', objectFit: 'cover',
+                        border: activeImage === img ? '2px solid var(--accent-color)' : '1px solid var(--border-color)',
+                        borderRadius: '8px', background: 'var(--surface-color)'
+                      }}
+                    />
+                    {isVid && (
+                      <div style={{
+                        position: 'absolute',
+                        inset: 0,
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        background: 'rgba(0,0,0,0.3)',
+                        borderRadius: '8px',
+                        pointerEvents: 'none'
+                      }}>
+                        <div style={{
+                          background: 'rgba(0,0,0,0.6)',
+                          borderRadius: '50%',
+                          padding: '0.4rem',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center'
+                        }}>
+                          <Play size={16} fill="#fff" color="#fff" />
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
             </div>
 
             <div style={{ flex: 1, minWidth: 0 }}>
@@ -307,7 +362,7 @@ const ProductPage = () => {
                 }}
               >
                 {product.gallery?.map((img, i) => (
-                  <ProductMedia key={i} src={img} alt="" />
+                  <ProductMedia key={i} src={img} alt="" controls={img?.toLowerCase().endsWith('.mp4')} />
                 ))}
               </div>
 
@@ -321,6 +376,7 @@ const ProductPage = () => {
                 <ProductMedia
                   src={activeImage}
                   alt={product.name}
+                  controls={activeImage?.toLowerCase().endsWith('.mp4')}
                   style={{ width: '100%', maxHeight: '600px', objectFit: 'contain' }}
                 />
               </div>
@@ -534,7 +590,7 @@ const ProductPage = () => {
                 })}
               </div>
 
-              {!isKids && !isBaby && (
+              {!isKids && !isBaby && !isShoes && (
                 <div style={{
                   marginTop: '0.8rem',
                   padding: '0.75rem 1rem',
@@ -618,7 +674,7 @@ const ProductPage = () => {
             )}
 
             {/* Customization Toggle */}
-            {!product.coming_soon && (
+            {!product.coming_soon && !isShoes && (
               <>
                 <div style={{ marginBottom: '1.5rem' }}>
                   <p style={{ fontWeight: 700, marginBottom: '0.8rem', fontSize: '0.9rem', textTransform: 'uppercase' }}>{t('product_customization')}</p>
@@ -725,6 +781,25 @@ const ProductPage = () => {
               </>
             )}
 
+            {/* Sneaker Sizing Tips */}
+            {isShoes && (
+              <div style={{ 
+                background: 'rgba(204, 255, 0, 0.03)', 
+                border: '1px dashed var(--accent-color)', 
+                borderRadius: '8px', 
+                padding: '1rem', 
+                marginBottom: '1.5rem' 
+              }}>
+                <h4 style={{ margin: '0 0 0.5rem 0', color: 'var(--accent-color)', fontSize: '0.9rem', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                  💡 {language === 'pt' ? 'Dicas de Ajuste para Chuteiras:' : 'Cleats Sizing Tips:'}
+                </h4>
+                <ul style={{ margin: 0, paddingLeft: '1.2rem', color: 'var(--text-muted)', fontSize: '0.85rem', lineHeight: '1.5' }}>
+                  <li>{language === 'pt' ? 'Chuteiras geralmente têm meio número maior.' : 'Cleats generally run half a size larger.'}</li>
+                  <li>{language === 'pt' ? 'Escolha meio número acima se você tiver pés largos ou grossos.' : 'Choose half a size up if you have wide or thick feet.'}</li>
+                </ul>
+              </div>
+            )}
+
             {/* Qty and Buy OR Pre-Order Button */}
             {product.coming_soon ? (
               <div style={{ display: 'flex', gap: '0.8rem', marginBottom: '2.5rem' }}>
@@ -772,6 +847,7 @@ const ProductPage = () => {
       <SizeGuideModal
         isOpen={isSizeGuideOpen}
         onClose={() => setIsSizeGuideOpen(false)}
+        isShoes={isShoes}
       />
 
       {/* 8. PROVA SOCIAL */}
