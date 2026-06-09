@@ -1297,7 +1297,8 @@ button {
   display: none;
 }
 
-.mobile-product-carousel img {
+.mobile-product-carousel img,
+.mobile-product-carousel video {
   flex: 0 0 100%;
   width: 100%;
   height: auto;
