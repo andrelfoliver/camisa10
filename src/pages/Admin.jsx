@@ -4674,6 +4674,18 @@ const Admin = () => {
 
                 return (
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', maxWidth: '1000px' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.8rem' }}>
+                        <span style={{ fontSize: '0.95rem', color: 'var(--text-muted)' }}>
+                          Total no Banco: <strong style={{ color: 'var(--accent-color)' }}>{customers.length}</strong> {customers.length === 1 ? 'cliente' : 'clientes'}
+                        </span>
+                        {totalFilteredCustomers !== customers.length && (
+                          <span style={{ fontSize: '0.85rem', color: 'var(--text-muted)', background: 'rgba(255,255,255,0.05)', padding: '0.2rem 0.6rem', borderRadius: '4px' }}>
+                            Filtrados: <strong style={{ color: '#fff' }}>{totalFilteredCustomers}</strong>
+                          </span>
+                        )}
+                      </div>
+                    </div>
                     {/* BARRA DE PESQUISA, SEGMENTAÇÃO E ORDENAÇÃO */}
                     <div className="glass-panel" style={{ padding: '1rem', borderRadius: '12px', display: 'flex', flexWrap: 'wrap', gap: '0.8rem', alignItems: 'center', border: '1px solid rgba(255,255,255,0.05)' }}>
                       <div style={{ position: 'relative', flex: '1 1 250px' }}>
