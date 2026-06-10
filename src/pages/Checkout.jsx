@@ -88,7 +88,6 @@ const Checkout = () => {
         country: 'United States',
         deliveryMethod: 'shipping'
       }));
-      setPaymentMethod('paypal');
     }
   }, [currency]);
 
@@ -96,7 +95,6 @@ const Checkout = () => {
   useEffect(() => {
     if (formData.country === 'United States') {
       setCurrency('USD');
-      setPaymentMethod('paypal');
     } else {
       setCurrency('CAD');
     }
@@ -709,9 +707,6 @@ const Checkout = () => {
                             country,
                             deliveryMethod: country === 'United States' ? 'shipping' : formData.deliveryMethod 
                           });
-                          if (country === 'United States') {
-                            setPaymentMethod('paypal');
-                          }
                         }}
                         style={{ width: '100%', padding: '0.75rem', borderRadius: 'var(--radius-sm)', background: 'var(--bg-color)', border: '1px solid var(--border-color)', color: 'var(--text-main)', fontSize: '1rem' }}
                       >
@@ -876,49 +871,32 @@ const Checkout = () => {
               <label style={{ display: 'block', marginBottom: '1rem', color: 'var(--text-muted)', fontSize: '0.9rem', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '1px' }}>
                 {t('payment_method_title') || 'Forma de Pagamento'}
               </label>
-              {formData.country === 'Canada' ? (
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
-                  <button
-                    onClick={() => setPaymentMethod('whatsapp')}
-                    style={{
-                      display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.8rem', padding: '1.2rem',
-                      borderRadius: 'var(--radius-md)', background: paymentMethod === 'whatsapp' ? 'rgba(37, 211, 102, 0.1)' : 'rgba(255,255,255,0.03)',
-                      border: `1px solid ${paymentMethod === 'whatsapp' ? '#25D366' : 'var(--border-color)'}`,
-                      transition: 'all 0.3s ease', cursor: 'pointer'
-                    }}
-                  >
-                    <MessageSquare size={24} color={paymentMethod === 'whatsapp' ? '#25D366' : 'var(--text-muted)'} />
-                    <span style={{ fontSize: '0.9rem', fontWeight: 600, color: paymentMethod === 'whatsapp' ? '#fff' : 'var(--text-muted)' }}>WhatsApp</span>
-                  </button>
-                  <button
-                    onClick={() => setPaymentMethod('paypal')}
-                    style={{
-                      display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.8rem', padding: '1.2rem',
-                      borderRadius: 'var(--radius-md)', background: paymentMethod === 'paypal' ? 'rgba(0, 112, 186, 0.1)' : 'rgba(255,255,255,0.03)',
-                      border: `1px solid ${paymentMethod === 'paypal' ? '#0070BA' : 'var(--border-color)'}`,
-                      transition: 'all 0.3s ease', cursor: 'pointer'
-                    }}
-                  >
-                    <CreditCard size={24} color={paymentMethod === 'paypal' ? '#0070BA' : 'var(--text-muted)'} />
-                    <span style={{ fontSize: '0.9rem', fontWeight: 600, color: paymentMethod === 'paypal' ? '#fff' : 'var(--text-muted)' }}>PayPal / Card</span>
-                  </button>
-                </div>
-              ) : (
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '1rem' }}>
-                  <button
-                    disabled
-                    style={{
-                      display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.8rem', padding: '1.2rem',
-                      borderRadius: 'var(--radius-md)', background: 'rgba(0, 112, 186, 0.1)',
-                      border: '1px solid #0070BA',
-                      transition: 'all 0.3s ease', cursor: 'default'
-                    }}
-                  >
-                    <CreditCard size={24} color="#0070BA" />
-                    <span style={{ fontSize: '0.9rem', fontWeight: 600, color: '#fff' }}>PayPal / Card (Only available payment method for US orders)</span>
-                  </button>
-                </div>
-              )}
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+                <button
+                  onClick={() => setPaymentMethod('whatsapp')}
+                  style={{
+                    display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.8rem', padding: '1.2rem',
+                    borderRadius: 'var(--radius-md)', background: paymentMethod === 'whatsapp' ? 'rgba(37, 211, 102, 0.1)' : 'rgba(255,255,255,0.03)',
+                    border: `1px solid ${paymentMethod === 'whatsapp' ? '#25D366' : 'var(--border-color)'}`,
+                    transition: 'all 0.3s ease', cursor: 'pointer'
+                  }}
+                >
+                  <MessageSquare size={24} color={paymentMethod === 'whatsapp' ? '#25D366' : 'var(--text-muted)'} />
+                  <span style={{ fontSize: '0.9rem', fontWeight: 600, color: paymentMethod === 'whatsapp' ? '#fff' : 'var(--text-muted)' }}>WhatsApp</span>
+                </button>
+                <button
+                  onClick={() => setPaymentMethod('paypal')}
+                  style={{
+                    display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.8rem', padding: '1.2rem',
+                    borderRadius: 'var(--radius-md)', background: paymentMethod === 'paypal' ? 'rgba(0, 112, 186, 0.1)' : 'rgba(255,255,255,0.03)',
+                    border: `1px solid ${paymentMethod === 'paypal' ? '#0070BA' : 'var(--border-color)'}`,
+                    transition: 'all 0.3s ease', cursor: 'pointer'
+                  }}
+                >
+                  <CreditCard size={24} color={paymentMethod === 'paypal' ? '#0070BA' : 'var(--text-muted)'} />
+                  <span style={{ fontSize: '0.9rem', fontWeight: 600, color: paymentMethod === 'paypal' ? '#fff' : 'var(--text-muted)' }}>PayPal / Card</span>
+                </button>
+              </div>
             </div>
 
             {paymentMethod === 'whatsapp' ? (
