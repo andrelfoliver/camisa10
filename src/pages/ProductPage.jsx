@@ -64,17 +64,22 @@ const ProductPage = () => {
     product?.name?.toLowerCase().includes('basketball') ||
     product?.name?.toLowerCase().includes('jersey nba');
 
-  const isKids = !isShoes && !isNba && (product?.category?.toLowerCase().includes('infantil') ||
+  const isStreetwear = product?.category?.toLowerCase() === 'streetwear' ||
+    product?.category?.toLowerCase() === 'camisetas' ||
+    product?.name?.toLowerCase().includes('streetwear') ||
+    product?.name?.toLowerCase().includes('camiseta');
+
+  const isKids = !isShoes && !isNba && !isStreetwear && (product?.category?.toLowerCase().includes('infantil') ||
     product?.name?.toLowerCase().includes('infantil') ||
     product?.name?.toLowerCase().includes('kids'));
   
-  const isBaby = !isShoes && !isNba && (product?.version === 'Baby body' ||
+  const isBaby = !isShoes && !isNba && !isStreetwear && (product?.version === 'Baby body' ||
     product?.version === 'Baby Body' ||
     product?.name?.toLowerCase().includes('baby body') ||
     product?.name?.toLowerCase().includes('body de bebê') ||
     product?.name?.toLowerCase().includes('body bebê'));
 
-  const isFemale = !isShoes && !isNba && (product?.category?.toLowerCase().includes('feminina') ||
+  const isFemale = !isShoes && !isNba && !isStreetwear && (product?.category?.toLowerCase().includes('feminina') ||
     product?.category?.toLowerCase().includes('womens') ||
     product?.name?.toLowerCase().includes('feminina') ||
     product?.name?.toLowerCase().includes('womens') ||
@@ -92,7 +97,9 @@ const ProductPage = () => {
         ? ['16', '18', '20', '22', '24', '26', '28']
         : isFemale
           ? ['S', 'M', 'L', 'XL', '2XL']
-          : ['S', 'M', 'L', 'XL', '2XL', '3XL', '4XL'];
+          : isStreetwear
+            ? ['S', 'M', 'L', 'XL', '2XL', '3XL']
+            : ['S', 'M', 'L', 'XL', '2XL', '3XL', '4XL'];
 
   const availableSizes = sizes.filter(s => !product?.unavailable_sizes?.includes(s));
 
@@ -110,12 +117,15 @@ const ProductPage = () => {
     } else if (isFemale && !['S', 'M', 'L', 'XL', '2XL'].includes(selectedSize)) {
       const firstAvailable = availableSizes[0] || 'M';
       setSelectedSize(firstAvailable);
+    } else if (isStreetwear && !['S', 'M', 'L', 'XL', '2XL', '3XL'].includes(selectedSize)) {
+      const firstAvailable = availableSizes[0] || 'M';
+      setSelectedSize(firstAvailable);
     } else if (product?.unavailable_sizes?.includes(selectedSize)) {
       // Se o tamanho padrão estiver bloqueado, pega o primeiro disponível
       const firstAvailable = availableSizes[0] || (isShoes ? 'US 8.5 (BR 40)' : isBaby ? '6M' : isKids ? '20' : 'M');
       setSelectedSize(firstAvailable);
     }
-  }, [isBaby, isKids, isFemale, isShoes, product, availableSizes, selectedSize, SHOE_SIZES]);
+  }, [isBaby, isKids, isFemale, isShoes, isStreetwear, product, availableSizes, selectedSize, SHOE_SIZES]);
 
   const [isCustomized, setIsCustomized] = useState(false);
   const [customName, setCustomName] = useState('');
@@ -602,7 +612,7 @@ const ProductPage = () => {
                 })}
               </div>
 
-              {!isKids && !isBaby && !isShoes && !isNba && (
+              {!isKids && !isBaby && !isShoes && !isNba && !isStreetwear && (
                 <div style={{
                   marginTop: '0.8rem',
                   padding: '0.75rem 1rem',
@@ -686,7 +696,7 @@ const ProductPage = () => {
             )}
 
             {/* Customization Toggle */}
-            {!product.coming_soon && !isShoes && (
+            {!product.coming_soon && !isShoes && !isStreetwear && (
               <>
                 <div style={{ marginBottom: '1.5rem' }}>
                   <p style={{ fontWeight: 700, marginBottom: '0.8rem', fontSize: '0.9rem', textTransform: 'uppercase' }}>{t('product_customization')}</p>
@@ -861,6 +871,7 @@ const ProductPage = () => {
         onClose={() => setIsSizeGuideOpen(false)}
         isShoes={isShoes}
         isNba={isNba}
+        isStreetwear={isStreetwear}
       />
 
       {/* 8. PROVA SOCIAL */}

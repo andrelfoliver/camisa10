@@ -34,7 +34,7 @@ const Admin = () => {
   const [manualInvoiceItems, setManualInvoiceItems] = useState([
     { name: '', size: 'M', quantity: 1, price: 47.90, extras: { nameNumber: false, customName: '', customNumber: '', extraCustomization: false, customExtraName: '' } }
   ]);
-  const OFFICIAL_CATEGORIES = ['Seleções', 'Brasileirão', 'Internacionais', 'Lançamentos', 'Retrô', 'Tênis', 'NBA'];
+  const OFFICIAL_CATEGORIES = ['Seleções', 'Brasileirão', 'Internacionais', 'Lançamentos', 'Retrô', 'Tênis', 'NBA', 'Streetwear'];
   const SHOE_SIZES = ['US 6.5 (BR 37)', 'US 7 (BR 38)', 'US 8 (BR 39)', 'US 8.5 (BR 40)', 'US 9.5 (BR 41)', 'US 10 (BR 42)', 'US 11 (BR 43)', 'US 12 (BR 44)'];
   const SIZES = ['S', 'M', 'L', 'XL', '2XL', '3XL', '4XL', '16', '18', '20', '22', '24', '26', '28', '3M', '6M', '9M', '12M', ...SHOE_SIZES];
   const DEFAULT_INVENTORY = { 'S': 0, 'M': 0, 'L': 0, 'XL': 0, '2XL': 0, '3XL': 0, '4XL': 0, '16': 0, '18': 0, '20': 0, '22': 0, '24': 0, '26': 0, '28': 0, '3M': 0, '6M': 0, '9M': 0, '12M': 0, 'US 6.5 (BR 37)': 0, 'US 7 (BR 38)': 0, 'US 8 (BR 39)': 0, 'US 8.5 (BR 40)': 0, 'US 9.5 (BR 41)': 0, 'US 10 (BR 42)': 0, 'US 11 (BR 43)': 0, 'US 12 (BR 44)': 0 };
@@ -140,6 +140,8 @@ const Admin = () => {
     if (!prod) return SIZES;
     const isShoes = (prod.category || '').toLowerCase().includes('tênis') || (prod.category || '').toLowerCase().includes('tenis') || (prod.category || '').toLowerCase().includes('shoes') || (prod.name || '').toLowerCase().includes('tênis') || (prod.name || '').toLowerCase().includes('tenis') || (prod.name || '').toLowerCase().includes('sapato') || (prod.name || '').toLowerCase().includes('shoe') || (prod.name || '').toLowerCase().includes('sneaker');
     if (isShoes) return SHOE_SIZES;
+    const isStreetwear = (prod.category || '').toLowerCase() === 'streetwear' || (prod.category || '').toLowerCase() === 'camisetas' || (prod.name || '').toLowerCase().includes('streetwear') || (prod.name || '').toLowerCase().includes('camiseta');
+    if (isStreetwear) return ['S', 'M', 'L', 'XL', '2XL', '3XL'];
     const isBaby = prod.version === 'Baby body' || prod.version === 'Baby Body' || (prod.name || '').toLowerCase().includes('baby body') || (prod.name || '').toLowerCase().includes('body de bebê') || (prod.name || '').toLowerCase().includes('body bebê');
     if (isBaby) return ['3M', '6M', '9M', '12M'];
     const isKids = prod.category === 'Infantil' || (prod.name || '').toLowerCase().includes('infantil') || (prod.name || '').toLowerCase().includes('kids');
@@ -2284,7 +2286,7 @@ const Admin = () => {
                 className="btn-primary"
                 style={{ background: '#10B981', color: '#fff', boxShadow: '0 4px 15px rgba(16, 185, 129, 0.3)' }}
               >
-                <Plus size={18} /> {supplierTab === 'CAT_Tênis' ? 'Novo Tênis' : (supplierTab === 'CAT_NBA' ? 'Novo Produto NBA' : 'Nova Camisa')}
+                <Plus size={18} /> {supplierTab === 'CAT_Tênis' ? 'Novo Tênis' : (supplierTab === 'CAT_NBA' ? 'Novo Produto NBA' : supplierTab === 'CAT_Streetwear' ? 'Novo Streetwear' : 'Nova Camisa')}
               </button>
             )}
             {supplierTab === 'TEAMS' && (
@@ -5238,14 +5240,14 @@ const Admin = () => {
                     onMouseLeave={(e) => { e.currentTarget.style.borderColor = 'var(--border-color)'; e.currentTarget.style.color = 'var(--text-muted)'; }}
                   >
                     <Plus size={40} style={{ marginBottom: '1rem' }} />
-                    <h3 style={{ fontSize: '1.2rem', fontWeight: 600 }}>{supplierTab === 'CAT_Tênis' ? 'Novo Tênis' : (supplierTab === 'CAT_NBA' ? 'Novo Produto NBA' : 'Nova Camisa')}</h3>
+                    <h3 style={{ fontSize: '1.2rem', fontWeight: 600 }}>{supplierTab === 'CAT_Tênis' ? 'Novo Tênis' : (supplierTab === 'CAT_NBA' ? 'Novo Produto NBA' : supplierTab === 'CAT_Streetwear' ? 'Novo Streetwear' : 'Nova Camisa')}</h3>
                     <p style={{ fontSize: '0.85rem', marginTop: '0.5rem', textAlign: 'center' }}>Adicionar a este catálogo</p>
                   </div>
                 )}
 
                 {displayProducts.length === 0 && (
                   <div style={{ gridColumn: '1 / -1', padding: '2rem 1rem', textAlign: 'center', color: 'var(--text-muted)' }}>
-                    {supplierTab === 'CAT_Tênis' ? 'A lista está vazia. Adicione novos tênis pelo botão acima.' : (supplierTab === 'CAT_NBA' ? 'A lista está vazia. Adicione novos produtos NBA pelo botão acima.' : 'A lista está vazia. Adicione novas camisas pelo botão ao lado.')}
+                    {supplierTab === 'CAT_Tênis' ? 'A lista está vazia. Adicione novos tênis pelo botão acima.' : (supplierTab === 'CAT_NBA' ? 'A lista está vazia. Adicione novos produtos NBA pelo botão acima.' : supplierTab === 'CAT_Streetwear' ? 'A lista está vazia. Adicione novos produtos Streetwear pelo botão acima.' : 'A lista está vazia. Adicione novas camisas pelo botão ao lado.')}
                   </div>
                 )}
               </div>
@@ -5259,7 +5261,7 @@ const Admin = () => {
           <div style={{ background: 'var(--surface-color)', padding: '2.5rem', borderRadius: 'var(--radius-lg)', border: '1px solid var(--border-color)', width: '100%', maxWidth: '550px', maxHeight: '90vh', overflowY: 'auto', boxShadow: '0 20px 50px rgba(0,0,0,0.5)' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
               <h2 style={{ fontSize: '1.5rem', display: 'flex', alignItems: 'center', gap: '0.5rem', color: '#fff' }}>
-                <Database color="#10B981" /> {newProduct.category === 'Tênis' ? 'Novo Tênis no Supabase' : 'Nova Camisa no Supabase'}
+                <Database color="#10B981" /> {newProduct.category === 'Tênis' ? 'Novo Tênis no Supabase' : newProduct.category === 'Streetwear' ? 'Novo Streetwear no Supabase' : 'Nova Camisa no Supabase'}
               </h2>
               <button onClick={() => setShowAddForm(false)} style={{ background: 'rgba(255,255,255,0.05)', border: 'none', color: '#fff', cursor: 'pointer', padding: '0.5rem', borderRadius: '50%' }}><X size={20} /></button>
             </div>
@@ -5267,7 +5269,7 @@ const Admin = () => {
             <form onSubmit={handleAddProduct} style={{ display: 'flex', flexDirection: 'column', gap: '1.2rem' }}>
               <div>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
-                  <label style={{ margin: 0, color: 'var(--text-muted)', fontSize: '0.9rem' }}>{newProduct.category === 'Tênis' ? 'Nome do Tênis *' : 'Nome da Camisa *'}</label>
+                  <label style={{ margin: 0, color: 'var(--text-muted)', fontSize: '0.9rem' }}>{newProduct.category === 'Tênis' ? 'Nome do Tênis *' : newProduct.category === 'Streetwear' ? 'Nome do Streetwear *' : 'Nome da Camisa *'}</label>
                   <button
                     type="button"
                     onClick={() => handleAutoFill(newProduct, setNewProduct)}
@@ -5276,7 +5278,7 @@ const Admin = () => {
                     🪄 Autopreencher Info
                   </button>
                 </div>
-                <input required type="text" value={newProduct.name} onChange={e => setNewProduct({ ...newProduct, name: e.target.value })} placeholder={newProduct.category === 'Tênis' ? 'Ex: Nike Air Jordan Retro 1' : 'Ex: Flamengo Titular 24/25'} style={{ width: '100%', padding: '0.8rem 1rem', background: 'var(--bg-color)', color: '#fff', border: '1px solid var(--border-color)', borderRadius: 'var(--radius-sm)' }} />
+                <input required type="text" value={newProduct.name} onChange={e => setNewProduct({ ...newProduct, name: e.target.value })} placeholder={newProduct.category === 'Tênis' ? 'Ex: Nike Air Jordan Retro 1' : newProduct.category === 'Streetwear' ? 'Ex: Camiseta Streetwear Ayrton Senna' : 'Ex: Flamengo Titular 24/25'} style={{ width: '100%', padding: '0.8rem 1rem', background: 'var(--bg-color)', color: '#fff', border: '1px solid var(--border-color)', borderRadius: 'var(--radius-sm)' }} />
               </div>
 
               <div style={{ display: 'flex', gap: '1rem' }}>
@@ -5290,6 +5292,9 @@ const Admin = () => {
                     style={{ width: '100%', padding: '0.8rem 1rem', background: 'rgba(255,255,255,0.05)', color: '#10B981', border: '1px solid var(--border-color)', borderRadius: 'var(--radius-sm)' }}
                   >
                     <option value="">-- Autopreencher Preço --</option>
+                    <optgroup label="Streetwear">
+                      <option value="42.90">Streetwear (CA$ 42.90)</option>
+                    </optgroup>
                     <optgroup label="Tênis / Calçados">
                       <option value="99.90">Tênis Standard (CA$ 99.90)</option>
                       <option value="109.90">Tênis Intermediário (CA$ 109.90)</option>
@@ -5327,11 +5332,11 @@ const Admin = () => {
                 </div>
               </div>
 
-              {newProduct.category !== 'Tênis' && (
+              {newProduct.category !== 'Tênis' && newProduct.category !== 'Streetwear' && (
                 <div style={{ display: 'flex', gap: '1rem' }}>
                   <div style={{ flex: 1 }}>
                     <label style={{ display: 'block', marginBottom: '0.5rem', color: 'var(--text-muted)', fontSize: '0.9rem' }}>Versão *</label>
-                    <select required={newProduct.category !== 'Tênis'} value={newProduct.version} onChange={e => setNewProduct({ ...newProduct, version: e.target.value })} style={{ width: '100%', padding: '0.8rem 1rem', background: 'var(--bg-color)', color: '#fff', border: '1px solid var(--border-color)', borderRadius: 'var(--radius-sm)' }}>
+                    <select required={newProduct.category !== 'Tênis' && newProduct.category !== 'Streetwear'} value={newProduct.version} onChange={e => setNewProduct({ ...newProduct, version: e.target.value })} style={{ width: '100%', padding: '0.8rem 1rem', background: 'var(--bg-color)', color: '#fff', border: '1px solid var(--border-color)', borderRadius: 'var(--radius-sm)' }}>
                       <option value="">Selecione...</option>
                       <option value="Torcedor">Torcedor</option>
                       <option value="Jogador">Jogador</option>
@@ -5351,7 +5356,7 @@ const Admin = () => {
                     onChange={e => {
                       const cat = e.target.value;
                       const updates = { category: cat };
-                      if (cat === 'Tênis') {
+                      if (cat === 'Tênis' || cat === 'Streetwear') {
                         updates.league = '';
                         updates.team = '';
                         updates.version = '';
@@ -5366,7 +5371,7 @@ const Admin = () => {
                     ))}
                   </select>
                 </div>
-                {newProduct.category !== 'Tênis' && (
+                {newProduct.category !== 'Tênis' && newProduct.category !== 'Streetwear' && (
                   <>
                     <div style={{ flex: 1 }}>
                       <label style={{ display: 'block', marginBottom: '0.5rem', color: 'var(--text-muted)', fontSize: '0.9rem' }}>Liga</label>
@@ -5740,7 +5745,7 @@ const Admin = () => {
           <div style={{ background: 'var(--surface-color)', padding: '2.5rem', borderRadius: 'var(--radius-lg)', border: '1px solid var(--border-color)', width: '100%', maxWidth: '550px', maxHeight: '90vh', overflowY: 'auto', boxShadow: '0 20px 50px rgba(0,0,0,0.5)' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
               <h2 style={{ fontSize: '1.5rem', display: 'flex', alignItems: 'center', gap: '0.5rem', color: '#fff' }}>
-                <Database color="#3B82F6" /> {editingProduct.category === 'Tênis' ? 'Editar Tênis' : 'Editar Camisa'}
+                <Database color="#3B82F6" /> {editingProduct.category === 'Tênis' ? 'Editar Tênis' : editingProduct.category === 'Streetwear' ? 'Editar Streetwear' : 'Editar Camisa'}
               </h2>
               <button onClick={() => setEditingProduct(null)} style={{ background: 'rgba(255,255,255,0.05)', border: 'none', color: '#fff', cursor: 'pointer', padding: '0.5rem', borderRadius: '50%' }}><X size={20} /></button>
             </div>
@@ -5748,7 +5753,7 @@ const Admin = () => {
             <form onSubmit={handleUpdateProduct} style={{ display: 'flex', flexDirection: 'column', gap: '1.2rem' }}>
               <div>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
-                  <label style={{ margin: 0, color: 'var(--text-muted)', fontSize: '0.9rem' }}>{editingProduct.category === 'Tênis' ? 'Nome do Tênis *' : 'Nome da Camisa *'}</label>
+                  <label style={{ margin: 0, color: 'var(--text-muted)', fontSize: '0.9rem' }}>{editingProduct.category === 'Tênis' ? 'Nome do Tênis *' : editingProduct.category === 'Streetwear' ? 'Nome do Streetwear *' : 'Nome da Camisa *'}</label>
                   <button
                     type="button"
                     onClick={() => handleAutoFill(editingProduct, setEditingProduct)}
@@ -5771,6 +5776,9 @@ const Admin = () => {
                     style={{ width: '100%', padding: '0.8rem 1rem', background: 'rgba(255,255,255,0.05)', color: '#3B82F6', border: '1px solid var(--border-color)', borderRadius: 'var(--radius-sm)' }}
                   >
                     <option value="">-- Autopreencher Preço --</option>
+                    <optgroup label="Streetwear">
+                      <option value="42.90">Streetwear (CA$ 42.90)</option>
+                    </optgroup>
                     <optgroup label="Tênis / Calçados">
                       <option value="99.90">Tênis Standard (CA$ 99.90)</option>
                       <option value="109.90">Tênis Intermediário (CA$ 109.90)</option>
@@ -5809,10 +5817,10 @@ const Admin = () => {
               </div>
 
               <div style={{ display: 'flex', gap: '1rem' }}>
-                {editingProduct.version !== 'Tênis' && editingProduct.category !== 'Tênis' && (
+                {editingProduct.version !== 'Tênis' && editingProduct.category !== 'Tênis' && editingProduct.category !== 'Streetwear' && (
                   <div style={{ flex: 1 }}>
                     <label style={{ display: 'block', marginBottom: '0.5rem', color: 'var(--text-muted)', fontSize: '0.9rem' }}>Versão *</label>
-                    <select required={editingProduct.category !== 'Tênis'} value={editingProduct.version} onChange={e => setEditingProduct({ ...editingProduct, version: e.target.value })} style={{ width: '100%', padding: '0.8rem 1rem', background: 'var(--bg-color)', color: '#fff', border: '1px solid var(--border-color)', borderRadius: 'var(--radius-sm)' }}>
+                    <select required={editingProduct.category !== 'Tênis' && editingProduct.category !== 'Streetwear'} value={editingProduct.version} onChange={e => setEditingProduct({ ...editingProduct, version: e.target.value })} style={{ width: '100%', padding: '0.8rem 1rem', background: 'var(--bg-color)', color: '#fff', border: '1px solid var(--border-color)', borderRadius: 'var(--radius-sm)' }}>
                       <option value="">Selecione...</option>
                       <option value="Torcedor">Torcedor</option>
                       <option value="Jogador">Jogador</option>
@@ -5829,7 +5837,7 @@ const Admin = () => {
                     onChange={e => {
                       const cat = e.target.value;
                       const updates = { category: cat };
-                      if (cat === 'Tênis') {
+                      if (cat === 'Tênis' || cat === 'Streetwear') {
                         updates.league = '';
                         updates.team = '';
                         updates.version = '';
@@ -5846,7 +5854,7 @@ const Admin = () => {
                 </div>
               </div>
 
-              {editingProduct.category !== 'Tênis' && (
+              {editingProduct.category !== 'Tênis' && editingProduct.category !== 'Streetwear' && (
                 <div style={{ display: 'flex', gap: '1rem' }}>
                   <div style={{ flex: 1 }}>
                     <label style={{ display: 'block', marginBottom: '0.5rem', color: 'var(--text-muted)', fontSize: '0.9rem' }}>Liga</label>

@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { X, Ruler, ChevronRight } from 'lucide-react';
 import { useLanguage } from '../context/LanguageContext';
 
-const SizeGuideModal = ({ isOpen, onClose, isShoes, isNba }) => {
+const SizeGuideModal = ({ isOpen, onClose, isShoes, isNba, isStreetwear }) => {
   const { t, language } = useLanguage();
   const [activeTab, setActiveTab] = useState('fan');
 
@@ -11,10 +11,12 @@ const SizeGuideModal = ({ isOpen, onClose, isShoes, isNba }) => {
       setActiveTab('shoes');
     } else if (isNba) {
       setActiveTab('nba');
+    } else if (isStreetwear) {
+      setActiveTab('streetwear');
     } else {
       setActiveTab('fan');
     }
-  }, [isShoes, isNba, isOpen]);
+  }, [isShoes, isNba, isStreetwear, isOpen]);
 
   // Handle ESC key press to close the modal
   React.useEffect(() => {
@@ -42,6 +44,7 @@ const SizeGuideModal = ({ isOpen, onClose, isShoes, isNba }) => {
     { id: 'special', label: language === 'pt' ? 'Especiais' : 'Plus Size' },
     { id: 'shoes', label: language === 'pt' ? 'Tênis' : 'Shoes' },
     { id: 'nba', label: 'NBA' },
+    { id: 'streetwear', label: 'Streetwear' },
     { id: 'accessories', label: language === 'pt' ? 'Outros' : 'Other' }
   ];
 
@@ -459,6 +462,57 @@ const SizeGuideModal = ({ isOpen, onClose, isShoes, isNba }) => {
                 <ul style={{ margin: 0, paddingLeft: '1.2rem', color: 'var(--text-muted)', fontSize: '0.85rem', lineHeight: '1.6' }}>
                   <li>{language === 'pt' ? 'As regatas de basquete possuem um corte ligeiramente mais longo e folgado em comparação com as camisas de futebol padrão.' : 'Basketball jerseys have a slightly longer and looser fit compared to standard soccer jerseys.'}</li>
                   <li>{language === 'pt' ? 'Se você planeja usar a regata por cima de um moletom ou camiseta (estilo streetwear), recomendamos comprar o seu tamanho normal ou um tamanho acima.' : 'If you plan to wear the jersey over a hoodie or t-shirt (streetwear style), we recommend buying your regular size or one size up.'}</li>
+                </ul>
+              </div>
+            </div>
+          )}
+
+          {activeTab === 'streetwear' && (
+            <div className="reveal">
+              <h3 style={{ marginBottom: '1.5rem', fontSize: '1.1rem', color: 'var(--accent-color)', textTransform: 'uppercase' }}>👕 {language === 'pt' ? 'Camisetas Streetwear' : 'Streetwear T-Shirts'}</h3>
+              
+              <div className="table-responsive" style={{ marginBottom: '2.5rem' }}>
+                <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+                  <thead>
+                    <tr style={{ background: 'rgba(204, 255, 0, 0.1)' }}>
+                      <th style={{ padding: '1rem', textAlign: 'left', borderBottom: '2px solid var(--accent-color)' }}>{language === 'pt' ? 'Tamanho' : 'Size'}</th>
+                      <th style={{ padding: '1rem', textAlign: 'center', borderBottom: '2px solid var(--accent-color)' }}>{language === 'pt' ? 'Ombro' : 'Shoulder'}</th>
+                      <th style={{ padding: '1rem', textAlign: 'center', borderBottom: '2px solid var(--accent-color)' }}>{language === 'pt' ? 'Comprimento' : 'Length'}</th>
+                      <th style={{ padding: '1rem', textAlign: 'center', borderBottom: '2px solid var(--accent-color)' }}>{language === 'pt' ? 'Peito' : 'Chest'}</th>
+                      <th style={{ padding: '1rem', textAlign: 'center', borderBottom: '2px solid var(--accent-color)' }}>{language === 'pt' ? 'Altura Recomendada' : 'Recommended Height'}</th>
+                      <th style={{ padding: '1rem', textAlign: 'center', borderBottom: '2px solid var(--accent-color)' }}>{language === 'pt' ? 'Peso Recomendado' : 'Recommended Weight'}</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {[
+                      ['S (P)', '50 cm', '66 cm', '100 cm', '155-160 cm', '36-45 kg'],
+                      ['M', '52 cm', '68 cm', '104 cm', '160-165 cm', '45-54 kg'],
+                      ['L (G)', '54 cm', '70 cm', '108 cm', '165-170 cm', '54-63 kg'],
+                      ['XL (GG)', '56 cm', '73 cm', '112 cm', '170-175 cm', '63-72 kg'],
+                      ['2XL (XXL)', '58 cm', '75 cm', '114 cm', '175-180 cm', '72-81 kg'],
+                      ['3XL', '60 cm', '77 cm', '120 cm', '180-185 cm', '81-90 kg']
+                    ].map(([s, shld, len, chst, h, w], i) => (
+                      <tr key={i} style={{ borderBottom: '1px solid var(--border-color)' }}>
+                        <td style={{ padding: '0.8rem', fontWeight: 600 }}>{s}</td>
+                        <td style={{ padding: '0.8rem', textAlign: 'center', color: 'var(--text-muted)' }}>{shld}</td>
+                        <td style={{ padding: '0.8rem', textAlign: 'center', color: 'var(--text-muted)' }}>{len}</td>
+                        <td style={{ padding: '0.8rem', textAlign: 'center', color: 'var(--text-muted)' }}>{chst}</td>
+                        <td style={{ padding: '0.8rem', textAlign: 'center', color: 'var(--text-muted)' }}>{h}</td>
+                        <td style={{ padding: '0.8rem', textAlign: 'center', color: 'var(--text-muted)' }}>{w}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+
+              {/* Dicas */}
+              <div style={{ background: 'rgba(204, 255, 0, 0.03)', border: '1px dashed var(--accent-color)', borderRadius: '8px', padding: '1rem' }}>
+                <h4 style={{ margin: '0 0 0.6rem 0', color: 'var(--accent-color)', fontSize: '0.9rem', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                  💡 {language === 'pt' ? 'Dicas de Ajuste para Camisetas Streetwear:' : 'Streetwear T-Shirt Sizing Tips:'}
+                </h4>
+                <ul style={{ margin: 0, paddingLeft: '1.2rem', color: 'var(--text-muted)', fontSize: '0.85rem', lineHeight: '1.6' }}>
+                  <li>{language === 'pt' ? 'Essas camisetas possuem modelagem boxy/oversized fit, com ombros ligeiramente caídos e caimento mais largo.' : 'These t-shirts feature a boxy/oversized fit with slightly dropped shoulders and a wider drape.'}</li>
+                  <li>{language === 'pt' ? 'Recomendamos comprar o seu tamanho habitual para um caimento moderno e confortável. Se preferir um ajuste mais tradicional/justo, opte por um tamanho menor.' : 'We recommend purchasing your usual size for a modern, comfortable fit. If you prefer a more traditional/tighter fit, consider sizing down.'}</li>
                 </ul>
               </div>
             </div>

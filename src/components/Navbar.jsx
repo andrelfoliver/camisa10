@@ -326,6 +326,7 @@ const Navbar = () => {
             <Link to="/colecao/retro" onClick={() => handleNav('/colecao/retro')} style={{ fontWeight: 600, fontSize: scrolled ? '0.78rem' : '0.85rem', textTransform: 'uppercase', letterSpacing: '1px', transition: 'all 0.2s', color: 'var(--text-main)' }}>{t('nav_retro')}</Link>
             <Link to="/colecao/tenis" onClick={() => handleNav('/colecao/tenis')} style={{ fontWeight: 600, fontSize: scrolled ? '0.78rem' : '0.85rem', textTransform: 'uppercase', letterSpacing: '1px', transition: 'all 0.2s', color: 'var(--text-main)' }}>{language === 'pt' ? 'Tênis' : 'Shoes'}</Link>
             <Link to="/colecao/nba" onClick={() => handleNav('/colecao/nba')} style={{ fontWeight: 600, fontSize: scrolled ? '0.78rem' : '0.85rem', textTransform: 'uppercase', letterSpacing: '1px', transition: 'all 0.2s', color: 'var(--text-main)' }}>NBA</Link>
+            <Link to="/colecao/streetwear" onClick={() => handleNav('/colecao/streetwear')} style={{ fontWeight: 600, fontSize: scrolled ? '0.78rem' : '0.85rem', textTransform: 'uppercase', letterSpacing: '1px', transition: 'all 0.2s', color: 'var(--text-main)' }}>Streetwear</Link>
             <Link to="/afiliados" onClick={() => handleNav('/afiliados')} style={{ fontWeight: 600, fontSize: scrolled ? '0.78rem' : '0.85rem', textTransform: 'uppercase', letterSpacing: '1px', transition: 'all 0.2s', color: 'var(--text-main)', opacity: 0.8 }}>{language === 'pt' ? 'Afiliados' : 'Affiliates'}</Link>
           </div>
         </div>
@@ -360,6 +361,7 @@ const Navbar = () => {
             <Link to="/colecao/retro" onClick={() => handleNav('/colecao/retro')}>{t('nav_retro')}</Link>
             <Link to="/colecao/tenis" onClick={() => handleNav('/colecao/tenis')}>{language === 'pt' ? 'Tênis' : 'Shoes'}</Link>
             <Link to="/colecao/nba" onClick={() => handleNav('/colecao/nba')}>NBA</Link>
+            <Link to="/colecao/streetwear" onClick={() => handleNav('/colecao/streetwear')}>Streetwear</Link>
             <Link to="/afiliados" onClick={() => handleNav('/afiliados')}>{language === 'pt' ? 'Programa de Afiliados' : 'Affiliate Program'}</Link>
           </div>
         )}
