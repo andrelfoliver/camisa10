@@ -2817,10 +2817,11 @@ const Admin = () => {
               ? allTimes.reduce((sum, t) => sum + t, 0) / allTimes.length
               : null;
 
+            const canadianProvinces = ['AB', 'BC', 'MB', 'NB', 'NL', 'NS', 'ON', 'PE', 'QC', 'SK'];
             const uniqueProvinces = new Set(
               Object.keys(cityStats)
-                .map(k => k.split(',')[1]?.trim())
-                .filter(Boolean)
+                .map(k => k.split(',')[1]?.trim()?.toUpperCase())
+                .filter(p => p && canadianProvinces.includes(p))
             );
             const totalCities = Object.keys(cityStats).length;
             const totalProvinces = uniqueProvinces.size;
