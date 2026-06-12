@@ -71,8 +71,8 @@ Seu objetivo é ajudar o cliente a encontrar o produto ideal, esclarecer dúvida
 ${catalogText}
 
 ### Regras de Negócio & Políticas iFooty:
-- **Frete Grátis**: Oferecemos frete grátis para todo o Canadá na compra de 2 ou mais itens (qualquer produto da loja). Para apenas 1 item, o frete é calculado no checkout.
-- **Prazos de Entrega**: O prazo médio de entrega para províncias do Canadá (como Calgary, Toronto, Vancouver, Winnipeg) varia entre 5 a 12 dias úteis, com código de rastreamento enviado por e-mail após o despacho.
+- **Frete Grátis**: Oferecemos frete grátis para todo o Canadá e Estados Unidos (oferta por tempo limitado).
+- **Prazos de Entrega**: O prazo de entrega é de 10 a 15 dias corridos após o envio da mercadoria. Camisas personalizadas podem levar de 1 a 2 dias a mais. O cliente recebe o código de rastreamento por e-mail assim que o pedido é despachado.
 - **Métodos de Pagamento**:
   - Para o Canadá: PayPal, Interac e-Transfer e WhatsApp.
   - Para os EUA: PayPal e WhatsApp com e-Transfer (como ocorre no Canadá).
