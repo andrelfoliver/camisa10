@@ -17,10 +17,10 @@ import SearchPage from './pages/SearchPage';
 import Success from './pages/Success';
 import AffiliateProgram from './pages/AffiliateProgram';
 import NotFound from './pages/NotFound';
-import WhatsAppIcon from './components/WhatsAppIcon';
 import SalesPopup from './components/SalesPopup';
 import ExitIntentPopup from './components/ExitIntentPopup';
 import FunkPlayer from './components/FunkPlayer';
+import AiChatbot from './components/AiChatbot';
 
 const ScrollToTop = () => {
   const { pathname } = useLocation();
@@ -92,24 +92,6 @@ const AppLayout = () => {
       </main>
       {!isAdminPage && <Footer />}
 
-      {/* Floating WhatsApp */}
-      <div className="whatsapp-float-wrapper">
-        {!isAdminPage && (
-          <div className="whatsapp-badge-bubble">
-            <span className="whatsapp-badge-dot"></span>
-            Plantão Especial Copa do Mundo
-          </div>
-        )}
-        <a
-          href={`https://wa.me/${waNumber.replace(/\D/g, '')}`}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="whatsapp-float"
-          title="Fale Conosco"
-        >
-          <WhatsAppIcon size={32} />
-        </a>
-      </div>
 
       {/* WhatsApp Group Vertical Banner */}
       {!isAdminPage && (
@@ -135,6 +117,9 @@ const AppLayout = () => {
 
       {/* Funk Player */}
       {!isAdminPage && <FunkPlayer />}
+
+      {/* AI Chatbot Assistant */}
+      {!isAdminPage && <AiChatbot />}
     </div>
   );
 };

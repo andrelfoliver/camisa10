@@ -1427,3 +1427,23 @@ button {
 .pac-icon {
   display: none !important;
 }
+
+/* AI Chatbot Custom Styles */
+.dot-typing {
+  width: 6px;
+  height: 6px;
+  background-color: var(--accent-color);
+  border-radius: 50%;
+  display: inline-block;
+  animation: dot-bounce 1.4s infinite ease-in-out both;
+}
+
+@keyframes dot-bounce {
+  0%, 80%, 100% {
+    transform: scale(0);
+  }
+  40% {
+    transform: scale(1.0);
+  }
+}
+
