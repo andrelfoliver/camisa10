@@ -30,12 +30,12 @@ export default function AiChatbot() {
     if (!name) {
       return [{
         role: 'assistant',
-        content: `Olá! Sou o **iFooty AI Coach** ⚽. Como posso te chamar?`
+        content: `Olá! Sou o **Mister Oliver** ⚽. Como posso te chamar?`
       }];
     }
     return [{
       role: 'assistant',
-      content: `Olá! Sou o **iFooty AI Coach** ⚽.
+      content: `Olá! Sou o **Mister Oliver** ⚽.
 Prazer em te ver novamente, **${name}**! 🤝 Como posso te ajudar hoje?
 
 Posso te ajudar com:
@@ -370,7 +370,7 @@ Posso te ajudar com:
         >
           <img 
             src="/avatar-ifooty-ai.png" 
-            alt="iFooty AI Coach" 
+            alt="Mister Oliver" 
             style={{ 
               width: '100%', 
               height: '100%', 
@@ -472,7 +472,7 @@ Posso te ajudar com:
                     
                     const initialMsgs = [{
                       role: 'assistant',
-                      content: `Olá! Sou o **iFooty AI Coach** ⚽. Como posso te chamar?`
+                      content: `Olá! Sou o **Mister Oliver** ⚽. Como posso te chamar?`
                     }];
                     setMessages(initialMsgs);
                     setShowConfirmReset(false);
@@ -512,7 +512,7 @@ Posso te ajudar com:
               <div style={{ position: 'relative' }}>
                 <img 
                   src="/avatar-ifooty-ai.png" 
-                  alt="iFooty AI Coach" 
+                  alt="Mister Oliver" 
                   style={{ 
                     width: '32px',
                     height: '32px',
@@ -536,7 +536,7 @@ Posso te ajudar com:
                 ></span>
               </div>
               <div>
-                <h4 style={{ fontSize: '0.85rem', fontWeight: 750, color: '#fff', margin: 0 }}>iFooty AI Coach</h4>
+                <h4 style={{ fontSize: '0.85rem', fontWeight: 750, color: '#fff', margin: 0 }}>Mister Oliver</h4>
                 <span style={{ fontSize: '0.65rem', color: 'var(--text-muted)' }}>Online • Pronto para ajudar</span>
               </div>
             </div>

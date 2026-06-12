@@ -3811,7 +3811,7 @@ const Admin = () => {
                                 }}
                               >
                                 <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)', marginBottom: '0.2rem', padding: '0 0.4rem' }}>
-                                  {isAssistant ? 'iFooty AI Coach' : (session.user_name || 'Cliente')}
+                                  {isAssistant ? 'Mister Oliver' : (session.user_name || 'Cliente')}
                                 </div>
                                 <div
                                   style={{
