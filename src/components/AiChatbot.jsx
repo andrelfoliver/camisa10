@@ -10,6 +10,7 @@ export default function AiChatbot() {
   const [messages, setMessages] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   const [showTooltip, setShowTooltip] = useState(true);
+  const [showConfirmReset, setShowConfirmReset] = useState(false);
   const messagesEndRef = useRef(null);
 
   // Initial welcome message template
@@ -125,6 +126,11 @@ Posso te ajudar com:
     const text = (textToSend || input).trim();
     if (!text) return;
 
+    // Safety limit check
+    if (messages.filter(m => m.role === 'user').length >= 20) {
+      return;
+    }
+
     if (!textToSend) setInput('');
 
     const newMessages = [...messages, { role: 'user', content: text }];
@@ -158,11 +164,7 @@ Posso te ajudar com:
   };
 
   const handleClearChat = () => {
-    if (window.confirm('Deseja limpar o histórico da conversa?')) {
-      const updated = [welcomeMessage];
-      setMessages(updated);
-      sessionStorage.removeItem('ifooty_ai_chat_messages');
-    }
+    setShowConfirmReset(true);
   };
 
   const handleKeyPress = (e) => {
@@ -176,6 +178,8 @@ Posso te ajudar com:
     { label: 'Prazos de entrega 🚚', text: 'Quais são os prazos de entrega e valor do frete?' },
     { label: 'Formas de pagamento 💳', text: 'Quais formas de pagamento vocês aceitam?' }
   ];
+
+  const isLimitExceeded = messages.filter(m => m.role === 'user').length >= 20;
 
   return (
     <div style={{ position: 'fixed', bottom: '2rem', right: '2rem', zIndex: 9999, fontFamily: 'var(--font-body)' }}>
@@ -260,7 +264,6 @@ Posso te ajudar com:
         </button>
       )}
 
-      {/* Chat Window container */}
       {isOpen && (
         <div
           style={{
@@ -281,6 +284,92 @@ Posso te ajudar com:
             animation: 'slideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1)'
           }}
         >
+          {/* Custom Confirmation Popup overlay inside Chatbot */}
+          {showConfirmReset && (
+            <div
+              style={{
+                position: 'absolute',
+                inset: 0,
+                background: 'rgba(7, 7, 9, 0.95)',
+                backdropFilter: 'blur(10px)',
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                justifyContent: 'center',
+                padding: '2rem',
+                textAlign: 'center',
+                zIndex: 10,
+                animation: 'fadeIn 0.2s ease-out'
+              }}
+            >
+              <div
+                style={{
+                  width: '48px',
+                  height: '48px',
+                  background: 'rgba(239, 68, 68, 0.1)',
+                  border: '1px solid #EF4444',
+                  borderRadius: '50%',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  marginBottom: '1rem'
+                }}
+              >
+                <RotateCcw size={20} color="#EF4444" />
+              </div>
+              <h4 style={{ color: '#fff', fontSize: '0.95rem', fontWeight: 700, marginBottom: '0.5rem' }}>
+                Limpar Conversa?
+              </h4>
+              <p style={{ color: 'var(--text-muted)', fontSize: '0.78rem', lineHeight: '1.4', marginBottom: '1.5rem' }}>
+                Tem certeza que deseja apagar todo o histórico de mensagens? Esta ação não pode ser desfeita.
+              </p>
+              <div style={{ display: 'flex', gap: '0.8rem', width: '100%' }}>
+                <button
+                  onClick={() => setShowConfirmReset(false)}
+                  style={{
+                    flex: 1,
+                    padding: '0.6rem',
+                    borderRadius: '20px',
+                    background: 'rgba(255,255,255,0.05)',
+                    border: '1px solid var(--border-color)',
+                    color: 'var(--text-muted)',
+                    fontSize: '0.78rem',
+                    fontWeight: 650,
+                    cursor: 'pointer',
+                    transition: 'all 0.2s'
+                  }}
+                  onMouseEnter={(e) => e.currentTarget.style.background = 'rgba(255,255,255,0.08)'}
+                  onMouseLeave={(e) => e.currentTarget.style.background = 'rgba(255,255,255,0.05)'}
+                >
+                  Cancelar
+                </button>
+                <button
+                  onClick={() => {
+                    const updated = [welcomeMessage];
+                    setMessages(updated);
+                    sessionStorage.removeItem('ifooty_ai_chat_messages');
+                    setShowConfirmReset(false);
+                  }}
+                  style={{
+                    flex: 1,
+                    padding: '0.6rem',
+                    borderRadius: '20px',
+                    background: '#EF4444',
+                    color: '#fff',
+                    fontSize: '0.78rem',
+                    fontWeight: 650,
+                    cursor: 'pointer',
+                    transition: 'all 0.2s',
+                    boxShadow: '0 4px 12px rgba(239, 68, 68, 0.2)'
+                  }}
+                  onMouseEnter={(e) => e.currentTarget.style.background = '#DC2626'}
+                  onMouseLeave={(e) => e.currentTarget.style.background = '#EF4444'}
+                >
+                  Limpar
+                </button>
+              </div>
+            </div>
+          )}
           {/* Header */}
           <div
             style={{
@@ -488,11 +577,11 @@ Posso te ajudar com:
           >
             <input
               type="text"
-              placeholder="Digite sua dúvida..."
+              placeholder={isLimitExceeded ? "Limite atingido. Limpe o chat para recomeçar." : "Digite sua dúvida..."}
               value={input}
               onChange={(e) => setInput(e.target.value)}
               onKeyDown={handleKeyPress}
-              disabled={isLoading}
+              disabled={isLoading || isLimitExceeded}
               style={{
                 flex: 1,
                 background: 'rgba(255, 255, 255, 0.03)',
@@ -515,10 +604,10 @@ Posso te ajudar com:
             />
             <button
               onClick={() => handleSendMessage()}
-              disabled={isLoading || !input.trim()}
+              disabled={isLoading || isLimitExceeded || !input.trim()}
               style={{
-                background: input.trim() ? 'var(--accent-color)' : 'rgba(255, 255, 255, 0.05)',
-                color: input.trim() ? '#000' : 'var(--text-muted)',
+                background: !isLimitExceeded && input.trim() ? 'var(--accent-color)' : 'rgba(255, 255, 255, 0.05)',
+                color: !isLimitExceeded && input.trim() ? '#000' : 'var(--text-muted)',
                 width: '32px',
                 height: '32px',
                 borderRadius: '50%',
@@ -526,7 +615,7 @@ Posso te ajudar com:
                 alignItems: 'center',
                 justifyContent: 'center',
                 transition: 'all 0.2s',
-                cursor: input.trim() ? 'pointer' : 'default',
+                cursor: !isLimitExceeded && input.trim() ? 'pointer' : 'default',
                 flexShrink: 0
               }}
             >

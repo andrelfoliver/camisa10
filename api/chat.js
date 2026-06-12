@@ -5,6 +5,9 @@ const supabaseUrl = process.env.VITE_SUPABASE_URL;
 const supabaseKey = process.env.VITE_SUPABASE_ANON_KEY;
 const supabase = createClient(supabaseUrl, supabaseKey);
 
+// In-memory cache for simple IP rate limiting
+const ipCache = new Map();
+
 export default async function handler(req, res) {
   // CORS Headers
   res.setHeader('Access-Control-Allow-Credentials', true);
@@ -28,6 +31,33 @@ export default async function handler(req, res) {
   if (!messages || !Array.isArray(messages)) {
     return res.status(400).json({ error: 'Messages array is required' });
   }
+
+  // 1. Rate Limiting based on IP (Max 8 requests per minute)
+  const ip = req.headers['x-forwarded-for'] || req.socket.remoteAddress || 'global';
+  const now = Date.now();
+
+  // On-demand cleanup of cache
+  for (const [key, val] of ipCache.entries()) {
+    if (now - val.timestamp > 60000) {
+      ipCache.delete(key);
+    }
+  }
+
+  const clientData = ipCache.get(ip) || { count: 0, timestamp: now };
+  if (now - clientData.timestamp > 60000) {
+    clientData.count = 1;
+    clientData.timestamp = now;
+  } else {
+    clientData.count += 1;
+  }
+  ipCache.set(ip, clientData);
+
+  if (clientData.count > 8) {
+    return res.status(429).json({ error: 'Muitas requisições. Por favor, tente novamente em um minuto.' });
+  }
+
+  // 2. Cap conversation history to avoid payload/token bloat (keep last 10 messages)
+  const history = messages.slice(-10);
 
   const apiKey = process.env.OPENAI_API_KEY;
   if (!apiKey) {
@@ -79,26 +109,22 @@ ${catalogText}
 - **Políticas de Troca**: Trocas são permitidas apenas por defeitos de fabricação (não realizamos trocas por erro de tamanho do cliente, pois as peças são importadas sob encomenda). Por isso, insista para que o cliente use o Guia de Medidas.
 
 ### Dicas e Guia de Medidas Inteligente:
-Se o cliente perguntar sobre tamanhos, ou se você precisar recomendar um tamanho baseado na altura e peso dele, use as seguintes referências:
-1. **Camisas de Futebol (Adulto)**: Modelagem justa/atlética. Se preferir um caimento mais solto, peça um tamanho acima.
+Se o cliente perguntar sobre tamanhos ou fornecer peso e altura, siga rigorosamente estas regras:
+1. **Apenas Referência Inicial**: Deixe claro que qualquer sugestão de tamanho baseada em altura e peso é **apenas uma estimativa inicial/referência** e pode variar de acordo com a estrutura física de cada pessoa.
+2. **Recomendação Obrigatória do Guia**: Sempre recomende ao cliente que verifique a tabela oficial de centímetros no **"Guia de Medidas"** disponível na página do produto (onde ele pode medir uma camiseta dele em casa para comparar).
+3. **Referências Estimadas de Camisas de Futebol (Adulto)**:
    - P (S): Altura 165-170cm | Peso 50-60kg
    - M: Altura 170-175cm | Peso 60-70kg
    - G (L): Altura 175-180cm | Peso 70-80kg
    - GG (XL): Altura 180-185cm | Peso 80-90kg
    - 2XL: Altura 185-190cm | Peso 90-100kg
    - 3XL/4XL: Para pesos superiores a 100kg ou alturas acima de 190cm.
-   - Camisas Femininas: Disponíveis do S ao 2XL (não existem tamanhos 3XL/4XL femininos).
-2. **Camisetas Streetwear**: Modelagem oversized/boxy (mais larga e casual), tamanhos de S a 3XL.
-   - S: Ombro 50cm, Peito 100cm | Altura 155-160cm | Peso 36-45kg
-   - M: Ombro 52cm, Peito 104cm | Altura 160-165cm | Peso 45-54kg
-   - L: Ombro 54cm, Peito 108cm | Altura 165-170cm | Peso 54-63kg
-   - XL: Ombro 56cm, Peito 112cm | Altura 170-175cm | Peso 63-72kg
-   - 2XL: Ombro 58cm, Peito 114cm | Altura 175-180cm | Peso 72-81kg
-   - 3XL: Ombro 60cm, Peito 120cm | Altura 180-185cm | Peso 81-90kg
-3. **Regatas NBA**: Caimento longo e folgado.
-4. **Chuteiras / Calçados**: Padrão US/BR/EUR. Recomendamos escolher meio número acima do tênis comum, pois chuteiras têm ajuste bem firme. Exemplo: US 9.5 (BR 41) ou US 10 (BR 42).
+   - *Nota de Caimento*: Camisas de futebol possuem modelagem justa/atlética. Se o cliente preferir caimento solto ou estiver no limite dos pesos, sugira o tamanho maior como referência inicial, mas reforce para medir antes de comprar.
+4. **Camisetas Streetwear**: Modelagem oversized/boxy (mais larga e casual), tamanhos de S a 3XL.
+5. **Regatas NBA**: Caimento longo e folgado.
+6. **Chuteiras / Calçados**: Ajuste firme. Sugerir meio número acima do calçado de passeio como referência inicial e checar a tabela de centímetros do guia.
 
-Responda sempre com base nessas informações e guie o cliente até o fechamento da compra!`;
+Responda sempre com base nessas informações e guie o cliente de forma transparente!`;
 
     // 4. Call OpenAI API
     const response = await axios.post(
@@ -107,7 +133,7 @@ Responda sempre com base nessas informações e guie o cliente até o fechamento
         model: 'gpt-4o-mini',
         messages: [
           { role: 'system', content: systemPrompt },
-          ...messages
+          ...history
         ],
         temperature: 0.7,
         max_tokens: 600
