@@ -4,9 +4,58 @@ import { Sparkles, X, Send, Bot, RotateCcw } from 'lucide-react';
 import axios from 'axios';
 import WhatsAppIcon from './WhatsAppIcon';
 import { supabase } from '../services/supabase';
+import { useLanguage } from '../context/LanguageContext';
+
+const chatbotTranslations = {
+  pt: {
+    ai_subtitle: 'Assistente de IA',
+    online_status: 'Online • Pronto para ajudar',
+    tooltip_text: 'Dúvidas sobre tamanho? Pergunte à IA! 📐',
+    placeholder_name: 'Digite seu nome...',
+    placeholder_input: 'Digite sua dúvida...',
+    limit_exceeded: 'Limite atingido. Limpe o chat para recomeçar.',
+    reset_title: 'Limpar Conversa?',
+    reset_confirm: 'Tem certeza que deseja apagar todo o histórico de mensagens? Esta ação não pode ser desfeita.',
+    reset_btn_cancel: 'Cancelar',
+    reset_btn_confirm: 'Limpar',
+    error_connection: 'Desculpe, tive um problema de conexão. Poderia tentar enviar sua mensagem novamente? 😢',
+    support_tooltip: 'Falar com Suporte',
+    reset_tooltip: 'Limpar Conversa',
+    close_tooltip: 'Fechar',
+    quick_size_label: 'Qual meu tamanho? 📐',
+    quick_size_text: 'Como eu calculo meu tamanho ideal?',
+    quick_shipping_label: 'Prazos de entrega 🚚',
+    quick_shipping_text: 'Quais são os prazos de entrega e valor do frete?',
+    quick_payment_label: 'Formas de pagamento 💳',
+    quick_payment_text: 'Quais formas de pagamento vocês aceitam?'
+  },
+  en: {
+    ai_subtitle: 'AI Assistant',
+    tooltip_text: 'Questions about size? Ask the AI! 📐',
+    placeholder_name: 'Enter your name...',
+    placeholder_input: 'Type your question...',
+    limit_exceeded: 'Limit reached. Clear the chat to start over.',
+    reset_title: 'Clear Conversation?',
+    reset_confirm: 'Are you sure you want to clear all message history? This action cannot be undone.',
+    reset_btn_cancel: 'Cancel',
+    reset_btn_confirm: 'Clear',
+    error_connection: 'Sorry, I ran into a connection issue. Could you try sending your message again? 😢',
+    support_tooltip: 'Talk to Support',
+    reset_tooltip: 'Clear Conversation',
+    close_tooltip: 'Close',
+    quick_size_label: 'What is my size? 📐',
+    quick_size_text: 'How do I calculate my ideal size?',
+    quick_shipping_label: 'Delivery times 🚚',
+    quick_shipping_text: 'What are the delivery times and shipping costs?',
+    quick_payment_label: 'Payment methods 💳',
+    quick_payment_text: 'What payment methods do you accept?'
+  }
+};
 
 export default function AiChatbot() {
   const navigate = useNavigate();
+  const { language } = useLanguage();
+  const ct = chatbotTranslations[language] || chatbotTranslations.pt;
   const [isOpen, setIsOpen] = useState(false);
   const [input, setInput] = useState('');
   const [messages, setMessages] = useState([]);
@@ -26,16 +75,35 @@ export default function AiChatbot() {
     return id;
   });
 
-  const getInitialMessages = (name) => {
-    if (!name) {
+  const getInitialMessages = (name, lang = 'pt') => {
+    if (lang === 'en') {
+      if (!name) {
+        return [{
+          role: 'assistant',
+          content: `Hello! I am **Mister Oliver** ⚽, your iFooty AI Assistant. How can I call you?`
+        }];
+      }
       return [{
         role: 'assistant',
-        content: `Olá! Sou o **Mister Oliver** ⚽. Como posso te chamar?`
+        content: `Hello! I am **Mister Oliver** ⚽, your iFooty AI Assistant.
+Nice to see you again, **${name}**! 🤝 How can I help you today?
+
+I can help you with:
+- 📐 **Calculate your ideal size** (just type your height and weight)
+- 🚚 **Delivery times and shipping**
+- 💳 **Payment methods in Canada and USA**
+- 👕 **Find the coolest jerseys in the store!**`
       }];
-    }
-    return [{
-      role: 'assistant',
-      content: `Olá! Sou o **Mister Oliver** ⚽.
+    } else {
+      if (!name) {
+        return [{
+          role: 'assistant',
+          content: `Olá! Sou o **Mister Oliver** ⚽, o assistente de Inteligência Artificial da iFooty. Como posso te chamar?`
+        }];
+      }
+      return [{
+        role: 'assistant',
+        content: `Olá! Sou o **Mister Oliver** ⚽, o assistente de Inteligência Artificial da iFooty.
 Prazer em te ver novamente, **${name}**! 🤝 Como posso te ajudar hoje?
 
 Posso te ajudar com:
@@ -43,7 +111,58 @@ Posso te ajudar com:
 - 🚚 **Prazos de entrega e frete**
 - 💳 **Formas de pagamento no Canadá e EUA**
 - 👕 **Encontrar os mantos mais irados da loja!**`
-    }];
+      }];
+    }
+  };
+
+  const translateInitialMessages = (msgs, name, lang) => {
+    return msgs.map(m => {
+      if (m.role !== 'assistant') return m;
+      
+      const isPtGreeting = m.content.includes("Como posso te chamar?");
+      const isEnGreeting = m.content.includes("How can I call you?");
+      if (isPtGreeting || isEnGreeting) {
+        return {
+          role: 'assistant',
+          content: lang === 'en'
+            ? `Hello! I am **Mister Oliver** ⚽, your iFooty AI Assistant. How can I call you?`
+            : `Olá! Sou o **Mister Oliver** ⚽, o assistente de Inteligência Artificial da iFooty. Como posso te chamar?`
+        };
+      }
+
+      const isPtWelcome = m.content.includes("Prazer em te ver novamente") || m.content.includes("Prazer em te conhecer") || m.content.includes("Calcular seu tamanho ideal");
+      const isEnWelcome = m.content.includes("Nice to see you again") || m.content.includes("Nice to meet you") || m.content.includes("Calculate your ideal size");
+      if (isPtWelcome || isEnWelcome) {
+        const isNewConnection = m.content.includes("conhecer") || m.content.includes("meet you");
+        if (lang === 'en') {
+          return {
+            role: 'assistant',
+            content: `Hello! I am **Mister Oliver** ⚽, your iFooty AI Assistant.
+${isNewConnection ? 'Nice to meet you' : 'Nice to see you again'}, **${name}**! 🤝 How can I help you today?
+
+I can help you with:
+- 📐 **Calculate your ideal size** (just type your height and weight)
+- 🚚 **Delivery times and shipping**
+- 💳 **Payment methods in Canada and USA**
+- 👕 **Find the coolest jerseys in the store!**`
+          };
+        } else {
+          return {
+            role: 'assistant',
+            content: `Olá! Sou o **Mister Oliver** ⚽, o assistente de Inteligência Artificial da iFooty.
+${isNewConnection ? 'Prazer em te conhecer' : 'Prazer em te ver novamente'}, **${name}**! 🤝 Como posso te ajudar hoje?
+
+Posso te ajudar com:
+- 📐 **Calcular seu tamanho ideal** (basta digitar sua altura e peso)
+- 🚚 **Prazos de entrega e frete**
+- 💳 **Formas de pagamento no Canadá e EUA**
+- 👕 **Encontrar os mantos mais irados da loja!**`
+          };
+        }
+      }
+
+      return m;
+    });
   };
 
   // Load message history from sessionStorage and fetch WhatsApp number
@@ -54,10 +173,10 @@ Posso te ajudar com:
       try {
         setMessages(JSON.parse(savedChat));
       } catch (e) {
-        setMessages(getInitialMessages(name));
+        setMessages(getInitialMessages(name, language));
       }
     } else {
-      setMessages(getInitialMessages(name));
+      setMessages(getInitialMessages(name, language));
     }
 
     const fetchWhatsapp = async () => {
@@ -83,6 +202,16 @@ Posso te ajudar com:
 
     return () => clearTimeout(timer);
   }, []);
+
+  // Translate initial/welcome messages if they are the default ones when language changes
+  useEffect(() => {
+    if (messages.length > 0) {
+      const updatedMessages = translateInitialMessages(messages, userName, language);
+      if (JSON.stringify(updatedMessages) !== JSON.stringify(messages)) {
+        saveMessages(updatedMessages);
+      }
+    }
+  }, [language]);
 
   // Save messages to sessionStorage
   const saveMessages = (updatedMessages) => {
@@ -177,16 +306,20 @@ Posso te ajudar com:
 
   const handleWhatsappHandoff = () => {
     const chatHistory = messages
-      .filter(m => m.content && !m.content.includes("Como posso te chamar?"))
+      .filter(m => m.content && !m.content.includes("Como posso te chamar?") && !m.content.includes("How can I call you?"))
       .slice(-5);
 
-    let intro = `Olá, meu nome é ${userName || 'Visitante'}. Estava conversando com a IA da iFooty e gostaria de falar com o suporte.\n\n`;
+    let intro = language === 'en'
+      ? `Hello, my name is ${userName || 'Visitor'}. I was chatting with iFooty's AI and would like to speak with support.\n\n`
+      : `Olá, meu nome é ${userName || 'Visitante'}. Estava conversando com a IA da iFooty e gostaria de falar com o suporte.\n\n`;
     
     let historyText = '';
     if (chatHistory.length > 0) {
-      historyText = `*Histórico da conversa:*\n`;
+      historyText = language === 'en' ? `*Chat history:*\n` : `*Histórico da conversa:*\n`;
       chatHistory.forEach(m => {
-        const sender = m.role === 'user' ? 'Cliente' : 'IA';
+        const sender = m.role === 'user'
+          ? (language === 'en' ? 'Client' : 'Cliente')
+          : 'IA';
         let cleanContent = m.content
           .replace(/\*\*(.*?)\*\*/g, '$1')
           .replace(/\[(.*?)\]\((.*?)\)/g, '$1 ($2)');
@@ -221,7 +354,17 @@ Posso te ajudar com:
       const userMsg = { role: 'user', content: name };
       const welcomeMsg = {
         role: 'assistant',
-        content: `Prazer em te conhecer, **${name}**! 🤝 Como posso te ajudar hoje?
+        content: language === 'en'
+          ? `Hello! I am **Mister Oliver** ⚽, your iFooty AI Assistant.
+Nice to meet you, **${name}**! 🤝 How can I help you today?
+
+I can help you with:
+- 📐 **Calculate your ideal size** (just type your height and weight)
+- 🚚 **Delivery times and shipping**
+- 💳 **Payment methods in Canada and USA**
+- 👕 **Find the coolest jerseys in the store!**`
+          : `Olá! Sou o **Mister Oliver** ⚽, o assistente de Inteligência Artificial da iFooty.
+Prazer em te conhecer, **${name}**! 🤝 Como posso te ajudar hoje?
 
 Posso te ajudar com:
 - 📐 **Calcular seu tamanho ideal** (basta digitar sua altura e peso)
@@ -246,7 +389,8 @@ Posso te ajudar com:
       const response = await axios.post('/api/chat', {
         messages: newMessages.map(m => ({ role: m.role, content: m.content })),
         sessionId,
-        userName
+        userName,
+        language
       });
 
       if (response.data && response.data.reply) {
@@ -262,7 +406,7 @@ Posso te ajudar com:
         ...newMessages,
         {
           role: 'assistant',
-          content: 'Desculpe, tive um problema de conexão. Poderia tentar enviar sua mensagem novamente? 😢'
+          content: ct.error_connection
         }
       ]);
     } finally {
@@ -281,9 +425,9 @@ Posso te ajudar com:
   };
 
   const quickPrompts = [
-    { label: 'Qual meu tamanho? 📐', text: 'Como eu calculo meu tamanho ideal?' },
-    { label: 'Prazos de entrega 🚚', text: 'Quais são os prazos de entrega e valor do frete?' },
-    { label: 'Formas de pagamento 💳', text: 'Quais formas de pagamento vocês aceitam?' }
+    { label: ct.quick_size_label, text: ct.quick_size_text },
+    { label: ct.quick_shipping_label, text: ct.quick_shipping_text },
+    { label: ct.quick_payment_label, text: ct.quick_payment_text }
   ];
 
   const isLimitExceeded = messages.filter(m => m.role === 'user').length >= 20;
@@ -323,7 +467,7 @@ Posso te ajudar com:
             borderRadius: '50%',
             boxShadow: '0 0 6px var(--accent-color)'
           }}></span>
-          Dúvidas sobre tamanho? Pergunte à IA! 📐
+          {ct.tooltip_text}
           {/* Arrow */}
           <div style={{
             position: 'absolute',
@@ -366,7 +510,7 @@ Posso te ajudar com:
             e.currentTarget.style.transform = 'scale(1) translateY(0)';
             e.currentTarget.style.boxShadow = '0 8px 25px rgba(0, 0, 0, 0.6), 0 0 15px var(--accent-glow)';
           }}
-          title="iFooty AI Assistant"
+          title={language === 'en' ? 'Mister Oliver - AI Assistant' : 'Mister Oliver - Assistente de IA'}
         >
           <img 
             src="/avatar-ifooty-ai.png" 
@@ -434,10 +578,10 @@ Posso te ajudar com:
                 <RotateCcw size={20} color="#EF4444" />
               </div>
               <h4 style={{ color: '#fff', fontSize: '0.95rem', fontWeight: 700, marginBottom: '0.5rem' }}>
-                Limpar Conversa?
+                {ct.reset_title}
               </h4>
               <p style={{ color: 'var(--text-muted)', fontSize: '0.78rem', lineHeight: '1.4', marginBottom: '1.5rem' }}>
-                Tem certeza que deseja apagar todo o histórico de mensagens? Esta ação não pode ser desfeita.
+                {ct.reset_confirm}
               </p>
               <div style={{ display: 'flex', gap: '0.8rem', width: '100%' }}>
                 <button
@@ -457,7 +601,7 @@ Posso te ajudar com:
                   onMouseEnter={(e) => e.currentTarget.style.background = 'rgba(255,255,255,0.08)'}
                   onMouseLeave={(e) => e.currentTarget.style.background = 'rgba(255,255,255,0.05)'}
                 >
-                  Cancelar
+                  {ct.reset_btn_cancel}
                 </button>
                 <button
                   onClick={async () => {
@@ -470,10 +614,7 @@ Posso te ajudar com:
                     setSessionId(newId);
                     setUserName('');
                     
-                    const initialMsgs = [{
-                      role: 'assistant',
-                      content: `Olá! Sou o **Mister Oliver** ⚽. Como posso te chamar?`
-                    }];
+                    const initialMsgs = getInitialMessages('', language);
                     setMessages(initialMsgs);
                     setShowConfirmReset(false);
                   }}
@@ -492,7 +633,7 @@ Posso te ajudar com:
                   onMouseEnter={(e) => e.currentTarget.style.background = '#DC2626'}
                   onMouseLeave={(e) => e.currentTarget.style.background = '#EF4444'}
                 >
-                  Limpar
+                  {ct.reset_btn_confirm}
                 </button>
               </div>
             </div>
@@ -537,7 +678,10 @@ Posso te ajudar com:
               </div>
               <div>
                 <h4 style={{ fontSize: '0.85rem', fontWeight: 750, color: '#fff', margin: 0 }}>Mister Oliver</h4>
-                <span style={{ fontSize: '0.65rem', color: 'var(--text-muted)' }}>Online • Pronto para ajudar</span>
+                <span style={{ fontSize: '0.65rem', color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: '3px' }}>
+                  <Sparkles size={9} style={{ color: 'var(--accent-color)' }} />
+                  {ct.ai_subtitle}
+                </span>
               </div>
             </div>
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
@@ -562,7 +706,7 @@ Posso te ajudar com:
                     e.currentTarget.style.background = 'transparent';
                     e.currentTarget.style.color = 'var(--text-muted)';
                   }}
-                  title="Falar com Suporte"
+                  title={ct.support_tooltip}
                 >
                   <WhatsAppIcon size={15} fill="currentColor" />
                 </button>
@@ -587,7 +731,7 @@ Posso te ajudar com:
                   e.currentTarget.style.background = 'transparent';
                   e.currentTarget.style.color = 'var(--text-muted)';
                 }}
-                title="Limpar Conversa"
+                title={ct.reset_tooltip}
               >
                 <RotateCcw size={15} />
               </button>
@@ -611,6 +755,7 @@ Posso te ajudar com:
                   e.currentTarget.style.background = 'transparent';
                   e.currentTarget.style.color = 'var(--text-muted)';
                 }}
+                title={ct.close_tooltip}
               >
                 <X size={16} />
               </button>
@@ -727,7 +872,7 @@ Posso te ajudar com:
           >
             <input
               type="text"
-              placeholder={!userName ? "Digite seu nome..." : (isLimitExceeded ? "Limite atingido. Limpe o chat para recomeçar." : "Digite sua dúvida...")}
+              placeholder={!userName ? ct.placeholder_name : (isLimitExceeded ? ct.limit_exceeded : ct.placeholder_input)}
               value={input}
               onChange={(e) => setInput(e.target.value)}
               onKeyDown={handleKeyPress}
