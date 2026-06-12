@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Sparkles, X, Send, Bot } from 'lucide-react';
+import { Sparkles, X, Send, Bot, RotateCcw } from 'lucide-react';
 import axios from 'axios';
 
 export default function AiChatbot() {
@@ -154,6 +154,14 @@ Posso te ajudar com:
       ]);
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const handleClearChat = () => {
+    if (window.confirm('Deseja limpar o histórico da conversa?')) {
+      const updated = [welcomeMessage];
+      setMessages(updated);
+      sessionStorage.removeItem('ifooty_ai_chat_messages');
     }
   };
 
@@ -319,29 +327,55 @@ Posso te ajudar com:
                 <span style={{ fontSize: '0.65rem', color: 'var(--text-muted)' }}>Online • Pronto para ajudar</span>
               </div>
             </div>
-            <button
-              onClick={() => setIsOpen(false)}
-              style={{
-                color: 'var(--text-muted)',
-                cursor: 'pointer',
-                padding: '4px',
-                borderRadius: '50%',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                transition: 'all 0.2s'
-              }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.background = 'rgba(255,255,255,0.05)';
-                e.currentTarget.style.color = '#fff';
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.background = 'transparent';
-                e.currentTarget.style.color = 'var(--text-muted)';
-              }}
-            >
-              <X size={16} />
-            </button>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+              <button
+                onClick={handleClearChat}
+                style={{
+                  color: 'var(--text-muted)',
+                  cursor: 'pointer',
+                  padding: '4px',
+                  borderRadius: '50%',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  transition: 'all 0.2s'
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.background = 'rgba(255,255,255,0.05)';
+                  e.currentTarget.style.color = 'var(--accent-color)';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.background = 'transparent';
+                  e.currentTarget.style.color = 'var(--text-muted)';
+                }}
+                title="Limpar Conversa"
+              >
+                <RotateCcw size={15} />
+              </button>
+              <button
+                onClick={() => setIsOpen(false)}
+                style={{
+                  color: 'var(--text-muted)',
+                  cursor: 'pointer',
+                  padding: '4px',
+                  borderRadius: '50%',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  transition: 'all 0.2s'
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.background = 'rgba(255,255,255,0.05)';
+                  e.currentTarget.style.color = '#fff';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.background = 'transparent';
+                  e.currentTarget.style.color = 'var(--text-muted)';
+                }}
+              >
+                <X size={16} />
+              </button>
+            </div>
           </div>
 
           {/* Messages Area */}
