@@ -344,18 +344,19 @@ Posso te ajudar com:
         <button
           onClick={() => setIsOpen(true)}
           style={{
-            background: 'var(--surface-color)',
-            color: 'var(--accent-color)',
-            width: '54px',
-            height: '54px',
+            background: 'transparent',
+            width: '56px',
+            height: '56px',
             borderRadius: '50%',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
             boxShadow: '0 8px 25px rgba(0, 0, 0, 0.6), 0 0 15px var(--accent-glow)',
-            border: '1px solid var(--accent-color)',
+            border: '2px solid var(--accent-color)',
             transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-            cursor: 'pointer'
+            cursor: 'pointer',
+            padding: 0,
+            overflow: 'hidden'
           }}
           onMouseEnter={(e) => {
             e.currentTarget.style.transform = 'scale(1.08) translateY(-2px)';
@@ -367,7 +368,15 @@ Posso te ajudar com:
           }}
           title="iFooty AI Assistant"
         >
-          <Sparkles size={24} style={{ animation: 'float 3s infinite ease-in-out' }} />
+          <img 
+            src="/avatar-ifooty-ai.png" 
+            alt="iFooty AI Coach" 
+            style={{ 
+              width: '100%', 
+              height: '100%', 
+              objectFit: 'cover'
+            }} 
+          />
         </button>
       )}
 
@@ -501,20 +510,17 @@ Posso te ajudar com:
           >
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
               <div style={{ position: 'relative' }}>
-                <div
-                  style={{
+                <img 
+                  src="/avatar-ifooty-ai.png" 
+                  alt="iFooty AI Coach" 
+                  style={{ 
                     width: '32px',
                     height: '32px',
-                    background: 'rgba(164, 210, 51, 0.1)',
-                    border: '1px solid var(--accent-color)',
                     borderRadius: '50%',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center'
+                    border: '1.5px solid var(--accent-color)',
+                    objectFit: 'cover'
                   }}
-                >
-                  <Bot size={16} color="var(--accent-color)" />
-                </div>
+                />
                 <span
                   style={{
                     position: 'absolute',
