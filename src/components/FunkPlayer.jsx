@@ -113,7 +113,7 @@ const FunkPlayer = () => {
     <>
       <audio ref={audioRef} src="/funk-ifooty.mp3" preload="metadata" />
 
-      <div className="funk-player-wrapper" style={{ position: 'fixed', bottom: '2rem', left: '2rem', zIndex: 999 }}>
+      <div className="funk-player-wrapper" style={{ position: 'fixed', bottom: '7.5rem', right: '2rem', zIndex: 999 }}>
         {/* State 1: Minimized */}
         {!isExpanded && (
           <button
