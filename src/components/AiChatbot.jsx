@@ -10,7 +10,7 @@ const chatbotTranslations = {
   pt: {
     ai_subtitle: 'Assistente de IA',
     online_status: 'Online • Pronto para ajudar',
-    tooltip_text: 'Dúvidas sobre tamanho? Pergunte à IA! 📐',
+    tooltip_text: 'Dúvidas sobre tamanho? Pergunte à IA!',
     placeholder_name: 'Digite seu nome...',
     placeholder_input: 'Digite sua dúvida...',
     limit_exceeded: 'Limite atingido. Limpe o chat para recomeçar.',
@@ -31,7 +31,7 @@ const chatbotTranslations = {
   },
   en: {
     ai_subtitle: 'AI Assistant',
-    tooltip_text: 'Questions about size? Ask the AI! 📐',
+    tooltip_text: 'Questions about size? Ask the AI!',
     placeholder_name: 'Enter your name...',
     placeholder_input: 'Type your question...',
     limit_exceeded: 'Limit reached. Clear the chat to start over.',
