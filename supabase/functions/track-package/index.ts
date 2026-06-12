@@ -148,7 +148,7 @@ async function fetchChineseTracking(num: string) {
   return { trackingData, chineseHistory: history };
 }
 
-async function fetch17trackData(num: string) {
+async function fetch17trackData(num: string, isUsps: boolean) {
   // @ts-ignore
   const apiKey = Deno.env.get('SEVENTEENTRACK_API_KEY');
   if (!apiKey) return [];
@@ -214,7 +214,7 @@ async function fetch17trackData(num: string) {
         date: formatToAMPM(displayDate), 
         location: await translateText(e.location || e.c || ''), 
         status: await translateText(e.description || e.z || ''), 
-        carrier: 'CA' 
+        carrier: isUsps ? 'US' : 'CA' 
       };
     }));
   } catch { return []; }
@@ -231,7 +231,8 @@ Deno.serve(async (req: Request) => {
     if (!trackingNumber) return new Response(JSON.stringify({ error: 'Número obrigatório' }), { headers: corsHeaders, status: 400 });
 
     const cleanNum = trackingNumber.trim();
-    console.log(`Buscando número: ${cleanNum}`);
+    const isUsps = /^(9\d{21}|[A-Z]{2}\d{9}US)$/i.test(cleanNum);
+    console.log(`Buscando número: ${cleanNum}, isUsps: ${isUsps}`);
 
     // @ts-ignore
     const supabase = createClient(Deno.env.get('SUPABASE_URL') || '', Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') || '');
@@ -258,7 +259,7 @@ Deno.serve(async (req: Request) => {
 
     const [cnRes, caRes] = await Promise.allSettled([
       fetchChineseTracking(cleanNum), 
-      fetch17trackData(cleanNum)
+      fetch17trackData(cleanNum, isUsps)
     ]);
     
     clearTimeout(timeoutId);
@@ -284,7 +285,7 @@ Deno.serve(async (req: Request) => {
         const a = allEvents[i];
         const b = allEvents[j];
 
-        // Só comparamos se forem de transportadoras diferentes (CN vs CA)
+        // Só comparamos se forem de transportadoras diferentes (CN vs CA ou CN vs US)
         if (a.carrier === b.carrier) continue;
 
         const statusA = normalize(a.status);
@@ -301,7 +302,7 @@ Deno.serve(async (req: Request) => {
           if (!isNaN(timeA) && !isNaN(timeB)) {
             const diffHours = Math.abs(timeA - timeB) / (1000 * 60 * 60);
             if (diffHours < 24) {
-              // Sempre remove o da China (CN) em favor do Local (CA)
+              // Sempre remove o da China (CN) em favor do Local (CA/US)
               if (a.carrier === 'CN') toRemove.add(i);
               else if (b.carrier === 'CN') toRemove.add(j);
             }
@@ -334,7 +335,7 @@ Deno.serve(async (req: Request) => {
       cn.trackingData = { 
         referenceNo: '', 
         trackingNumber: cleanNum, 
-        country: 'CA', 
+        country: isUsps ? 'US' : 'CA', 
         date: '', 
         lastRecord: '', 
         consigneeName: '',
@@ -349,7 +350,8 @@ Deno.serve(async (req: Request) => {
         const dateB = new Date(b.rawDate.replace(' ', 'T')).getTime();
         return dateB - dateA;
       }), 
-      hasCanadaPostData: ca.length > 0, 
+      hasCanadaPostData: !isUsps && ca.length > 0, 
+      hasUspsData: isUsps && ca.length > 0, 
       cachedAt: new Date().toISOString() 
     };
 

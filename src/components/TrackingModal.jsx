@@ -236,6 +236,7 @@ const TrackingModal = ({ isOpen, onClose, initialTrackingNumber = '' }) => {
   const [trackingData, setTrackingData] = useState(null);
   const [history, setHistory] = useState([]);
   const [hasCanadaPostData, setHasCanadaPostData] = useState(false);
+  const [hasUspsData, setHasUspsData] = useState(false);
   const [orderCity, setOrderCity] = useState(null);
   const fileInputRef = useRef(null);
 
@@ -248,6 +249,8 @@ const TrackingModal = ({ isOpen, onClose, initialTrackingNumber = '' }) => {
       // Clear data if opening empty
       setTrackingData(null);
       setHistory([]);
+      setHasCanadaPostData(false);
+      setHasUspsData(false);
       setTrackingNumber('');
       setOrderCity(null);
     }
@@ -308,6 +311,7 @@ const TrackingModal = ({ isOpen, onClose, initialTrackingNumber = '' }) => {
       setTrackingData(data.trackingData);
       setHistory(data.history || []);
       setHasCanadaPostData(data.hasCanadaPostData || false);
+      setHasUspsData(data.hasUspsData || false);
       setOrderCity(null);
 
       // Tenta buscar a cidade do pedido no banco de dados
@@ -328,7 +332,9 @@ const TrackingModal = ({ isOpen, onClose, initialTrackingNumber = '' }) => {
       
       if (data.trackingData || (data.history && data.history.length > 0)) {
         saveRecentSearch(num, data.trackingData?.consigneeName);
-        if (data.hasCanadaPostData) {
+        if (data.hasUspsData) {
+          toast.success("Rastreamento completo: China + USPS! 🇺🇸");
+        } else if (data.hasCanadaPostData) {
           toast.success("Rastreamento completo: China + Canada Post! 🇨🇦");
         } else {
           toast.success("Rastreamento atualizado!");
@@ -408,9 +414,9 @@ const TrackingModal = ({ isOpen, onClose, initialTrackingNumber = '' }) => {
     // 1. Se o próprio trackingData já tiver city (retornado pela Edge Function)
     if (trackingData?.city) return trackingData.city;
     
-    // 2. Fallback: Procura nos eventos do Canada Post (carrier === 'CA') por uma localização com cidade
+    // 2. Fallback: Procura nos eventos locais (carrier === 'CA' ou 'US') por uma localização com cidade
     if (history && history.length > 0) {
-      const localEvent = history.find(item => item.carrier === 'CA' && item.location);
+      const localEvent = history.find(item => (item.carrier === 'CA' || item.carrier === 'US') && item.location);
       if (localEvent) {
         const parts = localEvent.location.split(',');
         if (parts.length > 0) {
@@ -620,6 +626,9 @@ const TrackingModal = ({ isOpen, onClose, initialTrackingNumber = '' }) => {
                     {hasCanadaPostData && (
                       <span style={{ fontSize: '0.65rem', background: 'rgba(0,100,255,0.2)', border: '1px solid rgba(0,100,255,0.4)', borderRadius: '4px', padding: '2px 6px', color: '#80c0ff', fontWeight: 600 }}>🇨🇦 Canada Post</span>
                     )}
+                    {hasUspsData && (
+                      <span style={{ fontSize: '0.65rem', background: 'rgba(0,100,255,0.2)', border: '1px solid rgba(0,100,255,0.4)', borderRadius: '4px', padding: '2px 6px', color: '#80c0ff', fontWeight: 600 }}>🇺🇸 USPS</span>
+                    )}
                   </div>
                 </div>
 
@@ -628,6 +637,14 @@ const TrackingModal = ({ isOpen, onClose, initialTrackingNumber = '' }) => {
                     <Clock size={18} color="orange" />
                     <p style={{ margin: 0, fontSize: '0.75rem', color: '#ffcc80', lineHeight: '1.4' }}>
                       <strong>Sincronizando com Canada Post:</strong> As informações locais podem levar até 24h para aparecer após a saída da China.
+                    </p>
+                  </div>
+                )}
+                {!hasUspsData && trackingData?.country === 'US' && (
+                  <div style={{ background: 'rgba(255,165,0,0.05)', border: '1px solid rgba(255,165,0,0.2)', borderRadius: '8px', padding: '0.8rem', marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.8rem' }}>
+                    <Clock size={18} color="orange" />
+                    <p style={{ margin: 0, fontSize: '0.75rem', color: '#ffcc80', lineHeight: '1.4' }}>
+                      <strong>Sincronizando com USPS:</strong> As informações locais podem levar até 24h para aparecer após a saída da China.
                     </p>
                   </div>
                 )}
@@ -670,8 +687,9 @@ const TrackingModal = ({ isOpen, onClose, initialTrackingNumber = '' }) => {
                           
                           {items.map((item, index) => {
                             const isCanada = item.carrier === 'CA';
+                            const isUsps = item.carrier === 'US';
                             const isFirst = gIdx === 0 && index === 0;
-                            const dotColor = isFirst ? 'var(--accent-color)' : isCanada ? '#3b82f6' : 'rgba(255,255,255,0.2)';
+                            const dotColor = isFirst ? 'var(--accent-color)' : (isCanada || isUsps) ? '#3b82f6' : 'rgba(255,255,255,0.2)';
                             
                             return (
                               <div key={index} style={{ position: 'relative', marginBottom: '1.2rem', paddingLeft: '5px' }}>
@@ -694,18 +712,18 @@ const TrackingModal = ({ isOpen, onClose, initialTrackingNumber = '' }) => {
                                     </span>
                                     <span style={{ 
                                       fontSize: '0.55rem', 
-                                      background: isCanada ? 'rgba(0,100,255,0.1)' : 'rgba(255,50,50,0.1)', 
+                                      background: (isCanada || isUsps) ? 'rgba(0,100,255,0.1)' : 'rgba(255,50,50,0.1)', 
                                       borderRadius: '4px', 
                                       padding: '1px 6px', 
-                                      color: isCanada ? '#93c5fd' : '#ff9999',
-                                      border: `1px solid ${isCanada ? 'rgba(0,100,255,0.2)' : 'rgba(255,50,50,0.2)'}`,
+                                      color: (isCanada || isUsps) ? '#93c5fd' : '#ff9999',
+                                      border: `1px solid ${(isCanada || isUsps) ? 'rgba(0,100,255,0.2)' : 'rgba(255,50,50,0.2)'}`,
                                       fontWeight: 600
                                     }}>
-                                      {isCanada ? '🇨🇦 Canada Post' : '🇨🇳 China'}
+                                      {isUsps ? '🇺🇸 USPS' : isCanada ? '🇨🇦 Canada Post' : '🇨🇳 China'}
                                     </span>
                                   </div>
                                   <p style={{ margin: 0, color: isFirst ? '#fff' : 'var(--text-muted)', fontSize: '0.85rem', lineHeight: '1.4' }}>
-                                    {item.location ? <strong style={{ color: isCanada ? '#93c5fd' : 'inherit' }}>[{item.location}] </strong> : ''}
+                                    {item.location ? <strong style={{ color: (isCanada || isUsps) ? '#93c5fd' : 'inherit' }}>[{item.location}] </strong> : ''}
                                     {cleanStatusText(item.status)}
                                   </p>
                                 </div>
