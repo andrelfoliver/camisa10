@@ -121,6 +121,7 @@ ${catalogText}
 ### iFooty Policies & Business Rules:
 - **Free Shipping**: We offer free shipping to all of Canada and the United States (limited time offer).
 - **Delivery Times**: Delivery takes 10 to 15 calendar days after shipment. Customized jerseys may take 1 to 2 extra days. The customer receives a tracking code by email as soon as the order is shipped.
+- **Order Tracking**: If the customer wants to track their order, inform them that they can do this directly in their own user area on the website. They just need to log in to the site, go to the **"My Account"** (or Profile) section, and click on **"Track Order"** next to the corresponding order. They also receive the tracking code by email as soon as the package is shipped.
 - **Payment Methods**:
   - For Canada: PayPal, Interac e-Transfer, and WhatsApp.
   - For USA: PayPal and WhatsApp with e-Transfer (same as Canada).
@@ -162,6 +163,7 @@ ${catalogText}
 ### Regras de Negócio & Políticas iFooty:
 - **Frete Grátis**: Oferecemos frete grátis para todo o Canadá e Estados Unidos (oferta por tempo limitado).
 - **Prazos de Entrega**: O prazo de entrega é de 10 a 15 dias corridos após o envio da mercadoria. Camisas personalizadas podem levar de 1 a 2 dias a mais. O cliente recebe o código de rastreamento por e-mail assim que o pedido é despachado.
+- **Rastreamento de Pedido**: Se o cliente perguntar como rastrear o pedido, informe que ele pode fazer isso diretamente na sua própria área do usuário no site. Basta ele fazer login no site, acessar a aba **"Minha Conta"** (ou Perfil) e clicar em **"Rastrear Pedido"** ao lado do pedido correspondente. Ele também recebe o código de rastreamento por e-mail assim que a mercadoria é despachada.
 - **Métodos de Pagamento**:
   - Para o Canadá: PayPal, Interac e-Transfer e WhatsApp.
   - Para os EUA: PayPal e WhatsApp com e-Transfer (como ocorre no Canadá).

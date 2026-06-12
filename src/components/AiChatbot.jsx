@@ -345,17 +345,27 @@ Posso te ajudar com:
       return;
     }
 
-    // Onboarding: check if userName is empty and capture it
-    if (!userName) {
-      const name = text;
-      sessionStorage.setItem('ifooty_ai_chat_user_name', name);
-      setUserName(name);
+    let activeName = userName;
 
-      const userMsg = { role: 'user', content: name };
-      const welcomeMsg = {
-        role: 'assistant',
-        content: language === 'en'
-          ? `Hello! I am **Mister Oliver** ⚽, your iFooty AI Assistant.
+    // Onboarding: check if userName is empty and capture it
+    if (!activeName) {
+      const isQuestionOrLongText = text.split(/\s+/).length > 3 || 
+        /rastrear|rastreio|pedido|tamanho|frete|camisa|quanto|preço|preco|onde|como|quais|comprar|pagar|pagamento|track|order|size|shipping|delivery|price|payment|how|where|what/i.test(text);
+
+      if (isQuestionOrLongText) {
+        activeName = language === 'en' ? 'Visitor' : 'Visitante';
+        sessionStorage.setItem('ifooty_ai_chat_user_name', activeName);
+        setUserName(activeName);
+      } else {
+        const name = text;
+        sessionStorage.setItem('ifooty_ai_chat_user_name', name);
+        setUserName(name);
+
+        const userMsg = { role: 'user', content: name };
+        const welcomeMsg = {
+          role: 'assistant',
+          content: language === 'en'
+            ? `Hello! I am **Mister Oliver** ⚽, your iFooty AI Assistant.
 Nice to meet you, **${name}**! 🤝 How can I help you today?
 
 I can help you with:
@@ -363,7 +373,7 @@ I can help you with:
 - 🚚 **Delivery times and shipping**
 - 💳 **Payment methods in Canada and USA**
 - 👕 **Find the coolest jerseys in the store!**`
-          : `Olá! Sou o **Mister Oliver** ⚽, o assistente de Inteligência Artificial da iFooty.
+            : `Olá! Sou o **Mister Oliver** ⚽, o assistente de Inteligência Artificial da iFooty.
 Prazer em te conhecer, **${name}**! 🤝 Como posso te ajudar hoje?
 
 Posso te ajudar com:
@@ -371,12 +381,13 @@ Posso te ajudar com:
 - 🚚 **Prazos de entrega e frete**
 - 💳 **Formas de pagamento no Canadá e EUA**
 - 👕 **Encontrar os mantos mais irados da loja!**`
-      };
+        };
 
-      const updated = [...messages, userMsg, welcomeMsg];
-      saveMessages(updated);
-      saveSessionToDb(updated, name);
-      return;
+        const updated = [...messages, userMsg, welcomeMsg];
+        saveMessages(updated);
+        saveSessionToDb(updated, name);
+        return;
+      }
     }
 
     const newMessages = [...messages, { role: 'user', content: text }];
@@ -389,7 +400,7 @@ Posso te ajudar com:
       const response = await axios.post('/api/chat', {
         messages: newMessages.map(m => ({ role: m.role, content: m.content })),
         sessionId,
-        userName,
+        userName: activeName,
         language
       });
 
