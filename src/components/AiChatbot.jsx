@@ -137,8 +137,16 @@ Posso te ajudar com:
         if (lang === 'en') {
           return {
             role: 'assistant',
-            content: `Hello! I am **Mister Oliver** ⚽, your iFooty AI Assistant.
-${isNewConnection ? 'Nice to meet you' : 'Nice to see you again'}, **${name}**! 🤝 How can I help you today?
+            content: isNewConnection
+              ? `Nice to meet you, **${name}**! 🤝 How can I help you today?
+
+I can help you with:
+- 📐 **Calculate your ideal size** (just type your height and weight)
+- 🚚 **Delivery times and shipping**
+- 💳 **Payment methods in Canada and USA**
+- 👕 **Find the coolest jerseys in the store!**`
+              : `Hello! I am **Mister Oliver** ⚽, your iFooty AI Assistant.
+Nice to see you again, **${name}**! 🤝 How can I help you today?
 
 I can help you with:
 - 📐 **Calculate your ideal size** (just type your height and weight)
@@ -149,8 +157,16 @@ I can help you with:
         } else {
           return {
             role: 'assistant',
-            content: `Olá! Sou o **Mister Oliver** ⚽, o assistente de Inteligência Artificial da iFooty.
-${isNewConnection ? 'Prazer em te conhecer' : 'Prazer em te ver novamente'}, **${name}**! 🤝 Como posso te ajudar hoje?
+            content: isNewConnection
+              ? `Prazer em te conhecer, **${name}**! 🤝 Como posso te ajudar hoje?
+
+Posso te ajudar com:
+- 📐 **Calcular seu tamanho ideal** (basta digitar sua altura e peso)
+- 🚚 **Prazos de entrega e frete**
+- 💳 **Formas de pagamento no Canadá e EUA**
+- 👕 **Encontrar os mantos mais irados da loja!**`
+              : `Olá! Sou o **Mister Oliver** ⚽, o assistente de Inteligência Artificial da iFooty.
+Prazer em te ver novamente, **${name}**! 🤝 Como posso te ajudar hoje?
 
 Posso te ajudar com:
 - 📐 **Calcular seu tamanho ideal** (basta digitar sua altura e peso)
@@ -365,16 +381,14 @@ Posso te ajudar com:
         const welcomeMsg = {
           role: 'assistant',
           content: language === 'en'
-            ? `Hello! I am **Mister Oliver** ⚽, your iFooty AI Assistant.
-Nice to meet you, **${name}**! 🤝 How can I help you today?
+            ? `Nice to meet you, **${name}**! 🤝 How can I help you today?
 
 I can help you with:
 - 📐 **Calculate your ideal size** (just type your height and weight)
 - 🚚 **Delivery times and shipping**
 - 💳 **Payment methods in Canada and USA**
 - 👕 **Find the coolest jerseys in the store!**`
-            : `Olá! Sou o **Mister Oliver** ⚽, o assistente de Inteligência Artificial da iFooty.
-Prazer em te conhecer, **${name}**! 🤝 Como posso te ajudar hoje?
+            : `Prazer em te conhecer, **${name}**! 🤝 Como posso te ajudar hoje?
 
 Posso te ajudar com:
 - 📐 **Calcular seu tamanho ideal** (basta digitar sua altura e peso)
