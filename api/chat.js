@@ -26,7 +26,7 @@ export default async function handler(req, res) {
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
-  const { messages } = req.body;
+  const { messages, sessionId, userName } = req.body;
   
   if (!messages || !Array.isArray(messages)) {
     return res.status(400).json({ error: 'Messages array is required' });
@@ -85,6 +85,11 @@ export default async function handler(req, res) {
       }).join('\n');
     }
 
+    let nameInstruction = '';
+    if (userName && userName.trim()) {
+      nameInstruction = `\nO nome do cliente com quem você está conversando é "${userName.trim()}". Trate-o por este nome de forma amigável e natural durante a conversa.`;
+    }
+
     // 3. Build system prompt
     const systemPrompt = `Você é o iFooty AI Coach, o assistente virtual de vendas inteligente da iFooty.
 A iFooty é uma loja premium de artigos esportivos localizada no Canadá, especializada em camisas de futebol (brasileiras, europeias, retrô), regatas da NBA, calçados (chuteiras) e streetwear (camisetas casuais como a do Ayrton Senna).
@@ -124,7 +129,7 @@ Se o cliente perguntar sobre tamanhos ou fornecer peso e altura, siga rigorosame
 5. **Regatas NBA**: Caimento longo e folgado.
 6. **Chuteiras / Calçados**: Ajuste firme. Sugerir meio número acima do calçado de passeio como referência inicial e checar a tabela de centímetros do guia.
 
-Responda sempre com base nessas informações e guie o cliente de forma transparente!`;
+Responda sempre com base nessas informações e guie o cliente de forma transparente!${nameInstruction}`;
 
     // 4. Call OpenAI API
     const response = await axios.post(
@@ -148,6 +153,29 @@ Responda sempre com base nessas informações e guie o cliente de forma transpar
     );
 
     const reply = response.data.choices[0].message.content;
+
+    // 5. Save the updated conversation in Supabase if sessionId is provided
+    if (sessionId) {
+      const dbMessages = [...history, { role: 'assistant', content: reply }];
+      try {
+        const { error: upsertError } = await supabase
+          .from('ai_conversations')
+          .upsert({
+            session_id: sessionId,
+            user_name: userName || null,
+            user_ip: ip,
+            messages: dbMessages,
+            updated_at: new Date().toISOString()
+          }, { onConflict: 'session_id' });
+          
+        if (upsertError) {
+          console.error('❌ Error saving conversation to database:', upsertError);
+        }
+      } catch (dbErr) {
+        console.error('❌ Exception saving conversation to database:', dbErr);
+      }
+    }
+
     return res.status(200).json({ reply });
   } catch (error) {
     console.error('❌ AI Chatbot API Error:', error?.response?.data || error.message);

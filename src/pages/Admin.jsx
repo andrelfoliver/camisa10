@@ -276,6 +276,11 @@ const Admin = () => {
   });
   const [prodAgentFilter, setProdAgentFilter] = useState('');
 
+  const [chatSessions, setChatSessions] = useState([]);
+  const [selectedSessionId, setSelectedSessionId] = useState(null);
+  const [chatSearch, setChatSearch] = useState('');
+  const [loadingChats, setLoadingChats] = useState(false);
+
 
   const [isMigrating, setIsMigrating] = useState(false);
   const [modal, setModal] = useState({ show: false, title: '', message: '', onConfirm: null, type: 'alert' });
@@ -494,6 +499,22 @@ const Admin = () => {
       }
     }
 
+    async function loadChatSessions() {
+      setLoadingChats(true);
+      try {
+        const { data, error } = await supabase
+          .from('ai_conversations')
+          .select('*')
+          .order('updated_at', { ascending: false });
+        if (data) setChatSessions(data);
+        if (error) console.error("Erro ao buscar logs de chat:", error.message);
+      } catch (e) {
+        console.error("Erro ao buscar logs de chat:", e);
+      } finally {
+        setLoadingChats(false);
+      }
+    }
+
     if (isAdmin) {
       loadProducts();
       loadCustomers();
@@ -504,6 +525,7 @@ const Admin = () => {
       loadCoupons();
       loadTrackingCaches();
       loadInterests();
+      loadChatSessions();
     }
   }, [isAdmin, user]);
 
@@ -796,6 +818,23 @@ const Admin = () => {
       if (error) showAlert("Erro", error.message);
       else {
         setCoupons(coupons.filter(c => c.id !== id));
+      }
+    });
+  };
+
+  const handleDeleteChatSession = async (id) => {
+    showConfirm("Excluir Conversa", "Tem certeza que deseja apagar permanentemente este registro de conversa com a IA?", async () => {
+      try {
+        const { error } = await supabase.from('ai_conversations').delete().eq('id', id);
+        if (error) {
+          showAlert("Erro", error.message);
+        } else {
+          setChatSessions(prev => prev.filter(c => c.id !== id));
+          if (selectedSessionId === id) setSelectedSessionId(null);
+          showToast("Conversa excluída com sucesso!");
+        }
+      } catch (err) {
+        showAlert("Erro", err.message);
       }
     });
   };
@@ -2203,6 +2242,13 @@ const Admin = () => {
           >
             <Crown size={18} /> Agentes & Vendas
           </button>
+          <button
+            onClick={() => setSupplierTab('CHAT_LOGS')}
+            className={supplierTab === 'CHAT_LOGS' ? 'active-tab' : ''}
+            style={{ padding: '0.8rem 1rem', borderRadius: 'var(--radius-md)', display: 'flex', alignItems: 'center', gap: '0.8rem', width: '100%', textAlign: 'left', background: supplierTab === 'CHAT_LOGS' ? 'var(--accent-color)' : 'transparent', color: supplierTab === 'CHAT_LOGS' ? '#000' : 'var(--text-main)', fontWeight: supplierTab === 'CHAT_LOGS' ? 700 : 500, transition: 'all 0.2s', border: 'none', cursor: 'pointer' }}
+          >
+            <MessageSquare size={18} /> Conversas IA
+          </button>
 
           <button 
             onClick={signOut} 
@@ -2239,9 +2285,10 @@ const Admin = () => {
                               supplierTab === 'CLOUD_ALL' ? 'Todo o Banco na Nuvem' :
                                 supplierTab === 'ESTOQUE' ? 'Gestão de Estoque' :
                                   supplierTab === 'AGENTS' ? 'Agentes & Vendas' :
-                                    supplierTab === 'CIDADES' ? 'Distribuição Geográfica' :
-                                      supplierTab === 'FINANCEIRO' ? 'Resumo Financeiro Executivo' :
-                                        `${supplierTab.replace('CAT_', '')}`}
+                                    supplierTab === 'CHAT_LOGS' ? 'Conversas com IA (Logs)' :
+                                      supplierTab === 'CIDADES' ? 'Distribuição Geográfica' :
+                                        supplierTab === 'FINANCEIRO' ? 'Resumo Financeiro Executivo' :
+                                          `${supplierTab.replace('CAT_', '')}`}
               </h1>
               <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem', marginTop: '0.2rem' }} className="hide-mobile">Painel Central de Gerenciamento iFooty.</p>
             </div>
@@ -3554,6 +3601,248 @@ const Admin = () => {
                 </div>
               </div>
 
+            </div>
+          ) : supplierTab === 'CHAT_LOGS' ? (
+            <div style={{ display: 'grid', gridTemplateColumns: '350px 1fr', gap: '2rem', height: 'calc(100vh - 180px)' }}>
+              {/* LEFT SIDEBAR: Session List */}
+              <div className="glass-panel" style={{ display: 'flex', flexDirection: 'column', overflow: 'hidden', padding: '1.5rem', borderRadius: 'var(--radius-lg)' }}>
+                <div style={{ marginBottom: '1.2rem' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+                    <h3 style={{ color: 'var(--accent-color)', margin: 0, fontSize: '1.1rem', fontWeight: 750, display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                      <MessageSquare size={18} /> Conversas ({chatSessions.length})
+                    </h3>
+                    <button 
+                      onClick={async () => {
+                        setLoadingChats(true);
+                        try {
+                          const { data } = await supabase.from('ai_conversations').select('*').order('updated_at', { ascending: false });
+                          if (data) setChatSessions(data);
+                        } catch (e) {
+                          console.error(e);
+                        } finally {
+                          setLoadingChats(false);
+                        }
+                      }}
+                      style={{ background: 'transparent', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.2rem' }}
+                      title="Atualizar lista"
+                    >
+                      <RefreshCw size={14} className={loadingChats ? 'spin' : ''} />
+                    </button>
+                  </div>
+                  <div style={{ position: 'relative' }}>
+                    <input
+                      type="text"
+                      placeholder="Buscar por nome..."
+                      value={chatSearch}
+                      onChange={e => setChatSearch(e.target.value)}
+                      style={{
+                        width: '100%',
+                        padding: '0.6rem 1rem 0.6rem 2.2rem',
+                        borderRadius: '8px',
+                        background: 'var(--bg-color)',
+                        border: '1px solid var(--border-color)',
+                        color: '#fff',
+                        fontSize: '0.85rem'
+                      }}
+                    />
+                    <Search size={14} style={{ position: 'absolute', left: '0.8rem', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }} />
+                  </div>
+                </div>
+
+                <div style={{ flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '0.6rem' }} className="custom-scrollbar">
+                  {loadingChats ? (
+                    <div style={{ padding: '2rem', textAlign: 'center', color: 'var(--text-muted)', fontSize: '0.85rem' }}>Carregando conversas...</div>
+                  ) : chatSessions.filter(session => {
+                    const name = session.user_name || 'Visitante Anônimo';
+                    return name.toLowerCase().includes(chatSearch.toLowerCase());
+                  }).length === 0 ? (
+                    <div style={{ padding: '2rem', textAlign: 'center', color: 'var(--text-muted)', fontSize: '0.85rem' }}>Nenhuma conversa encontrada.</div>
+                  ) : (
+                    chatSessions
+                      .filter(session => {
+                        const name = session.user_name || 'Visitante Anônimo';
+                        return name.toLowerCase().includes(chatSearch.toLowerCase());
+                      })
+                      .map(session => {
+                        const isSelected = selectedSessionId === session.id;
+                        const msgCount = Array.isArray(session.messages) ? session.messages.length : 0;
+                        const lastMsg = msgCount > 0 ? session.messages[msgCount - 1] : null;
+                        const dateStr = new Date(session.updated_at).toLocaleString('pt-BR', {
+                          day: '2-digit',
+                          month: '2-digit',
+                          hour: '2-digit',
+                          minute: '2-digit'
+                        });
+
+                        return (
+                          <div
+                            key={session.id}
+                            onClick={() => setSelectedSessionId(session.id)}
+                            style={{
+                              padding: '1rem',
+                              borderRadius: '8px',
+                              background: isSelected ? 'rgba(164, 210, 51, 0.08)' : 'rgba(255, 255, 255, 0.02)',
+                              border: `1px solid ${isSelected ? 'var(--accent-color)' : 'var(--border-color)'}`,
+                              cursor: 'pointer',
+                              transition: 'all 0.2s',
+                              position: 'relative'
+                            }}
+                            onMouseEnter={e => e.currentTarget.style.background = isSelected ? 'rgba(164, 210, 51, 0.12)' : 'rgba(255, 255, 255, 0.05)'}
+                            onMouseLeave={e => e.currentTarget.style.background = isSelected ? 'rgba(164, 210, 51, 0.08)' : 'rgba(255, 255, 255, 0.02)'}
+                          >
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '0.4rem' }}>
+                              <span style={{ fontWeight: 700, color: '#fff', fontSize: '0.9rem' }}>
+                                {session.user_name || 'Visitante Anônimo'}
+                              </span>
+                              <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>{dateStr}</span>
+                            </div>
+                            <div style={{ fontSize: '0.78rem', color: 'var(--text-muted)', display: 'flex', gap: '0.8rem', flexWrap: 'wrap', marginBottom: '0.4rem' }}>
+                              <span>IP: {session.user_ip || 'N/I'}</span>
+                              <span>•</span>
+                              <span>{msgCount} msgs</span>
+                            </div>
+                            {lastMsg && (
+                              <p style={{
+                                fontSize: '0.78rem',
+                                color: 'var(--text-muted)',
+                                margin: 0,
+                                whiteSpace: 'nowrap',
+                                overflow: 'hidden',
+                                textOverflow: 'ellipsis',
+                                fontStyle: 'italic',
+                                paddingRight: '1.5rem'
+                              }}>
+                                {lastMsg.role === 'user' ? 'Cliente: ' : 'IA: '}{lastMsg.content}
+                              </p>
+                            )}
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleDeleteChatSession(session.id);
+                              }}
+                              style={{
+                                position: 'absolute',
+                                right: '0.8rem',
+                                bottom: '0.8rem',
+                                background: 'transparent',
+                                border: 'none',
+                                color: 'rgba(239, 68, 68, 0.6)',
+                                cursor: 'pointer',
+                                transition: 'all 0.2s',
+                                padding: '4px',
+                                borderRadius: '4px',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center'
+                              }}
+                              onMouseEnter={e => e.currentTarget.style.color = '#EF4444'}
+                              onMouseLeave={e => e.currentTarget.style.color = 'rgba(239, 68, 68, 0.6)'}
+                              title="Excluir log"
+                            >
+                              <Trash2 size={14} />
+                            </button>
+                          </div>
+                        );
+                      })
+                  )}
+                </div>
+              </div>
+
+              {/* RIGHT PANE: Conversation Details */}
+              <div className="glass-panel" style={{ display: 'flex', flexDirection: 'column', overflow: 'hidden', padding: 0, borderRadius: 'var(--radius-lg)', height: '100%' }}>
+                {selectedSessionId ? (() => {
+                  const session = chatSessions.find(s => s.id === selectedSessionId);
+                  if (!session) return <div style={{ display: 'flex', flex: 1, alignItems: 'center', justifyContent: 'center', color: 'var(--text-muted)' }}>Selecione uma conversa</div>;
+                  
+                  return (
+                    <>
+                      {/* Chat Detail Header */}
+                      <div style={{ padding: '1.2rem 2rem', borderBottom: '1px solid var(--border-color)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'rgba(255, 255, 255, 0.01)' }}>
+                        <div>
+                          <h3 style={{ color: '#fff', fontSize: '1.1rem', fontWeight: 850, margin: 0 }}>
+                            {session.user_name || 'Visitante Anônimo'}
+                          </h3>
+                          <p style={{ color: 'var(--text-muted)', fontSize: '0.8rem', margin: '0.2rem 0 0 0' }}>
+                            Sessão: <code style={{ color: 'var(--accent-color)' }}>{session.session_id}</code> | IP: {session.user_ip || 'Desconhecido'}
+                          </p>
+                        </div>
+                        <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
+                          <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)', background: 'rgba(255,255,255,0.05)', padding: '0.4rem 0.8rem', borderRadius: '20px' }} className="hide-mobile">
+                            Última atualização: {new Date(session.updated_at).toLocaleString('pt-BR')}
+                          </span>
+                          <button
+                            onClick={() => handleDeleteChatSession(session.id)}
+                            style={{
+                              background: 'rgba(239, 68, 68, 0.1)',
+                              border: '1px solid rgba(239, 68, 68, 0.3)',
+                              color: '#EF4444',
+                              cursor: 'pointer',
+                              padding: '0.5rem 1rem',
+                              borderRadius: '20px',
+                              display: 'flex',
+                              alignItems: 'center',
+                              gap: '0.4rem',
+                              fontSize: '0.8rem',
+                              fontWeight: 700,
+                              transition: 'all 0.2s'
+                             }}
+                             onMouseEnter={e => e.currentTarget.style.background = 'rgba(239, 68, 68, 0.2)'}
+                             onMouseLeave={e => e.currentTarget.style.background = 'rgba(239, 68, 68, 0.1)'}
+                           >
+                            <Trash2 size={14} /> Excluir Conversa
+                          </button>
+                        </div>
+                      </div>
+
+                      {/* Chat Messages Log view in stylized bubbles */}
+                      <div style={{ flex: 1, padding: '2rem', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '1.2rem', background: 'rgba(0,0,0,0.15)' }} className="custom-scrollbar">
+                        {Array.isArray(session.messages) && session.messages.length > 0 ? (
+                          session.messages.map((m, index) => {
+                            const isAssistant = m.role === 'assistant';
+                            return (
+                              <div
+                                key={index}
+                                style={{
+                                  display: 'flex',
+                                  flexDirection: 'column',
+                                  alignItems: isAssistant ? 'flex-start' : 'flex-end',
+                                  maxWidth: '75%',
+                                  alignSelf: isAssistant ? 'flex-start' : 'flex-end'
+                                }}
+                              >
+                                <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)', marginBottom: '0.2rem', padding: '0 0.4rem' }}>
+                                  {isAssistant ? 'iFooty AI Coach' : (session.user_name || 'Cliente')}
+                                </div>
+                                <div
+                                  style={{
+                                    padding: '0.85rem 1.1rem',
+                                    borderRadius: isAssistant ? '16px 16px 16px 4px' : '16px 16px 4px 16px',
+                                    background: isAssistant ? 'rgba(255, 255, 255, 0.03)' : 'rgba(164, 210, 51, 0.08)',
+                                    border: `1px solid ${isAssistant ? 'var(--border-color)' : 'rgba(164, 210, 51, 0.25)'}`,
+                                    color: isAssistant ? 'var(--text-muted)' : '#fff',
+                                    fontSize: '0.85rem',
+                                    lineHeight: '1.5',
+                                    whiteSpace: 'pre-wrap'
+                                  }}
+                                >
+                                  {m.content}
+                                </div>
+                              </div>
+                            );
+                          })
+                        ) : (
+                          <div style={{ padding: '2rem', textAlign: 'center', color: 'var(--text-muted)' }}>Sem mensagens registradas nesta sessão.</div>
+                        )}
+                      </div>
+                    </>
+                  );
+                })() : (
+                  <div style={{ display: 'flex', flex: 1, flexDirection: 'column', alignItems: 'center', justifyContent: 'center', color: 'var(--text-muted)', gap: '1rem' }}>
+                    <MessageSquare size={48} style={{ color: 'var(--border-color)' }} />
+                    <p style={{ fontSize: '0.9rem' }}>Selecione uma conversa da lista para visualizar o histórico de mensagens.</p>
+                  </div>
+                )}
+              </div>
             </div>
           ) : supplierTab === 'PRICING' ? (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem', maxWidth: '800px' }}>

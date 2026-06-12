@@ -2,6 +2,8 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Sparkles, X, Send, Bot, RotateCcw } from 'lucide-react';
 import axios from 'axios';
+import WhatsAppIcon from './WhatsAppIcon';
+import { supabase } from '../services/supabase';
 
 export default function AiChatbot() {
   const navigate = useNavigate();
@@ -13,31 +15,66 @@ export default function AiChatbot() {
   const [showConfirmReset, setShowConfirmReset] = useState(false);
   const messagesEndRef = useRef(null);
 
-  // Initial welcome message template
-  const welcomeMessage = {
-    role: 'assistant',
-    content: `Olá! Sou o **iFooty AI Coach** ⚽, seu assistente virtual de compras. 
-Como posso ajudar você hoje?
+  const [userName, setUserName] = useState(() => sessionStorage.getItem('ifooty_ai_chat_user_name') || '');
+  const [whatsappNumber, setWhatsappNumber] = useState('15146189914'); // Default fallback number
+  const [sessionId, setSessionId] = useState(() => {
+    let id = sessionStorage.getItem('ifooty_ai_chat_session_id');
+    if (!id) {
+      id = 'sess_' + Math.random().toString(36).substr(2, 9) + '_' + Date.now();
+      sessionStorage.setItem('ifooty_ai_chat_session_id', id);
+    }
+    return id;
+  });
+
+  const getInitialMessages = (name) => {
+    if (!name) {
+      return [{
+        role: 'assistant',
+        content: `Olá! Sou o **iFooty AI Coach** ⚽. Como posso te chamar?`
+      }];
+    }
+    return [{
+      role: 'assistant',
+      content: `Olá! Sou o **iFooty AI Coach** ⚽.
+Prazer em te ver novamente, **${name}**! 🤝 Como posso te ajudar hoje?
 
 Posso te ajudar com:
 - 📐 **Calcular seu tamanho ideal** (basta digitar sua altura e peso)
 - 🚚 **Prazos de entrega e frete**
 - 💳 **Formas de pagamento no Canadá e EUA**
 - 👕 **Encontrar os mantos mais irados da loja!**`
+    }];
   };
 
-  // Load message history from sessionStorage
+  // Load message history from sessionStorage and fetch WhatsApp number
   useEffect(() => {
     const savedChat = sessionStorage.getItem('ifooty_ai_chat_messages');
+    const name = sessionStorage.getItem('ifooty_ai_chat_user_name') || '';
     if (savedChat) {
       try {
         setMessages(JSON.parse(savedChat));
       } catch (e) {
-        setMessages([welcomeMessage]);
+        setMessages(getInitialMessages(name));
       }
     } else {
-      setMessages([welcomeMessage]);
+      setMessages(getInitialMessages(name));
     }
+
+    const fetchWhatsapp = async () => {
+      try {
+        const { data } = await supabase
+          .from('store_settings')
+          .select('value')
+          .eq('key', 'whatsapp_number')
+          .single();
+        if (data && data.value) {
+          setWhatsappNumber(data.value.replace(/\D/g, ''));
+        }
+      } catch (err) {
+        console.error('Error fetching whatsapp number:', err);
+      }
+    };
+    fetchWhatsapp();
 
     // Hide tooltip automatically after 8 seconds
     const timer = setTimeout(() => {
@@ -51,6 +88,22 @@ Posso te ajudar com:
   const saveMessages = (updatedMessages) => {
     setMessages(updatedMessages);
     sessionStorage.setItem('ifooty_ai_chat_messages', JSON.stringify(updatedMessages));
+  };
+
+  // Save conversation to Supabase DB
+  const saveSessionToDb = async (updatedMessages, currentName) => {
+    if (!sessionId) return;
+    try {
+      const name = currentName || userName || null;
+      await supabase.from('ai_conversations').upsert({
+        session_id: sessionId,
+        user_name: name,
+        messages: updatedMessages,
+        updated_at: new Date().toISOString()
+      }, { onConflict: 'session_id' });
+    } catch (dbErr) {
+      console.error('❌ Error saving conversation to database from client:', dbErr);
+    }
   };
 
   // Scroll to bottom on new messages
@@ -122,16 +175,66 @@ Posso te ajudar com:
     });
   };
 
+  const handleWhatsappHandoff = () => {
+    const chatHistory = messages
+      .filter(m => m.content && !m.content.includes("Como posso te chamar?"))
+      .slice(-5);
+
+    let intro = `Olá, meu nome é ${userName || 'Visitante'}. Estava conversando com a IA da iFooty e gostaria de falar com o suporte.\n\n`;
+    
+    let historyText = '';
+    if (chatHistory.length > 0) {
+      historyText = `*Histórico da conversa:*\n`;
+      chatHistory.forEach(m => {
+        const sender = m.role === 'user' ? 'Cliente' : 'IA';
+        let cleanContent = m.content
+          .replace(/\*\*(.*?)\*\*/g, '$1')
+          .replace(/\[(.*?)\]\((.*?)\)/g, '$1 ($2)');
+          
+        historyText += `- *${sender}:* ${cleanContent}\n`;
+      });
+    }
+
+    const fullMessage = intro + historyText;
+    const encodedMessage = encodeURIComponent(fullMessage);
+    const whatsappUrl = `https://wa.me/${whatsappNumber}?text=${encodedMessage}`;
+    window.open(whatsappUrl, '_blank');
+  };
+
   const handleSendMessage = async (textToSend) => {
     const text = (textToSend || input).trim();
     if (!text) return;
+
+    if (!textToSend) setInput('');
 
     // Safety limit check
     if (messages.filter(m => m.role === 'user').length >= 20) {
       return;
     }
 
-    if (!textToSend) setInput('');
+    // Onboarding: check if userName is empty and capture it
+    if (!userName) {
+      const name = text;
+      sessionStorage.setItem('ifooty_ai_chat_user_name', name);
+      setUserName(name);
+
+      const userMsg = { role: 'user', content: name };
+      const welcomeMsg = {
+        role: 'assistant',
+        content: `Prazer em te conhecer, **${name}**! 🤝 Como posso te ajudar hoje?
+
+Posso te ajudar com:
+- 📐 **Calcular seu tamanho ideal** (basta digitar sua altura e peso)
+- 🚚 **Prazos de entrega e frete**
+- 💳 **Formas de pagamento no Canadá e EUA**
+- 👕 **Encontrar os mantos mais irados da loja!**`
+      };
+
+      const updated = [...messages, userMsg, welcomeMsg];
+      saveMessages(updated);
+      saveSessionToDb(updated, name);
+      return;
+    }
 
     const newMessages = [...messages, { role: 'user', content: text }];
     saveMessages(newMessages);
@@ -141,11 +244,15 @@ Posso te ajudar com:
     try {
       // Send message history to our backend serverless route
       const response = await axios.post('/api/chat', {
-        messages: newMessages.map(m => ({ role: m.role, content: m.content }))
+        messages: newMessages.map(m => ({ role: m.role, content: m.content })),
+        sessionId,
+        userName
       });
 
       if (response.data && response.data.reply) {
-        saveMessages([...newMessages, { role: 'assistant', content: response.data.reply }]);
+        const updatedMessages = [...newMessages, { role: 'assistant', content: response.data.reply }];
+        saveMessages(updatedMessages);
+        saveSessionToDb(updatedMessages);
       } else {
         throw new Error('Invalid response structure');
       }
@@ -344,10 +451,21 @@ Posso te ajudar com:
                   Cancelar
                 </button>
                 <button
-                  onClick={() => {
-                    const updated = [welcomeMessage];
-                    setMessages(updated);
+                  onClick={async () => {
                     sessionStorage.removeItem('ifooty_ai_chat_messages');
+                    sessionStorage.removeItem('ifooty_ai_chat_user_name');
+                    sessionStorage.removeItem('ifooty_ai_chat_session_id');
+                    
+                    const newId = 'sess_' + Math.random().toString(36).substr(2, 9) + '_' + Date.now();
+                    sessionStorage.setItem('ifooty_ai_chat_session_id', newId);
+                    setSessionId(newId);
+                    setUserName('');
+                    
+                    const initialMsgs = [{
+                      role: 'assistant',
+                      content: `Olá! Sou o **iFooty AI Coach** ⚽. Como posso te chamar?`
+                    }];
+                    setMessages(initialMsgs);
                     setShowConfirmReset(false);
                   }}
                   style={{
@@ -417,6 +535,32 @@ Posso te ajudar com:
               </div>
             </div>
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+              {userName && (
+                <button
+                  onClick={handleWhatsappHandoff}
+                  style={{
+                    color: 'var(--text-muted)',
+                    cursor: 'pointer',
+                    padding: '4px',
+                    borderRadius: '50%',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    transition: 'all 0.2s'
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.background = 'rgba(37, 211, 102, 0.1)';
+                    e.currentTarget.style.color = '#25D366';
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.background = 'transparent';
+                    e.currentTarget.style.color = 'var(--text-muted)';
+                  }}
+                  title="Falar com Suporte"
+                >
+                  <WhatsAppIcon size={15} fill="currentColor" />
+                </button>
+              )}
               <button
                 onClick={handleClearChat}
                 style={{
@@ -522,7 +666,7 @@ Posso te ajudar com:
           </div>
 
           {/* Quick Reply Pills */}
-          {messages.length <= 1 && !isLoading && (
+          {userName && messages.length <= 1 && !isLoading && (
             <div
               style={{
                 display: 'flex',
@@ -577,7 +721,7 @@ Posso te ajudar com:
           >
             <input
               type="text"
-              placeholder={isLimitExceeded ? "Limite atingido. Limpe o chat para recomeçar." : "Digite sua dúvida..."}
+              placeholder={!userName ? "Digite seu nome..." : (isLimitExceeded ? "Limite atingido. Limpe o chat para recomeçar." : "Digite sua dúvida...")}
               value={input}
               onChange={(e) => setInput(e.target.value)}
               onKeyDown={handleKeyPress}
