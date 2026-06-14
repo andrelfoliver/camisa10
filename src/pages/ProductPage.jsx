@@ -879,7 +879,7 @@ const ProductPage = () => {
         <h2 style={{ fontSize: '2.5rem', marginBottom: '1rem' }}>{t('product_social_title')}</h2>
         <p className="text-muted" style={{ textAlign: 'center', marginBottom: '3rem', fontSize: '1.2rem' }}>
           {t('product_social_subtitle_part1')}
-          <strong style={{ color: 'var(--accent-color)' }}>+350 {language === 'pt' ? 'clientes' : 'customers'}</strong>
+          <strong style={{ color: 'var(--accent-color)' }}>+400 {language === 'pt' ? 'clientes' : 'customers'}</strong>
           {t('product_social_subtitle_part2')}
         </p>
 
