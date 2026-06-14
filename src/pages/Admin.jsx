@@ -2791,6 +2791,9 @@ const Admin = () => {
               if (city.toLowerCase().includes('charlottetown')) {
                 return 'Charlottetown';
               }
+              if (city.toLowerCase() === 'mont-royal' || city.toLowerCase() === 'mont royal' || city.toLowerCase() === 'montreal' || city.toLowerCase() === 'montréal') {
+                return 'Montréal';
+              }
               return city;
             };
 
@@ -2806,6 +2809,9 @@ const Admin = () => {
               }
               if (city === 'Charlottetown' && (!province || province.trim() === '' || province.trim() === 'N/A')) {
                 province = 'PE';
+              }
+              if (city === 'Montréal' && (!province || province.trim() === '' || province.trim() === 'N/A')) {
+                province = 'QC';
               }
               const key = `${city}${province ? `, ${province}` : ''}`;
               if (!acc[key]) acc[key] = { count: 0, revenue: 0, deliveryTimes: [], shirts: 0 };
@@ -4257,6 +4263,9 @@ const Admin = () => {
               if (city.toLowerCase().includes('charlottetown')) {
                 return 'Charlottetown';
               }
+              if (city.toLowerCase() === 'mont-royal' || city.toLowerCase() === 'mont royal' || city.toLowerCase() === 'montreal' || city.toLowerCase() === 'montréal') {
+                return 'Montréal';
+              }
               return city;
             };
 
@@ -4271,6 +4280,9 @@ const Admin = () => {
               }
               if (city === 'Charlottetown' && (!province || province.trim() === '' || province.trim() === 'N/A')) {
                 province = 'PE';
+              }
+              if (city === 'Montréal' && (!province || province.trim() === '' || province.trim() === 'N/A')) {
+                province = 'QC';
               }
               const key = `${city}${province ? `, ${province}` : ''}`;
               if (!acc[key]) acc[key] = { count: 0, revenue: 0 };

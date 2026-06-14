@@ -311,13 +311,17 @@ const Home = () => {
           let province = o.shipping_address?.province || '';
           
           if (city && typeof city === 'string' && city.trim() !== '') {
-            // Normalizar Winnipeg e Charlottetown
+            // Normalizar Winnipeg, Charlottetown e Montréal
+            const cleanLower = city.trim().toLowerCase();
             if (city.toUpperCase() === 'N') {
               city = 'Winnipeg';
               province = 'MB';
-            } else if (city.toLowerCase().includes('charlottetown')) {
+            } else if (cleanLower.includes('charlottetown')) {
               city = 'Charlottetown';
               province = 'PE';
+            } else if (cleanLower === 'mont-royal' || cleanLower === 'mont royal' || cleanLower === 'montreal' || cleanLower === 'montréal') {
+              city = 'Montréal';
+              province = 'QC';
             }
 
             // Pega apenas a primeira parte antes de qualquer vírgula, barra ou parênteses (sem cortar o hífen!)
