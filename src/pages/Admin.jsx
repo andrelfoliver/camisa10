@@ -3089,7 +3089,7 @@ const Admin = () => {
                                   border: isServed ? '1px solid rgba(34, 197, 94, 0.3)' : '1px solid rgba(255,255,255,0.05)',
                                   transition: 'all 0.3s ease'
                                 }}
-                                title={isServed ? `Província atendida: ${p}` : `Ainda não atendida: ${p}`}
+                                title={isServed ? `Província atendida: ${canadaProvincesMap[p] || p}` : `Ainda não atendida: ${canadaProvincesMap[p] || p}`}
                               >
                                 {p}
                               </span>
