@@ -2891,13 +2891,21 @@ const Admin = () => {
                 province = 'QC';
               }
               const key = `${city}${province ? `, ${province}` : ''}`;
-              if (!acc[key]) acc[key] = { count: 0, revenue: 0, deliveryTimes: [], shirts: 0 };
+              if (!acc[key]) acc[key] = { count: 0, revenue: 0, deliveryTimes: [], shirts: 0, customerEmails: new Set() };
               acc[key].count++;
               acc[key].revenue += Number(order.total_price || 0);
               const itemCount = Array.isArray(order.items) 
                 ? order.items.reduce((sum, item) => sum + (Number(item.quantity) || 1), 0)
                 : 1;
               acc[key].shirts += itemCount;
+              
+              if (order.customer_email) {
+                acc[key].customerEmails.add(order.customer_email.trim().toLowerCase());
+              } else if (order.customer_name) {
+                acc[key].customerEmails.add(order.customer_name.trim().toLowerCase());
+              } else {
+                acc[key].customerEmails.add(order.id);
+              }
 
               if (order.tracking_number) {
                 const codes = order.tracking_number.split(/[,;\s]+/).map(t => t.trim()).filter(Boolean);
@@ -2988,23 +2996,32 @@ const Admin = () => {
               const cityInfo = { cityName, provinceAbbr, key, ...data };
               if (canadaProvincesMap[provinceAbbr]) {
                 if (!grouped.canada[provinceAbbr]) {
-                  grouped.canada[provinceAbbr] = { name: canadaProvincesMap[provinceAbbr], cities: [], totalShirts: 0 };
+                  grouped.canada[provinceAbbr] = { name: canadaProvincesMap[provinceAbbr], cities: [], totalShirts: 0, customerEmails: new Set() };
                 }
                 grouped.canada[provinceAbbr].cities.push(cityInfo);
                 grouped.canada[provinceAbbr].totalShirts += data.shirts;
+                if (data.customerEmails) {
+                  data.customerEmails.forEach(email => grouped.canada[provinceAbbr].customerEmails.add(email));
+                }
               } else if (usStatesMap[provinceAbbr] || provinceAbbr === 'US') {
                 const stateName = usStatesMap[provinceAbbr] || 'United States';
                 if (!grouped.usa[provinceAbbr]) {
-                  grouped.usa[provinceAbbr] = { name: stateName, cities: [], totalShirts: 0 };
+                  grouped.usa[provinceAbbr] = { name: stateName, cities: [], totalShirts: 0, customerEmails: new Set() };
                 }
                 grouped.usa[provinceAbbr].cities.push(cityInfo);
                 grouped.usa[provinceAbbr].totalShirts += data.shirts;
+                if (data.customerEmails) {
+                  data.customerEmails.forEach(email => grouped.usa[provinceAbbr].customerEmails.add(email));
+                }
               } else {
                 if (!grouped.other[provinceAbbr]) {
-                  grouped.other[provinceAbbr] = { name: provinceAbbr === 'N/A' ? 'Outros / Sem Província' : provinceAbbr, cities: [], totalShirts: 0 };
+                  grouped.other[provinceAbbr] = { name: provinceAbbr === 'N/A' ? 'Outros / Sem Província' : provinceAbbr, cities: [], totalShirts: 0, customerEmails: new Set() };
                 }
                 grouped.other[provinceAbbr].cities.push(cityInfo);
                 grouped.other[provinceAbbr].totalShirts += data.shirts;
+                if (data.customerEmails) {
+                  data.customerEmails.forEach(email => grouped.other[provinceAbbr].customerEmails.add(email));
+                }
               }
             });
 
@@ -3120,7 +3137,7 @@ const Admin = () => {
                                   <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
                                     <span style={{ fontSize: '1.05rem', color: '#fff' }}>{data.name} ({provCode})</span>
                                     <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)', fontWeight: 'normal' }}>
-                                      • {data.cities.length} {data.cities.length === 1 ? 'cidade' : 'cidades'} ({data.totalShirts} {data.totalShirts === 1 ? 'camisa' : 'camisas'})
+                                      • {data.cities.length} {data.cities.length === 1 ? 'cidade' : 'cidades'} • {data.customerEmails.size} {data.customerEmails.size === 1 ? 'cliente' : 'clientes'} ({data.totalShirts} {data.totalShirts === 1 ? 'camisa' : 'camisas'})
                                     </span>
                                   </div>
                                   <span style={{ color: 'var(--accent-color)', transition: 'transform 0.2s', transform: isExpanded ? 'rotate(180deg)' : 'rotate(0deg)', display: 'inline-block' }}>▼</span>
@@ -3142,7 +3159,7 @@ const Admin = () => {
                                         <div key={cityInfo.key} className="glass-panel" style={{ padding: '1rem', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.03)' }}>
                                           <h4 style={{ margin: 0, color: '#fff', fontSize: '0.95rem' }}>{cityInfo.cityName}</h4>
                                           <p style={{ margin: '0.2rem 0 0 0', fontSize: '0.78rem', color: 'var(--text-muted)' }}>
-                                            {cityInfo.shirts} {cityInfo.shirts === 1 ? 'camisa' : 'camisas'}
+                                            {cityInfo.customerEmails.size} {cityInfo.customerEmails.size === 1 ? 'cliente' : 'clientes'} • {cityInfo.shirts} {cityInfo.shirts === 1 ? 'camisa' : 'camisas'}
                                           </p>
                                           {avgDeliveryTime !== null ? (
                                             <p style={{ margin: '0.2rem 0 0 0', fontSize: '0.78rem', color: '#10B981', display: 'flex', alignItems: 'center', gap: '0.3rem' }}>
@@ -3194,7 +3211,7 @@ const Admin = () => {
                                   <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
                                     <span style={{ fontSize: '1.05rem', color: '#fff' }}>{data.name} ({provCode})</span>
                                     <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)', fontWeight: 'normal' }}>
-                                      • {data.cities.length} {data.cities.length === 1 ? 'cidade' : 'cidades'} ({data.totalShirts} {data.totalShirts === 1 ? 'camisa' : 'camisas'})
+                                      • {data.cities.length} {data.cities.length === 1 ? 'cidade' : 'cidades'} • {data.customerEmails.size} {data.customerEmails.size === 1 ? 'cliente' : 'clientes'} ({data.totalShirts} {data.totalShirts === 1 ? 'camisa' : 'camisas'})
                                     </span>
                                   </div>
                                   <span style={{ color: '#3B82F6', transition: 'transform 0.2s', transform: isExpanded ? 'rotate(180deg)' : 'rotate(0deg)', display: 'inline-block' }}>▼</span>
@@ -3216,7 +3233,7 @@ const Admin = () => {
                                         <div key={cityInfo.key} className="glass-panel" style={{ padding: '1rem', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.03)' }}>
                                           <h4 style={{ margin: 0, color: '#fff', fontSize: '0.95rem' }}>{cityInfo.cityName}</h4>
                                           <p style={{ margin: '0.2rem 0 0 0', fontSize: '0.78rem', color: 'var(--text-muted)' }}>
-                                            {cityInfo.shirts} {cityInfo.shirts === 1 ? 'camisa' : 'camisas'}
+                                            {cityInfo.customerEmails.size} {cityInfo.customerEmails.size === 1 ? 'cliente' : 'clientes'} • {cityInfo.shirts} {cityInfo.shirts === 1 ? 'camisa' : 'camisas'}
                                           </p>
                                           {avgDeliveryTime !== null ? (
                                             <p style={{ margin: '0.2rem 0 0 0', fontSize: '0.78rem', color: '#10B981', display: 'flex', alignItems: 'center', gap: '0.3rem' }}>
@@ -3268,7 +3285,7 @@ const Admin = () => {
                                   <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
                                     <span style={{ fontSize: '1.05rem', color: '#fff' }}>{data.name}</span>
                                     <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)', fontWeight: 'normal' }}>
-                                      • {data.cities.length} {data.cities.length === 1 ? 'cidade' : 'cidades'} ({data.totalShirts} {data.totalShirts === 1 ? 'camisa' : 'camisas'})
+                                      • {data.cities.length} {data.cities.length === 1 ? 'cidade' : 'cidades'} • {data.customerEmails.size} {data.customerEmails.size === 1 ? 'cliente' : 'clientes'} ({data.totalShirts} {data.totalShirts === 1 ? 'camisa' : 'camisas'})
                                     </span>
                                   </div>
                                   <span style={{ color: '#8B5CF6', transition: 'transform 0.2s', transform: isExpanded ? 'rotate(180deg)' : 'rotate(0deg)', display: 'inline-block' }}>▼</span>
@@ -3290,7 +3307,7 @@ const Admin = () => {
                                         <div key={cityInfo.key} className="glass-panel" style={{ padding: '1rem', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.03)' }}>
                                           <h4 style={{ margin: 0, color: '#fff', fontSize: '0.95rem' }}>{cityInfo.cityName}</h4>
                                           <p style={{ margin: '0.2rem 0 0 0', fontSize: '0.78rem', color: 'var(--text-muted)' }}>
-                                            {cityInfo.shirts} {cityInfo.shirts === 1 ? 'camisa' : 'camisas'}
+                                            {cityInfo.customerEmails.size} {cityInfo.customerEmails.size === 1 ? 'cliente' : 'clientes'} • {cityInfo.shirts} {cityInfo.shirts === 1 ? 'camisa' : 'camisas'}
                                           </p>
                                           {avgDeliveryTime !== null ? (
                                             <p style={{ margin: '0.2rem 0 0 0', fontSize: '0.78rem', color: '#10B981', display: 'flex', alignItems: 'center', gap: '0.3rem' }}>
