@@ -3874,19 +3874,26 @@ const Admin = () => {
                           return acc;
                         }, {})).map(([agent, stats]) => {
                           // LÓGICA DE NÍVEIS
-                          let rate = 0.08;
-                          let level = "🥉 Bronze";
-                          if (stats.count >= 51) { rate = 0.15; level = "💎 Diamante"; }
-                          else if (stats.count >= 26) { rate = 0.12; level = "🥇 Ouro"; }
-                          else if (stats.count >= 11) { rate = 0.10; level = "🥈 Prata"; }
+                          const isSemIndicacao = agent === 'Sem Indicação';
+                          
+                          let rate = isSemIndicacao ? 0 : 0.08;
+                          let level = isSemIndicacao ? "N/A" : "🥉 Bronze";
+                          if (!isSemIndicacao) {
+                            if (stats.count >= 51) { rate = 0.15; level = "💎 Diamante"; }
+                            else if (stats.count >= 26) { rate = 0.12; level = "🥇 Ouro"; }
+                            else if (stats.count >= 11) { rate = 0.10; level = "🥈 Prata"; }
+                          }
 
                           let perfBonus = 0;
-                          if (stats.count >= 1) perfBonus += 5;
-                          if (stats.count >= 5) perfBonus += 10;
-                          if (stats.count >= 10) perfBonus += 15;
+                          if (!isSemIndicacao) {
+                            if (stats.count >= 1) perfBonus += 5;
+                            if (stats.count >= 5) perfBonus += 10;
+                            if (stats.count >= 10) perfBonus += 15;
+                          }
 
+                          const seasonalBonus = isSemIndicacao ? 0 : stats.seasonalBonus;
                           const commissionBase = stats.total * rate;
-                          const totalPayout = commissionBase + perfBonus + stats.seasonalBonus;
+                          const totalPayout = commissionBase + perfBonus + seasonalBonus;
                           const isExpanded = expandedAgentId === agent;
 
                           return (
@@ -3901,8 +3908,8 @@ const Admin = () => {
                                 <td style={{ padding: '1rem', fontSize: '0.8rem' }}>{level}</td>
                                 <td style={{ padding: '1rem' }}>${commissionBase.toFixed(2)} CAD <span style={{fontSize: '0.7rem', color: 'var(--text-muted)' }}>({(rate * 100)}%)</span></td>
                                 <td style={{ padding: '1rem' }}>
-                                  ${(perfBonus + stats.seasonalBonus).toFixed(2)}
-                                  {(stats.seasonalBonus > 0) && <div style={{ fontSize: '0.65rem', color: 'var(--accent-color)' }}>incl. Bônus Copa</div>}
+                                  ${(perfBonus + seasonalBonus).toFixed(2)}
+                                  {(seasonalBonus > 0) && <div style={{ fontSize: '0.65rem', color: 'var(--accent-color)' }}>incl. Bônus Copa</div>}
                                 </td>
                                 <td style={{ padding: '1rem', color: 'var(--accent-color)', fontWeight: 800 }}>
                                   ${totalPayout.toFixed(2)} CAD
@@ -4662,6 +4669,7 @@ const Admin = () => {
 
                 const orderCostCAD = calculateOrderCost(order);
                 acc.totalCostCAD += orderCostCAD;
+                acc.totalCommissionCAD += calculateOrderCommission(order);
 
                 // Cálculo USD
                 const itemsCostUSD = order.items?.reduce((sum, item) => {
@@ -4686,6 +4694,7 @@ const Admin = () => {
               return acc;
             }, { 
               totalRevenue: 0, totalCostCAD: 0, totalCostUSD: 0, totalJerseys: 0,
+              totalCommissionCAD: 0,
               countShipped: 0, countCompleted: 0, countCancelled: 0, countPending: 0, countPaid: 0, countProcessing: 0
             });
 
@@ -4821,11 +4830,19 @@ const Admin = () => {
                       {showValues ? `$${stats.totalCostUSD.toFixed(2)}` : '****'}
                     </h3>
                   </div>
-                  <div className="glass-panel" style={{ padding: '0.8rem', borderRadius: '12px', borderLeft: '4px solid #64748b' }}>
-                    <p style={{ fontSize: '0.6rem', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: 800 }}>Custo 🇨🇦 (CAD)</p>
-                    <h3 style={{ fontSize: '1.1rem', color: '#fff', margin: 0 }}>
+                  <div 
+                    className="glass-panel" 
+                    style={{ padding: '0.8rem', borderRadius: '12px', borderLeft: '4px solid #64748b' }}
+                  >
+                    <p style={{ fontSize: '0.6rem', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: 800, margin: 0 }}>Custo 🇨🇦 (CAD)</p>
+                    <h3 style={{ fontSize: '1.15rem', color: '#fff', margin: '0.2rem 0 0 0', lineHeight: 1.1 }}>
                       {showValues ? `$${stats.totalCostCAD.toFixed(2)}` : '****'}
                     </h3>
+                    {showValues && (
+                      <span style={{ fontSize: '0.65rem', color: '#F59E0B', display: 'block', marginTop: '0.25rem', fontWeight: 600 }}>
+                        Comissão: +${stats.totalCommissionCAD.toFixed(2)}
+                      </span>
+                    )}
                   </div>
                 </div>
 
