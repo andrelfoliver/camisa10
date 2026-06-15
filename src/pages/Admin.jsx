@@ -11,6 +11,10 @@ import CanadaMap, { normalizeProvince } from '../components/CanadaMap';
 import { Link, Navigate } from 'react-router-dom';
 
 const Admin = () => {
+  const getCalgaryDateStr = (d = new Date()) => {
+    return new Date(d).toLocaleDateString('en-CA', { timeZone: 'America/Edmonton' });
+  };
+
   const { user, isAdmin, loading: authLoading, signOut } = useAuth();
   const [bestSellerId, setBestSellerId] = useState(null);
   const [queridinhasIds, setQueridinhasIds] = useState([]);
@@ -28,7 +32,7 @@ const Admin = () => {
     country: 'Canada',
     email: '',
     invoiceNo: '',
-    date: new Date().toISOString().split('T')[0],
+    date: getCalgaryDateStr(),
     discount: ''
   });
   const [manualInvoiceItems, setManualInvoiceItems] = useState([
@@ -199,7 +203,7 @@ const Admin = () => {
   const [isUploadingHero, setIsUploadingHero] = useState(false);
   const [whatsAppNumber, setWhatsAppNumber] = useState('17788061419');
   const [showAddTestimonial, setShowAddTestimonial] = useState(false);
-  const [newTestimonial, setNewTestimonial] = useState({ name: '', content: '', rating: 5, location: '', date: new Date().toISOString().split('T')[0], status: 'approved', avatar_url: '' });
+  const [newTestimonial, setNewTestimonial] = useState({ name: '', content: '', rating: 5, location: '', date: getCalgaryDateStr(), status: 'approved', avatar_url: '' });
 
   const defaultPricing = {
     nameNumber: 12,
@@ -271,9 +275,13 @@ const Admin = () => {
   };
 
   // Filtros do Relatório de Produtividade
-  const [prodDateRange, setProdDateRange] = useState({
-    start: new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString().split('T')[0],
-    end: new Date().toISOString().split('T')[0]
+  const [prodDateRange, setProdDateRange] = useState(() => {
+    const cNow = new Date(new Date().toLocaleString('en-US', { timeZone: 'America/Edmonton' }));
+    const cStart = new Date(cNow.getFullYear(), cNow.getMonth(), 1);
+    return {
+      start: new Date(cStart).toLocaleDateString('en-CA', { timeZone: 'America/Edmonton' }),
+      end: cNow.toLocaleDateString('en-CA', { timeZone: 'America/Edmonton' })
+    };
   });
   const [prodAgentFilter, setProdAgentFilter] = useState('');
 
@@ -1234,7 +1242,7 @@ const Admin = () => {
       country: order.shipping_address?.country || 'Canada',
       email: order.customer_email || '',
       invoiceNo: String(order.id).substring(0, 8).toUpperCase(),
-      date: new Date(order.created_at).toISOString().split('T')[0],
+      date: getCalgaryDateStr(order.created_at),
       total: Number(order.total_price || 0)
     };
     handlePrintInvoice('INVOICE', clientInfo, order.items);
@@ -1248,7 +1256,7 @@ const Admin = () => {
       country: 'Canada',
       email: customer.email || '',
       invoiceNo: `CART-${String(customer.id).substring(0, 5).toUpperCase()}`,
-      date: new Date().toISOString().split('T')[0]
+      date: getCalgaryDateStr()
     };
     handlePrintInvoice('INVOICE', clientInfo, customer.cart);
   };
@@ -1492,7 +1500,7 @@ const Admin = () => {
     const base = getValidRevenue(order) * rate;
 
     // Bônus Sazonal
-    const orderDateStr = order.created_at?.split('T')[0] || '';
+    const orderDateStr = order.created_at ? getCalgaryDateStr(order.created_at) : '';
     const isCopaPeriod = orderDateStr >= '2026-06-11' && orderDateStr <= '2026-07-19';
     const seasonal = isCopaPeriod ? getValidRevenue(order) * 0.05 : 0;
 
@@ -3341,10 +3349,10 @@ const Admin = () => {
               const date = new Date(dateStr);
               if (isNaN(date.getTime())) return acc;
               
-              const month = date.getMonth(); // 0-11
-              const year = date.getFullYear();
-              const key = `${month + 1}-${year}`; // "5-2026"
-              const monthLabel = date.toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' }); // "maio de 2026"
+              const calgaryDateStr = date.toLocaleDateString('en-CA', { timeZone: 'America/Edmonton' }); // "YYYY-MM-DD"
+              const [cYear, cMonth] = calgaryDateStr.split('-').map(Number);
+              const key = `${cMonth}-${cYear}`; // "5-2026"
+              const monthLabel = date.toLocaleDateString('pt-BR', { month: 'long', year: 'numeric', timeZone: 'America/Edmonton' }); // "maio de 2026"
               const capitalizedLabel = monthLabel.charAt(0).toUpperCase() + monthLabel.slice(1);
               
               if (!acc[key]) {
@@ -3359,7 +3367,7 @@ const Admin = () => {
                   paypalVolume: 0,
                   transferVolume: 0,
                   partnerVolume: 0,
-                  year
+                  year: cYear
                 };
               }
               
@@ -3824,7 +3832,7 @@ const Admin = () => {
                     <tbody>
                       {Object.entries(orders
                         .filter(order => {
-                          const orderDate = order.created_at.split('T')[0];
+                          const orderDate = getCalgaryDateStr(order.created_at);
                           const inDateRange = (!prodDateRange.start || orderDate >= prodDateRange.start) &&
                             (!prodDateRange.end || orderDate <= prodDateRange.end);
                           return inDateRange;
@@ -3851,7 +3859,7 @@ const Admin = () => {
 
                           if (prodAgentFilter && refKey !== prodAgentFilter) return acc;
 
-                          const orderDateStr = order.created_at.split('T')[0];
+                          const orderDateStr = getCalgaryDateStr(order.created_at);
                           const isCopaPeriod = orderDateStr >= '2026-06-11' && orderDateStr <= '2026-07-19';
 
                           if (!acc[refKey]) acc[refKey] = { count: 0, total: 0, seasonalBonus: 0, orderList: [] };
@@ -4580,7 +4588,7 @@ const Admin = () => {
           ) : supplierTab === 'PEDIDOS' ? (() => {
             // 1. Primeiro filtramos apenas por data e cliente para ter os dados dos cards (Stats)
             const ordersForStats = orders.filter(o => {
-              const orderDate = new Date(o.created_at).toISOString().split('T')[0];
+              const orderDate = getCalgaryDateStr(o.created_at);
               const matchesDate = (!dateRange.start || orderDate >= dateRange.start) &&
                 (!dateRange.end || orderDate <= dateRange.end);
               const matchesCustomer = !orderFilter || o.user_id === orderFilter;
@@ -4711,21 +4719,21 @@ const Admin = () => {
                     
                     <button onClick={() => {
                       const d = new Date(); d.setDate(d.getDate() - 7);
-                      setDateRange({ start: d.toISOString().split('T')[0], end: new Date().toISOString().split('T')[0] });
+                      setDateRange({ start: getCalgaryDateStr(d), end: getCalgaryDateStr() });
                     }} style={{ padding: '0.4rem 1rem', background: 'rgba(255,255,255,0.1)', color: '#fff', border: 'none', borderRadius: '20px', cursor: 'pointer', fontSize: '0.8rem', fontWeight: 600, whiteSpace: 'nowrap' }}>Últimos 7 Dias</button>
 
                     <button onClick={() => {
-                      const now = new Date();
-                      const start = new Date(now.getFullYear(), now.getMonth(), 1).toISOString().split('T')[0];
-                      const end = new Date(now.getFullYear(), now.getMonth() + 1, 0).toISOString().split('T')[0];
-                      setDateRange({ start, end });
+                      const cNow = new Date(new Date().toLocaleString('en-US', { timeZone: 'America/Edmonton' }));
+                      const start = new Date(cNow.getFullYear(), cNow.getMonth(), 1);
+                      const end = new Date(cNow.getFullYear(), cNow.getMonth() + 1, 0);
+                      setDateRange({ start: getCalgaryDateStr(start), end: getCalgaryDateStr(end) });
                     }} style={{ padding: '0.4rem 1rem', background: 'rgba(255,255,255,0.1)', color: '#fff', border: 'none', borderRadius: '20px', cursor: 'pointer', fontSize: '0.8rem', fontWeight: 600, whiteSpace: 'nowrap' }}>Este Mês</button>
 
                     <button onClick={() => {
-                      const now = new Date();
-                      const start = new Date(now.getFullYear(), now.getMonth() - 1, 1).toISOString().split('T')[0];
-                      const end = new Date(now.getFullYear(), now.getMonth(), 0).toISOString().split('T')[0];
-                      setDateRange({ start, end });
+                      const cNow = new Date(new Date().toLocaleString('en-US', { timeZone: 'America/Edmonton' }));
+                      const start = new Date(cNow.getFullYear(), cNow.getMonth() - 1, 1);
+                      const end = new Date(cNow.getFullYear(), cNow.getMonth(), 0);
+                      setDateRange({ start: getCalgaryDateStr(start), end: getCalgaryDateStr(end) });
                     }} style={{ padding: '0.4rem 1rem', background: 'rgba(255,255,255,0.1)', color: '#fff', border: 'none', borderRadius: '20px', cursor: 'pointer', fontSize: '0.8rem', fontWeight: 600, whiteSpace: 'nowrap' }}>Mês Passado</button>
                   </div>
 
