@@ -3428,7 +3428,8 @@ const Admin = () => {
             const currentMonthData = monthlyStats[currentMonthKey] || { shirtCount: 0, label: fallbackLabel };
             const currentMonthShirts = currentMonthData.shirtCount;
             const targetGoal = 90;
-            const goalPercent = Math.min(100, (currentMonthShirts / targetGoal) * 100);
+            const realPercent = (currentMonthShirts / targetGoal) * 100;
+            const goalPercent = Math.min(100, realPercent);
 
             return (
               <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem', maxWidth: '1000px' }}>
@@ -3481,9 +3482,9 @@ const Admin = () => {
                         <div style={{ width: `${goalPercent}%`, height: '100%', background: 'linear-gradient(90deg, #f59e0b, #ffb81c)', borderRadius: '3px', transition: 'width 0.5s ease' }}></div>
                       </div>
                       <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.65rem', color: 'var(--text-muted)' }}>
-                        <span>Progresso: {goalPercent.toFixed(0)}%</span>
-                        {goalPercent >= 100 ? (
-                          <span style={{ color: '#22c55e', fontWeight: 700 }}>Concluída! 🎉</span>
+                        <span>Progresso: {realPercent.toFixed(0)}%</span>
+                        {currentMonthShirts >= targetGoal ? (
+                          <span style={{ color: '#22c55e', fontWeight: 700 }}>Passou {currentMonthShirts - targetGoal} camisas! 🎉</span>
                         ) : (
                           <span>Faltam {targetGoal - currentMonthShirts}</span>
                         )}
