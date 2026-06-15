@@ -52,7 +52,7 @@ const Checkout = () => {
     : (subtotal - discount + (currentShipping || 0));
 
   const finalTotal = paymentMethod === 'paypal'
-    ? Number(((baseFinalTotal + 0.30) / 0.971).toFixed(2))
+    ? Number(((baseFinalTotal + 0.30) / 0.951).toFixed(2))
     : baseFinalTotal;
   const paypalFee = paymentMethod === 'paypal'
     ? Number((finalTotal - baseFinalTotal).toFixed(2))
@@ -67,7 +67,7 @@ const Checkout = () => {
   const displayShipping = convertPrice(currentShipping);
   const displayBaseFinalTotal = displaySubtotal - displayDiscount - displayCouponDiscount + displayShipping;
   const displayFinalTotal = paymentMethod === 'paypal'
-    ? Number(((displayBaseFinalTotal + 0.30) / 0.971).toFixed(2))
+    ? Number(((displayBaseFinalTotal + 0.30) / 0.951).toFixed(2))
     : displayBaseFinalTotal;
   const displayPaypalFee = paymentMethod === 'paypal'
     ? Number((displayFinalTotal - displayBaseFinalTotal).toFixed(2))
@@ -856,7 +856,7 @@ const Checkout = () => {
 
               {paymentMethod === 'paypal' && (
                 <div style={{ display: 'flex', justifyContent: 'space-between', color: '#EAB308', fontWeight: 600, marginTop: '0.4rem' }}>
-                  <span>Taxa PayPal (2.9% + $0.30)</span>
+                  <span>Taxa PayPal (4.9% + $0.30)</span>
                   <span>+ ${displayPaypalFee.toFixed(2)}</span>
                 </div>
               )}
