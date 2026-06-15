@@ -736,11 +736,16 @@ const Checkout = () => {
               )}
 
               {formData.deliveryMethod === 'pickup' && (
-                <div style={{ background: 'rgba(204, 255, 0, 0.05)', padding: '1.5rem', borderRadius: '8px', border: '1px solid rgba(204, 255, 0, 0.2)' }}>
-                  <p style={{ display: 'flex', gap: '0.8rem', color: 'var(--accent-color)', fontSize: '0.9rem', lineHeight: 1.5 }}>
-                    <AlertCircle size={18} style={{ flexShrink: 0 }} />
-                    {t('checkout_pickup_alert')}
-                  </p>
+                <div style={{ background: 'rgba(245, 158, 11, 0.08)', padding: '1.5rem', borderRadius: '8px', border: '1px solid rgba(245, 158, 11, 0.3)' }}>
+                  <div style={{ display: 'flex', gap: '0.8rem', color: '#F59E0B', fontSize: '0.9rem', lineHeight: 1.5, flexDirection: 'column' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', fontWeight: 'bold' }}>
+                      <AlertCircle size={20} style={{ flexShrink: 0 }} />
+                      <span>{t('checkout_pickup_alert_title')}</span>
+                    </div>
+                    <p style={{ margin: 0, color: 'var(--text-main)', fontSize: '0.875rem' }}>
+                      {t('checkout_pickup_alert_text')}
+                    </p>
+                  </div>
                 </div>
               )}
 
