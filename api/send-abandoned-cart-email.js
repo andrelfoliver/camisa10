@@ -40,27 +40,7 @@ export default async function handler(req, res) {
     ? 'O tempo está acabando!'
     : 'Esqueceu algo na sacola?';
 
-  const emailBody = isSecondEmail 
-    ? `
-        <p style="color: #4a5568; line-height: 1.6; font-size: 1.05rem; margin-top: 0;">Olá, <strong>${firstName}</strong>!</p>
-        <p style="color: #4a5568; line-height: 1.6; font-size: 1.05rem;">Passando para avisar que a reserva dos itens no seu carrinho está prestes a expirar. Como a procura por nossos mantos premium e retrôs é altíssima e o estoque no Canadá é limitado, não conseguiremos segurar a reserva dos seus itens por muito mais tempo.</p>
-        <p style="color: #4a5568; line-height: 1.6; font-size: 1.05rem;">Para te dar uma ajuda extra, liberamos um benefício exclusivo nas próximas horas:</p>
-        
-        <div style="background: #f7fafc; border: 1px dashed #CCFF00; border-radius: 8px; padding: 20px; text-align: center; margin: 25px 0;">
-          <p style="margin: 0 0 10px 0; color: #4a5568; font-weight: bold;">CUPOM DE 5% DE DESCONTO EXTRA:</p>
-          <span style="display: inline-block; font-size: 1.8rem; font-weight: 900; color: #000000; background: #CCFF00; padding: 8px 25px; border-radius: 4px; letter-spacing: 1px;">IFOOTY5</span>
-          <p style="margin: 10px 0 0 0; color: #718096; font-size: 0.9rem;">+ FRETE GRÁTIS PARA CANADÁ E EUA! 🇨🇦🇺🇸</p>
-        </div>
-
-        <div style="margin: 25px 0; border: 1px solid #edf2f7; border-radius: 8px; overflow: hidden;">
-          ${cartItemsHtml}
-        </div>
-
-        <div style="text-align: center; margin: 35px 0 25px 0;">
-          <a href="https://ifooty.ca" style="background-color: #CCFF00; color: #000000; padding: 14px 35px; border-radius: 6px; font-weight: 900; text-decoration: none; display: inline-block; font-size: 1.05rem; text-transform: uppercase; letter-spacing: 0.5px; box-shadow: 0 4px 15px rgba(204, 255, 0, 0.3);">Concluir Compra com 5% OFF</a>
-        </div>
-      `
-    : `
+  const emailBody = `
         <p style="color: #4a5568; line-height: 1.6; font-size: 1.05rem; margin-top: 0;">Olá, <strong>${firstName}</strong>!</p>
         <p style="color: #4a5568; line-height: 1.6; font-size: 1.05rem;">Notamos que você visitou a iFooty e deixou alguns itens selecionados no seu carrinho de compras.</p>
         <p style="color: #4a5568; line-height: 1.6; font-size: 1.05rem;">Como o estoque de nossos mantos premium é limitado e a demanda é alta, salvamos os seus itens abaixo para que você não os perca:</p>
@@ -76,7 +56,33 @@ export default async function handler(req, res) {
         </div>
       `;
 
-  const htmlTemplate = `
+  const htmlTemplate = isSecondEmail
+    ? `
+        <div style="font-family: Arial, sans-serif; font-size: 15px; color: #333333; line-height: 1.6; max-width: 600px; margin: 0 auto; padding: 10px;">
+          <p>Olá, ${firstName}. Tudo bem?</p>
+          
+          <p>Aqui é o Oliver da iFooty.</p>
+          
+          <p>Notei aqui no sistema que você deixou alguns itens selecionados no seu carrinho de compras e acabei passando para ver se você ficou com alguma dúvida sobre o tamanho das camisas, estoque ou sobre a entrega.</p>
+          
+          <p>Como o nosso estoque de mantos aqui no Canadá é super limitado e a procura é alta, eu não consigo segurar a reserva dos seus itens por muito mais tempo. Mas para te dar um empurrãozinho final e te ajudar a garantir os seus mantos, consegui liberar uma condição especial para você:</p>
+          
+          <p>Use o cupom <strong>IFOOTY5</strong> no checkout para ganhar <strong>5% de Desconto Extra</strong> + <strong>Frete Grátis</strong> para todo o Canadá e EUA! 🇨🇦🇺🇸</p>
+          
+          <p>Você pode ver os itens da sua sacola e concluir a compra clicando no link abaixo:<br/>
+          <a href="https://ifooty.ca" style="color: #0066cc; text-decoration: underline; font-weight: bold;">https://ifooty.ca</a></p>
+          
+          <p>Se preferir fazer o pedido diretamente por aqui via Interac e-Transfer ou se tiver qualquer dúvida sobre as camisas, basta responder a este e-mail que eu te ajudo na hora.</p>
+          
+          <p style="margin-top: 25px; border-top: 1px solid #edf2f7; padding-top: 20px; color: #718096; font-size: 0.9rem;">
+            Qualquer dúvida sobre as formas de pagamento (aceitamos Interac e-Transfer e PayPal), basta me chamar.
+          </p>
+          
+          <p style="margin-top: 20px;">Abraços,<br/>
+          <strong>Oliver | Suporte iFooty</strong></p>
+        </div>
+      `
+    : `
     <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; max-width: 600px; margin: 0 auto; background: #ffffff; border: 1px solid #edf2f7; border-radius: 8px; overflow: hidden;">
       <div style="padding: 35px 30px; background: #000000; text-align: center;">
         <h1 style="margin: 0; font-style: italic; font-weight: 900; letter-spacing: -1px; font-family: sans-serif; font-size: 2.5rem;">
