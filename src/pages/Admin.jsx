@@ -464,6 +464,27 @@ const Admin = () => {
       if (data) {
         setOrders(data);
 
+        // Calcular vendas para popularidade real e salvar nas configurações públicas
+        const productSales = {};
+        data.forEach(order => {
+          if (order.status !== 'cancelled' && Array.isArray(order.items)) {
+            order.items.forEach(item => {
+              if (item && item.id) {
+                const prodId = Number(item.id);
+                const qty = Number(item.quantity) || 1;
+                productSales[prodId] = (productSales[prodId] || 0) + qty;
+              }
+            });
+          }
+        });
+        
+        supabase.from('store_settings').upsert({
+          key: 'product_sales_ranking',
+          value: JSON.stringify(productSales)
+        }, { onConflict: 'key' }).then(({ error }) => {
+          if (error) console.error("Erro ao salvar product_sales_ranking:", error);
+        });
+
         // Trigger Welcome Popup for Manager
         if (!welcomeTriggered && user?.email?.toLowerCase().trim() === 'camisadez085@gmail.com') {
           const pendingCount = data.filter(o => o.status === 'pending' || o.status === 'paid').length;

@@ -176,8 +176,29 @@ const Home = () => {
       let qIds = [];
       let cIds = [];
 
+      let productSales = {};
+      const sortBySales = (list) => {
+        return [...list].sort((a, b) => {
+          const aSales = productSales[a.id] || 0;
+          const bSales = productSales[b.id] || 0;
+          
+          if (bSales !== aSales) {
+            return bSales - aSales; // Mais vendidos primeiro
+          }
+          
+          // Desempates
+          if (a.is_new && !b.is_new) return -1;
+          if (!a.is_new && b.is_new) return 1;
+          
+          if (a.is_bestseller && !b.is_bestseller) return -1;
+          if (!a.is_bestseller && b.is_bestseller) return 1;
+          
+          return (a.price || 47.90) - (b.price || 47.90);
+        });
+      };
+
       // Buscar configurações globais na nuvem (Supabase)
-      const { data: settingsData, error: settingsError } = await supabase.from('store_settings').select('*').in('key', ['queridinhas_ids', 'catalog_ids']);
+      const { data: settingsData, error: settingsError } = await supabase.from('store_settings').select('*').in('key', ['queridinhas_ids', 'catalog_ids', 'product_sales_ranking']);
 
       if (settingsError) {
         console.error("❌ Erro ao buscar configurações no Supabase:", settingsError);
@@ -191,6 +212,7 @@ const Home = () => {
             const val = JSON.parse(s.value);
             if (s.key === 'queridinhas_ids') qIds = val;
             if (s.key === 'catalog_ids') cIds = val;
+            if (s.key === 'product_sales_ranking') productSales = val;
           } catch (e) {
             console.error(`❌ Erro ao processar chave ${s.key}:`, e);
           }
@@ -199,39 +221,34 @@ const Home = () => {
         console.warn("⚠️ Nenhuma configuração encontrada no Supabase para as chaves solicitadas.");
       }
 
-      // Fallback para localStorage (opcional)
-      if (qIds.length === 0) {
-        const localQ = localStorage.getItem('queridinhas_ids');
-        if (localQ) qIds = JSON.parse(localQ);
-      }
-
-      if (qIds && qIds.length > 0) {
-        let supabaseData = [];
-        const fetchIds = qIds
-          .map(id => parseInt(id))
-          .filter(id => !isNaN(id));
-
-        if (fetchIds.length > 0) {
-          const { data, error } = await supabase.from('products').select('*').in('id', fetchIds);
-          if (data) supabaseData = data;
-          if (error) console.error("Erro ao buscar queridinhas:", error);
-        }
-
-        const sortedQ = qIds.map(id => supabaseData.find(d => String(d.id) === String(id))).filter(Boolean);
-        
-        // Aplicar a nova ordenação solicitada pelo usuário mesmo na seleção manual
-        const prioritizedQ = sortProductsList(sortedQ);
-        setQueridinhas(prioritizedQ);
-      }
-
       const { data: dbData } = await supabase.from('products').select('*').order('id', { ascending: false });
       const allUnified = dbData || [];
 
-      // Fallback automático: Se não houver queridinhas manuais, usa as marcadas como is_bestseller
-      if (qIds.length === 0) {
-        const autoQueridinhas = allUnified.filter(p => p.is_bestseller).slice(0, 6);
-        setQueridinhas(sortProductsList(autoQueridinhas));
+      // Seleção 100% dinâmica das "Queridinhas" baseada em vendas reais (popularidade) do catálogo
+      // 1. Filtrar produtos que têm pelo menos 1 venda cadastrada
+      const soldProducts = allUnified.filter(p => (productSales[p.id] || 0) > 0);
+      
+      // 2. Ordenar os produtos vendidos por volume real de vendas (decrescente)
+      const sortedSold = sortBySales(soldProducts);
+
+      // 3. Montar a lista final com 10 itens. Se houver menos de 10 vendidos, preencher com os melhores do catálogo restante (sem duplicar)
+      let finalQueridinhas = [...sortedSold];
+      if (finalQueridinhas.length < 10) {
+        const remainingProducts = allUnified.filter(p => !finalQueridinhas.some(q => q.id === p.id));
+        const sortedRemaining = sortProductsList(remainingProducts);
+        const needed = 10 - finalQueridinhas.length;
+        finalQueridinhas = [...finalQueridinhas, ...sortedRemaining.slice(0, needed)];
+      } else {
+        finalQueridinhas = finalQueridinhas.slice(0, 10);
       }
+
+      // 4. Adicionar o destaque "MAIS VENDIDA do MOMENTO" apenas para a primeira posição (o mais vendido)
+      const mappedQueridinhas = finalQueridinhas.map((p, idx) => ({
+        ...p,
+        is_bestseller: idx === 0
+      }));
+
+      setQueridinhas(mappedQueridinhas);
 
       const { data: teamsData } = await supabase.from('teams').select('*').order('name');
       if (teamsData) setDbTeams(teamsData);
