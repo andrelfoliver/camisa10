@@ -7,7 +7,7 @@ export default async function handler(req, res) {
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
-  const { customerName, customerEmail, cartItems } = req.body;
+  const { customerName, customerEmail, cartItems, emailType } = req.body;
 
   if (!customerEmail || !customerName || !cartItems || !Array.isArray(cartItems) || cartItems.length === 0) {
     return res.status(400).json({ error: 'Missing required parameters' });
@@ -30,16 +30,37 @@ export default async function handler(req, res) {
     </div>
   `).join('');
 
-  const htmlTemplate = `
-    <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; max-width: 600px; margin: 0 auto; background: #ffffff; border: 1px solid #edf2f7; border-radius: 8px; overflow: hidden;">
-      <div style="padding: 35px 30px; background: #000000; text-align: center;">
-        <h1 style="margin: 0; font-style: italic; font-weight: 900; letter-spacing: -1px; font-family: sans-serif; font-size: 2.5rem;">
-          <span style="color: #CCFF00;">i</span><span style="color: #FFFFFF;">Footy</span><span style="color: #CCFF00;">.</span>
-        </h1>
-        <p style="color: #ffffff; margin-top: 10px; font-size: 0.95rem; opacity: 0.9; text-transform: uppercase; letter-spacing: 1px;">Esqueceu algo na sacola?</p>
-      </div>
-      
-      <div style="padding: 35px 30px; background: #ffffff;">
+  const isSecondEmail = Number(emailType) === 2;
+
+  const subject = isSecondEmail 
+    ? 'Última chance! Seu carrinho na iFooty está quase expirando ⏳🚨'
+    : 'Esqueceu alguma coisa na sua sacola? 🛒⚽';
+
+  const subtitle = isSecondEmail
+    ? 'O tempo está acabando!'
+    : 'Esqueceu algo na sacola?';
+
+  const emailBody = isSecondEmail 
+    ? `
+        <p style="color: #4a5568; line-height: 1.6; font-size: 1.05rem; margin-top: 0;">Olá, <strong>${firstName}</strong>!</p>
+        <p style="color: #4a5568; line-height: 1.6; font-size: 1.05rem;">Passando para avisar que a reserva dos itens no seu carrinho está prestes a expirar. Como a procura por nossos mantos premium e retrôs é altíssima e o estoque no Canadá é limitado, não conseguiremos segurar a reserva dos seus itens por muito mais tempo.</p>
+        <p style="color: #4a5568; line-height: 1.6; font-size: 1.05rem;">Para te dar uma ajuda extra, liberamos um benefício exclusivo nas próximas horas:</p>
+        
+        <div style="background: #f7fafc; border: 1px dashed #CCFF00; border-radius: 8px; padding: 20px; text-align: center; margin: 25px 0;">
+          <p style="margin: 0 0 10px 0; color: #4a5568; font-weight: bold;">CUPOM DE 5% DE DESCONTO EXTRA:</p>
+          <span style="display: inline-block; font-size: 1.8rem; font-weight: 900; color: #000000; background: #CCFF00; padding: 8px 25px; border-radius: 4px; letter-spacing: 1px;">IFOOTY5</span>
+          <p style="margin: 10px 0 0 0; color: #718096; font-size: 0.9rem;">+ FRETE GRÁTIS PARA CANADÁ E EUA! 🇨🇦🇺🇸</p>
+        </div>
+
+        <div style="margin: 25px 0; border: 1px solid #edf2f7; border-radius: 8px; overflow: hidden;">
+          ${cartItemsHtml}
+        </div>
+
+        <div style="text-align: center; margin: 35px 0 25px 0;">
+          <a href="https://ifooty.ca" style="background-color: #CCFF00; color: #000000; padding: 14px 35px; border-radius: 6px; font-weight: 900; text-decoration: none; display: inline-block; font-size: 1.05rem; text-transform: uppercase; letter-spacing: 0.5px; box-shadow: 0 4px 15px rgba(204, 255, 0, 0.3);">Concluir Compra com 5% OFF</a>
+        </div>
+      `
+    : `
         <p style="color: #4a5568; line-height: 1.6; font-size: 1.05rem; margin-top: 0;">Olá, <strong>${firstName}</strong>!</p>
         <p style="color: #4a5568; line-height: 1.6; font-size: 1.05rem;">Notamos que você visitou a iFooty e deixou alguns itens selecionados no seu carrinho de compras.</p>
         <p style="color: #4a5568; line-height: 1.6; font-size: 1.05rem;">Como o estoque de nossos mantos premium é limitado e a demanda é alta, salvamos os seus itens abaixo para que você não os perca:</p>
@@ -53,6 +74,19 @@ export default async function handler(req, res) {
         <div style="text-align: center; margin: 35px 0 25px 0;">
           <a href="https://ifooty.ca" style="background-color: #CCFF00; color: #000000; padding: 14px 35px; border-radius: 6px; font-weight: 900; text-decoration: none; display: inline-block; font-size: 1.05rem; text-transform: uppercase; letter-spacing: 0.5px; box-shadow: 0 4px 15px rgba(204, 255, 0, 0.3);">Concluir Minha Compra</a>
         </div>
+      `;
+
+  const htmlTemplate = `
+    <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; max-width: 600px; margin: 0 auto; background: #ffffff; border: 1px solid #edf2f7; border-radius: 8px; overflow: hidden;">
+      <div style="padding: 35px 30px; background: #000000; text-align: center;">
+        <h1 style="margin: 0; font-style: italic; font-weight: 900; letter-spacing: -1px; font-family: sans-serif; font-size: 2.5rem;">
+          <span style="color: #CCFF00;">i</span><span style="color: #FFFFFF;">Footy</span><span style="color: #CCFF00;">.</span>
+        </h1>
+        <p style="color: #ffffff; margin-top: 10px; font-size: 0.95rem; opacity: 0.9; text-transform: uppercase; letter-spacing: 1px;">${subtitle}</p>
+      </div>
+      
+      <div style="padding: 35px 30px; background: #ffffff;">
+        ${emailBody}
         
         <p style="color: #718096; line-height: 1.6; font-size: 0.95rem; margin-top: 25px; border-top: 1px solid #f7fafc; padding-top: 20px;">Qualquer dúvida sobre o pagamento (aceitamos Interac e-Transfer e PayPal) ou sobre o frete, basta responder a este e-mail ou falar conosco diretamente pelo WhatsApp.</p>
         <p style="color: #4a5568; line-height: 1.6; font-size: 1.05rem; margin-top: 20px; margin-bottom: 0;">Abraços,<br/><strong>Equipe iFooty</strong></p>
@@ -70,7 +104,7 @@ export default async function handler(req, res) {
       from: 'iFooty Store <vendas@ifooty.ca>',
       to: [customerEmail],
       replyTo: 'camisadez085@gmail.com',
-      subject: 'Esqueceu alguma coisa na sua sacola? 🛒⚽',
+      subject: subject,
       html: htmlTemplate,
     });
 

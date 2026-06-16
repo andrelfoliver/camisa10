@@ -267,6 +267,14 @@ const Admin = () => {
       return {};
     }
   });
+  const [sentRecoveryEmails2, setSentRecoveryEmails2] = useState(() => {
+    try {
+      const saved = localStorage.getItem('ifooty_sent_recovery_emails_2');
+      return saved ? JSON.parse(saved) : {};
+    } catch (e) {
+      return {};
+    }
+  });
   const [toast, setToast] = useState({ show: false, message: '', type: 'success' });
 
   const showToast = (message, type = 'success') => {
@@ -420,7 +428,7 @@ const Admin = () => {
       if (supplierData?.value) setSupplierEmail(supplierData.value);
 
       // Novas configurações na nuvem
-      const { data: cloudSettings } = await supabase.from('store_settings').select('*').in('key', ['queridinhas_ids', 'best_seller_id', 'catalog_ids', 'whatsapp_number', 'hero_slides', 'sent_recovery_emails']);
+      const { data: cloudSettings } = await supabase.from('store_settings').select('*').in('key', ['queridinhas_ids', 'best_seller_id', 'catalog_ids', 'whatsapp_number', 'hero_slides', 'sent_recovery_emails', 'sent_recovery_emails_2']);
       if (cloudSettings) {
         cloudSettings.forEach(s => {
           try {
@@ -431,6 +439,9 @@ const Admin = () => {
             const val = JSON.parse(s.value);
             if (s.key === 'sent_recovery_emails') {
               setSentRecoveryEmails(val || {});
+            }
+            if (s.key === 'sent_recovery_emails_2') {
+              setSentRecoveryEmails2(val || {});
             }
             if (s.key === 'queridinhas_ids' && Array.isArray(val)) {
               setQueridinhasIds(val.map(String));
@@ -1302,37 +1313,51 @@ const Admin = () => {
     setIsManualInvoiceModalOpen(true);
   };
 
-  const saveSentRecoveryEmailsToDb = async (newSent) => {
+  const saveSentRecoveryEmailsToDb = async (newSent, step = 1) => {
     try {
       await supabase.from('store_settings').upsert({
-        key: 'sent_recovery_emails',
+        key: step === 2 ? 'sent_recovery_emails_2' : 'sent_recovery_emails',
         value: JSON.stringify(newSent)
       }, { onConflict: 'key' });
     } catch (err) {
-      console.error("Erro ao salvar sent_recovery_emails:", err);
+      console.error(`Erro ao salvar sent_recovery_emails_${step}:`, err);
     }
   };
 
-  const toggleRecoveryEmailStatus = async (customer) => {
+  const toggleRecoveryEmailStatus = async (customer, step = 1) => {
     if (!customer) return;
-    const sentAt = sentRecoveryEmails[customer.id];
-    let newSent = { ...sentRecoveryEmails };
-    
-    if (sentAt) {
-      delete newSent[customer.id];
-      showToast("Status de recuperação removido.", "info");
+    if (step === 2) {
+      const sentAt = sentRecoveryEmails2[customer.id];
+      let newSent = { ...sentRecoveryEmails2 };
+      if (sentAt) {
+        delete newSent[customer.id];
+        showToast("Status de recuperação 2 removido.", "info");
+      } else {
+        const nowStr = new Date().toLocaleDateString('pt-BR') + ' às ' + new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+        newSent[customer.id] = nowStr;
+        showToast("Marcado como 2º e-mail enviado!", "success");
+      }
+      setSentRecoveryEmails2(newSent);
+      localStorage.setItem('ifooty_sent_recovery_emails_2', JSON.stringify(newSent));
+      await saveSentRecoveryEmailsToDb(newSent, 2);
     } else {
-      const nowStr = new Date().toLocaleDateString('pt-BR') + ' às ' + new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
-      newSent[customer.id] = nowStr;
-      showToast("Marcado como enviado!", "success");
+      const sentAt = sentRecoveryEmails[customer.id];
+      let newSent = { ...sentRecoveryEmails };
+      if (sentAt) {
+        delete newSent[customer.id];
+        showToast("Status de recuperação 1 removido.", "info");
+      } else {
+        const nowStr = new Date().toLocaleDateString('pt-BR') + ' às ' + new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+        newSent[customer.id] = nowStr;
+        showToast("Marcado como 1º e-mail enviado!", "success");
+      }
+      setSentRecoveryEmails(newSent);
+      localStorage.setItem('ifooty_sent_recovery_emails', JSON.stringify(newSent));
+      await saveSentRecoveryEmailsToDb(newSent, 1);
     }
-    
-    setSentRecoveryEmails(newSent);
-    localStorage.setItem('ifooty_sent_recovery_emails', JSON.stringify(newSent));
-    await saveSentRecoveryEmailsToDb(newSent);
   };
 
-  const handleSendAbandonedCartEmail = async (customer) => {
+  const handleSendAbandonedCartEmail = async (customer, step = 1) => {
     if (!customer || !customer.email || !customer.cart || customer.cart.length === 0) {
       showAlert("Erro", "Cliente não possui e-mail ou sacola ativa.");
       return;
@@ -1345,17 +1370,25 @@ const Admin = () => {
         body: JSON.stringify({
           customerName: customer.full_name || 'Cliente',
           customerEmail: customer.email,
-          cartItems: customer.cart
+          cartItems: customer.cart,
+          emailType: step
         })
       });
       const data = await res.json();
       if (res.ok && data.success) {
         const nowStr = new Date().toLocaleDateString('pt-BR') + ' às ' + new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
-        const newSent = { ...sentRecoveryEmails, [customer.id]: nowStr };
-        setSentRecoveryEmails(newSent);
-        localStorage.setItem('ifooty_sent_recovery_emails', JSON.stringify(newSent));
-        await saveSentRecoveryEmailsToDb(newSent);
-        showAlert("Sucesso!", `E-mail de recuperação enviado para ${customer.email} com sucesso.`);
+        if (step === 2) {
+          const newSent = { ...sentRecoveryEmails2, [customer.id]: nowStr };
+          setSentRecoveryEmails2(newSent);
+          localStorage.setItem('ifooty_sent_recovery_emails_2', JSON.stringify(newSent));
+          await saveSentRecoveryEmailsToDb(newSent, 2);
+        } else {
+          const newSent = { ...sentRecoveryEmails, [customer.id]: nowStr };
+          setSentRecoveryEmails(newSent);
+          localStorage.setItem('ifooty_sent_recovery_emails', JSON.stringify(newSent));
+          await saveSentRecoveryEmailsToDb(newSent, 1);
+        }
+        showAlert("Sucesso!", `${step === 2 ? '2º' : '1º'} E-mail de recuperação enviado para ${customer.email} com sucesso.`);
       } else {
         showAlert("Erro no Envio", data.error?.message || data.error || "Ocorreu um erro ao processar o envio do e-mail.");
       }
@@ -5538,11 +5571,18 @@ const Admin = () => {
                                         Sacola Ativa ({customer.cart.reduce((sum, item) => sum + (item.quantity || 1), 0)})
                                       </span>
                                       {(() => {
-                                        const sentAt = sentRecoveryEmails[customer.id];
-                                        if (sentAt) {
+                                        const sentAt1 = sentRecoveryEmails[customer.id];
+                                        const sentAt2 = sentRecoveryEmails2[customer.id];
+                                        if (sentAt2) {
                                           return (
-                                            <span style={{ fontSize: '0.65rem', background: 'rgba(16, 185, 129, 0.15)', color: '#10B981', border: '1px solid rgba(16, 185, 129, 0.3)', padding: '2px 6px', borderRadius: '4px', fontWeight: 800 }} title={`E-mail de recuperação enviado em: ${sentAt}`}>
-                                              📧 Recuperação Enviada
+                                            <span style={{ fontSize: '0.65rem', background: 'rgba(59, 130, 246, 0.15)', color: '#3B82F6', border: '1px solid rgba(59, 130, 246, 0.3)', padding: '2px 6px', borderRadius: '4px', fontWeight: 800 }} title={`2º E-mail de recuperação enviado em: ${sentAt2}`}>
+                                              📧 2º E-mail Enviado
+                                            </span>
+                                          );
+                                        } else if (sentAt1) {
+                                          return (
+                                            <span style={{ fontSize: '0.65rem', background: 'rgba(16, 185, 129, 0.15)', color: '#10B981', border: '1px solid rgba(16, 185, 129, 0.3)', padding: '2px 6px', borderRadius: '4px', fontWeight: 800 }} title={`1º E-mail de recuperação enviado em: ${sentAt1}`}>
+                                              📧 1º E-mail Enviado
                                             </span>
                                           );
                                         } else {
@@ -5615,73 +5655,116 @@ const Admin = () => {
 
                                   <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '1rem', alignItems: 'center', flexWrap: 'wrap' }}>
                                     {customer.cart && Array.isArray(customer.cart) && customer.cart.length > 0 && (() => {
-                                      const sentAt = sentRecoveryEmails[customer.id];
+                                      const sentAt1 = sentRecoveryEmails[customer.id];
+                                      const sentAt2 = sentRecoveryEmails2[customer.id];
                                       return (
-                                        <>
-                                          <button
-                                            onClick={(e) => {
-                                              e.stopPropagation();
-                                              toggleRecoveryEmailStatus(customer);
-                                            }}
-                                            style={{
-                                              display: 'flex',
-                                              alignItems: 'center',
-                                              gap: '0.5rem',
-                                              background: 'rgba(255,255,255,0.05)',
-                                              color: 'var(--text-muted)',
-                                              border: '1px solid var(--border-color)',
-                                              padding: '0.6rem 1.2rem',
-                                              borderRadius: '6px',
-                                              fontWeight: 800,
-                                              cursor: 'pointer',
-                                              transition: 'all 0.2s'
-                                            }}
-                                            onMouseEnter={(e) => e.currentTarget.style.background = 'rgba(255,255,255,0.1)'}
-                                            onMouseLeave={(e) => e.currentTarget.style.background = 'rgba(255,255,255,0.05)'}
-                                          >
-                                            {sentAt ? 'Desmarcar como Enviado' : 'Marcar como Enviado'}
-                                          </button>
+                                        <div style={{ display: 'flex', gap: '1rem', alignItems: 'center', flexWrap: 'wrap', borderRight: '1px solid rgba(255,255,255,0.1)', paddingRight: '1rem' }}>
+                                          {/* Grupo 1º E-mail */}
+                                          <div style={{ display: 'flex', gap: '0.4rem', alignItems: 'center' }}>
+                                            <button
+                                              onClick={(e) => {
+                                                e.stopPropagation();
+                                                toggleRecoveryEmailStatus(customer, 1);
+                                              }}
+                                              style={{
+                                                background: 'rgba(255,255,255,0.03)',
+                                                color: 'var(--text-muted)',
+                                                border: '1px solid var(--border-color)',
+                                                padding: '0.4rem 0.8rem',
+                                                borderRadius: '6px',
+                                                fontSize: '0.85rem',
+                                                fontWeight: 700,
+                                                cursor: 'pointer'
+                                              }}
+                                            >
+                                              {sentAt1 ? 'Desmarcar 1º' : 'Marcar 1º'}
+                                            </button>
 
-                                          <button
-                                            onClick={(e) => {
-                                              e.stopPropagation();
-                                              if (sentAt) {
-                                                showConfirm(
-                                                  "Reenviar E-mail",
-                                                  `Você já enviou um e-mail de recuperação para este cliente em ${sentAt}. Deseja enviar novamente?`,
-                                                  () => handleSendAbandonedCartEmail(customer)
-                                                );
-                                              } else {
-                                                handleSendAbandonedCartEmail(customer);
-                                              }
-                                            }}
-                                            style={{
-                                              display: 'flex',
-                                              alignItems: 'center',
-                                              gap: '0.5rem',
-                                              background: sentAt ? 'rgba(255,255,255,0.05)' : '#CCFF00',
-                                              color: sentAt ? 'var(--text-muted)' : '#000000',
-                                              border: sentAt ? '1px solid var(--border-color)' : 'none',
-                                              padding: '0.6rem 1.2rem',
-                                              borderRadius: '6px',
-                                              fontWeight: 800,
-                                              cursor: 'pointer',
-                                              transition: 'all 0.2s',
-                                              boxShadow: sentAt ? 'none' : '0 4px 15px rgba(204, 255, 0, 0.2)'
-                                            }}
-                                            onMouseEnter={(e) => {
-                                              if (sentAt) e.currentTarget.style.background = 'rgba(255,255,255,0.1)';
-                                              else e.currentTarget.style.opacity = 0.9;
-                                            }}
-                                            onMouseLeave={(e) => {
-                                              if (sentAt) e.currentTarget.style.background = 'rgba(255,255,255,0.05)';
-                                              else e.currentTarget.style.opacity = 1;
-                                            }}
-                                          >
-                                            {sentAt ? <Check size={16} color="#10B981" /> : <Send size={16} />}
-                                            {sentAt ? `Recuperação Enviada (${sentAt.split(' às ')[0]})` : 'Enviar E-mail de Recuperação'}
-                                          </button>
-                                        </>
+                                            <button
+                                              onClick={(e) => {
+                                                e.stopPropagation();
+                                                if (sentAt1) {
+                                                  showConfirm(
+                                                    "Reenviar E-mail",
+                                                    `Você já enviou o 1º e-mail em ${sentAt1}. Reenviar?`,
+                                                    () => handleSendAbandonedCartEmail(customer, 1)
+                                                  );
+                                                } else {
+                                                  handleSendAbandonedCartEmail(customer, 1);
+                                                }
+                                              }}
+                                              style={{
+                                                display: 'flex',
+                                                alignItems: 'center',
+                                                gap: '0.4rem',
+                                                background: sentAt1 ? 'rgba(16, 185, 129, 0.1)' : '#CCFF00',
+                                                color: sentAt1 ? '#10B981' : '#000',
+                                                border: sentAt1 ? '1px solid rgba(16, 185, 129, 0.3)' : 'none',
+                                                padding: '0.4rem 0.8rem',
+                                                borderRadius: '6px',
+                                                fontSize: '0.85rem',
+                                                fontWeight: 800,
+                                                cursor: 'pointer'
+                                              }}
+                                            >
+                                              {sentAt1 ? <Check size={14} color="#10B981" /> : <Send size={14} />}
+                                              {sentAt1 ? '1º Enviado' : 'Enviar 1º E-mail'}
+                                            </button>
+                                          </div>
+
+                                          {/* Grupo 2º E-mail */}
+                                          <div style={{ display: 'flex', gap: '0.4rem', alignItems: 'center' }}>
+                                            <button
+                                              onClick={(e) => {
+                                                e.stopPropagation();
+                                                toggleRecoveryEmailStatus(customer, 2);
+                                              }}
+                                              style={{
+                                                background: 'rgba(255,255,255,0.03)',
+                                                color: 'var(--text-muted)',
+                                                border: '1px solid var(--border-color)',
+                                                padding: '0.4rem 0.8rem',
+                                                borderRadius: '6px',
+                                                fontSize: '0.85rem',
+                                                fontWeight: 700,
+                                                cursor: 'pointer'
+                                              }}
+                                            >
+                                              {sentAt2 ? 'Desmarcar 2º' : 'Marcar 2º'}
+                                            </button>
+
+                                            <button
+                                              onClick={(e) => {
+                                                e.stopPropagation();
+                                                if (sentAt2) {
+                                                  showConfirm(
+                                                    "Reenviar E-mail",
+                                                    `Você já enviou o 2º e-mail em ${sentAt2}. Reenviar?`,
+                                                    () => handleSendAbandonedCartEmail(customer, 2)
+                                                  );
+                                                } else {
+                                                  handleSendAbandonedCartEmail(customer, 2);
+                                                }
+                                              }}
+                                              style={{
+                                                display: 'flex',
+                                                alignItems: 'center',
+                                                gap: '0.4rem',
+                                                background: sentAt2 ? 'rgba(59, 130, 246, 0.1)' : '#3B82F6',
+                                                color: sentAt2 ? '#3B82F6' : '#fff',
+                                                border: sentAt2 ? '1px solid rgba(59, 130, 246, 0.3)' : 'none',
+                                                padding: '0.4rem 0.8rem',
+                                                borderRadius: '6px',
+                                                fontSize: '0.85rem',
+                                                fontWeight: 800,
+                                                cursor: 'pointer'
+                                              }}
+                                            >
+                                              {sentAt2 ? <Check size={14} color="#3B82F6" /> : <Send size={14} />}
+                                              {sentAt2 ? '2º Enviado (5% OFF)' : 'Enviar 2º (5% OFF)'}
+                                            </button>
+                                          </div>
+                                        </div>
                                       );
                                     })()}
                                     {customer.cart && Array.isArray(customer.cart) && customer.cart.length > 0 && (
