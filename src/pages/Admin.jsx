@@ -5576,13 +5576,13 @@ const Admin = () => {
                                         if (sentAt2) {
                                           return (
                                             <span style={{ fontSize: '0.65rem', background: 'rgba(59, 130, 246, 0.15)', color: '#3B82F6', border: '1px solid rgba(59, 130, 246, 0.3)', padding: '2px 6px', borderRadius: '4px', fontWeight: 800 }} title={`2º E-mail de recuperação enviado em: ${sentAt2}`}>
-                                              📧 2º E-mail Enviado
+                                              📧 2º Enviado (${sentAt2.split(' às ')[0]})
                                             </span>
                                           );
                                         } else if (sentAt1) {
                                           return (
                                             <span style={{ fontSize: '0.65rem', background: 'rgba(16, 185, 129, 0.15)', color: '#10B981', border: '1px solid rgba(16, 185, 129, 0.3)', padding: '2px 6px', borderRadius: '4px', fontWeight: 800 }} title={`1º E-mail de recuperação enviado em: ${sentAt1}`}>
-                                              📧 1º E-mail Enviado
+                                              📧 1º Enviado (${sentAt1.split(' às ')[0]})
                                             </span>
                                           );
                                         } else {
@@ -5708,7 +5708,7 @@ const Admin = () => {
                                               }}
                                             >
                                               {sentAt1 ? <Check size={14} color="#10B981" /> : <Send size={14} />}
-                                              {sentAt1 ? '1º Enviado' : 'Enviar 1º E-mail'}
+                                              {sentAt1 ? `1º Enviado (${sentAt1.split(' às ')[0]})` : 'Enviar 1º E-mail'}
                                             </button>
                                           </div>
 
@@ -5761,7 +5761,7 @@ const Admin = () => {
                                               }}
                                             >
                                               {sentAt2 ? <Check size={14} color="#3B82F6" /> : <Send size={14} />}
-                                              {sentAt2 ? '2º Enviado (5% OFF)' : 'Enviar 2º (5% OFF)'}
+                                              {sentAt2 ? `2º Enviado (${sentAt2.split(' às ')[0]})` : 'Enviar 2º (5% OFF)'}
                                             </button>
                                           </div>
                                         </div>
