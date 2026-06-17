@@ -151,7 +151,7 @@ async function fetchChineseTracking(num: string) {
 async function fetch17trackData(num: string, isUsps: boolean) {
   // @ts-ignore
   const apiKey = Deno.env.get('SEVENTEENTRACK_API_KEY');
-  if (!apiKey) return [];
+  if (!apiKey) return { events: [], rawAccepted: null };
   try {
     const cleanNum = num.trim();
     await fetch('https://api.17track.net/track/v2/register', {
@@ -173,7 +173,7 @@ async function fetch17trackData(num: string, isUsps: boolean) {
     console.log(`DIAGNÓSTICO 17TRACK V2 - Resposta para ${cleanNum}:`, JSON.stringify(data));
     
     const accepted = data?.data?.accepted?.[0];
-    if (!accepted) return [];
+    if (!accepted) return { events: [], rawAccepted: null };
 
     const events: any[] = [];
     
@@ -191,7 +191,7 @@ async function fetch17trackData(num: string, isUsps: boolean) {
 
     if (events.length === 0) {
       console.log(`17TRACK SEM EVENTOS: O objeto existe mas a lista de eventos está vazia.`);
-      return [];
+      return { events: [], rawAccepted: accepted };
     }
 
     // Remover duplicados
@@ -199,7 +199,7 @@ async function fetch17trackData(num: string, isUsps: boolean) {
       a.findIndex(t => (t.time_iso === v.time_iso && t.description === v.description)) === i
     );
 
-    return await Promise.all(uniqueEvents.map(async (e: any) => {
+    const mappedEvents = await Promise.all(uniqueEvents.map(async (e: any) => {
       let displayDate = e.time_iso || e.a || '';
       
       // Limpeza robusta: Troca T por espaço e remove fuso horário (ex: -04:00 ou +02:00)
@@ -217,7 +217,9 @@ async function fetch17trackData(num: string, isUsps: boolean) {
         carrier: isUsps ? 'US' : 'CA' 
       };
     }));
-  } catch { return []; }
+
+    return { events: mappedEvents, rawAccepted: accepted };
+  } catch { return { events: [], rawAccepted: null }; }
 }
 
 // @ts-ignore
@@ -265,7 +267,8 @@ Deno.serve(async (req: Request) => {
     clearTimeout(timeoutId);
 
     const cn = cnRes.status === 'fulfilled' ? cnRes.value : { trackingData: null, chineseHistory: [] };
-    const ca = caRes.status === 'fulfilled' ? caRes.value : [];
+    const caData = caRes.status === 'fulfilled' ? caRes.value : { events: [], rawAccepted: null };
+    const ca = caData.events || [];
     
     console.log(`Busca concluída. China: ${cn.chineseHistory.length} eventos, 17Track: ${ca.length} eventos.`);
 
@@ -352,7 +355,8 @@ Deno.serve(async (req: Request) => {
       }), 
       hasCanadaPostData: !isUsps && ca.length > 0, 
       hasUspsData: isUsps && ca.length > 0, 
-      cachedAt: new Date().toISOString() 
+      cachedAt: new Date().toISOString(),
+      raw17Track: caData.rawAccepted
     };
 
     if (finalData.history.length > 0) {

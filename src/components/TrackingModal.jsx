@@ -225,6 +225,56 @@ const formatCalgaryShippingDate = (dateStr, history) => {
   return dateStr;
 };
 
+const addBusinessDays = (startDate, days) => {
+  const date = new Date(startDate.getTime());
+  let count = 0;
+  while (count < days) {
+    date.setDate(date.getDate() + 1);
+    const day = date.getDay();
+    if (day !== 0 && day !== 6) {
+      count++;
+    }
+  }
+  return date;
+};
+
+const calculateDeliveryExpectation = (startDate, provinceCode) => {
+  if (!startDate || isNaN(startDate.getTime())) return null;
+  let minDays = 4;
+  let maxDays = 7;
+  const prov = String(provinceCode || '').trim().toUpperCase();
+  if (prov === 'ON' || prov === 'ONTARIO') {
+    minDays = 2;
+    maxDays = 3;
+  } else if (!prov) {
+    minDays = 3;
+    maxDays = 6;
+  }
+  return {
+    minDate: addBusinessDays(startDate, minDays),
+    maxDate: addBusinessDays(startDate, maxDays)
+  };
+};
+
+const formatExpectedDate = (date) => {
+  const options = { weekday: 'long', day: 'numeric', month: 'long' };
+  try {
+    let formatted = date.toLocaleDateString('pt-BR', options);
+    return formatted.charAt(0).toUpperCase() + formatted.slice(1);
+  } catch (e) {
+    return date.toLocaleDateString('pt-BR');
+  }
+};
+
+const formatExpectedDayMonth = (date) => {
+  const options = { day: 'numeric', month: 'long' };
+  try {
+    return date.toLocaleDateString('pt-BR', options);
+  } catch (e) {
+    return date.toLocaleDateString('pt-BR');
+  }
+};
+
 const TrackingModal = ({ isOpen, onClose, initialTrackingNumber = '' }) => {
   const [trackingNumber, setTrackingNumber] = useState(initialTrackingNumber);
   const [recentSearches, setRecentSearches] = useState(() => {
@@ -238,6 +288,7 @@ const TrackingModal = ({ isOpen, onClose, initialTrackingNumber = '' }) => {
   const [hasCanadaPostData, setHasCanadaPostData] = useState(false);
   const [hasUspsData, setHasUspsData] = useState(false);
   const [orderCity, setOrderCity] = useState(null);
+  const [orderAddress, setOrderAddress] = useState(null);
   const fileInputRef = useRef(null);
 
   // Auto-search if initial number is provided
@@ -253,6 +304,7 @@ const TrackingModal = ({ isOpen, onClose, initialTrackingNumber = '' }) => {
       setHasUspsData(false);
       setTrackingNumber('');
       setOrderCity(null);
+      setOrderAddress(null);
     }
   }, [isOpen, initialTrackingNumber]);
 
@@ -313,8 +365,9 @@ const TrackingModal = ({ isOpen, onClose, initialTrackingNumber = '' }) => {
       setHasCanadaPostData(data.hasCanadaPostData || false);
       setHasUspsData(data.hasUspsData || false);
       setOrderCity(null);
+      setOrderAddress(null);
 
-      // Tenta buscar a cidade do pedido no banco de dados
+      // Tenta buscar a cidade e endereço do pedido no banco de dados
       try {
         const cleanNum = num.trim();
         const { data: orderData } = await supabase
@@ -323,8 +376,11 @@ const TrackingModal = ({ isOpen, onClose, initialTrackingNumber = '' }) => {
           .ilike('tracking_number', `%${cleanNum}%`)
           .limit(1);
 
-        if (orderData && orderData.length > 0 && orderData[0].shipping_address?.city) {
-          setOrderCity(orderData[0].shipping_address.city);
+        if (orderData && orderData.length > 0 && orderData[0].shipping_address) {
+          setOrderAddress(orderData[0].shipping_address);
+          if (orderData[0].shipping_address.city) {
+            setOrderCity(orderData[0].shipping_address.city);
+          }
         }
       } catch (err) {
         console.warn("Não foi possível buscar a cidade na tabela orders:", err);
@@ -561,6 +617,63 @@ const TrackingModal = ({ isOpen, onClose, initialTrackingNumber = '' }) => {
                     {formatCalgaryShippingDate(trackingData.date, history)}
                   </p>
                 </div>
+
+                {hasCanadaPostData && (() => {
+                  const caEvents = history.filter(h => h.carrier === 'CA');
+                  const oldestEvent = caEvents[caEvents.length - 1];
+                  if (!oldestEvent) return null;
+                  const startDate = parseCarrierTimeToDate(oldestEvent.rawDate || oldestEvent.date, 'CA');
+                  const province = orderAddress?.province || '';
+                  const expectation = calculateDeliveryExpectation(startDate, province);
+                  if (!expectation) return null;
+
+                  const isDelivered = history.some(item => {
+                    const status = (item.status || '').toLowerCase();
+                    return status.includes('entregue') || status.includes('assinado') || status.includes('delivered');
+                  });
+
+                  if (isDelivered) return null;
+
+                  return (
+                    <div style={{
+                      gridColumn: 'span 2',
+                      background: 'linear-gradient(135deg, rgba(59, 130, 246, 0.1) 0%, rgba(59, 130, 246, 0.03) 100%)',
+                      border: '1px solid rgba(59, 130, 246, 0.2)',
+                      borderRadius: '12px',
+                      padding: '1.2rem',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '1rem',
+                      marginTop: '0.5rem',
+                      boxShadow: '0 4px 20px rgba(59, 130, 246, 0.15)'
+                    }}>
+                      <div style={{
+                        width: '40px',
+                        height: '40px',
+                        borderRadius: '50%',
+                        background: 'rgba(59, 130, 246, 0.2)',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        border: '1px solid rgba(59, 130, 246, 0.3)',
+                        flexShrink: 0
+                      }}>
+                        <Calendar size={20} color="#3B82F6" />
+                      </div>
+                      <div style={{ flex: 1 }}>
+                        <span style={{ fontSize: '0.7rem', color: '#3B82F6', textTransform: 'uppercase', display: 'block', letterSpacing: '0.05em', fontWeight: 800 }}>
+                          Expectativa de Entrega (Estimada)
+                        </span>
+                        <span style={{ fontSize: '1rem', color: '#fff', fontWeight: 800, display: 'block', marginTop: '2px' }}>
+                          {formatExpectedDate(expectation.maxDate)}
+                        </span>
+                        <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)', display: 'block', marginTop: '2px' }}>
+                          Previsão estimada entre {formatExpectedDayMonth(expectation.minDate)} e {formatExpectedDayMonth(expectation.maxDate)}
+                        </span>
+                      </div>
+                    </div>
+                  );
+                })()}
                 
                 {daysPassed !== null && (
                   <div style={{
