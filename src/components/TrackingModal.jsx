@@ -238,18 +238,59 @@ const addBusinessDays = (startDate, days) => {
   return date;
 };
 
+const isPhysicalCanadaPostEvent = (event) => {
+  if (!event) return false;
+  const status = (event.status || '').toLowerCase();
+  
+  if (
+    status.includes('informações eletrônicas') || 
+    status.includes('electronic information') || 
+    status.includes('informação eletrônica') || 
+    status.includes('submitted by shipper') ||
+    status.includes('enviadas pelo remetente')
+  ) {
+    return false;
+  }
+  
+  if (
+    status.includes('apresentada para revisão') || 
+    status.includes('presented for customs') || 
+    status.includes('arrived in canada and will be presented') ||
+    status.includes('chegou ao canadá e será apresentada')
+  ) {
+    return false;
+  }
+  
+  return true;
+};
+
 const calculateDeliveryExpectation = (startDate, provinceCode) => {
   if (!startDate || isNaN(startDate.getTime())) return null;
-  let minDays = 4;
-  let maxDays = 7;
+  
+  let minDays = 3;
+  let maxDays = 5; // default fallback
+  
   const prov = String(provinceCode || '').trim().toUpperCase();
   if (prov === 'ON' || prov === 'ONTARIO') {
+    minDays = 1;
+    maxDays = 3; // Ontario regional/local
+  } else if (prov === 'QC' || prov === 'QUEBEC' || prov === 'QUÉBEC') {
     minDays = 2;
-    maxDays = 3;
-  } else if (!prov) {
+    maxDays = 3; // Quebec regional
+  } else if (['AB', 'ALBERTA', 'BC', 'BRITISH COLUMBIA', 'MB', 'MANITOBA', 'SK', 'SASKATCHEWAN'].includes(prov)) {
     minDays = 3;
-    maxDays = 6;
+    maxDays = 4; // Major national Western provinces
+  } else if (['NS', 'NOVA SCOTIA', 'NB', 'NEW BRUNSWICK', 'PE', 'PRINCE EDWARD ISLAND', 'NL', 'NEWFOUNDLAND'].includes(prov)) {
+    minDays = 3;
+    maxDays = 5; // Atlantic provinces
+  } else if (['YT', 'YUKON', 'NT', 'NORTHWEST TERRITORIES', 'NU', 'NUNAVUT'].includes(prov)) {
+    minDays = 5;
+    maxDays = 7; // Territories / remote regions
+  } else if (!prov) {
+    minDays = 2;
+    maxDays = 4; // default fallback if no province is resolved
   }
+  
   return {
     minDate: addBusinessDays(startDate, minDays),
     maxDate: addBusinessDays(startDate, maxDays)
@@ -620,7 +661,8 @@ const TrackingModal = ({ isOpen, onClose, initialTrackingNumber = '' }) => {
 
                 {hasCanadaPostData && (() => {
                   const caEvents = history.filter(h => h.carrier === 'CA');
-                  const oldestEvent = caEvents[caEvents.length - 1];
+                  const physicalEvents = caEvents.filter(isPhysicalCanadaPostEvent);
+                  const oldestEvent = physicalEvents.length > 0 ? physicalEvents[physicalEvents.length - 1] : caEvents[caEvents.length - 1];
                   if (!oldestEvent) return null;
                   const startDate = parseCarrierTimeToDate(oldestEvent.rawDate || oldestEvent.date, 'CA');
                   const province = orderAddress?.province || '';
