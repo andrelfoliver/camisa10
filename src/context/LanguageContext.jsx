@@ -128,6 +128,10 @@ export const translations = {
       {
         question: 'E se o produto vier com defeito?',
         answer: 'Entre em contato em até 7 dias após o recebimento com fotos do defeito. Após nossa análise, a iFooty arca com todos os custos e realiza o reembolso ou a troca sem custo adicional.'
+      },
+      {
+        question: 'Como devo lavar e cuidar da minha camisa (especialmente a Versão Jogador)?',
+        answer: 'As camisas de futebol (especialmente a Versão Jogador, que possui escudos e patrocínios emborrachados termocolantes) exigem cuidados especiais. Recomendamos: 1) Lavar sempre à mão e pelo avesso; 2) Utilizar água fria e sabão neutro; 3) Não alvejar, não torcer e não usar secadora (secar sempre à sombra); 4) Nunca passar o ferro de passar diretamente sobre as estampas e emborrachados.'
       }
     ],
     cta_security: 'Site 100% Blindado',
@@ -446,6 +450,10 @@ export const translations = {
       {
         question: 'What if the product comes with a defect?',
         answer: 'Contact us within 7 days of receipt with photos of the defect. After our analysis, iFooty bears all costs and provides a refund or an exchange at no additional cost.'
+      },
+      {
+        question: 'How should I wash and care for my jersey (especially the Player Version)?',
+        answer: 'Soccer jerseys (especially the Player Version, which features heat-pressed rubber shields and sponsors) require special care to ensure durability. We recommend: 1) Always hand wash inside out; 2) Use cold water and mild soap; 3) Do not bleach, do not wring, and do not use a dryer (always air dry in the shade); 4) Never iron directly over prints, sponsors, or rubberized crests.'
       }
     ],
     cta_security: '100% Shielded Site',
