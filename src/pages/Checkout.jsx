@@ -33,6 +33,12 @@ const Checkout = () => {
     saveAddress: true
   });
 
+  const formDataRef = useRef(formData);
+  useEffect(() => {
+    formDataRef.current = formData;
+  }, [formData]);
+
+
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [waNumber, setWaNumber] = useState('17788061419');
   const [couponCode, setCouponCode] = useState('');
@@ -239,23 +245,24 @@ const Checkout = () => {
   };
 
   const generateWhatsAppMessage = () => {
-    const isPickup = formData.deliveryMethod === 'pickup';
+    const data = formDataRef.current;
+    const isPickup = data.deliveryMethod === 'pickup';
     let message = `${t('checkout_wa_order_title')}\n\n`;
     message += `${t('checkout_wa_customer')}\n`;
-    message += `Nome: ${formData.name}\n`;
+    message += `Nome: ${data.name}\n`;
     if (user?.email) message += `Email: ${user.email}\n`;
-    message += `Telefone: ${formData.phone}\n`;
+    message += `Telefone: ${data.phone}\n`;
     
     if (isPickup) {
       message += `MÉTODO: 📍 RETIRADA (Wolf Willow, Calgary)\n\n`;
     } else {
-      message += `Nome: ${formData.name}\n`;
-      message += `Endereço: ${formData.street}, ${formData.addressNumber}${formData.apartment ? ', Unit ' + formData.apartment : ''}\n`;
-      if (formData.instructions) message += `Instruções de Entrega: ${formData.instructions}\n`;
-      message += `Bairro: ${formData.district}\n`;
-      message += `Cidade: ${formData.city}, ${formData.province}\n`;
-      message += `Postal Code: ${formData.postalCode}\n`;
-      message += `País: ${formData.country}\n\n`;
+      message += `Nome: ${data.name}\n`;
+      message += `Endereço: ${data.street}, ${data.addressNumber}${data.apartment ? ', Unit ' + data.apartment : ''}\n`;
+      if (data.instructions) message += `Instruções de Entrega: ${data.instructions}\n`;
+      message += `Bairro: ${data.district}\n`;
+      message += `Cidade: ${data.city}, ${data.province}\n`;
+      message += `Postal Code: ${data.postalCode}\n`;
+      message += `País: ${data.country}\n\n`;
     }
 
     message += `🛒 ITENS DO PEDIDO:\n`;
@@ -313,42 +320,50 @@ const Checkout = () => {
     }
   };
 
-  // pricing options, calculations and PayPal memoization moved to top of Checkout
-  const validateForm = () => {
+  const validateForm = (data = formDataRef.current) => {
     // 1. Validações Básicas Comuns
-    if (formData.name.trim().length < 3) {
+    const name = (data.name || '').trim();
+    if (name.length < 3) {
       showPopup("Por favor, insira o seu nome completo real.");
       return false;
     }
-    const phoneDigits = formData.phone.replace(/\D/g, '');
+    const phone = data.phone || '';
+    const phoneDigits = phone.replace(/\D/g, '');
     if (phoneDigits.length < 10) {
       showPopup("Por favor, insira um telefone válido com 10 dígitos (DDD + Número).");
       return false;
     }
 
     // 2. Validações Específicas para Entrega
-    if (formData.deliveryMethod === 'shipping') {
-      if (!formData.street || !formData.addressNumber || !formData.city || !formData.province) {
+    if (data.deliveryMethod === 'shipping') {
+      const street = (data.street || '').trim();
+      const addressNumber = (data.addressNumber || '').trim();
+      const city = (data.city || '').trim();
+      const province = (data.province || '').trim();
+      const postalCode = (data.postalCode || '').trim();
+      const district = (data.district || '').trim();
+
+      if (!street || !addressNumber || !city || !province || !postalCode) {
         showPopup("Para entrega em casa, todos os campos de endereço são obrigatórios.");
         return false;
       }
 
       // Validação Postal Code / ZIP Code
-      if (formData.country === 'Canada') {
+      if (data.country === 'Canada') {
         const pcRegex = /^[A-Z]\d[A-Z] ?\d[A-Z]\d$/i;
-        if (!pcRegex.test(formData.postalCode)) {
+        if (!pcRegex.test(postalCode)) {
           showPopup("Formato de Postal Code inválido. Exemplo correto: T2X 0V1");
           return false;
         }
       } else {
         const zipRegex = /^\d{5}(-\d{4})?$/;
-        if (!zipRegex.test(formData.postalCode)) {
+        if (!zipRegex.test(postalCode)) {
           showPopup("Formato de ZIP Code americano inválido. Exemplo correto: 90210");
           return false;
         }
       }
 
-      if (formData.district.trim().length < 2) {
+      if (district.length < 2) {
         showPopup("Por favor, informe seu bairro.");
         return false;
       }
@@ -358,6 +373,7 @@ const Checkout = () => {
   };
 
   const saveOrderToDatabase = async (paymentDetails = null) => {
+    const data = formDataRef.current;
     try {
       // Buscar câmbio real USD -> CAD para registro no pedido
       let currentExchangeRate = 1.38; // Fallback de segurança
@@ -373,20 +389,20 @@ const Checkout = () => {
 
       const orderData = {
         user_id: user.id,
-        customer_name: formData.name,
+        customer_name: data.name,
         customer_email: user.email,
-        customer_phone: formData.phone,
+        customer_phone: data.phone,
         shipping_address: {
-          method: formData.deliveryMethod,
-          street: formData.deliveryMethod === 'pickup' ? 'Wolf Willow (Pickup)' : formData.street,
-          number: formData.addressNumber,
-          district: formData.district,
-          apartment: formData.apartment,
-          city: formData.deliveryMethod === 'pickup' ? 'Calgary' : formData.city,
-          province: formData.deliveryMethod === 'pickup' ? 'AB' : formData.province,
-          postalCode: formData.postalCode,
-          country: formData.country,
-          instructions: formData.instructions
+          method: data.deliveryMethod,
+          street: data.deliveryMethod === 'pickup' ? 'Wolf Willow (Pickup)' : data.street,
+          number: data.addressNumber,
+          district: data.district,
+          apartment: data.apartment,
+          city: data.deliveryMethod === 'pickup' ? 'Calgary' : data.city,
+          province: data.deliveryMethod === 'pickup' ? 'AB' : data.province,
+          postalCode: data.postalCode,
+          country: data.country,
+          instructions: data.instructions
         },
         usd_cad_rate: currentExchangeRate,
         items: cartItems.map(item => ({
@@ -433,9 +449,9 @@ const Checkout = () => {
             language,
             order: {
               ...orderData,
-              customer_name: formData.name,
+              customer_name: data.name,
               customer_email: user.email,
-              customer_phone: formData.phone,
+              customer_phone: data.phone,
               shipping_address: orderData.shipping_address
             }
           })
@@ -445,14 +461,14 @@ const Checkout = () => {
       }
 
       // 2. Atualizar o Perfil se solicitado
-      if (formData.saveAddress) {
+      if (data.saveAddress) {
         try {
           await supabase.from('profiles').update({
-            street: formData.street,
-            apartment: formData.apartment,
-            city: formData.city,
-            province: formData.province,
-            postal_code: formData.postalCode
+            street: data.street,
+            apartment: data.apartment,
+            city: data.city,
+            province: data.province,
+            postal_code: data.postalCode
           }).eq('id', user.id);
         } catch (profileErr) {
           console.warn("⚠️ Perfil não atualizado:", profileErr);
@@ -573,7 +589,7 @@ const Checkout = () => {
 
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginBottom: '2rem' }}>
             <button
-              onClick={() => setFormData({ ...formData, deliveryMethod: 'shipping' })}
+              onClick={() => setFormData(prev => ({ ...prev, deliveryMethod: 'shipping' }))}
               style={{
                 padding: '1.5rem', borderRadius: 'var(--radius-md)', border: `2px solid ${formData.deliveryMethod === 'shipping' ? 'var(--accent-color)' : 'var(--border-color)'}`,
                 background: formData.deliveryMethod === 'shipping' ? 'rgba(204, 255, 0, 0.05)' : 'transparent', textAlign: 'center', cursor: 'pointer', transition: 'all 0.3s'
@@ -585,8 +601,9 @@ const Checkout = () => {
             </button>
             <button
               onClick={() => {
-                if (formData.country === 'Canada') {
-                  setFormData({ ...formData, deliveryMethod: 'pickup' });
+                const currentCountry = formDataRef.current.country;
+                if (currentCountry === 'Canada') {
+                  setFormData(prev => ({ ...prev, deliveryMethod: 'pickup' }));
                 }
               }}
               disabled={formData.country !== 'Canada'}
@@ -609,7 +626,7 @@ const Checkout = () => {
                   <label style={{ display: 'block', marginBottom: '0.5rem', color: 'var(--text-muted)' }}>{t('checkout_name')}</label>
                   <input
                     type="text"
-                    value={formData.name} onChange={e => setFormData({ ...formData, name: e.target.value })}
+                    value={formData.name} onChange={e => setFormData(prev => ({ ...prev, name: e.target.value }))}
                     placeholder="Como no passaporte/ID"
                     style={{ width: '100%', padding: '0.75rem', borderRadius: 'var(--radius-sm)', background: 'var(--bg-color)', border: '1px solid var(--border-color)', color: 'var(--text-main)', fontSize: '1rem' }}
                   />
@@ -618,7 +635,7 @@ const Checkout = () => {
                   <label style={{ display: 'block', marginBottom: '0.5rem', color: 'var(--text-muted)' }}>{t('checkout_phone')}</label>
                   <input
                     type="tel"
-                    value={formData.phone} onChange={e => setFormData({ ...formData, phone: e.target.value.replace(/\D/g, '').substring(0, 14) })}
+                    value={formData.phone} onChange={e => setFormData(prev => ({ ...prev, phone: e.target.value.replace(/\D/g, '').substring(0, 14) }))}
                     placeholder="(000) 000-0000"
                     style={{ width: '100%', padding: '0.75rem', borderRadius: 'var(--radius-sm)', background: 'var(--bg-color)', border: '1px solid var(--border-color)', color: 'var(--text-main)', fontSize: '1rem' }}
                   />
@@ -632,7 +649,7 @@ const Checkout = () => {
                       <label style={{ display: 'block', marginBottom: '0.5rem', color: 'var(--text-muted)' }}>{t('checkout_postal')}</label>
                       <input
                         type="text" placeholder="Ex: T2X 0V1"
-                        value={formData.postalCode} onChange={e => setFormData({ ...formData, postalCode: e.target.value.toUpperCase() })}
+                        value={formData.postalCode} onChange={e => setFormData(prev => ({ ...prev, postalCode: e.target.value.toUpperCase() }))}
                         style={{ width: '100%', padding: '0.75rem', borderRadius: 'var(--radius-sm)', background: 'var(--bg-color)', border: '1px solid var(--border-color)', color: 'var(--text-main)', fontSize: '1rem' }}
                       />
                     </div>
@@ -644,7 +661,7 @@ const Checkout = () => {
                       <input
                         type="text" placeholder="Ex: 123 Bay Street"
                         ref={addressInputRef}
-                        value={formData.street} onChange={e => setFormData({ ...formData, street: e.target.value })}
+                        value={formData.street} onChange={e => setFormData(prev => ({ ...prev, street: e.target.value }))}
                         style={{ width: '100%', padding: '0.75rem', borderRadius: 'var(--radius-sm)', background: 'var(--bg-color)', border: '1px solid var(--accent-color)', color: 'var(--text-main)', fontSize: '1rem' }}
                       />
                       <p style={{ fontSize: '0.7rem', color: 'var(--accent-color)', marginTop: '0.4rem', opacity: 0.8 }}>
@@ -655,7 +672,7 @@ const Checkout = () => {
                       <label style={{ display: 'block', marginBottom: '0.5rem', color: 'var(--text-muted)' }}>{t('checkout_address_number')}</label>
                       <input
                         type="text" placeholder="Ex: 123"
-                        value={formData.addressNumber} onChange={e => setFormData({ ...formData, addressNumber: e.target.value })}
+                        value={formData.addressNumber} onChange={e => setFormData(prev => ({ ...prev, addressNumber: e.target.value }))}
                         style={{ width: '100%', padding: '0.75rem', borderRadius: 'var(--radius-sm)', background: 'var(--bg-color)', border: '1px solid var(--border-color)', color: 'var(--text-main)', fontSize: '1rem' }}
                       />
                     </div>
@@ -666,7 +683,7 @@ const Checkout = () => {
                       <label style={{ display: 'block', marginBottom: '0.5rem', color: 'var(--text-muted)' }}>{t('checkout_district')}</label>
                       <input
                         type="text" placeholder="Ex: Wolf Willow"
-                        value={formData.district} onChange={e => setFormData({ ...formData, district: e.target.value })}
+                        value={formData.district} onChange={e => setFormData(prev => ({ ...prev, district: e.target.value }))}
                         style={{ width: '100%', padding: '0.75rem', borderRadius: 'var(--radius-sm)', background: 'var(--bg-color)', border: '1px solid var(--border-color)', color: 'var(--text-main)', fontSize: '1rem' }}
                       />
                     </div>
@@ -674,7 +691,7 @@ const Checkout = () => {
                       <label style={{ display: 'block', marginBottom: '0.5rem', color: 'var(--text-muted)' }}>{t('checkout_unit')}</label>
                       <input
                         type="text" placeholder="Ex: 402"
-                        value={formData.apartment} onChange={e => setFormData({ ...formData, apartment: e.target.value })}
+                        value={formData.apartment} onChange={e => setFormData(prev => ({ ...prev, apartment: e.target.value }))}
                         style={{ width: '100%', padding: '0.75rem', borderRadius: 'var(--radius-sm)', background: 'var(--bg-color)', border: '1px solid var(--border-color)', color: 'var(--text-main)', fontSize: '1rem' }}
                       />
                     </div>
@@ -682,7 +699,7 @@ const Checkout = () => {
                       <label style={{ display: 'block', marginBottom: '0.5rem', color: 'var(--text-muted)' }}>{t('checkout_city_label')}</label>
                       <input
                         type="text"
-                        value={formData.city} onChange={e => setFormData({ ...formData, city: e.target.value })}
+                        value={formData.city} onChange={e => setFormData(prev => ({ ...prev, city: e.target.value }))}
                         style={{ width: '100%', padding: '0.75rem', borderRadius: 'var(--radius-sm)', background: 'var(--bg-color)', border: '1px solid var(--border-color)', color: 'var(--text-main)', fontSize: '1rem' }}
                       />
                     </div>
@@ -692,7 +709,7 @@ const Checkout = () => {
                     <div>
                       <label style={{ display: 'block', marginBottom: '0.5rem', color: 'var(--text-muted)' }}>{t('checkout_province_label')}</label>
                       <input
-                        type="text" value={formData.province} onChange={e => setFormData({ ...formData, province: e.target.value })}
+                        type="text" value={formData.province} onChange={e => setFormData(prev => ({ ...prev, province: e.target.value }))}
                         style={{ width: '100%', padding: '0.75rem', borderRadius: 'var(--radius-sm)', background: 'var(--bg-color)', border: '1px solid var(--border-color)', color: 'var(--text-main)', fontSize: '1rem' }}
                       />
                     </div>
@@ -702,11 +719,11 @@ const Checkout = () => {
                         value={formData.country}
                         onChange={e => {
                           const country = e.target.value;
-                          setFormData({ 
-                            ...formData, 
+                          setFormData(prev => ({ 
+                            ...prev, 
                             country,
-                            deliveryMethod: country === 'United States' ? 'shipping' : formData.deliveryMethod 
-                          });
+                            deliveryMethod: country === 'United States' ? 'shipping' : prev.deliveryMethod 
+                          }));
                         }}
                         style={{ width: '100%', padding: '0.75rem', borderRadius: 'var(--radius-sm)', background: 'var(--bg-color)', border: '1px solid var(--border-color)', color: 'var(--text-main)', fontSize: '1rem' }}
                       >
@@ -728,7 +745,7 @@ const Checkout = () => {
                       placeholder={language === 'pt'
                         ? 'Ex: Leave at front door, buzzer code 1234, etc. (Escreva em inglês para a transportadora)'
                         : 'Ex: Leave at front door, buzzer code 1234, etc. (Write in English for the courier)'}
-                      value={formData.instructions} onChange={e => setFormData({ ...formData, instructions: e.target.value })}
+                      value={formData.instructions} onChange={e => setFormData(prev => ({ ...prev, instructions: e.target.value }))}
                       style={{ width: '100%', padding: '0.75rem', borderRadius: 'var(--radius-sm)', background: 'var(--bg-color)', border: '1px solid var(--border-color)', color: 'var(--text-main)', fontSize: '1rem', minHeight: '80px', resize: 'vertical' }}
                     />
                   </div>
@@ -753,12 +770,10 @@ const Checkout = () => {
                 <label style={{ display: 'block', marginBottom: '0.5rem', color: 'var(--text-muted)' }}>{t('checkout_social')}</label>
                 <input
                   type="text" placeholder={t('checkout_social_placeholder')}
-                  value={formData.instagram} onChange={e => setFormData({ ...formData, instagram: e.target.value })}
+                  value={formData.instagram} onChange={e => setFormData(prev => ({ ...prev, instagram: e.target.value }))}
                   style={{ width: '100%', padding: '0.75rem', borderRadius: 'var(--radius-sm)', background: 'var(--bg-color)', border: '1px solid var(--border-color)', color: 'var(--text-main)', fontSize: '1rem' }}
                 />
-              </div>
-
-              <div style={{ display: 'flex', alignItems: 'center', gap: '0.8rem', marginTop: '1rem', cursor: 'pointer' }} onClick={() => setFormData({ ...formData, saveAddress: !formData.saveAddress })}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.8rem', marginTop: '1rem', cursor: 'pointer' }} onClick={() => setFormData(prev => ({ ...prev, saveAddress: !prev.saveAddress }))}>
                 <div style={{ width: '24px', height: '24px', borderRadius: '6px', border: '2px solid var(--accent-color)', background: formData.saveAddress ? 'var(--accent-color)' : 'transparent', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'all 0.2s' }}>
                   {formData.saveAddress && <Save size={14} color="#000" />}
                 </div>
@@ -767,8 +782,9 @@ const Checkout = () => {
             </div>
           </div>
         </div>
+      </div>
 
-        {/* Order Summary */}
+        {/* Summary */}
         <div>
           <h2 style={{ fontSize: '2rem', marginBottom: '2rem' }}>{t('checkout_summary_title')}</h2>
           <div className="glass-panel" style={{ padding: '2rem', borderRadius: 'var(--radius-md)' }}>
@@ -918,11 +934,13 @@ const Checkout = () => {
               <div style={{ position: 'relative', zIndex: 1 }}>
                 <PayPalButtons
                   style={{ layout: "vertical", shape: "rect", label: "pay" }}
-                  createOrder={(data, actions) => {
+                  onClick={(data, actions) => {
                     if (!validateForm()) {
                       return actions.reject();
                     }
-                    
+                    return actions.resolve();
+                  }}
+                  createOrder={(data, actions) => {
                     const displayCurrency = currency === 'USD' ? 'USD' : 'CAD';
 
                     // Calculate each item's converted price
@@ -1007,6 +1025,7 @@ const Checkout = () => {
                 />
               </div>
             )}
+
             <p style={{ textAlign: 'center', marginTop: '1rem', fontSize: '0.85rem', color: 'var(--text-muted)' }}>
               {paymentMethod === 'paypal' ? t('checkout_summary_footer_note_paypal') : t('checkout_summary_footer_note')}
             </p>
