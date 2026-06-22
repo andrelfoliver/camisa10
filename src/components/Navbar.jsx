@@ -18,6 +18,16 @@ const Navbar = () => {
   const [suggestions, setSuggestions] = React.useState([]);
   const [scrolled, setScrolled] = React.useState(false);
 
+  // Holiday Banner State
+  const [showHolidayBanner, setShowHolidayBanner] = React.useState(() => {
+    return localStorage.getItem('ifooty_holiday_banner_dismissed') !== 'true';
+  });
+
+  const dismissHolidayBanner = () => {
+    localStorage.setItem('ifooty_holiday_banner_dismissed', 'true');
+    setShowHolidayBanner(false);
+  };
+
   React.useEffect(() => {
     const handleScroll = () => {
       const currentScroll = window.scrollY;
@@ -97,6 +107,54 @@ const Navbar = () => {
       }}>
         {t('top_bar_announcement')}
       </div>
+
+      {showHolidayBanner && (
+        <div style={{
+          background: 'rgba(245, 158, 11, 0.08)',
+          borderBottom: '1px solid rgba(245, 158, 11, 0.2)',
+          color: '#F59E0B',
+          padding: '0.5rem 2.5rem 0.5rem 1rem',
+          textAlign: 'center',
+          fontSize: '0.8rem',
+          fontWeight: 600,
+          position: 'relative',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          lineHeight: '1.4',
+          zIndex: 4100
+        }}>
+          <span>
+            {language === 'pt'
+              ? '📢 Aviso: Devido ao feriado da fábrica nos dias 18, 19 e 20 de Junho, os pedidos realizados nesse período sofrerão um pequeno atraso na postagem. Agradecemos sua compreensão!'
+              : '📢 Notice: Due to a factory holiday on June 18th, 19th, and 20th, orders placed during this period will experience a slight dispatch delay. Thank you for your understanding!'}
+          </span>
+          <button
+            onClick={dismissHolidayBanner}
+            style={{
+              position: 'absolute',
+              right: '0.75rem',
+              top: '50%',
+              transform: 'translateY(-50%)',
+              background: 'transparent',
+              border: 'none',
+              color: '#F59E0B',
+              cursor: 'pointer',
+              padding: '0.2rem',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              opacity: 0.7,
+              transition: 'opacity 0.2s'
+            }}
+            onMouseOver={(e) => e.currentTarget.style.opacity = 1}
+            onMouseOut={(e) => e.currentTarget.style.opacity = 0.7}
+            title="Fechar / Dismiss"
+          >
+            <X size={14} />
+          </button>
+        </div>
+      )}
 
       {/* BARRA 2: MAIN HEADER (SEARCH | LOGO | ACTIONS) */}
       <nav className="glass-panel" style={{
