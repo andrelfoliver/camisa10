@@ -334,7 +334,20 @@ const Checkout = () => {
       return false;
     }
 
-    // 2. Validações Específicas para Entrega
+    // 2. Validação de Personalização vs Retirada
+    if (data.deliveryMethod === 'pickup') {
+      const hasPersonalization = cartItems.some(item => item.extras?.nameNumber || item.extras?.extraCustomization);
+      if (hasPersonalization) {
+        if (language === 'pt') {
+          showPopup("A personalização de itens (nome/número) não está disponível para retirada em mãos (Wolf Willow). Por favor, selecione Receber em Casa ou remova a personalização dos itens.");
+        } else {
+          showPopup("Customization (name/number) is not available for local pickup. Please select Home Delivery or remove personalization from your items.");
+        }
+        return false;
+      }
+    }
+
+    // 3. Validações Específicas para Entrega
     if (data.deliveryMethod === 'shipping') {
       const street = (data.street || '').trim();
       const addressNumber = (data.addressNumber || '').trim();
