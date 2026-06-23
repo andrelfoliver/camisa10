@@ -1090,6 +1090,27 @@ const Admin = () => {
     }
   };
 
+  const handleDeleteCustomer = async (customerId, customerEmail) => {
+    if (!window.confirm(`Tem certeza que deseja excluir o cliente com e-mail ${customerEmail}?`)) {
+      return;
+    }
+    
+    try {
+      const { error } = await supabase
+        .from('profiles')
+        .delete()
+        .eq('id', customerId);
+
+      if (error) throw error;
+      
+      showAlert("Sucesso!", "Perfil do cliente excluído do banco com sucesso.");
+      setCustomers(prev => prev.filter(c => c.id !== customerId));
+    } catch (err) {
+      console.error(err);
+      showAlert("Erro", `Não foi possível excluir o cliente: ${err.message}`);
+    }
+  };
+
   const formatCartItemDate = (dateStr) => {
     if (!dateStr) return null;
     try {
@@ -5661,11 +5682,12 @@ const Admin = () => {
                     ) : (
                       <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
                         {/* HEADER */}
-                        <div style={{ display: 'grid', gridTemplateColumns: '60px 1.5fr 1.5fr 100px 40px', padding: '0.8rem 1.5rem', color: 'var(--text-muted)', fontSize: '0.7rem', fontWeight: 800, textTransform: 'uppercase' }}>
+                        <div style={{ display: 'grid', gridTemplateColumns: '60px 1.5fr 1.5fr 100px 40px 40px', padding: '0.8rem 1.5rem', color: 'var(--text-muted)', fontSize: '0.7rem', fontWeight: 800, textTransform: 'uppercase' }}>
                           <span></span>
                           <span>Nome Completo</span>
                           <span>E-mail</span>
                           <span>Pedidos</span>
+                          <span></span>
                           <span></span>
                         </div>
 
@@ -5680,7 +5702,7 @@ const Admin = () => {
                                 onClick={() => setExpandedCustomerId(isExpanded ? null : customer.id)}
                                 style={{
                                   display: 'grid',
-                                  gridTemplateColumns: '60px 1.5fr 1.5fr 100px 40px',
+                                  gridTemplateColumns: '60px 1.5fr 1.5fr 100px 40px 40px',
                                   padding: '1rem 1.5rem',
                                   background: isExpanded ? 'rgba(255,255,255,0.05)' : 'var(--surface-color)',
                                   borderRadius: '8px',
@@ -5691,7 +5713,30 @@ const Admin = () => {
                                   marginBottom: isExpanded ? '0' : '0.2rem'
                                 }}
                               >
-                                <img src={customer.avatar_url || 'https://via.placeholder.com/40'} alt="" style={{ width: '32px', height: '32px', borderRadius: '50%', border: '1px solid rgba(255,255,255,0.1)' }} />
+                                {customer.avatar_url && customer.avatar_url.trim() !== '' && !customer.avatar_url.includes('placeholder.com') ? (
+                                  <img 
+                                    src={customer.avatar_url} 
+                                    alt="" 
+                                    style={{ width: '32px', height: '32px', borderRadius: '50%', border: '1px solid rgba(255,255,255,0.1)', objectFit: 'cover' }} 
+                                  />
+                                ) : (
+                                  <div style={{
+                                    width: '32px',
+                                    height: '32px',
+                                    borderRadius: '50%',
+                                    background: 'rgba(255, 255, 255, 0.05)',
+                                    border: '1px solid var(--accent-color)',
+                                    color: 'var(--accent-color)',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'center',
+                                    fontSize: '0.85rem',
+                                    fontWeight: 700,
+                                    textTransform: 'uppercase'
+                                  }}>
+                                    {(customer.email || 'U').charAt(0)}
+                                  </div>
+                                )}
                                 <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap' }}>
                                   <span style={{ fontWeight: 700, color: '#fff' }}>{customer.full_name || 'Usuário'}</span>
                                   {customer.cart && Array.isArray(customer.cart) && customer.cart.length > 0 && (
@@ -5732,6 +5777,29 @@ const Admin = () => {
                                 <div style={{ color: 'var(--text-muted)' }}>
                                   {isExpanded ? <ChevronUp size={18} /> : <ChevronDown size={18} />}
                                 </div>
+                                <button
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleDeleteCustomer(customer.id, customer.email);
+                                  }}
+                                  style={{
+                                    background: 'transparent',
+                                    border: 'none',
+                                    color: '#EF4444',
+                                    cursor: 'pointer',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'center',
+                                    padding: '0.25rem',
+                                    borderRadius: '4px',
+                                    transition: 'background 0.2s'
+                                  }}
+                                  onMouseEnter={(e) => e.currentTarget.style.background = 'rgba(239, 68, 68, 0.1)'}
+                                  onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
+                                  title="Excluir Cliente"
+                                >
+                                  <Trash2 size={16} />
+                                </button>
                               </div>
 
                               {/* EXPANDED CONTENT */}
