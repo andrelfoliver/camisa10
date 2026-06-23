@@ -276,6 +276,8 @@ const Admin = () => {
     }
   });
   const [toast, setToast] = useState({ show: false, message: '', type: 'success' });
+  const [editingOrderNameId, setEditingOrderNameId] = useState(null);
+  const [tempOrderName, setTempOrderName] = useState('');
 
   const showToast = (message, type = 'success') => {
     setToast({ show: true, message, type });
@@ -1064,6 +1066,25 @@ const Admin = () => {
       setOrders(orders.map(o => o.id === orderId ? { ...o, tracking_number: trackingNumber } : o));
       setSaved(true);
       setTimeout(() => setSaved(false), 2000);
+    }
+  };
+
+  const handleUpdateCustomerName = async (orderId, newName) => {
+    if (!newName || !newName.trim()) {
+      showAlert("Erro", "O nome do cliente não pode ficar em branco.");
+      return;
+    }
+    const { error } = await supabase
+      .from('orders')
+      .update({ customer_name: newName.trim() })
+      .eq('id', orderId);
+
+    if (error) {
+      showAlert("Erro ao Salvar Nome", error.message);
+    } else {
+      setOrders(orders.map(o => o.id === orderId ? { ...o, customer_name: newName.trim() } : o));
+      setEditingOrderNameId(null);
+      showToast("Nome do cliente atualizado com sucesso!");
     }
   };
 
@@ -5013,7 +5034,93 @@ const Admin = () => {
                         >
                           <span style={{ fontSize: '0.75rem', fontWeight: 800, color: 'var(--text-muted)' }}>#{order.id.slice(0, 5)}</span>
                           <div style={{ display: 'flex', flexDirection: 'column' }}>
-                            <span style={{ fontWeight: 700, color: '#fff' }}>{order.customer_name}</span>
+                            {editingOrderNameId === order.id ? (
+                              <div style={{ display: 'flex', alignItems: 'center', gap: '0.3rem' }} onClick={(e) => e.stopPropagation()}>
+                                <input
+                                  type="text"
+                                  value={tempOrderName}
+                                  onChange={(e) => setTempOrderName(e.target.value)}
+                                  style={{
+                                    padding: '0.2rem 0.4rem',
+                                    background: 'var(--bg-color)',
+                                    color: '#fff',
+                                    border: '1px solid var(--accent-color)',
+                                    borderRadius: '4px',
+                                    fontSize: '0.85rem',
+                                    fontWeight: 700,
+                                    width: '100%',
+                                    maxWidth: '180px'
+                                  }}
+                                  autoFocus
+                                  onKeyDown={(e) => {
+                                    if (e.key === 'Enter') handleUpdateCustomerName(order.id, tempOrderName);
+                                    if (e.key === 'Escape') setEditingOrderNameId(null);
+                                  }}
+                                />
+                                <button
+                                  onClick={() => handleUpdateCustomerName(order.id, tempOrderName)}
+                                  style={{
+                                    background: 'rgba(164, 210, 51, 0.2)',
+                                    color: 'var(--accent-color)',
+                                    border: 'none',
+                                    borderRadius: '4px',
+                                    padding: '0.3rem',
+                                    cursor: 'pointer',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'center'
+                                  }}
+                                  title="Salvar"
+                                >
+                                  <Check size={14} />
+                                </button>
+                                <button
+                                  onClick={() => setEditingOrderNameId(null)}
+                                  style={{
+                                    background: 'rgba(239, 68, 68, 0.2)',
+                                    color: '#EF4444',
+                                    border: 'none',
+                                    borderRadius: '4px',
+                                    padding: '0.3rem',
+                                    cursor: 'pointer',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'center'
+                                  }}
+                                  title="Cancelar"
+                                >
+                                  <X size={14} />
+                                </button>
+                              </div>
+                            ) : (
+                              <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                                <span style={{ fontWeight: 700, color: '#fff' }}>{order.customer_name}</span>
+                                <button
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    setEditingOrderNameId(order.id);
+                                    setTempOrderName(order.customer_name || '');
+                                  }}
+                                  style={{
+                                    background: 'transparent',
+                                    border: 'none',
+                                    color: 'var(--text-muted)',
+                                    cursor: 'pointer',
+                                    padding: '0.2rem',
+                                    borderRadius: '4px',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'center',
+                                    transition: 'color 0.2s, background 0.2s'
+                                  }}
+                                  onMouseEnter={(e) => { e.currentTarget.style.color = 'var(--accent-color)'; e.currentTarget.style.background = 'rgba(255,255,255,0.05)'; }}
+                                  onMouseLeave={(e) => { e.currentTarget.style.color = 'var(--text-muted)'; e.currentTarget.style.background = 'transparent'; }}
+                                  title="Editar nome do cliente"
+                                >
+                                  <Edit size={12} />
+                                </button>
+                              </div>
+                            )}
                             <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{order.customer_email}</span>
                           </div>
                           <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>{new Date(order.created_at).toLocaleDateString()}</span>
