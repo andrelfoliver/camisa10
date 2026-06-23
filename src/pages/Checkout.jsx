@@ -387,6 +387,20 @@ const Checkout = () => {
 
   const saveOrderToDatabase = async (paymentDetails = null) => {
     const data = formDataRef.current;
+    
+    // Trava de segurança final: impedir gravação no banco com endereço incompleto
+    if (data.deliveryMethod === 'shipping') {
+      const street = (data.street || '').trim();
+      const addressNumber = (data.addressNumber || '').trim();
+      const city = (data.city || '').trim();
+      const province = (data.province || '').trim();
+      const postalCode = (data.postalCode || '').trim();
+      
+      if (!street || !addressNumber || !city || !province || !postalCode) {
+        throw new Error("Dados de endereço incompletos para entrega.");
+      }
+    }
+
     try {
       // Buscar câmbio real USD -> CAD para registro no pedido
       let currentExchangeRate = 1.38; // Fallback de segurança
@@ -1023,6 +1037,11 @@ const Checkout = () => {
                     });
                   }}
                   onApprove={async (data, actions) => {
+                    // Trava de segurança: validar novamente antes de capturar o pagamento
+                    if (!validateForm()) {
+                      showPopup("Por favor, preencha todos os campos obrigatórios de endereço antes de concluir o pagamento.");
+                      return;
+                    }
                     const details = await actions.order.capture();
                     setIsSubmitting(true);
                     try {
