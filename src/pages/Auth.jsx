@@ -17,6 +17,7 @@ const Auth = () => {
   const [email, setEmail] = useState('');
   const [otpCode, setOtpCode] = useState('');
   const [step, setStep] = useState('email'); // 'email' or 'verify'
+  const [otpType, setOtpType] = useState('email'); // 'email' or 'signup'
 
   // Container onde o botão oficial do Google será renderizado
   const googleBtnRef = useRef(null);
@@ -55,12 +56,36 @@ const Auth = () => {
     setLoading(true);
     setError(null);
 
+    const cleanEmail = email.trim().toLowerCase();
+
     try {
-      const { error } = await supabase.auth.signInWithOtp({
-        email: email.trim().toLowerCase(),
+      // 1. Tenta enviar OTP impedindo a criação automática de usuário para verificar se ele já existe
+      const { data, error } = await supabase.auth.signInWithOtp({
+        email: cleanEmail,
+        options: {
+          shouldCreateUser: false,
+        }
       });
 
-      if (error) throw error;
+      if (error) {
+        // Se der erro, significa que o usuário não existe.
+        // Logo, é um cadastro novo! Vamos cadastrar e gerar o OTP de tipo 'signup'
+        console.log("Usuário não existe. Enviando OTP para novo cadastro...");
+        const { error: signUpError } = await supabase.auth.signInWithOtp({
+          email: cleanEmail,
+          options: {
+            shouldCreateUser: true,
+          }
+        });
+
+        if (signUpError) throw signUpError;
+        setOtpType('signup');
+      } else {
+        // Se não deu erro, o e-mail de login (type 'email') foi enviado com sucesso
+        console.log("Usuário já existe. Enviando OTP para login...");
+        setOtpType('email');
+      }
+
       setStep('verify');
     } catch (err) {
       console.error("Erro ao enviar OTP:", err);
@@ -84,35 +109,24 @@ const Auth = () => {
     setError(null);
 
     try {
-      // 1. Tentar como 'email' (login de usuário existente)
-      const { data, error } = await supabase.auth.verifyOtp({
+      const { error } = await supabase.auth.verifyOtp({
         email: email.trim().toLowerCase(),
         token: otpCode,
-        type: 'email'
+        type: otpType
       });
 
       if (error) {
-        console.log("Falha com type: 'email', tentando type: 'signup'...");
-        // 2. Se falhar, tentar como 'signup' (confirmação de novo cadastro)
-        const { data: dataSignup, error: errorSignup } = await supabase.auth.verifyOtp({
-          email: email.trim().toLowerCase(),
-          token: otpCode,
-          type: 'signup'
-        });
-        
-        if (errorSignup) {
-          console.log("Falha com type: 'signup', tentando type: 'magiclink'...");
-          // 3. Se falhar também, tentar como 'magiclink' (fallback)
-          const { data: dataMagic, error: errorMagic } = await supabase.auth.verifyOtp({
+        // Fallback de email -> magiclink
+        if (otpType === 'email') {
+          console.log("Falha com type: 'email', tentando magiclink...");
+          const { error: magicError } = await supabase.auth.verifyOtp({
             email: email.trim().toLowerCase(),
             token: otpCode,
             type: 'magiclink'
           });
-          
-          if (errorMagic) {
-            // Se todas as tentativas falharem, lança o erro
-            throw errorSignup;
-          }
+          if (magicError) throw magicError;
+        } else {
+          throw error;
         }
       }
     } catch (err) {
