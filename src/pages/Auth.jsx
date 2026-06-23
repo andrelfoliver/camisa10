@@ -100,8 +100,8 @@ const Auth = () => {
 
   const handleVerifyOtp = async (e) => {
     e.preventDefault();
-    if (!otpCode || otpCode.length !== 6) {
-      setError(language === 'pt' ? "O código deve ter 6 dígitos." : "Code must be 6 digits.");
+    if (!otpCode || otpCode.length < 6 || otpCode.length > 8) {
+      setError(language === 'pt' ? "O código deve ter entre 6 e 8 dígitos." : "Code must be between 6 and 8 digits.");
       return;
     }
 
@@ -341,15 +341,15 @@ const Auth = () => {
               <form onSubmit={handleVerifyOtp} style={{ display: 'flex', flexDirection: 'column', gap: '0.8rem', marginTop: '1.5rem' }}>
                 <p style={{ fontSize: '0.9rem', color: 'var(--text-muted)', margin: '0.5rem 0' }}>
                   {language === 'pt' 
-                    ? `Enviamos um código de 6 dígitos para:` 
-                    : `We sent a 6-digit code to:`}
+                    ? `Enviamos o código de acesso para:` 
+                    : `We sent the verification code to:`}
                   <strong style={{ display: 'block', color: '#fff', marginTop: '0.2rem' }}>{email}</strong>
                 </p>
 
                 <input
                   type="text"
-                  placeholder="123456"
-                  maxLength="6"
+                  placeholder="Código"
+                  maxLength="8"
                   required
                   value={otpCode}
                   onChange={(e) => setOtpCode(e.target.value.replace(/\D/g, ''))}
