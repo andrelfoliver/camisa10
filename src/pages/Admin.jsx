@@ -151,6 +151,8 @@ const Admin = () => {
     if (isBaby) return ['3M', '6M', '9M', '12M'];
     const isKids = prod.category === 'Infantil' || (prod.name || '').toLowerCase().includes('infantil') || (prod.name || '').toLowerCase().includes('kids');
     if (isKids) return ['16', '18', '20', '22', '24', '26', '28'];
+    const isPlayer = (prod.version || '').toLowerCase().includes('jogador') || (prod.version || '').toLowerCase().includes('player') || (prod.name || '').toLowerCase().includes('jogador') || (prod.name || '').toLowerCase().includes('player');
+    if (isPlayer) return ['S', 'M', 'L', 'XL', '2XL'];
     return ['S', 'M', 'L', 'XL', '2XL', '3XL', '4XL'];
   };
 

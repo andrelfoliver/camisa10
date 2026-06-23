@@ -87,6 +87,13 @@ const ProductPage = () => {
     product?.version?.toLowerCase().includes('womens') ||
     product?.version?.toLowerCase().includes('women'));
 
+  const isPlayer = !isShoes && !isNba && !isStreetwear && (
+    product?.version?.toLowerCase().includes('jogador') ||
+    product?.version?.toLowerCase().includes('player') ||
+    product?.name?.toLowerCase().includes('jogador') ||
+    product?.name?.toLowerCase().includes('player')
+  );
+
   const SHOE_SIZES = ['US 6.5 (BR 37)', 'US 7 (BR 38)', 'US 8 (BR 39)', 'US 8.5 (BR 40)', 'US 9.5 (BR 41)', 'US 10 (BR 42)', 'US 11 (BR 43)', 'US 12 (BR 44)'];
 
   const sizes = isShoes
@@ -97,9 +104,11 @@ const ProductPage = () => {
         ? ['16', '18', '20', '22', '24', '26', '28']
         : isFemale
           ? ['S', 'M', 'L', 'XL', '2XL']
-          : isStreetwear
-            ? ['S', 'M', 'L', 'XL', '2XL', '3XL']
-            : ['S', 'M', 'L', 'XL', '2XL', '3XL', '4XL'];
+          : isPlayer
+            ? ['S', 'M', 'L', 'XL', '2XL']
+            : isStreetwear
+              ? ['S', 'M', 'L', 'XL', '2XL', '3XL']
+              : ['S', 'M', 'L', 'XL', '2XL', '3XL', '4XL'];
 
   const availableSizes = sizes.filter(s => !product?.unavailable_sizes?.includes(s));
 
@@ -117,6 +126,9 @@ const ProductPage = () => {
     } else if (isFemale && !['S', 'M', 'L', 'XL', '2XL'].includes(selectedSize)) {
       const firstAvailable = availableSizes[0] || 'M';
       setSelectedSize(firstAvailable);
+    } else if (isPlayer && !['S', 'M', 'L', 'XL', '2XL'].includes(selectedSize)) {
+      const firstAvailable = availableSizes[0] || 'M';
+      setSelectedSize(firstAvailable);
     } else if (isStreetwear && !['S', 'M', 'L', 'XL', '2XL', '3XL'].includes(selectedSize)) {
       const firstAvailable = availableSizes[0] || 'M';
       setSelectedSize(firstAvailable);
@@ -125,7 +137,7 @@ const ProductPage = () => {
       const firstAvailable = availableSizes[0] || (isShoes ? 'US 8.5 (BR 40)' : isBaby ? '6M' : isKids ? '20' : 'M');
       setSelectedSize(firstAvailable);
     }
-  }, [isBaby, isKids, isFemale, isShoes, isStreetwear, product, availableSizes, selectedSize, SHOE_SIZES]);
+  }, [isBaby, isKids, isFemale, isPlayer, isShoes, isStreetwear, product, availableSizes, selectedSize, SHOE_SIZES]);
 
   const [isCustomized, setIsCustomized] = useState(false);
   const [customName, setCustomName] = useState('');
