@@ -316,6 +316,62 @@ const formatExpectedDayMonth = (date) => {
   }
 };
 
+const isEventInDestinationCountry = (locationText, statusText, country) => {
+  const loc = (locationText || '').toLowerCase();
+  const stat = (statusText || '').toLowerCase();
+  
+  if (country === 'US') {
+    const directKeywords = [
+      'usa', 'eua', 'united states', 'chicago', 'miami', 'new york', 'jfk', 'lax', 
+      'o\'hare', 'ohare', 'houston', 'katy', 'orlando', 'los angeles', 'san francisco', 
+      'dallas', 'atlanta', 'newark', 'oakland', 'seattle', 'boston', 'detroit', 'philadelphia'
+    ];
+    if (directKeywords.some(kw => loc.includes(kw) || stat.includes(kw))) {
+      return true;
+    }
+    const usRegex = /\bus\b/i;
+    if (usRegex.test(loc) || usRegex.test(stat)) {
+      return true;
+    }
+  } else if (country === 'CA') {
+    const directKeywords = [
+      'canada', 'canadá', 'toronto', 'vancouver', 'montreal', 'calgary', 
+      'edmonton', 'ottawa', 'mississauga', 'winnipeg', 'halifax'
+    ];
+    if (directKeywords.some(kw => loc.includes(kw) || stat.includes(kw))) {
+      return true;
+    }
+    const caRegex = /\bca\b/i;
+    if (caRegex.test(loc) || caRegex.test(stat)) {
+      return true;
+    }
+  }
+  return false;
+};
+
+const processHistoryCarriers = (historyList, destCountry) => {
+  if (!historyList) return [];
+  const country = destCountry?.toUpperCase() || 'CA';
+  
+  return historyList.map(item => {
+    if (item.carrier === 'CA' || item.carrier === 'US') {
+      return {
+        ...item,
+        carrier: country === 'US' ? 'US' : 'CA'
+      };
+    }
+    if (item.carrier === 'CN') {
+      if (isEventInDestinationCountry(item.location, item.status, country)) {
+        return {
+          ...item,
+          carrier: country === 'US' ? 'US' : 'CA'
+        };
+      }
+    }
+    return item;
+  });
+};
+
 const TrackingModal = ({ isOpen, onClose, initialTrackingNumber = '' }) => {
   const [trackingNumber, setTrackingNumber] = useState(initialTrackingNumber);
   const [recentSearches, setRecentSearches] = useState(() => {
@@ -402,9 +458,18 @@ const TrackingModal = ({ isOpen, onClose, initialTrackingNumber = '' }) => {
       if (data?.error) throw new Error(data.error);
 
       setTrackingData(data.trackingData);
-      setHistory(data.history || []);
-      setHasCanadaPostData(data.hasCanadaPostData || false);
-      setHasUspsData(data.hasUspsData || false);
+      
+      const countryStr = data.trackingData?.country?.toUpperCase() || '';
+      const isUs = countryStr === 'US' || countryStr === 'USA' || countryStr === 'EUA' || data.hasUspsData;
+      const normalizedDest = isUs ? 'US' : 'CA';
+      
+      const processedHistory = processHistoryCarriers(data.history || [], normalizedDest);
+      setHistory(processedHistory);
+      
+      const hasUs = processedHistory.some(item => item.carrier === 'US');
+      const hasCa = processedHistory.some(item => item.carrier === 'CA');
+      setHasCanadaPostData(!isUs && (data.hasCanadaPostData || hasCa));
+      setHasUspsData(isUs && (data.hasUspsData || hasUs));
       setOrderCity(null);
       setOrderAddress(null);
 

@@ -88,6 +88,39 @@ async function translateText(text: string): Promise<string> {
   return clean;
 }
 
+function isEventInDestinationCountry(locationText: string, statusText: string, country: string): boolean {
+  const loc = (locationText || '').toLowerCase();
+  const stat = (statusText || '').toLowerCase();
+  
+  if (country === 'US') {
+    const directKeywords = [
+      'usa', 'eua', 'united states', 'chicago', 'miami', 'new york', 'jfk', 'lax', 
+      'o\'hare', 'ohare', 'houston', 'katy', 'orlando', 'los angeles', 'san francisco', 
+      'dallas', 'atlanta', 'newark', 'oakland', 'seattle', 'boston', 'detroit', 'philadelphia'
+    ];
+    if (directKeywords.some(kw => loc.includes(kw) || stat.includes(kw))) {
+      return true;
+    }
+    const usRegex = /\bus\b/i;
+    if (usRegex.test(loc) || usRegex.test(stat)) {
+      return true;
+    }
+  } else if (country === 'CA') {
+    const directKeywords = [
+      'canada', 'canadá', 'toronto', 'vancouver', 'montreal', 'calgary', 
+      'edmonton', 'ottawa', 'mississauga', 'winnipeg', 'halifax'
+    ];
+    if (directKeywords.some(kw => loc.includes(kw) || stat.includes(kw))) {
+      return true;
+    }
+    const caRegex = /\bca\b/i;
+    if (caRegex.test(loc) || caRegex.test(stat)) {
+      return true;
+    }
+  }
+  return false;
+}
+
 async function fetchChineseTracking(num: string) {
   const decodeEntities = (str: string): string => str.replace(/&[a-zA-Z]+;/g, (m: string) => htmlEntities[m] || m);
   const cleanHTML = (str: string): string => {
@@ -332,13 +365,16 @@ Deno.serve(async (req: Request) => {
       console.error("Erro ao buscar cidade do pedido no banco:", dbErr);
     }
 
+    const country = cn.trackingData?.country?.toUpperCase() || (isUsps ? 'US' : 'CA');
+    const isActualUs = country === 'US' || country === 'USA' || country === 'EUA';
+
     if (cn.trackingData) {
       cn.trackingData.city = dbCity;
     } else if (dbCity) {
       cn.trackingData = { 
         referenceNo: '', 
         trackingNumber: cleanNum, 
-        country: isUsps ? 'US' : 'CA', 
+        country: isActualUs ? 'US' : 'CA', 
         date: '', 
         lastRecord: '', 
         consigneeName: '',
@@ -346,15 +382,34 @@ Deno.serve(async (req: Request) => {
       };
     }
 
+    // Corrigir/atualizar o carrier para eventos locais
+    const processedHistory = filteredHistory.map(event => {
+      if (event.carrier === 'CA' || event.carrier === 'US') {
+        return {
+          ...event,
+          carrier: isActualUs ? 'US' : 'CA'
+        };
+      }
+      if (event.carrier === 'CN') {
+        if (isEventInDestinationCountry(event.location, event.status, isActualUs ? 'US' : 'CA')) {
+          return {
+            ...event,
+            carrier: isActualUs ? 'US' : 'CA'
+          };
+        }
+      }
+      return event;
+    });
+
     const finalData = { 
       trackingData: cn.trackingData, 
-      history: filteredHistory.sort((a, b) => {
+      history: processedHistory.sort((a, b) => {
         const dateA = new Date(a.rawDate.replace(' ', 'T')).getTime();
         const dateB = new Date(b.rawDate.replace(' ', 'T')).getTime();
         return dateB - dateA;
       }), 
-      hasCanadaPostData: !isUsps && ca.length > 0, 
-      hasUspsData: isUsps && ca.length > 0, 
+      hasCanadaPostData: !isActualUs && (ca.length > 0 || processedHistory.some(h => h.carrier === 'CA')), 
+      hasUspsData: isActualUs && (ca.length > 0 || processedHistory.some(h => h.carrier === 'US')), 
       cachedAt: new Date().toISOString(),
       raw17Track: caData.rawAccepted
     };
