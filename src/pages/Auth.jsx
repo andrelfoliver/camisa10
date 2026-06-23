@@ -297,6 +297,14 @@ const Auth = () => {
                   onBlur={(e) => e.target.style.borderColor = 'var(--border-color)'}
                 />
                 
+                {email.toLowerCase().includes('gmail.com') && (
+                  <p style={{ color: 'var(--accent-color)', fontSize: '0.8rem', marginTop: '0.2rem', marginBottom: '0.2rem', textAlign: 'center', lineHeight: '1.3' }}>
+                    {language === 'pt' 
+                      ? '💡 Dica: Como você usa Gmail, pode clicar no botão "Entrar com o Google" no topo para entrar instantaneamente!' 
+                      : '💡 Tip: Since you use Gmail, you can click "Sign in with Google" at the top to sign in instantly!'}
+                  </p>
+                )}
+                
                 <button
                   type="submit"
                   className="btn-primary"
