@@ -487,10 +487,28 @@ const Checkout = () => {
         console.error("Erro ao disparar notificação de e-mail:", err);
       }
 
+      // 1.8 Sincronizar nome no Auth metadata e profiles caso não esteja cadastrado
+      try {
+        if (user) {
+          const hasName = user.user_metadata?.full_name && user.user_metadata.full_name.trim() !== '';
+          if (!hasName && data.name) {
+            await supabase.auth.updateUser({
+              data: { full_name: (data.name || '').trim() }
+            });
+            await supabase.from('profiles').update({
+              full_name: (data.name || '').trim()
+            }).eq('id', user.id);
+          }
+        }
+      } catch (metaErr) {
+        console.warn("⚠️ Erro ao atualizar nome do perfil:", metaErr);
+      }
+
       // 2. Atualizar o Perfil se solicitado
       if (data.saveAddress) {
         try {
           await supabase.from('profiles').update({
+            full_name: data.name,
             street: data.street,
             apartment: data.apartment,
             city: data.city,

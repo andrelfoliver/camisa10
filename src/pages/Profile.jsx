@@ -1,14 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useLanguage } from '../context/LanguageContext';
-import { LogOut, Package, Star, Calendar, MessageSquare, CheckCircle2, Clock, MapPin, TrendingUp, Copy, Share2, Menu, X as CloseIcon, Shield, PenTool, Zap, Lock, ChevronDown, ChevronUp, Truck } from 'lucide-react';
+import { LogOut, Package, Star, Calendar, MessageSquare, CheckCircle2, Clock, MapPin, TrendingUp, Copy, Share2, Menu, X as CloseIcon, Shield, PenTool, Zap, Lock, ChevronDown, ChevronUp, Truck, UserCircle, Check, Edit } from 'lucide-react';
 import { Navigate, useNavigate } from 'react-router-dom';
 import { supabase } from '../services/supabase';
 import TrackingModal from '../components/TrackingModal';
 
 const Profile = () => {
   const { user, signOut, isAdmin, loading: authLoading } = useAuth();
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
   const navigate = useNavigate();
 
   // ✅ ALL HOOKS MUST BE BEFORE CONDITIONAL RETURNS
@@ -29,9 +29,14 @@ const Profile = () => {
   const [expandedScript, setExpandedScript] = useState(null);
   const [isTrackModalOpen, setIsTrackModalOpen] = useState(false);
   const [trackingNumberToView, setTrackingNumberToView] = useState('');
+  const [isEditingName, setIsEditingName] = useState(false);
+  const [editName, setEditName] = useState('');
 
   useEffect(() => {
-    if (user) loadUserData();
+    if (user) {
+      loadUserData();
+      setEditName(user.user_metadata?.full_name || '');
+    }
   }, [user]);
 
   const loadUserData = async () => {
@@ -122,6 +127,28 @@ const Profile = () => {
     navigate('/');
   };
 
+  const handleUpdateName = async () => {
+    if (!editName || !editName.trim()) return;
+    setSubmitting(true);
+    try {
+      const { error } = await supabase.auth.updateUser({
+        data: { full_name: editName.trim() }
+      });
+      if (error) {
+        alert("Erro ao atualizar nome: " + error.message);
+      } else {
+        await supabase.from('profiles').update({
+          full_name: editName.trim()
+        }).eq('id', user.id);
+        setIsEditingName(false);
+      }
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
   const getStatusLabel = (status) => {
     const map = {
       pending: t('profile_status_pending'),
@@ -139,7 +166,7 @@ const Profile = () => {
     setSubmitting(true);
     const feedbackData = {
       user_id: user.id,
-      name: user.user_metadata?.full_name || 'Fan',
+      name: user.user_metadata?.full_name || (language === 'pt' ? 'Torcedor' : 'Fan'),
       content,
       rating,
       location: location || 'Canada',
@@ -184,14 +211,112 @@ const Profile = () => {
     <div className="container" style={{ padding: '4rem 1rem', minHeight: '80vh' }}>
       
       <div className="profile-header" style={{ display: 'flex', alignItems: 'center', gap: '1.5rem', marginBottom: '3rem' }}>
-        <img 
-          src={user.user_metadata?.avatar_url || 'https://via.placeholder.com/100'} 
-          alt="Avatar" 
-          style={{ width: '80px', height: '80px', borderRadius: '50%', border: '2px solid var(--accent-color)' }}
-        />
-        <div>
-          <h1 style={{ fontSize: '2rem', margin: 0 }}>{user.user_metadata?.full_name || 'Fan'}</h1>
-          <p style={{ color: 'var(--text-muted)', margin: 0 }}>{user.email}</p>
+        {user.user_metadata?.avatar_url && user.user_metadata.avatar_url.trim() !== '' ? (
+          <img 
+            src={user.user_metadata.avatar_url} 
+            alt="Avatar" 
+            style={{ width: '80px', height: '80px', borderRadius: '50%', border: '2px solid var(--accent-color)', objectFit: 'cover' }}
+          />
+        ) : (
+          <div style={{ width: '80px', height: '80px', borderRadius: '50%', border: '2px solid var(--accent-color)', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(255,255,255,0.05)', color: 'var(--accent-color)' }}>
+            <UserCircle size={56} />
+          </div>
+        )}
+        <div style={{ flex: 1 }}>
+          {isEditingName ? (
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.4rem' }}>
+              <input
+                type="text"
+                value={editName}
+                onChange={(e) => setEditName(e.target.value)}
+                style={{
+                  padding: '0.4rem 0.8rem',
+                  background: 'var(--bg-color)',
+                  color: '#fff',
+                  border: '1px solid var(--accent-color)',
+                  borderRadius: '6px',
+                  fontSize: '1.25rem',
+                  fontWeight: 600,
+                  outline: 'none',
+                  width: '100%',
+                  maxWidth: '300px'
+                }}
+                autoFocus
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') handleUpdateName();
+                  if (e.key === 'Escape') setIsEditingName(false);
+                }}
+              />
+              <button
+                onClick={handleUpdateName}
+                disabled={submitting}
+                style={{
+                  background: 'rgba(204, 255, 0, 0.2)',
+                  color: 'var(--accent-color)',
+                  border: 'none',
+                  borderRadius: '6px',
+                  padding: '0.5rem',
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  opacity: submitting ? 0.7 : 1
+                }}
+                title="Salvar"
+              >
+                <Check size={18} />
+              </button>
+              <button
+                onClick={() => setIsEditingName(false)}
+                style={{
+                  background: 'rgba(239, 68, 68, 0.2)',
+                  color: '#EF4444',
+                  border: 'none',
+                  borderRadius: '6px',
+                  padding: '0.5rem',
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center'
+                }}
+                title="Cancelar"
+              >
+                <CloseIcon size={18} />
+              </button>
+            </div>
+          ) : (
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', flexWrap: 'wrap' }}>
+              <h1 style={{ fontSize: '2rem', margin: 0, fontWeight: 800 }}>
+                {user.user_metadata?.full_name || (language === 'pt' ? 'Torcedor' : 'Fan')}
+              </h1>
+              <button
+                onClick={() => {
+                  setEditName(user.user_metadata?.full_name || '');
+                  setIsEditingName(true);
+                }}
+                style={{
+                  background: 'rgba(255,255,255,0.05)',
+                  border: '1px solid rgba(255,255,255,0.1)',
+                  color: 'var(--text-muted)',
+                  borderRadius: '6px',
+                  padding: '0.3rem 0.6rem',
+                  fontSize: '0.75rem',
+                  fontWeight: 600,
+                  cursor: 'pointer',
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '0.3rem',
+                  transition: 'all 0.2s'
+                }}
+                onMouseEnter={(e) => { e.currentTarget.style.color = 'var(--accent-color)'; e.currentTarget.style.background = 'rgba(255,255,255,0.08)'; }}
+                onMouseLeave={(e) => { e.currentTarget.style.color = 'var(--text-muted)'; e.currentTarget.style.background = 'rgba(255,255,255,0.05)'; }}
+                title="Editar Nome"
+              >
+                <Edit size={12} /> {language === 'pt' ? 'Editar' : 'Edit'}
+              </button>
+            </div>
+          )}
+          <p style={{ color: 'var(--text-muted)', margin: '0.2rem 0 0 0', fontSize: '0.95rem' }}>{user.email}</p>
         </div>
       </div>
 

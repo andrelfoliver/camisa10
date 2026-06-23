@@ -276,7 +276,7 @@ const Navbar = () => {
               style={{ color: user ? 'var(--accent-color)' : 'var(--text-main)', padding: '0.35rem', background: 'transparent', border: 'none', cursor: 'pointer' }}
               title={user ? 'Minha Conta' : 'Fazer Login'}
             >
-              {user?.user_metadata?.avatar_url ? (
+              {user?.user_metadata?.avatar_url && user.user_metadata.avatar_url.trim() !== '' ? (
                 <img src={user.user_metadata.avatar_url} alt="Profile" style={{ width: '22px', height: '22px', borderRadius: '50%', border: `1px solid var(--accent-color)`, objectFit: 'cover' }} />
               ) : (
                 <UserCircle size={22} />
