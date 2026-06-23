@@ -2987,7 +2987,7 @@ const Admin = () => {
                 province = 'QC';
               }
               const key = `${city}${province ? `, ${province}` : ''}`;
-              if (!acc[key]) acc[key] = { count: 0, revenue: 0, deliveryTimes: [], shirts: 0, customerEmails: new Set() };
+              if (!acc[key]) acc[key] = { count: 0, revenue: 0, deliveryTimes: [], shirts: 0, customerEmails: new Set(), customers: [] };
               acc[key].count++;
               acc[key].revenue += Number(order.total_price || 0);
               const itemCount = Array.isArray(order.items) 
@@ -3001,6 +3001,11 @@ const Admin = () => {
                 acc[key].customerEmails.add(order.customer_name.trim().toLowerCase());
               } else {
                 acc[key].customerEmails.add(order.id);
+              }
+
+              const customerName = order.customer_name ? order.customer_name.trim() : (order.customer_email ? order.customer_email.trim() : 'N/A');
+              if (!acc[key].customers.includes(customerName)) {
+                acc[key].customers.push(customerName);
               }
 
               if (order.tracking_number) {
@@ -3252,11 +3257,16 @@ const Admin = () => {
                                         ? cityInfo.deliveryTimes.reduce((sum, t) => sum + t, 0) / cityInfo.deliveryTimes.length
                                         : null;
                                       return (
-                                        <div key={cityInfo.key} className="glass-panel" style={{ padding: '1rem', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.03)' }}>
+                                        <div key={cityInfo.key} className="glass-panel" style={{ padding: '1rem', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.03)', display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
                                           <h4 style={{ margin: 0, color: '#fff', fontSize: '0.95rem' }}>{cityInfo.cityName}</h4>
-                                          <p style={{ margin: '0.2rem 0 0 0', fontSize: '0.78rem', color: 'var(--text-muted)' }}>
+                                          <p style={{ margin: 0, fontSize: '0.78rem', color: 'var(--text-muted)' }}>
                                             {cityInfo.customerEmails.size} {cityInfo.customerEmails.size === 1 ? 'cliente' : 'clientes'} • {cityInfo.shirts} {cityInfo.shirts === 1 ? 'camisa' : 'camisas'}
                                           </p>
+                                          {cityInfo.customers && cityInfo.customers.length > 0 && (
+                                            <p style={{ margin: 0, fontSize: '0.75rem', color: 'rgba(255,255,255,0.5)', wordBreak: 'break-word' }}>
+                                              <strong>Clientes:</strong> {cityInfo.customers.join(', ')}
+                                            </p>
+                                          )}
                                           {avgDeliveryTime !== null ? (
                                             <p style={{ margin: '0.2rem 0 0 0', fontSize: '0.78rem', color: '#10B981', display: 'flex', alignItems: 'center', gap: '0.3rem' }}>
                                               <Truck size={12} /> Média de entrega: {avgDeliveryTime.toFixed(1)} dias
@@ -3326,11 +3336,16 @@ const Admin = () => {
                                         ? cityInfo.deliveryTimes.reduce((sum, t) => sum + t, 0) / cityInfo.deliveryTimes.length
                                         : null;
                                       return (
-                                        <div key={cityInfo.key} className="glass-panel" style={{ padding: '1rem', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.03)' }}>
+                                        <div key={cityInfo.key} className="glass-panel" style={{ padding: '1rem', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.03)', display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
                                           <h4 style={{ margin: 0, color: '#fff', fontSize: '0.95rem' }}>{cityInfo.cityName}</h4>
-                                          <p style={{ margin: '0.2rem 0 0 0', fontSize: '0.78rem', color: 'var(--text-muted)' }}>
+                                          <p style={{ margin: 0, fontSize: '0.78rem', color: 'var(--text-muted)' }}>
                                             {cityInfo.customerEmails.size} {cityInfo.customerEmails.size === 1 ? 'cliente' : 'clientes'} • {cityInfo.shirts} {cityInfo.shirts === 1 ? 'camisa' : 'camisas'}
                                           </p>
+                                          {cityInfo.customers && cityInfo.customers.length > 0 && (
+                                            <p style={{ margin: 0, fontSize: '0.75rem', color: 'rgba(255,255,255,0.5)', wordBreak: 'break-word' }}>
+                                              <strong>Clientes:</strong> {cityInfo.customers.join(', ')}
+                                            </p>
+                                          )}
                                           {avgDeliveryTime !== null ? (
                                             <p style={{ margin: '0.2rem 0 0 0', fontSize: '0.78rem', color: '#10B981', display: 'flex', alignItems: 'center', gap: '0.3rem' }}>
                                               <Truck size={12} /> Média de entrega: {avgDeliveryTime.toFixed(1)} dias
@@ -3400,11 +3415,16 @@ const Admin = () => {
                                         ? cityInfo.deliveryTimes.reduce((sum, t) => sum + t, 0) / cityInfo.deliveryTimes.length
                                         : null;
                                       return (
-                                        <div key={cityInfo.key} className="glass-panel" style={{ padding: '1rem', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.03)' }}>
+                                        <div key={cityInfo.key} className="glass-panel" style={{ padding: '1rem', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.03)', display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
                                           <h4 style={{ margin: 0, color: '#fff', fontSize: '0.95rem' }}>{cityInfo.cityName}</h4>
-                                          <p style={{ margin: '0.2rem 0 0 0', fontSize: '0.78rem', color: 'var(--text-muted)' }}>
+                                          <p style={{ margin: 0, fontSize: '0.78rem', color: 'var(--text-muted)' }}>
                                             {cityInfo.customerEmails.size} {cityInfo.customerEmails.size === 1 ? 'cliente' : 'clientes'} • {cityInfo.shirts} {cityInfo.shirts === 1 ? 'camisa' : 'camisas'}
                                           </p>
+                                          {cityInfo.customers && cityInfo.customers.length > 0 && (
+                                            <p style={{ margin: 0, fontSize: '0.75rem', color: 'rgba(255,255,255,0.5)', wordBreak: 'break-word' }}>
+                                              <strong>Clientes:</strong> {cityInfo.customers.join(', ')}
+                                            </p>
+                                          )}
                                           {avgDeliveryTime !== null ? (
                                             <p style={{ margin: '0.2rem 0 0 0', fontSize: '0.78rem', color: '#10B981', display: 'flex', alignItems: 'center', gap: '0.3rem' }}>
                                               <Truck size={12} /> Média de entrega: {avgDeliveryTime.toFixed(1)} dias
