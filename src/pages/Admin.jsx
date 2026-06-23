@@ -1090,25 +1090,27 @@ const Admin = () => {
     }
   };
 
-  const handleDeleteCustomer = async (customerId, customerEmail) => {
-    if (!window.confirm(`Tem certeza que deseja excluir o cliente com e-mail ${customerEmail}?`)) {
-      return;
-    }
-    
-    try {
-      const { error } = await supabase
-        .from('profiles')
-        .delete()
-        .eq('id', customerId);
+  const handleDeleteCustomer = (customerId, customerEmail) => {
+    showConfirm(
+      "Excluir Cliente",
+      `Tem certeza que deseja excluir o cliente com e-mail ${customerEmail}?`,
+      async () => {
+        try {
+          const { error } = await supabase
+            .from('profiles')
+            .delete()
+            .eq('id', customerId);
 
-      if (error) throw error;
-      
-      showAlert("Sucesso!", "Perfil do cliente excluído do banco com sucesso.");
-      setCustomers(prev => prev.filter(c => c.id !== customerId));
-    } catch (err) {
-      console.error(err);
-      showAlert("Erro", `Não foi possível excluir o cliente: ${err.message}`);
-    }
+          if (error) throw error;
+          
+          showAlert("Sucesso!", "Perfil do cliente excluído do banco com sucesso.");
+          setCustomers(prev => prev.filter(c => c.id !== customerId));
+        } catch (err) {
+          console.error(err);
+          showAlert("Erro", `Não foi possível excluir o cliente: ${err.message}`);
+        }
+      }
+    );
   };
 
   const formatCartItemDate = (dateStr) => {
