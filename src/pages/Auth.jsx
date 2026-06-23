@@ -84,13 +84,37 @@ const Auth = () => {
     setError(null);
 
     try {
-      const { error } = await supabase.auth.verifyOtp({
+      // 1. Tentar como 'email' (login de usuário existente)
+      const { data, error } = await supabase.auth.verifyOtp({
         email: email.trim().toLowerCase(),
         token: otpCode,
         type: 'email'
       });
 
-      if (error) throw error;
+      if (error) {
+        console.log("Falha com type: 'email', tentando type: 'signup'...");
+        // 2. Se falhar, tentar como 'signup' (confirmação de novo cadastro)
+        const { data: dataSignup, error: errorSignup } = await supabase.auth.verifyOtp({
+          email: email.trim().toLowerCase(),
+          token: otpCode,
+          type: 'signup'
+        });
+        
+        if (errorSignup) {
+          console.log("Falha com type: 'signup', tentando type: 'magiclink'...");
+          // 3. Se falhar também, tentar como 'magiclink' (fallback)
+          const { data: dataMagic, error: errorMagic } = await supabase.auth.verifyOtp({
+            email: email.trim().toLowerCase(),
+            token: otpCode,
+            type: 'magiclink'
+          });
+          
+          if (errorMagic) {
+            // Se todas as tentativas falharem, lança o erro
+            throw errorSignup;
+          }
+        }
+      }
     } catch (err) {
       console.error("Erro ao verificar OTP:", err);
       setError(language === 'pt' 
