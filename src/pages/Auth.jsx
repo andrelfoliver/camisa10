@@ -14,6 +14,10 @@ const Auth = () => {
   const [error, setError] = useState(null);
   const [gisReady, setGisReady] = useState(false);
 
+  const [email, setEmail] = useState('');
+  const [otpCode, setOtpCode] = useState('');
+  const [step, setStep] = useState('email'); // 'email' or 'verify'
+
   // Container onde o botão oficial do Google será renderizado
   const googleBtnRef = useRef(null);
 
@@ -43,6 +47,59 @@ const Auth = () => {
       setLoading(false);
     }
   }, [t]);
+
+  const handleSendOtp = async (e) => {
+    e.preventDefault();
+    if (!email || !email.trim()) return;
+
+    setLoading(true);
+    setError(null);
+
+    try {
+      const { error } = await supabase.auth.signInWithOtp({
+        email: email.trim().toLowerCase(),
+      });
+
+      if (error) throw error;
+      setStep('verify');
+    } catch (err) {
+      console.error("Erro ao enviar OTP:", err);
+      setError(language === 'pt' 
+        ? `Falha ao enviar código: ${err.message || 'Verifique o e-mail digitado.'}` 
+        : `Failed to send code: ${err.message || 'Please check your email address.'}`
+      );
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleVerifyOtp = async (e) => {
+    e.preventDefault();
+    if (!otpCode || otpCode.length !== 6) {
+      setError(language === 'pt' ? "O código deve ter 6 dígitos." : "Code must be 6 digits.");
+      return;
+    }
+
+    setLoading(true);
+    setError(null);
+
+    try {
+      const { error } = await supabase.auth.verifyOtp({
+        email: email.trim().toLowerCase(),
+        token: otpCode,
+        type: 'email'
+      });
+
+      if (error) throw error;
+    } catch (err) {
+      console.error("Erro ao verificar OTP:", err);
+      setError(language === 'pt' 
+        ? `Código inválido ou expirado: ${err.message}` 
+        : `Invalid or expired code: ${err.message}`
+      );
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
     let cancelled = false;
@@ -153,18 +210,21 @@ const Auth = () => {
           </div>
         )}
 
-        {loading ? (
+        {loading && (
           <div style={{
             padding: '1rem',
             background: 'rgba(204,255,0,0.05)',
             borderRadius: '8px',
             color: 'var(--accent-color)',
             fontWeight: 600,
-            fontSize: '1rem'
+            fontSize: '1rem',
+            marginBottom: '1.5rem'
           }}>
             {t('auth_loading')}
           </div>
-        ) : (
+        )}
+
+        {!loading && (
           <>
             {/* Container do botão oficial do Google — abre popup real */}
             <div
@@ -177,9 +237,124 @@ const Auth = () => {
               }}
             />
             {!gisReady && (
-              <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem' }}>
-                Carregando...
+              <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem', marginBottom: '1rem' }}>
+                Carregando Google Login...
               </p>
+            )}
+
+            {step === 'email' ? (
+              <form onSubmit={handleSendOtp} style={{ display: 'flex', flexDirection: 'column', gap: '0.8rem', marginTop: '1.5rem' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', margin: '0.5rem 0' }}>
+                  <div style={{ flex: 1, height: '1px', background: 'rgba(255,255,255,0.1)' }}></div>
+                  <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                    {language === 'pt' ? 'ou entrar com e-mail' : 'or sign in with email'}
+                  </span>
+                  <div style={{ flex: 1, height: '1px', background: 'rgba(255,255,255,0.1)' }}></div>
+                </div>
+
+                <input
+                  type="email"
+                  placeholder={language === 'pt' ? 'Seu melhor e-mail (qualquer provedor)' : 'Your best email (any provider)'}
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  required
+                  style={{
+                    padding: '0.8rem 1rem',
+                    background: 'rgba(255, 255, 255, 0.02)',
+                    border: '1px solid var(--border-color)',
+                    borderRadius: '8px',
+                    color: '#fff',
+                    fontSize: '0.95rem',
+                    outline: 'none',
+                    textAlign: 'center',
+                    transition: 'border-color 0.2s'
+                  }}
+                  onFocus={(e) => e.target.style.borderColor = 'var(--accent-color)'}
+                  onBlur={(e) => e.target.style.borderColor = 'var(--border-color)'}
+                />
+                
+                <button
+                  type="submit"
+                  className="btn-primary"
+                  style={{
+                    padding: '0.8rem',
+                    borderRadius: '8px',
+                    fontWeight: 700,
+                    fontSize: '0.95rem',
+                    cursor: 'pointer',
+                    background: 'var(--accent-color)',
+                    color: '#000',
+                    border: 'none',
+                    transition: 'transform 0.2s, opacity 0.2s'
+                  }}
+                >
+                  {language === 'pt' ? 'Receber Código de Acesso' : 'Get Verification Code'}
+                </button>
+              </form>
+            ) : (
+              <form onSubmit={handleVerifyOtp} style={{ display: 'flex', flexDirection: 'column', gap: '0.8rem', marginTop: '1.5rem' }}>
+                <p style={{ fontSize: '0.9rem', color: 'var(--text-muted)', margin: '0.5rem 0' }}>
+                  {language === 'pt' 
+                    ? `Enviamos um código de 6 dígitos para:` 
+                    : `We sent a 6-digit code to:`}
+                  <strong style={{ display: 'block', color: '#fff', marginTop: '0.2rem' }}>{email}</strong>
+                </p>
+
+                <input
+                  type="text"
+                  placeholder="123456"
+                  maxLength="6"
+                  required
+                  value={otpCode}
+                  onChange={(e) => setOtpCode(e.target.value.replace(/\D/g, ''))}
+                  style={{
+                    padding: '0.8rem 1rem',
+                    background: 'rgba(255, 255, 255, 0.02)',
+                    border: '1px solid var(--accent-color)',
+                    borderRadius: '8px',
+                    color: '#fff',
+                    fontSize: '1.25rem',
+                    fontWeight: 800,
+                    letterSpacing: '4px',
+                    textAlign: 'center',
+                    outline: 'none'
+                  }}
+                  autoFocus
+                />
+
+                <button
+                  type="submit"
+                  className="btn-primary"
+                  style={{
+                    padding: '0.8rem',
+                    borderRadius: '8px',
+                    fontWeight: 700,
+                    fontSize: '0.95rem',
+                    cursor: 'pointer',
+                    background: 'var(--accent-color)',
+                    color: '#000',
+                    border: 'none'
+                  }}
+                >
+                  {language === 'pt' ? 'Confirmar Código e Entrar' : 'Verify Code & Sign In'}
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => { setStep('email'); setOtpCode(''); }}
+                  style={{
+                    background: 'transparent',
+                    border: 'none',
+                    color: 'var(--text-muted)',
+                    cursor: 'pointer',
+                    fontSize: '0.85rem',
+                    textDecoration: 'underline',
+                    marginTop: '0.5rem'
+                  }}
+                >
+                  {language === 'pt' ? 'Alterar e-mail' : 'Change email'}
+                </button>
+              </form>
             )}
           </>
         )}
