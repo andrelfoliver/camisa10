@@ -30,7 +30,7 @@ export default async function handler(req, res) {
     return res.status(200).json({ success: true, message: 'Meta configuration missing' });
   }
 
-  const { eventName, eventId, customData = {}, userData = {} } = req.body;
+  const { eventName, eventId, customData = {}, userData = {}, testEventCode } = req.body;
 
   if (!eventName || !eventId) {
     return res.status(400).json({ error: 'Missing eventName or eventId' });
@@ -87,6 +87,10 @@ export default async function handler(req, res) {
       },
     ],
   };
+
+  if (testEventCode) {
+    capiPayload.test_event_code = testEventCode;
+  }
 
   try {
     const url = `https://graph.facebook.com/v19.0/${pixelId}/events?access_token=${accessToken}`;

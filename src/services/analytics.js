@@ -40,6 +40,12 @@ export function initAnalytics() {
     localStorage.setItem(REFERRER_KEY, ref.trim());
   }
 
+  // Capturar código de teste da Meta se estiver presente na URL
+  const testCode = params.get('fb_pixel_test_event_code');
+  if (testCode) {
+    sessionStorage.setItem('ifooty_test_event_code', testCode.trim());
+  }
+
   // 3. Inicializar Meta Pixel se o ID estiver configurado
   const pixelId = (import.meta.env.VITE_META_PIXEL_ID || '').trim();
   if (pixelId && !window.fbq) {
@@ -100,6 +106,7 @@ export async function trackEvent(eventName, customData = {}, userData = {}, even
 
   // 2. Disparar evento Meta Conversion API (Server-Side CAPI)
   try {
+    const testEventCode = sessionStorage.getItem('ifooty_test_event_code') || null;
     fetch('/api/capi', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -110,7 +117,8 @@ export async function trackEvent(eventName, customData = {}, userData = {}, even
         userData: {
           ...userData,
           client_user_agent: window.navigator.userAgent,
-        }
+        },
+        testEventCode
       })
     }).catch(err => console.warn('[CAPI] Fetch background error:', err));
   } catch (capiErr) {
