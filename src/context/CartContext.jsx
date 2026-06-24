@@ -2,6 +2,7 @@ import React, { createContext, useContext, useState, useEffect, useRef } from 'r
 import { supabase } from '../services/supabase';
 import { useAuth } from './AuthContext';
 import { toast } from 'react-hot-toast';
+import { trackEvent } from '../services/analytics';
 
 const CartContext = createContext();
 
@@ -240,6 +241,21 @@ export const CartProvider = ({ children }) => {
       }];
     });
     setIsCartOpen(true);
+
+    trackEvent('AddToCart', {
+      content_name: product.name,
+      content_category: product.category || 'Catálogo',
+      content_ids: [product.id],
+      content_type: 'product',
+      value: finalPrice,
+      currency: 'CAD',
+      quantity: 1
+    }, {
+      email: user?.email,
+      phone: user?.phone || user?.user_metadata?.phone,
+      firstName: user?.user_metadata?.full_name?.split(' ')[0],
+      lastName: user?.user_metadata?.full_name?.split(' ').slice(1).join(' ')
+    });
   };
 
   const removeFromCart = (cartId) => {

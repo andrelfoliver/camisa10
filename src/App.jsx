@@ -22,6 +22,8 @@ import ExitIntentPopup from './components/ExitIntentPopup';
 import FunkPlayer from './components/FunkPlayer';
 import AiChatbot from './components/AiChatbot';
 
+import { initAnalytics, trackEvent } from './services/analytics';
+
 const ScrollToTop = () => {
   const { pathname } = useLocation();
   useEffect(() => {
@@ -35,6 +37,11 @@ const AppLayout = () => {
   const isAdminPage = pathname.startsWith('/admin');
   const isBlacklisted = ['/checkout', '/auth', '/admin', '/perfil', '/sucesso'].some(p => pathname.startsWith(p));
   const [waNumber, setWaNumber] = useState('17788061419');
+
+  // Inicializar o Analytics (gerar session_id, capturar UTMs, carregar Meta Pixel)
+  useEffect(() => {
+    initAnalytics();
+  }, []);
 
   useEffect(() => {
     // Lista de caminhos que representam "navegação de compras" (listas de produtos)
@@ -55,6 +62,9 @@ const AppLayout = () => {
     if (ref) {
       localStorage.setItem('ifooty_referrer', ref);
     }
+
+    // Disparar o PageView para todos os canais de analytics
+    trackEvent('PageView', { path: pathname });
 
     // Auto-correção: se por algum motivo o path salvo for o checkout ou auth, resetar para home
     const saved = sessionStorage.getItem('ifooty_last_browsed_path');

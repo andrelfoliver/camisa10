@@ -3,6 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { supabase } from '../services/supabase';
 import { useCart } from '../context/CartContext';
 import { useLanguage } from '../context/LanguageContext';
+import { trackEvent } from '../services/analytics';
 
 import { brasil2025Products } from '../data/brasil2025';
 import {
@@ -185,6 +186,14 @@ const ProductPage = () => {
           ].filter((val, idx, self) => val && self.indexOf(val) === idx);
           setProduct({ ...p, gallery: galleryWithMain });
           setActiveImage(p.image);
+          trackEvent('ViewContent', {
+            content_name: p.name,
+            content_category: p.category,
+            content_ids: [p.id],
+            content_type: 'product',
+            value: p.price || 109.99,
+            currency: 'CAD'
+          });
         }
         setLoading(false);
         return;
@@ -198,6 +207,14 @@ const ProductPage = () => {
         ].filter((val, idx, self) => val && self.indexOf(val) === idx);
         setProduct({ ...data, gallery: galleryWithMain });
         setActiveImage(data.image);
+        trackEvent('ViewContent', {
+          content_name: data.name,
+          content_category: data.category,
+          content_ids: [data.id],
+          content_type: 'product',
+          value: data.price || 109.99,
+          currency: 'CAD'
+        });
       }
       setLoading(false);
     }

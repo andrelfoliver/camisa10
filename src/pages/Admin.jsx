@@ -196,6 +196,9 @@ const Admin = () => {
   const [customerPage, setCustomerPage] = useState(1);
   const customersPerPage = 15;
   const [orders, setOrders] = useState([]);
+  const [analyticsEvents, setAnalyticsEvents] = useState([]);
+  const [analyticsLoading, setAnalyticsLoading] = useState(false);
+  const [analyticsPeriod, setAnalyticsPeriod] = useState('all'); // 'all', '24h', '7d', '30d'
   const [testimonials, setTestimonials] = useState([]);
   const [interests, setInterests] = useState([]);
   const [heroUrl, setHeroUrl] = useState('');
@@ -576,6 +579,41 @@ const Admin = () => {
       loadChatSessions();
     }
   }, [isAdmin, user]);
+
+  const loadAnalyticsEvents = async () => {
+    setAnalyticsLoading(true);
+    try {
+      let query = supabase.from('analytics_events').select('*').order('created_at', { ascending: false });
+      
+      if (analyticsPeriod !== 'all') {
+        const days = analyticsPeriod === '24h' ? 1 : (analyticsPeriod === '7d' ? 7 : 30);
+        const limitDate = new Date();
+        limitDate.setDate(limitDate.getDate() - days);
+        query = query.gte('created_at', limitDate.toISOString());
+      }
+      
+      const { data, error } = await query;
+      if (!error && data) {
+        setAnalyticsEvents(data);
+      } else {
+        if (error?.code === '42P01') {
+          console.warn("Tabela 'analytics_events' não encontrada. A migração SQL de analytics ainda não foi executada.");
+        } else {
+          console.error("Erro ao carregar analytics_events:", error);
+        }
+      }
+    } catch (err) {
+      console.error("Erro ao carregar analytics:", err);
+    } finally {
+      setAnalyticsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    if (isAdmin && supplierTab === 'MARKETING') {
+      loadAnalyticsEvents();
+    }
+  }, [isAdmin, supplierTab, analyticsPeriod]);
 
 
   const handleSavePricing = async (e) => {
@@ -2351,6 +2389,14 @@ const Admin = () => {
           </button>
 
           <button
+            onClick={() => setSupplierTab('MARKETING')}
+            className={supplierTab === 'MARKETING' ? 'active-tab' : ''}
+            style={{ padding: '0.8rem 1.5rem', background: supplierTab === 'MARKETING' ? 'var(--accent-color)' : 'transparent', color: supplierTab === 'MARKETING' ? '#000' : 'var(--text-muted)', border: 'none', borderRadius: '4px', cursor: 'pointer', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '0.5rem' }}
+          >
+            <BarChart size={18} /> MARKETING & FUNIL
+          </button>
+
+          <button
             onClick={() => setSupplierTab('CONFIG')}
             className={supplierTab === 'CONFIG' ? 'active-tab' : ''}
             style={{ padding: '0.8rem 1rem', borderRadius: 'var(--radius-md)', display: 'flex', alignItems: 'center', gap: '0.8rem', width: '100%', textAlign: 'left', background: supplierTab === 'CONFIG' ? '#3B82F6' : 'transparent', color: supplierTab === 'CONFIG' ? '#fff' : 'var(--text-main)', fontWeight: supplierTab === 'CONFIG' ? 700 : 500, transition: 'all 0.2s', border: 'none', cursor: 'pointer' }}
@@ -2419,26 +2465,27 @@ const Admin = () => {
             <div>
               <h1 className="admin-header-title" style={{ fontSize: '1.8rem', color: '#fff', fontWeight: 800, margin: 0 }}>
                 {
-                  supplierTab === 'CLIENTES' ? 'Gestão de Clientes' :
-                    supplierTab === 'INTERESSES' ? 'Interesses de Lançamento / Pré-venda' :
-                      supplierTab === 'CONFIG' ? 'Configuração de Interface' :
-                        supplierTab === 'PRICING' ? 'Tabela de Preços Globais' :
-                          supplierTab === 'TESTIMONIALS' ? 'Gestão de Depoimentos' :
-                            supplierTab === 'TEAMS' ? 'Gestão de Escudos Oficiais' :
-                              supplierTab === 'CLOUD_ALL' ? 'Todo o Banco na Nuvem' :
-                                supplierTab === 'ESTOQUE' ? 'Gestão de Estoque' :
-                                  supplierTab === 'AGENTS' ? 'Agentes & Vendas' :
-                                    supplierTab === 'CHAT_LOGS' ? 'Conversas com IA (Logs)' :
-                                      supplierTab === 'CIDADES' ? 'Distribuição Geográfica' :
-                                        supplierTab === 'FINANCEIRO' ? 'Resumo Financeiro Executivo' :
-                                          `${supplierTab.replace('CAT_', '')}`}
+                  supplierTab === 'MARKETING' ? 'Marketing Analytics & Funil' :
+                    supplierTab === 'CLIENTES' ? 'Gestão de Clientes' :
+                      supplierTab === 'INTERESSES' ? 'Interesses de Lançamento / Pré-venda' :
+                        supplierTab === 'CONFIG' ? 'Configuração de Interface' :
+                          supplierTab === 'PRICING' ? 'Tabela de Preços Globais' :
+                            supplierTab === 'TESTIMONIALS' ? 'Gestão de Depoimentos' :
+                              supplierTab === 'TEAMS' ? 'Gestão de Escudos Oficiais' :
+                                supplierTab === 'CLOUD_ALL' ? 'Todo o Banco na Nuvem' :
+                                  supplierTab === 'ESTOQUE' ? 'Gestão de Estoque' :
+                                    supplierTab === 'AGENTS' ? 'Agentes & Vendas' :
+                                      supplierTab === 'CHAT_LOGS' ? 'Conversas com IA (Logs)' :
+                                        supplierTab === 'CIDADES' ? 'Distribuição Geográfica' :
+                                          supplierTab === 'FINANCEIRO' ? 'Resumo Financeiro Executivo' :
+                                            `${supplierTab.replace('CAT_', '')}`}
               </h1>
               <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem', marginTop: '0.2rem' }} className="hide-mobile">Painel Central de Gerenciamento iFooty.</p>
             </div>
           </div>
           <div style={{ display: 'flex', gap: '1.2rem', alignItems: 'center' }}>
             {/* Botão Global de Privacidade */}
-            {['PEDIDOS', 'FINANCEIRO'].includes(supplierTab) && (
+            {['PEDIDOS', 'FINANCEIRO', 'MARKETING'].includes(supplierTab) && (
                <button 
                   onClick={() => setShowValues(!showValues)}
                   className="glass-panel"
@@ -2512,7 +2559,7 @@ const Admin = () => {
                   <h3 style={{ fontSize: '0.85rem', color: 'var(--text-muted)', textTransform: 'uppercase', marginBottom: '0.8rem', display: 'flex', alignItems: 'center', gap: '0.5rem', fontWeight: 800 }}>
                     <Crown size={16} color="#FFB81C" /> O Rei (Capa da Loja)
                   </h3>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+<div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                     <span style={{ color: '#000', background: '#FFB81C', fontSize: '0.9rem', fontWeight: 800, padding: '0.3rem 0.8rem', borderRadius: '4px' }}>
                       {bestSellerName}
                     </span>
@@ -3737,6 +3784,325 @@ const Admin = () => {
                   </div>
 
                 </div>
+              </div>
+            );
+          })() : supplierTab === 'MARKETING' ? (() => {
+            const funnel = (() => {
+              const sessions = new Set();
+              const viewSessions = new Set();
+              const cartSessions = new Set();
+              const checkoutSessions = new Set();
+              const purchaseSessions = new Set();
+
+              analyticsEvents.forEach(e => {
+                if (e.session_id) {
+                  sessions.add(e.session_id);
+                  if (e.event_name === 'ViewContent') viewSessions.add(e.session_id);
+                  if (e.event_name === 'AddToCart') cartSessions.add(e.session_id);
+                  if (e.event_name === 'InitiateCheckout') checkoutSessions.add(e.session_id);
+                  if (e.event_name === 'Purchase') purchaseSessions.add(e.session_id);
+                }
+              });
+
+              let ordersCountForPeriod = orders;
+              if (analyticsPeriod !== 'all') {
+                const days = analyticsPeriod === '24h' ? 1 : (analyticsPeriod === '7d' ? 7 : 30);
+                const limitDate = new Date();
+                limitDate.setDate(limitDate.getDate() - days);
+                ordersCountForPeriod = orders.filter(o => new Date(o.created_at) >= limitDate);
+              }
+
+              const finalPurchaseCount = purchaseSessions.size > 0 ? purchaseSessions.size : ordersCountForPeriod.length;
+
+              return {
+                sessions: sessions.size,
+                views: viewSessions.size,
+                carts: cartSessions.size,
+                checkouts: checkoutSessions.size,
+                purchases: finalPurchaseCount
+              };
+            })();
+
+            const utmStats = (() => {
+              const stats = {};
+              let filteredOrders = orders;
+              if (analyticsPeriod !== 'all') {
+                const days = analyticsPeriod === '24h' ? 1 : (analyticsPeriod === '7d' ? 7 : 30);
+                const limitDate = new Date();
+                limitDate.setDate(limitDate.getDate() - days);
+                filteredOrders = orders.filter(o => new Date(o.created_at) >= limitDate);
+              }
+
+              filteredOrders.forEach(o => {
+                const source = o.utm_source || 'Direto / Orgânico';
+                const campaign = o.utm_campaign || 'N/A';
+                const key = `${source} | ${campaign}`;
+
+                if (!stats[key]) {
+                  stats[key] = {
+                    source,
+                    campaign,
+                    orders: 0,
+                    revenue: 0,
+                    paidOrders: 0,
+                    paidRevenue: 0
+                  };
+                }
+
+                const price = Number(o.total_price) || 0;
+                stats[key].orders += 1;
+                stats[key].revenue += price;
+                if (o.status === 'paid') {
+                  stats[key].paidOrders += 1;
+                  stats[key].paidRevenue += price;
+                }
+              });
+
+              return Object.values(stats).sort((a, b) => b.paidRevenue - a.paidRevenue);
+            })();
+
+            const mostViewed = (() => {
+              const views = {};
+              analyticsEvents.forEach(e => {
+                if (e.event_name === 'ViewContent' && e.product_id) {
+                  views[e.product_id] = (views[e.product_id] || 0) + 1;
+                }
+              });
+
+              return Object.entries(views)
+                .map(([prodId, count]) => {
+                  const pId = Number(prodId);
+                  const prod = products.find(p => p.id === pId);
+                  return {
+                    id: pId,
+                    name: prod ? prod.name : `Manto #${pId}`,
+                    image: prod ? prod.image : null,
+                    category: prod ? prod.category : 'N/A',
+                    count
+                  };
+                })
+                .sort((a, b) => b.count - a.count)
+                .slice(0, 5);
+            })();
+
+            return (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
+                {/* FILTRO DE PERÍODO */}
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'rgba(255,255,255,0.03)', padding: '1rem 1.5rem', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.05)' }}>
+                  <span style={{ fontSize: '0.9rem', color: 'var(--text-muted)' }}>Filtrar métricas por período:</span>
+                  <div style={{ display: 'flex', gap: '0.5rem' }}>
+                    {[
+                      { key: '24h', label: '24 Horas' },
+                      { key: '7d', label: '7 Dias' },
+                      { key: '30d', label: '30 Dias' },
+                      { key: 'all', label: 'Todo o Período' }
+                    ].map(p => (
+                      <button
+                        key={p.key}
+                        onClick={() => setAnalyticsPeriod(p.key)}
+                        style={{
+                          padding: '0.4rem 1rem',
+                          borderRadius: '4px',
+                          border: 'none',
+                          cursor: 'pointer',
+                          fontSize: '0.85rem',
+                          fontWeight: 700,
+                          background: analyticsPeriod === p.key ? 'var(--accent-color)' : 'rgba(255,255,255,0.05)',
+                          color: analyticsPeriod === p.key ? '#000' : 'var(--text-muted)',
+                          transition: 'all 0.2s'
+                        }}
+                      >
+                        {p.label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {analyticsLoading ? (
+                  <div style={{ textAlign: 'center', padding: '5rem 0' }}>
+                    <div style={{ width: '40px', height: '40px', border: '3px solid rgba(204,255,0,0.1)', borderTopColor: 'var(--accent-color)', borderRadius: '50%', animation: 'spin 1s linear infinite', margin: '0 auto' }}></div>
+                    <p style={{ color: 'var(--text-muted)', marginTop: '1rem' }}>Carregando dados de marketing...</p>
+                  </div>
+                ) : (
+                  <>
+                    {/* CONTAINER DE TRÊS COLUNAS: FUNIL & PRODUTOS & CONVERSÕES */}
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '1.5rem' }}>
+                      
+                      {/* FUNIL DE CONVERSÃO */}
+                      <div className="glass-panel" style={{ padding: '2rem', borderRadius: '12px' }}>
+                        <h3 style={{ margin: '0 0 1.5rem 0', display: 'flex', alignItems: 'center', gap: '0.5rem', color: '#fff' }}>
+                          <BarChart size={20} color="var(--accent-color)" /> Funil de Sessões
+                        </h3>
+                        
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+                          {[
+                            { label: '1. Sessões no Site', count: funnel.sessions, color: '#3B82F6', nextPct: funnel.sessions > 0 ? (funnel.views / funnel.sessions) * 100 : 0 },
+                            { label: '2. Visualizou Produto', count: funnel.views, color: '#A855F7', nextPct: funnel.views > 0 ? (funnel.carts / funnel.views) * 100 : 0 },
+                            { label: '3. Adicionou à Sacola', count: funnel.carts, color: '#F59E0B', nextPct: funnel.carts > 0 ? (funnel.checkouts / funnel.carts) * 100 : 0 },
+                            { label: '4. Iniciou Checkout', count: funnel.checkouts, color: '#10B981', nextPct: funnel.checkouts > 0 ? (funnel.purchases / funnel.checkouts) * 100 : 0 },
+                            { label: '5. Pedido Criado', count: funnel.purchases, color: 'var(--accent-color)' }
+                          ].map((step, idx, arr) => {
+                            const rootPct = funnel.sessions > 0 ? (step.count / funnel.sessions) * 100 : 0;
+                            
+                            return (
+                              <div key={step.label}>
+                                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.4rem', fontSize: '0.85rem' }}>
+                                  <span style={{ fontWeight: 600, color: 'var(--text-main)' }}>{step.label}</span>
+                                  <span style={{ fontWeight: 800, color: step.color }}>
+                                    {step.count} {step.count === 1 ? 'visita' : 'visitas'}
+                                    {idx > 0 && funnel.sessions > 0 && ` (${rootPct.toFixed(1)}%)`}
+                                  </span>
+                                </div>
+                                <div style={{ width: '100%', height: '10px', background: 'rgba(255,255,255,0.03)', borderRadius: '5px', overflow: 'hidden' }}>
+                                  <div style={{ width: `${rootPct}%`, height: '100%', background: step.color, borderRadius: '5px', transition: 'width 0.5s' }} />
+                                </div>
+                                {idx < arr.length - 1 && (
+                                  <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '0.3rem', textAlign: 'right', fontStyle: 'italic' }}>
+                                    ↳ Taxa de avanço: {step.nextPct.toFixed(1)}%
+                                  </div>
+                                )}
+                              </div>
+                            );
+                          })}
+                        </div>
+                      </div>
+
+                      {/* CONVERSÕES E TAXAS */}
+                      <div className="glass-panel" style={{ padding: '2rem', borderRadius: '12px', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
+                        <div>
+                          <h3 style={{ margin: '0 0 1.5rem 0', color: '#fff' }}>Métricas de Desempenho</h3>
+                          
+                          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginBottom: '1.5rem' }}>
+                            <div style={{ background: 'rgba(255,255,255,0.02)', padding: '1rem', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.05)' }}>
+                              <p style={{ margin: 0, fontSize: '0.7rem', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: 800 }}>Taxa de Conversão Global</p>
+                              <h2 style={{ margin: '0.3rem 0 0 0', color: 'var(--accent-color)', fontSize: '1.8rem', fontWeight: 800 }}>
+                                {funnel.sessions > 0 ? `${((funnel.purchases / funnel.sessions) * 100).toFixed(2)}%` : '0.00%'}
+                              </h2>
+                              <span style={{ fontSize: '0.65rem', color: 'var(--text-muted)' }}>Sessões ➔ Vendas</span>
+                            </div>
+                            
+                            <div style={{ background: 'rgba(255,255,255,0.02)', padding: '1rem', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.05)' }}>
+                              <p style={{ margin: 0, fontSize: '0.7rem', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: 800 }}>Taxa do Checkout</p>
+                              <h2 style={{ margin: '0.3rem 0 0 0', color: '#10B981', fontSize: '1.8rem', fontWeight: 800 }}>
+                                {funnel.checkouts > 0 ? `${((funnel.purchases / funnel.checkouts) * 100).toFixed(1)}%` : '0.0%'}
+                              </h2>
+                              <span style={{ fontSize: '0.65rem', color: 'var(--text-muted)' }}>Checkout ➔ Vendas</span>
+                            </div>
+                          </div>
+
+                          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+                            <div style={{ background: 'rgba(255,255,255,0.02)', padding: '1rem', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.05)' }}>
+                              <p style={{ margin: 0, fontSize: '0.7rem', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: 800 }}>Abandono de Checkout</p>
+                              <h2 style={{ margin: '0.3rem 0 0 0', color: '#EF4444', fontSize: '1.8rem', fontWeight: 800 }}>
+                                {funnel.checkouts > 0 ? `${(100 - (funnel.purchases / funnel.checkouts) * 100).toFixed(1)}%` : '0.0%'}
+                              </h2>
+                              <span style={{ fontSize: '0.65rem', color: 'var(--text-muted)' }}>Iniciaram mas não compraram</span>
+                            </div>
+                            
+                            <div style={{ background: 'rgba(255,255,255,0.02)', padding: '1rem', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.05)' }}>
+                              <p style={{ margin: 0, fontSize: '0.7rem', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: 800 }}>Abandono de Sacola</p>
+                              <h2 style={{ margin: '0.3rem 0 0 0', color: '#F59E0B', fontSize: '1.8rem', fontWeight: 800 }}>
+                                {funnel.carts > 0 ? `${(100 - (funnel.checkouts / funnel.carts) * 100).toFixed(1)}%` : '0.0%'}
+                              </h2>
+                              <span style={{ fontSize: '0.65rem', color: 'var(--text-muted)' }}>Carrinho ➔ Sem checkout</span>
+                            </div>
+                          </div>
+                        </div>
+
+                        <div style={{ marginTop: '1.5rem', padding: '1rem', background: 'rgba(204,255,0,0.02)', borderRadius: '8px', border: '1px solid rgba(204,255,0,0.1)', fontSize: '0.8rem', color: 'var(--text-muted)', lineHeight: '1.4' }}>
+                          💡 <strong>Dica de Escala:</strong> Se o abandono de checkout estiver acima de 70%, considere automatizar o envio de e-mails de recuperação de carrinho ou reduzir as etapas do checkout manual de WhatsApp.
+                        </div>
+                      </div>
+
+                      {/* PRODUTOS MAIS VISTOS */}
+                      <div className="glass-panel" style={{ padding: '2rem', borderRadius: '12px' }}>
+                        <h3 style={{ margin: '0 0 1.5rem 0', display: 'flex', alignItems: 'center', gap: '0.5rem', color: '#fff' }}>
+                          <Eye size={20} color="var(--accent-color)" /> Produtos Mais Vistos
+                        </h3>
+                        
+                        {mostViewed.length === 0 ? (
+                          <div style={{ textAlign: 'center', padding: '3rem 0', color: 'var(--text-muted)' }}>
+                            Nenhuma visualização registrada neste período.
+                          </div>
+                        ) : (
+                          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.8rem' }}>
+                            {mostViewed.map((item, idx) => (
+                              <div key={item.id} style={{ display: 'flex', alignItems: 'center', gap: '0.8rem', padding: '0.6rem', background: 'rgba(255,255,255,0.01)', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.03)' }}>
+                                <span style={{ fontSize: '0.85rem', fontWeight: 800, color: 'var(--text-muted)', width: '20px' }}>#{idx + 1}</span>
+                                {item.image ? (
+                                  <img src={item.image} alt="" style={{ width: '40px', height: '40px', objectFit: 'contain', borderRadius: '4px', background: '#fff' }} />
+                                ) : (
+                                  <div style={{ width: '40px', height: '40px', background: 'rgba(255,255,255,0.05)', borderRadius: '4px' }} />
+                                )}
+                                <div style={{ flex: 1, minWidth: 0 }}>
+                                  <p style={{ margin: 0, fontSize: '0.85rem', fontWeight: 600, color: '#fff', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{item.name}</p>
+                                  <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>{item.category}</span>
+                                </div>
+                                <span style={{ fontSize: '0.85rem', fontWeight: 800, color: 'var(--accent-color)' }}>{item.count} views</span>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+
+                    </div>
+
+                    {/* VENDAS POR UTM */}
+                    <div className="glass-panel" style={{ padding: '2rem', borderRadius: '12px' }}>
+                      <h3 style={{ margin: '0 0 1.5rem 0', display: 'flex', alignItems: 'center', gap: '0.5rem', color: '#fff' }}>
+                        <Tag size={20} color="var(--accent-color)" /> Rastreamento UTM - Atribuição de Vendas
+                      </h3>
+                      
+                      <div className="admin-table-wrapper" style={{ overflowX: 'auto' }}>
+                        <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', fontSize: '0.85rem' }}>
+                          <thead>
+                            <tr style={{ borderBottom: '1px solid var(--border-color)', color: 'var(--text-muted)' }}>
+                              <th style={{ padding: '1rem' }}>Origem (utm_source)</th>
+                              <th style={{ padding: '1rem' }}>Campanha (utm_campaign)</th>
+                              <th style={{ padding: '1rem', textAlign: 'center' }}>Sessões (Cliques)</th>
+                              <th style={{ padding: '1rem', textAlign: 'center' }}>Pedidos Criados</th>
+                              <th style={{ padding: '1rem', textAlign: 'center' }}>Pedidos Pagos</th>
+                              <th style={{ padding: '1rem', textAlign: 'right' }}>Conversão</th>
+                              <th style={{ padding: '1rem', textAlign: 'right' }}>Receita Total (CAD)</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {utmStats.length === 0 ? (
+                              <tr>
+                                <td colSpan="7" style={{ textAlign: 'center', padding: '3rem', color: 'var(--text-muted)' }}>
+                                  Nenhuma venda rastreada por UTM ou canal orgânico neste período.
+                                </td>
+                              </tr>
+                            ) : (
+                              utmStats.map((item, idx) => {
+                                const sessionCount = analyticsEvents.filter(e => 
+                                  e.event_name === 'PageView' && 
+                                  (e.utm_source === item.source || (!e.utm_source && item.source === 'Direto / Orgânico'))
+                                ).length;
+
+                                const conversionRate = sessionCount > 0 ? (item.paidOrders / sessionCount) * 100 : 0;
+
+                                return (
+                                  <tr key={idx} style={{ borderBottom: '1px solid rgba(255,255,255,0.02)' }}>
+                                    <td style={{ padding: '1rem', fontWeight: 600, color: '#fff' }}>{item.source}</td>
+                                    <td style={{ padding: '1rem', color: 'var(--text-muted)' }}>{item.campaign}</td>
+                                    <td style={{ padding: '1rem', textAlign: 'center' }}>{sessionCount || '-'}</td>
+                                    <td style={{ padding: '1rem', textAlign: 'center' }}>{item.orders}</td>
+                                    <td style={{ padding: '1rem', textAlign: 'center', color: '#10B981', fontWeight: 700 }}>{item.paidOrders}</td>
+                                    <td style={{ padding: '1rem', textAlign: 'right', fontWeight: 600 }}>{sessionCount > 0 ? `${conversionRate.toFixed(2)}%` : 'N/A'}</td>
+                                    <td style={{ padding: '1rem', textAlign: 'right', fontWeight: 800, color: 'var(--accent-color)' }}>
+                                      {showValues ? `$${item.paidRevenue.toFixed(2)}` : '****'}
+                                    </td>
+                                  </tr>
+                                );
+                              })
+                            )}
+                          </tbody>
+                        </table>
+                      </div>
+                    </div>
+                  </>
+                )}
               </div>
             );
           })() : supplierTab === 'AGENTS' ? (

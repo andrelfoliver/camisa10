@@ -9,12 +9,32 @@ import { CreditCard, MessageSquare } from 'lucide-react';
 import WhatsAppIcon from '../components/WhatsAppIcon';
 import { supabase } from '../services/supabase';
 import { useLanguage } from '../context/LanguageContext';
+import { trackEvent, getSavedUtms } from '../services/analytics';
 
 const Checkout = () => {
   const { t, language, currency, setCurrency, convertPrice, formatPrice } = useLanguage();
   const { cartItems, cartTotal, subtotal, discount, clearCart, appliedShipping, pricingConfig } = useCart();
   const { user } = useAuth();
   const navigate = useNavigate();
+
+  const initiatedCheckoutRef = useRef(false);
+  useEffect(() => {
+    if (cartItems.length > 0 && !initiatedCheckoutRef.current) {
+      initiatedCheckoutRef.current = true;
+      trackEvent('InitiateCheckout', {
+        value: cartTotal,
+        currency: 'CAD',
+        num_items: cartItems.length,
+        content_ids: cartItems.map(i => i.id),
+        content_type: 'product'
+      }, {
+        email: user?.email,
+        phone: user?.phone || user?.user_metadata?.phone,
+        firstName: user?.user_metadata?.full_name?.split(' ')[0],
+        lastName: user?.user_metadata?.full_name?.split(' ').slice(1).join(' ')
+      });
+    }
+  }, [cartItems, cartTotal, user]);
 
   const [formData, setFormData] = useState({
     name: user?.user_metadata?.full_name || '',
@@ -414,6 +434,8 @@ const Checkout = () => {
         console.warn("⚠️ Não foi possível obter câmbio real em tempo real, usando fallback.");
       }
 
+      const utms = getSavedUtms();
+
       const orderData = {
         user_id: user.id,
         customer_name: data.name,
@@ -448,11 +470,34 @@ const Checkout = () => {
         paid_at: paymentDetails ? new Date().toISOString() : null,
         referrer: localStorage.getItem('ifooty_referrer') || null,
         coupon_code: appliedCoupon?.code || null,
-        coupon_discount: appliedCoupon ? (cartTotal - finalTotal) : 0
+        coupon_discount: appliedCoupon ? (cartTotal - finalTotal) : 0,
+        utm_source: utms.utm_source,
+        utm_medium: utms.utm_medium,
+        utm_campaign: utms.utm_campaign,
+        utm_content: utms.utm_content,
+        utm_term: utms.utm_term
       };
 
-      const { error: orderError } = await supabase.from('orders').insert([orderData]);
+      const { data: insertedOrders, error: orderError } = await supabase.from('orders').insert([orderData]).select();
       if (orderError) throw orderError;
+
+      const createdOrder = insertedOrders && insertedOrders[0];
+      const orderId = createdOrder ? createdOrder.id : (window.crypto?.randomUUID ? window.crypto.randomUUID() : 'purchase_' + Date.now());
+
+      // 1.1. Disparar Purchase Analytics
+      trackEvent('Purchase', {
+        value: finalTotal,
+        currency: 'CAD',
+        num_items: cartItems.reduce((acc, item) => acc + item.quantity, 0),
+        content_ids: cartItems.map(i => i.id),
+        content_type: 'product',
+        order_id: orderId
+      }, {
+        email: user.email,
+        phone: data.phone || user.phone || user.user_metadata?.phone,
+        firstName: data.name?.split(' ')[0],
+        lastName: data.name?.split(' ').slice(1).join(' ')
+      }, orderId);
 
       // 1.2. Decrementar estoque local (Pronta Entrega)
       try {
