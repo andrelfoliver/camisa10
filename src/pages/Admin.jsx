@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from '../services/supabase';
 import { useAuth } from '../context/AuthContext';
-import { Save, Check, Crown, Heart, Database, HardDrive, Star, LogOut, Package, Plus, Trash2, Edit, X, Users, Image, DollarSign, MapPin, RefreshCw, Shield, AlertTriangle, MessageSquare, ChevronDown, ChevronUp, MoreHorizontal, ExternalLink, Settings, Tag, TrendingUp, Truck, BarChart, Eye, EyeOff, Send, Printer, Search, Clock } from 'lucide-react';
+import { Save, Check, Crown, Heart, Database, HardDrive, Star, LogOut, Package, Plus, Trash2, Edit, X, Users, Image, DollarSign, MapPin, RefreshCw, Shield, AlertTriangle, MessageSquare, ChevronDown, ChevronUp, MoreHorizontal, ExternalLink, Settings, Tag, TrendingUp, Truck, BarChart, Eye, EyeOff, Send, Printer, Search, Clock, Compass, Globe } from 'lucide-react';
 import { migrateProductsToSupabase } from '../services/migration';
 import { migrateTeamsToSupabase } from '../services/migration_teams';
 import WhatsAppIcon from '../components/WhatsAppIcon';
@@ -4418,7 +4418,149 @@ const Admin = () => {
               }).sort((a,b) => b.revenue - a.revenue);
             })();
 
-            // 10. Salvar gastos de campanha editados em linha
+            // 10. Estatísticas por Origem de Tráfego (Traffic Source Attribution)
+            const trafficSourceStats = (() => {
+              const statsMap = {};
+
+              const getSourceFriendlyName = (sourceVal, fbclid, gclid, referrerVal) => {
+                if (sourceVal && sourceVal !== 'Direto') return sourceVal.trim();
+                if (fbclid) {
+                  const ref = (referrerVal || '').toLowerCase();
+                  if (ref.includes('instagram.com')) return 'Instagram Ads';
+                  return 'Facebook Ads';
+                }
+                if (gclid) return 'Google Ads';
+                if (referrerVal && referrerVal !== 'Direto') {
+                  const cleanReferrer = referrerVal.toLowerCase();
+                  if (cleanReferrer.includes('google.')) return 'Google Orgânico';
+                  if (cleanReferrer.includes('bing.')) return 'Bing';
+                  if (cleanReferrer.includes('search.yahoo.')) return 'Yahoo';
+                  if (cleanReferrer.includes('duckduckgo.')) return 'DuckDuckGo';
+                  if (cleanReferrer.includes('facebook.com')) return 'Facebook Orgânico';
+                  if (cleanReferrer.includes('instagram.com')) return 'Instagram Orgânico';
+                  if (cleanReferrer.includes('youtube.com') || cleanReferrer.includes('youtu.be')) return 'YouTube';
+                  if (cleanReferrer.includes('reddit.com')) return 'Reddit';
+                  if (cleanReferrer.includes('linkedin.com')) return 'LinkedIn';
+                  if (cleanReferrer.includes('tiktok.com')) return 'TikTok';
+                  if (cleanReferrer.includes('wa.me') || cleanReferrer.includes('whatsapp.com')) return 'WhatsApp';
+                  return 'Referral';
+                }
+                return 'Direto';
+              };
+
+              const initializeSource = (src) => {
+                if (!statsMap[src]) {
+                  statsMap[src] = {
+                    source: src,
+                    sessions: new Set(),
+                    views: new Set(),
+                    carts: new Set(),
+                    checkouts: new Set(),
+                    orders: 0,
+                    paidOrders: 0,
+                    revenue: 0,
+                    lifetimeRevenue: 0,
+                    lifetimeClients: new Set()
+                  };
+                }
+              };
+
+              // Processar eventos filtrados do período atual
+              currentEvents.forEach(e => {
+                const src = getSourceFriendlyName(e.utm_source, e.fbclid || e.metadata?.fbclid, e.gclid || e.metadata?.gclid, e.referrer || e.metadata?.referrer);
+                initializeSource(src);
+                
+                if (e.session_id) {
+                  statsMap[src].sessions.add(e.session_id);
+                  if (e.event_name === 'ViewContent') statsMap[src].views.add(e.session_id);
+                  if (e.event_name === 'AddToCart') statsMap[src].carts.add(e.session_id);
+                  if (e.event_name === 'InitiateCheckout' || e.event_name === 'Begin Checkout') statsMap[src].checkouts.add(e.session_id);
+                }
+              });
+
+              // Processar pedidos do período atual
+              currentOrders.forEach(o => {
+                const src = getSourceFriendlyName(o.utm_source, o.fbclid, o.gclid, o.referrer);
+                initializeSource(src);
+                
+                statsMap[src].orders += 1;
+                if (o.status === 'paid') {
+                  statsMap[src].paidOrders += 1;
+                  statsMap[src].revenue += getValidRevenue(o);
+                }
+              });
+
+              // Cálculo de LTV Histórico / Vitalício por Origem
+              const clientSpendMap = {};
+              
+              orders.filter(o => o.status === 'paid').forEach(o => {
+                const email = o.customer_email?.trim().toLowerCase();
+                if (!email) return;
+                if (!clientSpendMap[email]) {
+                  clientSpendMap[email] = {
+                    email,
+                    totalSpend: 0,
+                    orders: []
+                  };
+                }
+                clientSpendMap[email].totalSpend += getValidRevenue(o);
+                clientSpendMap[email].orders.push(o);
+              });
+
+              Object.values(clientSpendMap).forEach(client => {
+                const sortedClientOrders = [...client.orders].sort((a, b) => new Date(a.created_at) - new Date(b.created_at));
+                const firstOrder = sortedClientOrders[0];
+                
+                const profile = customers.find(c => c.email?.trim().toLowerCase() === client.email);
+                let clientSource = 'Direto';
+                if (profile) {
+                  clientSource = getSourceFriendlyName(
+                    profile.utm_source,
+                    profile.fbclid,
+                    profile.gclid,
+                    profile.referrer
+                  );
+                } else if (firstOrder) {
+                  clientSource = getSourceFriendlyName(
+                    firstOrder.utm_source,
+                    firstOrder.fbclid,
+                    firstOrder.gclid,
+                    firstOrder.referrer
+                  );
+                }
+
+                initializeSource(clientSource);
+                statsMap[clientSource].lifetimeRevenue += client.totalSpend;
+                statsMap[clientSource].lifetimeClients.add(client.email);
+              });
+
+              return Object.values(statsMap).map(item => {
+                const sessionCount = item.sessions.size || 1;
+                const paidCount = item.paidOrders;
+                
+                const conversion = (paidCount / sessionCount) * 100;
+                const aov = paidCount > 0 ? item.revenue / paidCount : 0;
+                
+                const clientCount = item.lifetimeClients.size;
+                const ltv = clientCount > 0 ? item.lifetimeRevenue / clientCount : 0;
+
+                return {
+                  source: item.source,
+                  sessions: item.sessions.size,
+                  views: item.views.size,
+                  carts: item.carts.size,
+                  checkouts: item.checkouts.size,
+                  orders: item.orders,
+                  paidOrders: paidCount,
+                  revenue: item.revenue,
+                  conversion,
+                  aov,
+                  ltv
+                };
+              }).sort((a, b) => b.revenue - a.revenue);
+            })();
+
+            // 11. Salvar gastos de campanha editados em linha
             const handleSaveCampaignCost = async (campaignKey, costVal) => {
               const updated = {
                 ...campaignCosts,
@@ -4774,6 +4916,68 @@ const Admin = () => {
 
                     </div>
 
+                    {/* SEÇÃO EXTRA: ORIGENS DE TRÁFEGO DETALHADAS */}
+                    <div className="glass-panel" style={{ padding: '2rem', borderRadius: '12px', marginTop: '1.5rem' }}>
+                      <h3 style={{ margin: '0 0 1.5rem 0', display: 'flex', alignItems: 'center', gap: '0.5rem', color: '#fff' }}>
+                        <Compass size={20} color="var(--accent-color)" /> Desempenho por Origem de Tráfego (Attribution)
+                      </h3>
+
+                      <div className="admin-table-wrapper" style={{ overflowX: 'auto' }}>
+                        <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', fontSize: '0.8rem' }}>
+                          <thead>
+                            <tr style={{ borderBottom: '1px solid var(--border-color)', color: 'var(--text-muted)' }}>
+                              <th style={{ padding: '0.8rem' }}>Origem</th>
+                              <th style={{ padding: '0.8rem', textAlign: 'center' }}>Sessões</th>
+                              <th style={{ padding: '0.8rem', textAlign: 'center' }}>Ver Produto</th>
+                              <th style={{ padding: '0.8rem', textAlign: 'center' }}>Carrinho</th>
+                              <th style={{ padding: '0.8rem', textAlign: 'center' }}>Checkout</th>
+                              <th style={{ padding: '0.8rem', textAlign: 'center' }}>Pedidos (Pagos)</th>
+                              <th style={{ padding: '0.8rem', textAlign: 'right' }}>Conversão</th>
+                              <th style={{ padding: '0.8rem', textAlign: 'right' }}>Faturamento</th>
+                              <th style={{ padding: '0.8rem', textAlign: 'right' }}>AOV</th>
+                              <th style={{ padding: '0.8rem', textAlign: 'right', color: 'var(--accent-color)' }}>LTV Vitalício</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {trafficSourceStats.length === 0 ? (
+                              <tr>
+                                <td colSpan="10" style={{ textAlign: 'center', padding: '3rem', color: 'var(--text-muted)' }}>
+                                  Sem dados de origens de tráfego para o período.
+                                </td>
+                              </tr>
+                            ) : (
+                              trafficSourceStats.map((item, idx) => (
+                                <tr key={idx} style={{ borderBottom: '1px solid rgba(255,255,255,0.02)' }}>
+                                  <td style={{ padding: '0.8rem', fontWeight: 700, color: '#fff' }}>
+                                    {item.source}
+                                  </td>
+                                  <td style={{ padding: '0.8rem', textAlign: 'center' }}>{item.sessions}</td>
+                                  <td style={{ padding: '0.8rem', textAlign: 'center' }}>{item.views}</td>
+                                  <td style={{ padding: '0.8rem', textAlign: 'center' }}>{item.carts}</td>
+                                  <td style={{ padding: '0.8rem', textAlign: 'center' }}>{item.checkouts}</td>
+                                  <td style={{ padding: '0.8rem', textAlign: 'center' }}>
+                                    {item.orders} ({item.paidOrders})
+                                  </td>
+                                  <td style={{ padding: '0.8rem', textAlign: 'right', fontWeight: 700, color: item.conversion >= 2.0 ? '#10B981' : 'var(--text-muted)' }}>
+                                    {item.conversion.toFixed(2)}%
+                                  </td>
+                                  <td style={{ padding: '0.8rem', textAlign: 'right', fontWeight: 700, color: 'var(--text-main)' }}>
+                                    {showValues ? `$${item.revenue.toFixed(2)}` : '****'}
+                                  </td>
+                                  <td style={{ padding: '0.8rem', textAlign: 'right' }}>
+                                    {showValues ? `$${item.aov.toFixed(2)}` : '****'}
+                                  </td>
+                                  <td style={{ padding: '0.8rem', textAlign: 'right', fontWeight: 800, color: 'var(--accent-color)' }}>
+                                    {showValues ? `$${item.ltv.toFixed(2)}` : '****'}
+                                  </td>
+                                </tr>
+                              ))
+                            )}
+                          </tbody>
+                        </table>
+                      </div>
+                    </div>
+
                     {/* SEÇÃO 3: MAPA INTERATIVO DO CANADÁ */}
                     <div className="glass-panel" style={{ padding: '2rem', borderRadius: '12px' }}>
                       <h3 style={{ margin: '0 0 1.5rem 0', display: 'flex', alignItems: 'center', gap: '0.5rem', color: '#fff' }}>
@@ -5070,12 +5274,17 @@ const Admin = () => {
                   utm_campaign: e.utm_campaign || null,
                   utm_content: e.utm_content || null,
                   utm_term: e.utm_term || null,
+                  fbclid: e.fbclid || e.metadata?.fbclid || null,
+                  gclid: e.gclid || e.metadata?.gclid || null,
+                  referrer: e.referrer || e.metadata?.referrer || null,
+                  landing_page: e.landing_page || e.metadata?.landing_page || null,
+                  country: e.country || e.metadata?.country || 'Canada',
                   created_at: e.created_at,
                   last_event_at: e.created_at,
-                  city: e.metadata?.city || null,
-                  province: e.metadata?.province || (e.utm_source === 'offline' ? 'AB' : null),
-                  device: e.metadata?.device || (e.metadata?.client_user_agent ? (e.metadata.client_user_agent.toLowerCase().includes('mobile') ? 'Mobile' : 'Desktop') : 'Desktop'),
-                  browser: e.metadata?.browser || (e.metadata?.client_user_agent ? (e.metadata.client_user_agent.includes('Chrome') ? 'Chrome' : e.metadata.client_user_agent.includes('Safari') ? 'Safari' : e.metadata.client_user_agent.includes('Firefox') ? 'Firefox' : 'Outro') : 'Outro'),
+                  city: e.city || e.metadata?.city || null,
+                  province: e.province || e.metadata?.province || (e.utm_source === 'offline' ? 'AB' : null),
+                  device: e.device || e.metadata?.device || (e.metadata?.client_user_agent ? (e.metadata.client_user_agent.toLowerCase().includes('mobile') ? 'Mobile' : 'Desktop') : 'Desktop'),
+                  browser: e.browser || e.metadata?.browser || (e.metadata?.client_user_agent ? (e.metadata.client_user_agent.includes('Chrome') ? 'Chrome' : e.metadata.client_user_agent.includes('Safari') ? 'Safari' : e.metadata.client_user_agent.includes('Firefox') ? 'Firefox' : 'Outro') : 'Outro'),
                   purchaseCount: 0,
                   checkoutCount: 0,
                   paymentMethod: null,
@@ -5089,8 +5298,15 @@ const Admin = () => {
               sess.events.push(e);
               sess.last_event_at = e.created_at;
               
-              if (e.metadata?.city && !sess.city) sess.city = e.metadata.city;
-              if (e.metadata?.province && !sess.province) sess.province = e.metadata.province;
+              if ((e.city || e.metadata?.city) && !sess.city) sess.city = e.city || e.metadata.city;
+              if ((e.province || e.metadata?.province) && !sess.province) sess.province = e.province || e.metadata.province;
+              if ((e.country || e.metadata?.country) && !sess.country) sess.country = e.country || e.metadata.country;
+              if ((e.fbclid || e.metadata?.fbclid) && !sess.fbclid) sess.fbclid = e.fbclid || e.metadata.fbclid;
+              if ((e.gclid || e.metadata?.gclid) && !sess.gclid) sess.gclid = e.gclid || e.metadata.gclid;
+              if ((e.referrer || e.metadata?.referrer) && !sess.referrer) sess.referrer = e.referrer || e.metadata.referrer;
+              if ((e.landing_page || e.metadata?.landing_page) && !sess.landing_page) sess.landing_page = e.landing_page || e.metadata.landing_page;
+              if ((e.device || e.metadata?.device) && !sess.device) sess.device = e.device || e.metadata.device;
+              if ((e.browser || e.metadata?.browser) && !sess.browser) sess.browser = e.browser || e.metadata.browser;
               
               if (e.event_name === 'Purchase' || e.event_name === 'Pagamento aprovado') {
                 sess.isPurchased = true;
@@ -5124,6 +5340,10 @@ const Admin = () => {
                 }
                 if (o.shipping_address?.city) sess.city = o.shipping_address.city;
                 if (o.shipping_address?.province) sess.province = o.shipping_address.province;
+                if (o.fbclid && !sess.fbclid) sess.fbclid = o.fbclid;
+                if (o.gclid && !sess.gclid) sess.gclid = o.gclid;
+                if (o.referrer && !sess.referrer) sess.referrer = o.referrer;
+                if (o.landing_page && !sess.landing_page) sess.landing_page = o.landing_page;
               }
             });
 
@@ -5482,6 +5702,14 @@ const Admin = () => {
                                   💵 {sess.paymentMethod.toUpperCase()}
                                 </span>
                               )}
+                              {sess.city && (
+                                <span style={{ fontSize: '0.7rem', background: 'rgba(139,92,246,0.1)', color: '#A78BFA', padding: '0.1rem 0.3rem', borderRadius: '2px' }}>
+                                  📍 {sess.city}, {sess.province || ''}
+                                </span>
+                              )}
+                              <span style={{ fontSize: '0.7rem', background: 'rgba(107,114,128,0.1)', color: '#9CA3AF', padding: '0.1rem 0.3rem', borderRadius: '2px' }}>
+                                {sess.device === 'Mobile' ? '📱 Mobile' : '💻 Desktop'} ({sess.browser})
+                              </span>
                             </div>
 
                             <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.75rem', color: 'var(--text-muted)' }}>
@@ -5518,9 +5746,16 @@ const Admin = () => {
                         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.8rem', background: 'rgba(255,255,255,0.02)', padding: '1rem', borderRadius: '6px', marginBottom: '1.5rem', fontSize: '0.8rem', border: '1px solid rgba(255,255,255,0.03)' }}>
                           <div>📱 Dispositivo: <strong style={{ color: '#fff' }}>{activeReplay.device}</strong></div>
                           <div>🌐 Navegador: <strong style={{ color: '#fff' }}>{activeReplay.browser}</strong></div>
-                          <div>📍 Localização: <strong style={{ color: '#fff' }}>{activeReplay.city ? `${activeReplay.city}, ${activeReplay.province || ''}` : 'Não informada'}</strong></div>
+                          <div>📍 Localização: <strong style={{ color: '#fff' }}>{activeReplay.city ? `${activeReplay.city}, ${activeReplay.province || ''} (${activeReplay.country || 'Canada'})` : 'Não informada'}</strong></div>
                           <div>💰 Total Estimado: <strong style={{ color: 'var(--accent-color)' }}>{showValues ? `$${activeReplay.totalValue.toFixed(2)}` : '****'}</strong></div>
-                          <div style={{ gridColumn: 'span 2' }}>📢 Campanha UTM: <strong style={{ color: '#fff' }}>{activeReplay.utm_campaign || 'N/A'} ({activeReplay.utm_source})</strong></div>
+                          <div style={{ gridColumn: 'span 2' }}>📢 Origem / Mídia: <strong style={{ color: '#fff' }}>{activeReplay.utm_source} {activeReplay.utm_medium ? `/ ${activeReplay.utm_medium}` : ''}</strong></div>
+                          {activeReplay.utm_campaign && <div style={{ gridColumn: 'span 2' }}>🎯 Campanha UTM: <strong style={{ color: '#fff' }}>{activeReplay.utm_campaign}</strong></div>}
+                          {activeReplay.utm_content && <div>📝 Conteúdo UTM: <strong style={{ color: '#fff' }}>{activeReplay.utm_content}</strong></div>}
+                          {activeReplay.utm_term && <div>🔑 Termo UTM: <strong style={{ color: '#fff' }}>{activeReplay.utm_term}</strong></div>}
+                          {activeReplay.fbclid && <div style={{ gridColumn: 'span 2', wordBreak: 'break-all' }}>🆔 fbclid (Meta): <strong style={{ color: '#10B981', fontFamily: 'monospace' }}>{activeReplay.fbclid}</strong></div>}
+                          {activeReplay.gclid && <div style={{ gridColumn: 'span 2', wordBreak: 'break-all' }}>🆔 gclid (Google): <strong style={{ color: '#3B82F6', fontFamily: 'monospace' }}>{activeReplay.gclid}</strong></div>}
+                          {activeReplay.referrer && <div style={{ gridColumn: 'span 2', wordBreak: 'break-all' }}>🔗 Referrer: <strong style={{ color: '#fff', fontSize: '0.75rem' }}>{activeReplay.referrer}</strong></div>}
+                          {activeReplay.landing_page && <div style={{ gridColumn: 'span 2', wordBreak: 'break-all' }}>🚪 Landing Page: <strong style={{ color: '#fff', fontSize: '0.75rem' }}>{activeReplay.landing_page}</strong></div>}
                         </div>
 
                         {/* Timeline Vertical */}

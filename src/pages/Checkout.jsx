@@ -9,7 +9,7 @@ import { CreditCard, MessageSquare } from 'lucide-react';
 import WhatsAppIcon from '../components/WhatsAppIcon';
 import { supabase } from '../services/supabase';
 import { useLanguage } from '../context/LanguageContext';
-import { trackEvent, getSavedUtms } from '../services/analytics';
+import { trackEvent, getSavedUtms, getSavedAttribution } from '../services/analytics';
 
 const Checkout = () => {
   const { t, language, currency, setCurrency, convertPrice, formatPrice } = useLanguage();
@@ -435,6 +435,7 @@ const Checkout = () => {
       }
 
       const utms = getSavedUtms();
+      const attribution = getSavedAttribution();
 
       const orderData = {
         user_id: user.id,
@@ -468,18 +469,60 @@ const Checkout = () => {
         payment_method: paymentDetails ? 'paypal' : 'whatsapp',
         payment_id: paymentDetails?.id || null,
         paid_at: paymentDetails ? new Date().toISOString() : null,
-        referrer: localStorage.getItem('ifooty_referrer') || null,
+        referrer: attribution.referrer || localStorage.getItem('ifooty_referrer') || null,
         coupon_code: appliedCoupon?.code || null,
         coupon_discount: appliedCoupon ? (cartTotal - finalTotal) : 0,
-        utm_source: utms.utm_source,
-        utm_medium: utms.utm_medium,
-        utm_campaign: utms.utm_campaign,
-        utm_content: utms.utm_content,
-        utm_term: utms.utm_term,
-        session_id: localStorage.getItem('ifooty_session_id') || null
+        utm_source: attribution.utm_source || utms.utm_source,
+        utm_medium: attribution.utm_medium || utms.utm_medium,
+        utm_campaign: attribution.utm_campaign || utms.utm_campaign,
+        utm_content: attribution.utm_content || utms.utm_content,
+        utm_term: attribution.utm_term || utms.utm_term,
+        session_id: localStorage.getItem('ifooty_session_id') || null,
+        fbclid: attribution.fbclid,
+        gclid: attribution.gclid,
+        landing_page: attribution.landing_page
       };
 
-      const { data: insertedOrders, error: orderError } = await supabase.from('orders').insert([orderData]).select();
+      let insertedOrders;
+      let orderError;
+
+      try {
+        const res = await supabase.from('orders').insert([orderData]).select();
+        insertedOrders = res.data;
+        orderError = res.error;
+      } catch (err) {
+        orderError = err;
+      }
+
+      if (orderError && (orderError.code === '42703' || orderError.message?.includes('column'))) {
+        console.warn("[Checkout] Column error detected, retrying order insertion with fallback payload...");
+        const fallbackOrderData = {
+          user_id: user.id,
+          customer_name: data.name,
+          customer_email: user.email,
+          customer_phone: data.phone,
+          shipping_address: orderData.shipping_address,
+          usd_cad_rate: currentExchangeRate,
+          items: orderData.items,
+          total_price: finalTotal,
+          status: orderData.status,
+          payment_method: orderData.payment_method,
+          payment_id: orderData.payment_id,
+          paid_at: orderData.paid_at,
+          referrer: localStorage.getItem('ifooty_referrer') || null,
+          coupon_code: appliedCoupon?.code || null,
+          coupon_discount: orderData.coupon_discount,
+          utm_source: utms.utm_source,
+          utm_medium: utms.utm_medium,
+          utm_campaign: utms.utm_campaign,
+          utm_content: utms.utm_content,
+          utm_term: utms.utm_term,
+          session_id: localStorage.getItem('ifooty_session_id') || null
+        };
+        const res = await supabase.from('orders').insert([fallbackOrderData]).select();
+        insertedOrders = res.data;
+        orderError = res.error;
+      }
       if (orderError) throw orderError;
 
       const createdOrder = insertedOrders && insertedOrders[0];
