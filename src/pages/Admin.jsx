@@ -224,6 +224,8 @@ const Admin = () => {
   const [heroSlides, setHeroSlides] = useState([]);
   const [isUploadingHero, setIsUploadingHero] = useState(false);
   const [whatsAppNumber, setWhatsAppNumber] = useState('17788061419');
+  const [enableExceptionalLogin, setEnableExceptionalLogin] = useState(false);
+  const [isUpdatingLoginSetting, setIsUpdatingLoginSetting] = useState(false);
   const [showAddTestimonial, setShowAddTestimonial] = useState(false);
   const [newTestimonial, setNewTestimonial] = useState({ name: '', content: '', rating: 5, location: '', date: getCalgaryDateStr(), status: 'approved', avatar_url: '' });
 
@@ -452,12 +454,16 @@ const Admin = () => {
       if (supplierData?.value) setSupplierEmail(supplierData.value);
 
       // Novas configurações na nuvem
-      const { data: cloudSettings } = await supabase.from('store_settings').select('*').in('key', ['queridinhas_ids', 'best_seller_id', 'catalog_ids', 'whatsapp_number', 'hero_slides', 'sent_recovery_emails', 'sent_recovery_emails_2', 'campaign_costs']);
+      const { data: cloudSettings } = await supabase.from('store_settings').select('*').in('key', ['queridinhas_ids', 'best_seller_id', 'catalog_ids', 'whatsapp_number', 'hero_slides', 'sent_recovery_emails', 'sent_recovery_emails_2', 'campaign_costs', 'allow_exceptional_login']);
       if (cloudSettings) {
         cloudSettings.forEach(s => {
           try {
             if (s.key === 'whatsapp_number') {
               setWhatsAppNumber(s.value);
+              return;
+            }
+            if (s.key === 'allow_exceptional_login') {
+              setEnableExceptionalLogin(s.value === 'true');
               return;
             }
             const val = JSON.parse(s.value);
@@ -970,6 +976,28 @@ const Admin = () => {
     } else {
       setSaved(true);
       setTimeout(() => setSaved(false), 3000);
+    }
+  };
+
+  const handleToggleExceptionalLogin = async () => {
+    setIsUpdatingLoginSetting(true);
+    const newValue = !enableExceptionalLogin;
+    try {
+      const { error } = await supabase
+        .from('store_settings')
+        .upsert({ key: 'allow_exceptional_login', value: String(newValue) }, { onConflict: 'key' });
+      if (error) {
+        showAlert("Erro", "Não foi possível salvar a configuração de login.");
+      } else {
+        setEnableExceptionalLogin(newValue);
+        setSaved(true);
+        setTimeout(() => setSaved(false), 3000);
+      }
+    } catch (err) {
+      console.error("Erro ao atualizar login excepcional:", err);
+      showAlert("Erro", "Não foi possível salvar a configuração.");
+    } finally {
+      setIsUpdatingLoginSetting(false);
     }
   };
 
@@ -2865,6 +2893,47 @@ const Admin = () => {
                     style={{ flex: 1, padding: '1.2rem', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.8rem' }}
                   >
                     <Save size={20} /> SALVAR ORDEM E ALTERAÇÕES
+                  </button>
+                </div>
+              </div>
+
+              {/* CONFIGURAÇÃO DE LOGIN EXCEPCIONAL */}
+              <div className="glass-panel" style={{ padding: '2.5rem', borderRadius: 'var(--radius-lg)' }}>
+                <h2 style={{ display: 'flex', alignItems: 'center', gap: '0.8rem', marginBottom: '0.5rem', fontSize: '1.5rem' }}>
+                  <Settings size={24} color="var(--accent-color)" /> Opções de Login Excepcional
+                </h2>
+                <p style={{ color: 'var(--text-muted)', marginBottom: '2rem', fontSize: '0.9rem' }}>
+                  Gerencie se a opção alternativa de login (via e-mail comum com código OTP) deve estar visível na tela de autenticação para usuários normais. O padrão é mantê-la desativada para que os usuários usem apenas o Gmail (garantindo o avatar).
+                </p>
+
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: 'rgba(255,255,255,0.02)', padding: '1.5rem', borderRadius: '12px', border: '1px solid var(--border-color)', flexWrap: 'wrap', gap: '1rem' }}>
+                  <div>
+                    <h3 style={{ fontSize: '1.1rem', margin: '0 0 0.3rem 0', color: '#fff' }}>Habilitar Login por E-mail Comum</h3>
+                    <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', margin: 0 }}>Quando ativado, o botão/link "Entrar com outro e-mail (Excepcional)" aparecerá na tela de login.</p>
+                  </div>
+                  
+                  <button
+                    onClick={handleToggleExceptionalLogin}
+                    disabled={isUpdatingLoginSetting}
+                    style={{
+                      background: enableExceptionalLogin ? 'var(--accent-color)' : 'rgba(255, 255, 255, 0.1)',
+                      color: enableExceptionalLogin ? '#000' : '#fff',
+                      border: 'none',
+                      padding: '0.6rem 1.5rem',
+                      borderRadius: '8px',
+                      fontWeight: 700,
+                      cursor: 'pointer',
+                      transition: 'all 0.2s',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '0.5rem'
+                    }}
+                  >
+                    {isUpdatingLoginSetting ? (
+                      <div style={{ width: '16px', height: '16px', border: '2px solid rgba(255,255,255,0.3)', borderTopColor: enableExceptionalLogin ? '#000' : '#fff', borderRadius: '50%', animation: 'spin 0.8s linear infinite' }} />
+                    ) : (
+                      enableExceptionalLogin ? 'ATIVADO' : 'DESATIVADO'
+                    )}
                   </button>
                 </div>
               </div>

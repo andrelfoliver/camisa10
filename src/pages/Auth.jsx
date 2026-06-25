@@ -19,6 +19,8 @@ const Auth = () => {
   const [step, setStep] = useState('email'); // 'email' or 'verify'
   const [otpType, setOtpType] = useState('email'); // 'email' or 'signup'
   const [showEmailForm, setShowEmailForm] = useState(false);
+  const [allowExceptionalLogin, setAllowExceptionalLogin] = useState(false);
+  const [clickCount, setClickCount] = useState(0);
 
   // Container onde o botão oficial do Google será renderizado
   const googleBtnRef = useRef(null);
@@ -189,6 +191,40 @@ const Auth = () => {
     return () => { cancelled = true; };
   }, [handleGoogleCallback]);
 
+  useEffect(() => {
+    const fetchSetting = async () => {
+      try {
+        const { data, error } = await supabase
+          .from('store_settings')
+          .select('value')
+          .eq('key', 'allow_exceptional_login')
+          .single();
+        if (data) {
+          setAllowExceptionalLogin(data.value === 'true');
+        }
+      } catch (err) {
+        console.error("Erro ao carregar allow_exceptional_login:", err);
+      }
+    };
+    
+    fetchSetting();
+
+    if (window.location.search.includes('exceptional=true') || window.location.search.includes('showEmail=true')) {
+      setShowEmailForm(true);
+    }
+  }, []);
+
+  const handleIconClick = () => {
+    setClickCount(prev => {
+      const next = prev + 1;
+      if (next >= 5) {
+        setShowEmailForm(true);
+        return 0;
+      }
+      return next;
+    });
+  };
+
   if (user) {
     let redirectTo = null;
     try {
@@ -224,7 +260,10 @@ const Auth = () => {
         textAlign: 'center'
       }}>
 
-        <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '2rem', color: 'var(--accent-color)' }}>
+        <div 
+          onClick={handleIconClick}
+          style={{ display: 'flex', justifyContent: 'center', marginBottom: '2rem', color: 'var(--accent-color)', cursor: 'pointer' }}
+        >
           <UserCircle size={64} />
         </div>
 
@@ -404,7 +443,7 @@ const Auth = () => {
                   </button>
                 </form>
               )
-            ) : (
+            ) : allowExceptionalLogin ? (
               <div style={{ marginTop: '1.5rem' }}>
                 <button
                   type="button"
@@ -425,7 +464,7 @@ const Auth = () => {
                   {language === 'pt' ? 'Entrar com outro e-mail (Excepcional)' : 'Sign in with other email (Exceptional)'}
                 </button>
               </div>
-            )}
+            ) : null}
           </>
         )}
 
