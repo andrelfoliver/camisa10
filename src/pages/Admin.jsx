@@ -4907,7 +4907,20 @@ const Admin = () => {
                                 <tr key={p.id} style={{ borderBottom: '1px solid rgba(255,255,255,0.02)' }}>
                                   <td style={{ padding: '0.6rem' }}>
                                     <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                                      {p.image && <img src={p.image} alt="" style={{ width: '30px', height: '30px', objectFit: 'contain', background: '#fff', borderRadius: '4px' }} />}
+                                      {p.image ? (
+                                        <ProductMedia
+                                          src={p.image}
+                                          alt=""
+                                          style={{ width: '30px', height: '30px', objectFit: 'contain', background: '#fff', borderRadius: '4px' }}
+                                          onError={(e) => { e.target.onerror = null; if (e.target.tagName === 'IMG') e.target.src = '/camisas/placeholder.png'; }}
+                                        />
+                                      ) : (
+                                        <img
+                                          src="/camisas/placeholder.png"
+                                          alt=""
+                                          style={{ width: '30px', height: '30px', objectFit: 'contain', background: '#fff', borderRadius: '4px' }}
+                                        />
+                                      )}
                                       <span style={{ fontWeight: 600, color: '#fff', display: 'inline-block', maxWidth: '140px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{p.name}</span>
                                     </div>
                                   </td>
@@ -7048,7 +7061,12 @@ const Admin = () => {
                                 {order.items?.map((item, i) => (
                                   <div key={i} style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
                                     <div style={{ width: '40px', height: '40px', background: 'rgba(255,255,255,0.05)', borderRadius: '4px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                                      <Package size={20} color="var(--text-muted)" />
+                                       <ProductMedia
+                                         src={item.image || '/camisas/placeholder.png'}
+                                         alt=""
+                                         style={{ width: '30px', height: '30px', objectFit: 'contain', background: 'rgba(255,255,255,0.05)', borderRadius: '4px' }}
+                                         onError={(e) => { e.target.onerror = null; if (e.target.tagName === 'IMG') e.target.src = '/camisas/placeholder.png'; }}
+                                       />
                                     </div>
                                     <div style={{ flex: 1 }}>
                                       <p style={{ color: '#fff', fontSize: '0.9rem', fontWeight: 600 }}>{item.quantity}x {item.name}</p>
@@ -7695,7 +7713,12 @@ const Admin = () => {
                                         <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
                                           {customer.cart.map((item, idx) => (
                                             <div key={idx} style={{ display: 'flex', alignItems: 'center', gap: '0.8rem', background: 'rgba(255,255,255,0.03)', padding: '0.5rem 0.8rem', borderRadius: '6px', border: '1px solid rgba(255,255,255,0.05)' }}>
-                                              <img src={item.image} alt="" style={{ width: '30px', height: '30px', objectFit: 'contain', background: 'rgba(255,255,255,0.05)', borderRadius: '4px' }} />
+                                               <ProductMedia
+                                                 src={item.image || '/camisas/placeholder.png'}
+                                                 alt=""
+                                                 style={{ width: '30px', height: '30px', objectFit: 'contain', background: 'rgba(255,255,255,0.05)', borderRadius: '4px' }}
+                                                 onError={(e) => { e.target.onerror = null; if (e.target.tagName === 'IMG') e.target.src = '/camisas/placeholder.png'; }}
+                                               />
                                               <div style={{ flex: 1 }}>
                                                 <p style={{ fontSize: '0.8rem', color: '#fff', fontWeight: 700, margin: 0 }}>{item.name}</p>
                                                 <p style={{ fontSize: '0.7rem', color: 'var(--text-muted)', margin: 0 }}>
@@ -7982,7 +8005,12 @@ const Admin = () => {
                           <tr key={p.id} style={{ borderBottom: '1px solid rgba(255,255,255,0.03)', transition: 'background 0.2s' }} onMouseEnter={e => e.currentTarget.style.background = 'rgba(255,255,255,0.02)'} onMouseLeave={e => e.currentTarget.style.background = 'transparent'}>
                             <td style={{ padding: '1rem 1.2rem' }}>
                               <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-                                <img src={p.image} alt="" style={{ width: '38px', height: '38px', borderRadius: '6px', objectFit: 'cover', background: '#000' }} />
+                                <ProductMedia
+                                  src={p.image || '/camisas/placeholder.png'}
+                                  alt=""
+                                  style={{ width: '38px', height: '38px', borderRadius: '6px', objectFit: 'cover', background: '#000' }}
+                                  onError={(e) => { e.target.onerror = null; if (e.target.tagName === 'IMG') e.target.src = '/camisas/placeholder.png'; }}
+                                />
                                 <div>
                                   <div style={{ fontWeight: 700, color: '#fff', fontSize: '0.85rem' }}>{p.name}</div>
                                   <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>{p.category} • {p.team}</div>
