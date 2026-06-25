@@ -4005,7 +4005,7 @@ const Admin = () => {
               // Cálculo de custos de campanha (Ad Spend) para o período
               let spend = 0;
               events.forEach(e => {
-                if (e.utm_campaign) {
+                if (e.utm_campaign && !e.utm_campaign.includes('test_campaign')) {
                   const key = `${e.utm_campaign}|${e.utm_source || 'Direto'}`;
                   // Dividido pelas sessões globais da campanha para ter uma taxa de custo proporcional
                   const cmpSpend = Number(campaignCosts[key] || 0);
@@ -4017,12 +4017,12 @@ const Admin = () => {
               let totalInputSpend = 0;
               const detectedCampaignKeys = new Set();
               events.forEach(e => {
-                if (e.utm_campaign) {
+                if (e.utm_campaign && !e.utm_campaign.includes('test_campaign')) {
                   detectedCampaignKeys.add(`${e.utm_campaign}|${e.utm_source || 'Direto'}`);
                 }
               });
               periodOrders.forEach(o => {
-                if (o.utm_campaign) {
+                if (o.utm_campaign && !o.utm_campaign.includes('test_campaign')) {
                   detectedCampaignKeys.add(`${o.utm_campaign}|${o.utm_source || 'Direto'}`);
                 }
               });
@@ -4146,7 +4146,7 @@ const Admin = () => {
             const campaignStats = (() => {
               const statsMap = {};
               currentEvents.forEach(e => {
-                if (e.utm_campaign) {
+                if (e.utm_campaign && !e.utm_campaign.includes('test_campaign')) {
                   const src = e.utm_source || 'Direto';
                   const key = `${e.utm_campaign}|${src}`;
                   if (!statsMap[key]) {
@@ -4157,7 +4157,7 @@ const Admin = () => {
               });
 
               currentOrders.forEach(o => {
-                if (o.utm_campaign) {
+                if (o.utm_campaign && !o.utm_campaign.includes('test_campaign')) {
                   const src = o.utm_source || 'Direto';
                   const key = `${o.utm_campaign}|${src}`;
                   if (!statsMap[key]) {
@@ -4380,6 +4380,7 @@ const Admin = () => {
             const utmExtendedStats = (() => {
               const map = {};
               currentOrders.forEach(o => {
+                if (o.utm_campaign && o.utm_campaign.includes('test_campaign')) return;
                 const src = o.utm_source || 'Direto';
                 const med = o.utm_medium || 'N/A';
                 const cam = o.utm_campaign || 'N/A';
