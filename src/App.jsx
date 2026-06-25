@@ -38,12 +38,10 @@ const AppLayout = () => {
   const isBlacklisted = ['/checkout', '/auth', '/admin', '/perfil', '/sucesso'].some(p => pathname.startsWith(p));
   const [waNumber, setWaNumber] = useState('17788061419');
 
-  // Inicializar o Analytics (gerar session_id, capturar UTMs, carregar Meta Pixel)
+  // Inicializar o Analytics e capturar UTMs em cada mudança de rota (para garantir captura antes do envio do PageView)
   useEffect(() => {
     initAnalytics();
-  }, []);
 
-  useEffect(() => {
     // Lista de caminhos que representam "navegação de compras" (listas de produtos)
     const shoppingPaths = ['/', '/busca'];
     const isCategoryPath = pathname.startsWith('/colecao/');
