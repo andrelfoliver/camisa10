@@ -146,6 +146,7 @@ const Checkout = () => {
   }, [notification.show]);
 
   const addressInputRef = useRef(null);
+  const autocompleteRef = useRef(null);
 
   // Inicialização Moderna do Google Places (API New)
   useEffect(() => {
@@ -159,11 +160,15 @@ const Checkout = () => {
 
         if (!addressInputRef.current) return;
 
+        const initialCountry = formDataRef.current?.country === 'United States' ? 'us' : 'ca';
+
         autocomplete = new Autocomplete(addressInputRef.current, {
-          componentRestrictions: { country: ['ca', 'us'] },
+          componentRestrictions: { country: initialCountry },
           fields: ['address_components', 'geometry'],
           types: ['address']
         });
+
+        autocompleteRef.current = autocomplete;
 
         autocomplete.addListener('place_changed', () => {
           const place = autocomplete.getPlace();
@@ -203,6 +208,14 @@ const Checkout = () => {
 
     initAutocomplete();
   }, []);
+
+  // Atualiza as restrições do autocomplete sempre que o país selecionado mudar
+  useEffect(() => {
+    if (autocompleteRef.current) {
+      const countryCode = formData.country === 'United States' ? 'us' : 'ca';
+      autocompleteRef.current.setComponentRestrictions({ country: countryCode });
+    }
+  }, [formData.country]);
 
   useEffect(() => {
     if (user) {
