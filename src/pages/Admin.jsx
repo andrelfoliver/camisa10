@@ -11,6 +11,36 @@ import CanadaMap, { normalizeProvince } from '../components/CanadaMap';
 import { Link, Navigate } from 'react-router-dom';
 
 const Admin = () => {
+  const getSourceFriendlyName = (sourceVal, fbclid, gclid, referrerVal) => {
+    const ref = referrerVal ? referrerVal.trim().toLowerCase() : '';
+    if (gclid) return 'Google Ads';
+    if (fbclid) return 'Meta Ads';
+
+    let src = sourceVal ? sourceVal.trim().toLowerCase() : '';
+    if (src) {
+      if (src === 'ig' || src === 'instagram' || src.includes('instagram.com')) return 'Instagram';
+      if (src === 'facebook' || src.includes('facebook.com') || src === 'fb') return 'Facebook';
+      if (src === 'google' || src.includes('google.com') || src === 'google search') return 'Google Orgânico';
+      return sourceVal.trim();
+    }
+
+    if (ref) {
+      if (ref.includes('instagram.com')) return 'Instagram';
+      if (ref.includes('facebook.com')) return 'Facebook';
+      if (ref.includes('google.')) return 'Google Orgânico';
+      if (ref.includes('bing.')) return 'Bing';
+      if (ref.includes('search.yahoo.')) return 'Yahoo';
+      if (ref.includes('duckduckgo.')) return 'DuckDuckGo';
+      if (ref.includes('youtube.com') || ref.includes('youtu.be')) return 'YouTube';
+      if (ref.includes('reddit.com')) return 'Reddit';
+      if (ref.includes('linkedin.com')) return 'LinkedIn';
+      if (ref.includes('tiktok.com')) return 'TikTok';
+      if (ref.includes('wa.me') || ref.includes('whatsapp.com')) return 'WhatsApp';
+      return 'Referral';
+    }
+    return 'Direto';
+  };
+
   const getCalgaryDateStr = (d = new Date()) => {
     return new Date(d).toLocaleDateString('en-CA', { timeZone: 'America/Edmonton' });
   };
@@ -3955,45 +3985,81 @@ const Admin = () => {
 
             // 2. Método auxiliar para cálculo de métricas de funil estruturado (cascata decrescente)
             const calculateFunnelMetrics = (events, periodOrders) => {
-              const sessions = new Set();
-              const views = new Set();
-              const carts = new Set();
-              const checkouts = new Set();
-              const purchaseSessions = new Set();
+              const sessionsMap = {};
 
               events.forEach(e => {
-                if (e.session_id) {
-                  sessions.add(e.session_id);
-                  if (e.event_name === 'ViewContent') views.add(e.session_id);
-                  if (e.event_name === 'AddToCart') carts.add(e.session_id);
-                  if (e.event_name === 'InitiateCheckout') checkouts.add(e.session_id);
-                  if (e.event_name === 'Purchase') purchaseSessions.add(e.session_id);
+                if (!e.session_id) return;
+                if (!sessionsMap[e.session_id]) {
+                  sessionsMap[e.session_id] = {
+                    hasView: false,
+                    hasCart: false,
+                    hasCheckout: false,
+                    hasOrder: false,
+                    hasPaid: false
+                  };
+                }
+                const s = sessionsMap[e.session_id];
+                if (e.event_name === 'ViewContent') s.hasView = true;
+                if (e.event_name === 'AddToCart') s.hasCart = true;
+                if (e.event_name === 'InitiateCheckout' || e.event_name === 'Begin Checkout') s.hasCheckout = true;
+                if (e.event_name === 'Pedido criado') s.hasOrder = true;
+                if (e.event_name === 'Pagamento aprovado' || e.event_name === 'Purchase') s.hasPaid = true;
+              });
+
+              periodOrders.forEach(o => {
+                if (!o.session_id) return;
+                if (!sessionsMap[o.session_id]) {
+                  sessionsMap[o.session_id] = {
+                    hasView: false,
+                    hasCart: false,
+                    hasCheckout: false,
+                    hasOrder: false,
+                    hasPaid: false
+                  };
+                }
+                const s = sessionsMap[o.session_id];
+                if (o.status !== 'cancelled') {
+                  s.hasOrder = true;
+                  if (o.status === 'paid') {
+                    s.hasPaid = true;
+                  }
                 }
               });
 
-              // Pedidos desconsiderando cancelados
-              const activeOrders = periodOrders.filter(o => o.status !== 'cancelled');
-              const ordersCount = activeOrders.length;
-              const paidOrders = activeOrders.filter(o => o.status === 'paid');
-              const paidCount = paidOrders.length;
+              // Propagação reversa (backfill) para garantir integridade do funil progressivo
+              let sCount = 0;
+              let vCount = 0;
+              let cCount = 0;
+              let chCount = 0;
+              let oCount = 0;
+              let pCount = 0;
 
-              // Cascata progressiva blindada
-              const s = sessions.size;
-              const v = Math.min(views.size, s);
-              const c = Math.min(carts.size, v);
-              const ch = Math.min(checkouts.size, c);
-              const cr = Math.min(ordersCount, ch);
-              const p = Math.min(paidCount, cr);
+              Object.values(sessionsMap).forEach(s => {
+                if (s.hasPaid) s.hasOrder = true;
+                if (s.hasOrder) s.hasCheckout = true;
+                if (s.hasCheckout) s.hasCart = true;
+                if (s.hasCart) s.hasView = true;
+
+                sCount++;
+                if (s.hasView) vCount++;
+                if (s.hasCart) cCount++;
+                if (s.hasCheckout) chCount++;
+                if (s.hasOrder) oCount++;
+                if (s.hasPaid) pCount++;
+              });
 
               // Taxas de avanço (0% a 100%)
-              const rateView = s > 0 ? (v / s) * 100 : 0;
-              const rateCart = v > 0 ? (c / v) * 100 : 0;
-              const rateCheckout = c > 0 ? (ch / c) * 100 : 0;
-              const rateOrder = ch > 0 ? (cr / ch) * 100 : 0;
-              const ratePaid = cr > 0 ? (p / cr) * 100 : 0;
-              const conversionGlobal = s > 0 ? (p / s) * 100 : 0;
+              const rateView = sCount > 0 ? (vCount / sCount) * 100 : 0;
+              const rateCart = vCount > 0 ? (cCount / vCount) * 100 : 0;
+              const rateCheckout = cCount > 0 ? (chCount / cCount) * 100 : 0;
+              const rateOrder = chCount > 0 ? (oCount / chCount) * 100 : 0;
+              const ratePaid = oCount > 0 ? (pCount / oCount) * 100 : 0;
+              const conversionGlobal = sCount > 0 ? (pCount / sCount) * 100 : 0;
 
               // Financeiro do período
+              const activeOrders = periodOrders.filter(o => o.status !== 'cancelled');
+              const paidOrders = activeOrders.filter(o => o.status === 'paid');
+              
               let revenue = 0;
               let cost = 0;
               paidOrders.forEach(o => {
@@ -4003,37 +4069,49 @@ const Admin = () => {
               const profit = revenue - cost;
 
               // Cálculo de custos de campanha (Ad Spend) para o período
-              let spend = 0;
-              events.forEach(e => {
-                if (e.utm_campaign && !e.utm_campaign.includes('test_campaign')) {
-                  const key = `${e.utm_campaign}|${e.utm_source || 'Direto'}`;
-                  // Dividido pelas sessões globais da campanha para ter uma taxa de custo proporcional
-                  const cmpSpend = Number(campaignCosts[key] || 0);
-                  const cmpSessions = events.filter(ev => ev.utm_campaign === e.utm_campaign).length;
-                  spend += cmpSessions > 0 ? (cmpSpend / cmpSessions) : 0;
-                }
-              });
-              // Para fins de precisão, faremos o somatório dos gastos imputados
               let totalInputSpend = 0;
               const detectedCampaignKeys = new Set();
               events.forEach(e => {
                 if (e.utm_campaign && !e.utm_campaign.includes('test_campaign')) {
-                  detectedCampaignKeys.add(`${e.utm_campaign}|${e.utm_source || 'Direto'}`);
+                  detectedCampaignKeys.add(`${e.utm_campaign}|${getSourceFriendlyName(e.utm_source, e.fbclid || e.metadata?.fbclid, e.gclid || e.metadata?.gclid, e.referrer || e.metadata?.referrer)}`);
                 }
               });
               periodOrders.forEach(o => {
                 if (o.utm_campaign && !o.utm_campaign.includes('test_campaign')) {
-                  detectedCampaignKeys.add(`${o.utm_campaign}|${o.utm_source || 'Direto'}`);
+                  detectedCampaignKeys.add(`${o.utm_campaign}|${getSourceFriendlyName(o.utm_source, o.fbclid, o.gclid, o.referrer)}`);
                 }
               });
               detectedCampaignKeys.forEach(k => {
                 totalInputSpend += Number(campaignCosts[k] || 0);
               });
 
+              // Validar matematicamente o funil
+              if (vCount > sCount) console.warn(`[Funnel Validation] Views (${vCount}) maior que Sessões (${sCount})`);
+              if (cCount > vCount) console.warn(`[Funnel Validation] Carrinhos (${cCount}) maior que Views (${vCount})`);
+              if (chCount > cCount) console.warn(`[Funnel Validation] Checkouts (${chCount}) maior que Carrinhos (${cCount})`);
+              if (oCount > chCount) console.warn(`[Funnel Validation] Pedidos Criados (${oCount}) maior que Checkouts (${chCount})`);
+              if (pCount > oCount) console.warn(`[Funnel Validation] Pagamentos Aprovados (${pCount}) maior que Pedidos Criados (${oCount})`);
+
+              const hasInconsistency = (vCount > sCount || cCount > vCount || chCount > cCount || oCount > chCount || pCount > oCount);
+
               return {
-                s, v, c, ch, cr, p,
-                rateView, rateCart, rateCheckout, rateOrder, ratePaid,
-                conversionGlobal, revenue, cost, profit, spend: totalInputSpend
+                s: sCount,
+                v: vCount,
+                c: cCount,
+                ch: chCount,
+                cr: oCount,
+                p: pCount,
+                rateView,
+                rateCart,
+                rateCheckout,
+                rateOrder,
+                ratePaid,
+                conversionGlobal,
+                revenue,
+                cost,
+                profit,
+                spend: totalInputSpend,
+                hasInconsistency
               };
             };
 
@@ -4147,7 +4225,7 @@ const Admin = () => {
               const statsMap = {};
               currentEvents.forEach(e => {
                 if (e.utm_campaign && !e.utm_campaign.includes('test_campaign')) {
-                  const src = e.utm_source || 'Direto';
+                  const src = getSourceFriendlyName(e.utm_source, e.fbclid || e.metadata?.fbclid, e.gclid || e.metadata?.gclid, e.referrer || e.metadata?.referrer);
                   const key = `${e.utm_campaign}|${src}`;
                   if (!statsMap[key]) {
                     statsMap[key] = { campaign: e.utm_campaign, source: src, key, sessions: new Set(), orders: 0, paidOrders: 0, revenue: 0, cost: 0 };
@@ -4158,7 +4236,7 @@ const Admin = () => {
 
               currentOrders.forEach(o => {
                 if (o.utm_campaign && !o.utm_campaign.includes('test_campaign')) {
-                  const src = o.utm_source || 'Direto';
+                  const src = getSourceFriendlyName(o.utm_source, o.fbclid, o.gclid, o.referrer);
                   const key = `${o.utm_campaign}|${src}`;
                   if (!statsMap[key]) {
                     statsMap[key] = { campaign: o.utm_campaign, source: src, key, sessions: new Set(), orders: 0, paidOrders: 0, revenue: 0, cost: 0 };
@@ -4381,7 +4459,7 @@ const Admin = () => {
               const map = {};
               currentOrders.forEach(o => {
                 if (o.utm_campaign && o.utm_campaign.includes('test_campaign')) return;
-                const src = o.utm_source || 'Direto';
+                const src = getSourceFriendlyName(o.utm_source, o.fbclid, o.gclid, o.referrer);
                 const med = o.utm_medium || 'N/A';
                 const cam = o.utm_campaign || 'N/A';
                 const con = o.utm_content || 'N/A';
@@ -4402,7 +4480,7 @@ const Admin = () => {
               return Object.values(map).map(item => {
                 const matchingEvents = currentEvents.filter(e =>
                   e.event_name === 'PageView' &&
-                  (e.utm_source === item.source || (item.source === 'Direto' && !e.utm_source)) &&
+                  (getSourceFriendlyName(e.utm_source, e.fbclid || e.metadata?.fbclid, e.gclid || e.metadata?.gclid, e.referrer || e.metadata?.referrer) === item.source) &&
                   (e.utm_campaign === item.campaign || (item.campaign === 'N/A' && !e.utm_campaign))
                 );
                 const sessions = new Set(matchingEvents.map(e => e.session_id)).size;
@@ -4422,40 +4500,14 @@ const Admin = () => {
             const trafficSourceStats = (() => {
               const statsMap = {};
 
-              const getSourceFriendlyName = (sourceVal, fbclid, gclid, referrerVal) => {
-                if (sourceVal && sourceVal !== 'Direto') return sourceVal.trim();
-                if (fbclid) {
-                  const ref = (referrerVal || '').toLowerCase();
-                  if (ref.includes('instagram.com')) return 'Instagram Ads';
-                  return 'Facebook Ads';
-                }
-                if (gclid) return 'Google Ads';
-                if (referrerVal && referrerVal !== 'Direto') {
-                  const cleanReferrer = referrerVal.toLowerCase();
-                  if (cleanReferrer.includes('google.')) return 'Google Orgânico';
-                  if (cleanReferrer.includes('bing.')) return 'Bing';
-                  if (cleanReferrer.includes('search.yahoo.')) return 'Yahoo';
-                  if (cleanReferrer.includes('duckduckgo.')) return 'DuckDuckGo';
-                  if (cleanReferrer.includes('facebook.com')) return 'Facebook Orgânico';
-                  if (cleanReferrer.includes('instagram.com')) return 'Instagram Orgânico';
-                  if (cleanReferrer.includes('youtube.com') || cleanReferrer.includes('youtu.be')) return 'YouTube';
-                  if (cleanReferrer.includes('reddit.com')) return 'Reddit';
-                  if (cleanReferrer.includes('linkedin.com')) return 'LinkedIn';
-                  if (cleanReferrer.includes('tiktok.com')) return 'TikTok';
-                  if (cleanReferrer.includes('wa.me') || cleanReferrer.includes('whatsapp.com')) return 'WhatsApp';
-                  return 'Referral';
-                }
-                return 'Direto';
-              };
-
               const initializeSource = (src) => {
                 if (!statsMap[src]) {
                   statsMap[src] = {
                     source: src,
-                    sessions: new Set(),
-                    views: new Set(),
-                    carts: new Set(),
-                    checkouts: new Set(),
+                    sessions: 0,
+                    views: 0,
+                    carts: 0,
+                    checkouts: 0,
                     orders: 0,
                     paidOrders: 0,
                     revenue: 0,
@@ -4465,28 +4517,71 @@ const Admin = () => {
                 }
               };
 
-              // Processar eventos filtrados do período atual
+              // Agrupar eventos/pedidos do período atual por session_id
+              const sessionsMap = {};
+
               currentEvents.forEach(e => {
-                const src = getSourceFriendlyName(e.utm_source, e.fbclid || e.metadata?.fbclid, e.gclid || e.metadata?.gclid, e.referrer || e.metadata?.referrer);
-                initializeSource(src);
-                
-                if (e.session_id) {
-                  statsMap[src].sessions.add(e.session_id);
-                  if (e.event_name === 'ViewContent') statsMap[src].views.add(e.session_id);
-                  if (e.event_name === 'AddToCart') statsMap[src].carts.add(e.session_id);
-                  if (e.event_name === 'InitiateCheckout' || e.event_name === 'Begin Checkout') statsMap[src].checkouts.add(e.session_id);
+                if (!e.session_id) return;
+                if (!sessionsMap[e.session_id]) {
+                  sessionsMap[e.session_id] = {
+                    source: getSourceFriendlyName(e.utm_source, e.fbclid || e.metadata?.fbclid, e.gclid || e.metadata?.gclid, e.referrer || e.metadata?.referrer),
+                    hasView: false,
+                    hasCart: false,
+                    hasCheckout: false,
+                    hasOrder: false,
+                    hasPaid: false,
+                    paidRevenue: 0
+                  };
+                }
+                const s = sessionsMap[e.session_id];
+                if (e.event_name === 'ViewContent') s.hasView = true;
+                if (e.event_name === 'AddToCart') s.hasCart = true;
+                if (e.event_name === 'InitiateCheckout' || e.event_name === 'Begin Checkout') s.hasCheckout = true;
+                if (e.event_name === 'Pedido criado') s.hasOrder = true;
+                if (e.event_name === 'Pagamento aprovado' || e.event_name === 'Purchase') s.hasPaid = true;
+              });
+
+              currentOrders.forEach(o => {
+                if (!o.session_id) return;
+                if (!sessionsMap[o.session_id]) {
+                  sessionsMap[o.session_id] = {
+                    source: getSourceFriendlyName(o.utm_source, o.fbclid, o.gclid, o.referrer),
+                    hasView: false,
+                    hasCart: false,
+                    hasCheckout: false,
+                    hasOrder: false,
+                    hasPaid: false,
+                    paidRevenue: 0
+                  };
+                }
+                const s = sessionsMap[o.session_id];
+                if (o.status !== 'cancelled') {
+                  s.hasOrder = true;
+                  if (o.status === 'paid') {
+                    s.hasPaid = true;
+                    s.paidRevenue += getValidRevenue(o);
+                  }
                 }
               });
 
-              // Processar pedidos do período atual
-              currentOrders.forEach(o => {
-                const src = getSourceFriendlyName(o.utm_source, o.fbclid, o.gclid, o.referrer);
-                initializeSource(src);
-                
-                statsMap[src].orders += 1;
-                if (o.status === 'paid') {
-                  statsMap[src].paidOrders += 1;
-                  statsMap[src].revenue += getValidRevenue(o);
+              // Aplicar backfill progressivo por sessão e acumular no statsMap
+              Object.values(sessionsMap).forEach(s => {
+                if (s.hasPaid) s.hasOrder = true;
+                if (s.hasOrder) s.hasCheckout = true;
+                if (s.hasCheckout) s.hasCart = true;
+                if (s.hasCart) s.hasView = true;
+
+                initializeSource(s.source);
+                const sourceStats = statsMap[s.source];
+
+                sourceStats.sessions += 1;
+                if (s.hasView) sourceStats.views += 1;
+                if (s.hasCart) sourceStats.carts += 1;
+                if (s.hasCheckout) sourceStats.checkouts += 1;
+                if (s.hasOrder) sourceStats.orders += 1;
+                if (s.hasPaid) {
+                  sourceStats.paidOrders += 1;
+                  sourceStats.revenue += s.paidRevenue;
                 }
               });
 
@@ -4535,7 +4630,7 @@ const Admin = () => {
               });
 
               return Object.values(statsMap).map(item => {
-                const sessionCount = item.sessions.size || 1;
+                const sessionCount = item.sessions || 1;
                 const paidCount = item.paidOrders;
                 
                 const conversion = (paidCount / sessionCount) * 100;
@@ -4546,10 +4641,10 @@ const Admin = () => {
 
                 return {
                   source: item.source,
-                  sessions: item.sessions.size,
-                  views: item.views.size,
-                  carts: item.carts.size,
-                  checkouts: item.checkouts.size,
+                  sessions: item.sessions,
+                  views: item.views,
+                  carts: item.carts,
+                  checkouts: item.checkouts,
                   orders: item.orders,
                   paidOrders: paidCount,
                   revenue: item.revenue,
@@ -4599,42 +4694,33 @@ const Admin = () => {
             const campaignFunnel = (() => {
               if (!selectedCmpKey) return { s: 0, v: 0, c: 0, ch: 0, cr: 0, p: 0 };
               const [campaign, source] = selectedCmpKey.split('|');
-              const campaignEvents = currentEvents.filter(e => e.utm_campaign === campaign && (!source || e.utm_source === source || (source === 'Direto' && !e.utm_source)));
-              const campaignOrders = currentOrders.filter(o => o.utm_campaign === campaign && (!source || o.utm_source === source || (source === 'Direto' && !o.utm_source)));
+              const campaignEvents = currentEvents.filter(e => e.utm_campaign === campaign && (!source || getSourceFriendlyName(e.utm_source, e.fbclid || e.metadata?.fbclid, e.gclid || e.metadata?.gclid, e.referrer || e.metadata?.referrer) === source));
+              const campaignOrders = currentOrders.filter(o => o.utm_campaign === campaign && (!source || getSourceFriendlyName(o.utm_source, o.fbclid, o.gclid, o.referrer) === source));
 
-              const sessions = new Set();
-              const views = new Set();
-              const carts = new Set();
-              const checkouts = new Set();
-
-              campaignEvents.forEach(e => {
-                if (e.session_id) {
-                  sessions.add(e.session_id);
-                  if (e.event_name === 'ViewContent') views.add(e.session_id);
-                  if (e.event_name === 'AddToCart') carts.add(e.session_id);
-                  if (e.event_name === 'InitiateCheckout') checkouts.add(e.session_id);
-                }
-              });
-
-              const activeOrders = campaignOrders.filter(o => o.status !== 'cancelled');
-              const createdOrders = activeOrders.length;
-              const paidOrders = activeOrders.filter(o => o.status === 'paid').length;
-
-              const s = sessions.size;
-              const v = Math.min(views.size, s);
-              const c = Math.min(carts.size, v);
-              const ch = Math.min(checkouts.size, c);
-              const cr = Math.min(createdOrders, ch);
-              const p = Math.min(paidOrders, cr);
-
-              return { s, v, c, ch, cr, p };
+              return calculateFunnelMetrics(campaignEvents, campaignOrders);
             })();
 
             return (
               <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
                 {/* FILTRO DE PERÍODO & ALERTAS INTELIGENTES */}
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'rgba(255,255,255,0.03)', padding: '1rem 1.5rem', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.05)' }}>
-                  <span style={{ fontSize: '0.9rem', color: 'var(--text-muted)' }}>Filtrar métricas e comparativos por período:</span>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'rgba(255,255,255,0.03)', padding: '1rem 1.5rem', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.05)', flexWrap: 'wrap', gap: '1rem' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                    <span style={{ fontSize: '0.9rem', color: 'var(--text-muted)' }}>Filtrar métricas e comparativos por período:</span>
+                    <div style={{ 
+                      fontSize: '0.75rem', 
+                      padding: '0.2rem 0.6rem', 
+                      borderRadius: '4px', 
+                      fontWeight: 700,
+                      background: currentFunnel.hasInconsistency ? 'rgba(239,68,68,0.15)' : 'rgba(16,185,129,0.15)',
+                      color: currentFunnel.hasInconsistency ? '#EF4444' : '#10B981',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '0.3rem'
+                    }}>
+                      <span>{currentFunnel.hasInconsistency ? '⚠️' : '✅'}</span>
+                      <span>Analytics: {currentFunnel.hasInconsistency ? 'Foram encontradas inconsistências na coleta.' : 'Consistente'}</span>
+                    </div>
+                  </div>
                   <div style={{ display: 'flex', gap: '0.5rem' }}>
                     {[
                       { key: '24h', label: '24 Horas' },
@@ -5269,7 +5355,7 @@ const Admin = () => {
                   session_id: sid,
                   user_id: e.user_id,
                   events: [],
-                  utm_source: e.utm_source || 'Direto',
+                  utm_source: getSourceFriendlyName(e.utm_source, e.fbclid || e.metadata?.fbclid, e.gclid || e.metadata?.gclid, e.referrer || e.metadata?.referrer),
                   utm_medium: e.utm_medium || null,
                   utm_campaign: e.utm_campaign || null,
                   utm_content: e.utm_content || null,
@@ -5295,6 +5381,20 @@ const Admin = () => {
               }
               
               const sess = sessionsMap[sid];
+
+              // Deduplicação na timeline do Replay para eventos consecutivos iguais na mesma sessão dentro de 1 segundo (1000ms)
+              const lastEvt = sess.events[sess.events.length - 1];
+              if (lastEvt && lastEvt.event_name === e.event_name) {
+                const diff = new Date(e.created_at) - new Date(lastEvt.created_at);
+                if (diff < 1000) {
+                  const lastPayload = JSON.stringify(lastEvt.metadata || {});
+                  const currentPayload = JSON.stringify(e.metadata || {});
+                  if (lastPayload === currentPayload) {
+                    return; // Descarta evento redundante consecutivo
+                  }
+                }
+              }
+              
               sess.events.push(e);
               sess.last_event_at = e.created_at;
               
@@ -5384,7 +5484,7 @@ const Admin = () => {
             const uniqueSources = (() => {
               const set = new Set();
               analyticsEvents.forEach(e => {
-                set.add(e.utm_source || 'Direto');
+                set.add(getSourceFriendlyName(e.utm_source, e.fbclid || e.metadata?.fbclid, e.gclid || e.metadata?.gclid, e.referrer || e.metadata?.referrer));
               });
               return Array.from(set);
             })();

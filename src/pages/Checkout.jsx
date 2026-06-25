@@ -480,7 +480,8 @@ const Checkout = () => {
         session_id: localStorage.getItem('ifooty_session_id') || null,
         fbclid: attribution.fbclid,
         gclid: attribution.gclid,
-        landing_page: attribution.landing_page
+        landing_page: attribution.landing_page,
+        visitor_id: attribution.visitor_id
       };
 
       let insertedOrders;

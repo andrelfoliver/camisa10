@@ -3,8 +3,9 @@ import { supabase } from './supabase';
 
 const SESSION_KEY = 'ifooty_session_id';
 const REFERRER_KEY = 'ifooty_referrer';
+const VISITOR_KEY = 'ifooty_visitor_id';
 
-// Função utilitária para gerar um ID de sessão único (UUID-like)
+// Função utilitária para gerar um ID único (UUID-like)
 function generateUUID() {
   return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function (c) {
     const r = (Math.random() * 16) | 0;
@@ -13,18 +14,93 @@ function generateUUID() {
   });
 }
 
+// Normalização universal das origens de tráfego conforme especificação
+export function normalizeSource(sourceStr, fbclid, gclid, referrerStr) {
+  const ref = referrerStr ? referrerStr.trim().toLowerCase() : '';
+  
+  if (gclid) return 'Google Ads';
+  if (fbclid) return 'Meta Ads';
+
+  let src = sourceStr ? sourceStr.trim().toLowerCase() : '';
+  if (src) {
+    if (src === 'ig' || src === 'instagram' || src.includes('instagram.com')) return 'Instagram';
+    if (src === 'facebook' || src.includes('facebook.com') || src === 'fb') return 'Facebook';
+    if (src === 'google' || src.includes('google.com') || src === 'google search') return 'Google Orgânico';
+    return sourceStr.trim();
+  }
+
+  if (ref) {
+    if (ref.includes('instagram.com')) return 'Instagram';
+    if (ref.includes('facebook.com')) return 'Facebook';
+    if (ref.includes('google.')) return 'Google Orgânico';
+    if (ref.includes('bing.')) return 'Bing';
+    if (ref.includes('search.yahoo.')) return 'Yahoo';
+    if (ref.includes('duckduckgo.')) return 'DuckDuckGo';
+    if (ref.includes('youtube.com') || ref.includes('youtu.be')) return 'YouTube';
+    if (ref.includes('reddit.com')) return 'Reddit';
+    if (ref.includes('linkedin.com')) return 'LinkedIn';
+    if (ref.includes('tiktok.com')) return 'TikTok';
+    if (ref.includes('wa.me') || ref.includes('whatsapp.com')) return 'WhatsApp';
+    return 'Referral';
+  }
+
+  return 'Direto';
+}
+
+// Memória local para deduplicação de eventos chaves redundantes
+const DUPLICATE_WINDOW = 1000; // Janela de 1 segundo
+const firedEventsMemory = {};
+
+function isDuplicateEvent(eventName, customData) {
+  const now = Date.now();
+  const payloadHash = JSON.stringify(customData || {});
+  const last = firedEventsMemory[eventName];
+  
+  if (last && (now - last.timestamp < DUPLICATE_WINDOW) && last.payloadHash === payloadHash) {
+    return true;
+  }
+  
+  firedEventsMemory[eventName] = { timestamp: now, payloadHash };
+  return false;
+}
+
+const DEDUPLICATE_EVENTS = [
+  'PageView',
+  'ViewContent',
+  'AddToCart',
+  'InitiateCheckout',
+  'Begin Checkout',
+  'Purchase',
+  'Pedido criado',
+  'Pagamento aprovado'
+];
+
 // Inicializa a sessão, captura UTMs e configura o Meta Pixel no navegador
 export function initAnalytics() {
   if (typeof window === 'undefined') return;
 
   const params = new URLSearchParams(window.location.search);
 
-  // 1. Gerenciar session_id
+  // A. Gerenciar visitor_id persistente
+  let visitorId = localStorage.getItem(VISITOR_KEY);
+  if (!visitorId) {
+    visitorId = generateUUID();
+    localStorage.setItem(VISITOR_KEY, visitorId);
+  }
+
+  // B. Gerenciar session_id com timeout de inatividade de 30 min e navegador fechado
   let sessionId = localStorage.getItem(SESSION_KEY);
+  let sessionActive = sessionStorage.getItem('ifooty_session_active');
+  let lastActivity = localStorage.getItem('ifooty_last_activity');
   let isNewSession = false;
-  if (!sessionId) {
+
+  const now = Date.now();
+  const sessionExpired = lastActivity && (now - Number(lastActivity) > 30 * 60 * 1000);
+
+  if (!sessionId || !sessionActive || sessionExpired) {
     sessionId = generateUUID();
     localStorage.setItem(SESSION_KEY, sessionId);
+    sessionStorage.setItem('ifooty_session_active', 'true');
     isNewSession = true;
     
     // Limpeza preventiva de dados antigos de sessões anteriores
@@ -40,83 +116,22 @@ export function initAnalytics() {
     localStorage.removeItem(REFERRER_KEY);
   }
 
+  // Atualiza data/hora de última atividade
+  localStorage.setItem('ifooty_last_activity', String(Date.now()));
+
   // 2. Capturar parâmetros de atribuição se for nova sessão ou se a origem não estiver gravada
   if (isNewSession || !localStorage.getItem('ifooty_session_source')) {
     const referrer = document.referrer ? document.referrer.trim() : '';
-    const cleanReferrer = referrer.toLowerCase();
+    const fbclid = params.get('fbclid') || null;
+    const gclid = params.get('gclid') || null;
     
-    let source = 'Direto';
-    let medium = null;
-    let campaign = null;
-    let content = null;
-    let term = null;
-    let fbclid = params.get('fbclid') || null;
-    let gclid = params.get('gclid') || null;
-
-    // A. Parâmetros UTM clássicos (Hierarquia 1)
-    if (params.get('utm_source')) {
-      source = params.get('utm_source').trim();
-      medium = params.get('utm_medium') ? params.get('utm_medium').trim() : null;
-      campaign = params.get('utm_campaign') ? params.get('utm_campaign').trim() : null;
-      content = params.get('utm_content') ? params.get('utm_content').trim() : null;
-      term = params.get('utm_term') ? params.get('utm_term').trim() : null;
-    }
-    // B. Meta Ads Click (Hierarquia 2)
-    else if (fbclid) {
-      if (cleanReferrer.includes('instagram.com')) {
-        source = 'Instagram Ads';
-      } else {
-        source = 'Facebook Ads';
-      }
-      medium = 'cpc';
-      campaign = 'Meta Ads';
-    }
-    // C. Google Ads Click (Hierarquia 3)
-    else if (gclid) {
-      source = 'Google Ads';
-      medium = 'cpc';
-      campaign = 'Google Ads';
-    }
-    // D. Document Referrer (Hierarquia 4)
-    else if (referrer) {
-      if (cleanReferrer.includes('google.')) {
-        source = 'Google Orgânico';
-        medium = 'organic';
-      } else if (cleanReferrer.includes('bing.')) {
-        source = 'Bing';
-        medium = 'organic';
-      } else if (cleanReferrer.includes('search.yahoo.')) {
-        source = 'Yahoo';
-        medium = 'organic';
-      } else if (cleanReferrer.includes('duckduckgo.')) {
-        source = 'DuckDuckGo';
-        medium = 'organic';
-      } else if (cleanReferrer.includes('facebook.com')) {
-        source = 'Facebook Orgânico';
-        medium = 'referral';
-      } else if (cleanReferrer.includes('instagram.com')) {
-        source = 'Instagram Orgânico';
-        medium = 'referral';
-      } else if (cleanReferrer.includes('youtube.com') || cleanReferrer.includes('youtu.be')) {
-        source = 'YouTube';
-        medium = 'referral';
-      } else if (cleanReferrer.includes('reddit.com')) {
-        source = 'Reddit';
-        medium = 'referral';
-      } else if (cleanReferrer.includes('linkedin.com')) {
-        source = 'LinkedIn';
-        medium = 'referral';
-      } else if (cleanReferrer.includes('tiktok.com')) {
-        source = 'TikTok';
-        medium = 'referral';
-      } else if (cleanReferrer.includes('wa.me') || cleanReferrer.includes('whatsapp.com')) {
-        source = 'WhatsApp';
-        medium = 'chat';
-      } else {
-        source = 'Referral';
-        medium = 'referral';
-      }
-    }
+    let utmSource = params.get('utm_source') ? params.get('utm_source').trim() : null;
+    const source = normalizeSource(utmSource, fbclid, gclid, referrer);
+    
+    const medium = params.get('utm_medium') ? params.get('utm_medium').trim() : (gclid || fbclid ? 'cpc' : (referrer ? 'organic' : null));
+    const campaign = params.get('utm_campaign') ? params.get('utm_campaign').trim() : (gclid ? 'Google Ads' : (fbclid ? 'Meta Ads' : null));
+    const content = params.get('utm_content') ? params.get('utm_content').trim() : null;
+    const term = params.get('utm_term') ? params.get('utm_term').trim() : null;
 
     // Persistir dados de atribuição no localStorage
     localStorage.setItem('ifooty_session_source', source);
@@ -133,7 +148,7 @@ export function initAnalytics() {
     localStorage.setItem('ifooty_session_first_page', window.location.pathname);
     localStorage.setItem('ifooty_session_created_at', new Date().toISOString());
 
-    // Identificar dispositivo e navegador a partir do User Agent
+    // Identificar dispositivo e navegador
     const userAgent = window.navigator.userAgent;
     let browser = 'Outro';
     if (userAgent.includes('Chrome') && !userAgent.includes('Edg') && !userAgent.includes('OPR')) browser = 'Chrome';
@@ -148,7 +163,7 @@ export function initAnalytics() {
     localStorage.setItem('ifooty_session_device', device);
     localStorage.setItem('ifooty_session_browser', browser);
 
-    // Buscar dados geográficos (Canadá target) via IP (CORS-friendly)
+    // Buscar dados geográficos via IP (CORS-friendly)
     fetch('https://ipwho.is/')
       .then(res => res.json())
       .then(data => {
@@ -241,13 +256,23 @@ export function getSavedAttribution() {
     browser: localStorage.getItem('ifooty_session_browser') || null,
     country: localStorage.getItem('ifooty_session_country') || null,
     province: localStorage.getItem('ifooty_session_province') || null,
-    city: localStorage.getItem('ifooty_session_city') || null
+    city: localStorage.getItem('ifooty_session_city') || null,
+    visitor_id: localStorage.getItem(VISITOR_KEY) || null
   };
 }
 
 // Dispara um evento de rastreamento de forma redundante (Pixel, CAPI e Banco de Dados Interno)
 export async function trackEvent(eventName, customData = {}, userData = {}, eventId = null) {
   if (typeof window === 'undefined') return;
+
+  // 1. Deduplicação em memória para evitar redundâncias na mesma fração de segundo
+  if (DEDUPLICATE_EVENTS.includes(eventName) && isDuplicateEvent(eventName, customData)) {
+    console.debug(`[Analytics] Ignorado evento duplicado consecutivamente: ${eventName}`);
+    return;
+  }
+
+  // 2. Atualizar data/hora de última atividade
+  localStorage.setItem('ifooty_last_activity', String(Date.now()));
 
   const pixelId = (import.meta.env.VITE_META_PIXEL_ID || '').trim();
   const sessionId = localStorage.getItem(SESSION_KEY) || generateUUID();
@@ -256,7 +281,7 @@ export async function trackEvent(eventName, customData = {}, userData = {}, even
   // Garante um eventId para deduplicação entre Pixel e CAPI
   const finalEventId = eventId || generateUUID();
 
-  // 1. Disparar evento Meta Pixel no Navegador (Client-Side)
+  // 3. Disparar evento Meta Pixel no Navegador (Client-Side)
   if (pixelId && window.fbq) {
     try {
       window.fbq('track', eventName, customData, { eventID: finalEventId });
@@ -266,7 +291,7 @@ export async function trackEvent(eventName, customData = {}, userData = {}, even
     }
   }
 
-  // 2. Disparar evento Meta Conversion API (Server-Side CAPI)
+  // 4. Disparar evento Meta Conversion API (Server-Side CAPI)
   try {
     const testEventCode = sessionStorage.getItem('ifooty_test_event_code') || null;
     fetch('/api/capi', {
@@ -287,7 +312,7 @@ export async function trackEvent(eventName, customData = {}, userData = {}, even
     console.warn('[CAPI] Erro ao disparar requisição serverless:', capiErr);
   }
 
-  // 3. Persistir evento no banco de dados interno (Supabase analytics_events)
+  // 5. Persistir evento no banco de dados interno (Supabase analytics_events)
   try {
     const userSession = await supabase.auth.getSession();
     const userId = userSession.data?.session?.user?.id || null;
@@ -316,7 +341,8 @@ export async function trackEvent(eventName, customData = {}, userData = {}, even
         browser: attribution.browser,
         country: attribution.country,
         province: attribution.province,
-        city: attribution.city
+        city: attribution.city,
+        visitor_id: attribution.visitor_id
       },
       utm_source: attribution.utm_source,
       utm_medium: attribution.utm_medium,
