@@ -1566,6 +1566,11 @@
     <priority>0.9</priority>
   </url>
   <url>
+    <loc>https://ifooty.ca/produto/1498</loc>
+    <changefreq>daily</changefreq>
+    <priority>0.9</priority>
+  </url>
+  <url>
     <loc>https://ifooty.ca/produto/1469</loc>
     <changefreq>daily</changefreq>
     <priority>0.9</priority>
@@ -1626,17 +1631,17 @@
     <priority>0.9</priority>
   </url>
   <url>
-    <loc>https://ifooty.ca/produto/1398</loc>
-    <changefreq>daily</changefreq>
-    <priority>0.9</priority>
-  </url>
-  <url>
     <loc>https://ifooty.ca/produto/1401</loc>
     <changefreq>daily</changefreq>
     <priority>0.9</priority>
   </url>
   <url>
     <loc>https://ifooty.ca/produto/1400</loc>
+    <changefreq>daily</changefreq>
+    <priority>0.9</priority>
+  </url>
+  <url>
+    <loc>https://ifooty.ca/produto/1398</loc>
     <changefreq>daily</changefreq>
     <priority>0.9</priority>
   </url>
@@ -1747,11 +1752,6 @@
   </url>
   <url>
     <loc>https://ifooty.ca/produto/1417</loc>
-    <changefreq>daily</changefreq>
-    <priority>0.9</priority>
-  </url>
-  <url>
-    <loc>https://ifooty.ca/produto/1011</loc>
     <changefreq>daily</changefreq>
     <priority>0.9</priority>
   </url>
