@@ -206,6 +206,16 @@ const Admin = () => {
   const [isEditingCampaignCosts, setIsEditingCampaignCosts] = useState(false);
   const [editingCostKey, setEditingCostKey] = useState('');
   const [editingCostVal, setEditingCostVal] = useState('');
+  
+  // Estados do Replay de Sessões
+  const [selectedSessionReplay, setSelectedSessionReplay] = useState(null);
+  const [replayClientSearch, setReplayClientSearch] = useState('');
+  const [replaySessionSearch, setReplaySessionSearch] = useState('');
+  const [replayProductFilter, setReplayProductFilter] = useState('all');
+  const [replayStatusFilter, setReplayStatusFilter] = useState('all'); // 'all' | 'purchase' | 'abandoned'
+  const [replayPaymentFilter, setReplayPaymentFilter] = useState('all'); // 'all' | 'paypal' | 'whatsapp'
+  const [replaySourceFilter, setReplaySourceFilter] = useState('all');
+  const [replayCampaignFilter, setReplayCampaignFilter] = useState('');
   const [testimonials, setTestimonials] = useState([]);
   const [interests, setInterests] = useState([]);
   const [heroUrl, setHeroUrl] = useState('');
@@ -620,7 +630,7 @@ const Admin = () => {
   };
 
   useEffect(() => {
-    if (isAdmin && supplierTab === 'MARKETING') {
+    if (isAdmin && (supplierTab === 'MARKETING' || supplierTab === 'REPLAYS')) {
       loadAnalyticsEvents();
     }
   }, [isAdmin, supplierTab, analyticsPeriod]);
@@ -1048,8 +1058,35 @@ const Admin = () => {
       return;
     }
 
-    // 2. Sincronização de Estoque Automática
+    // Registrar evento de Pagamento aprovado no analytics do banco
     const order = orders.find(o => o.id === orderId);
+    if (newStatus === 'paid' && order) {
+      try {
+        const paymentEvent = {
+          event_name: 'Pagamento aprovado',
+          session_id: order.session_id || `offline_session_${order.id}`,
+          user_id: order.user_id || null,
+          metadata: {
+            order_id: order.id,
+            value: order.total_price,
+            currency: 'CAD',
+            payment_method: order.payment_method || 'whatsapp',
+            via_admin_dashboard: true
+          },
+          utm_source: order.utm_source || null,
+          utm_medium: order.utm_medium || null,
+          utm_campaign: order.utm_campaign || null,
+          utm_content: order.utm_content || null,
+          utm_term: order.utm_term || null,
+          page: '/admin'
+        };
+        await supabase.from('analytics_events').insert([paymentEvent]);
+      } catch (errEvt) {
+        console.warn("Falha ao registrar evento de pagamento aprovado via Admin:", errEvt);
+      }
+    }
+
+    // 2. Sincronização de Estoque Automática
     if (order && order.items) {
       const previousStatus = order.status;
       const shouldAddStock = previousStatus !== 'cancelled' && newStatus === 'cancelled';
@@ -2407,6 +2444,14 @@ const Admin = () => {
           </button>
 
           <button
+            onClick={() => setSupplierTab('REPLAYS')}
+            className={supplierTab === 'REPLAYS' ? 'active-tab' : ''}
+            style={{ padding: '0.8rem 1.5rem', background: supplierTab === 'REPLAYS' ? 'var(--accent-color)' : 'transparent', color: supplierTab === 'REPLAYS' ? '#000' : 'var(--text-muted)', border: 'none', borderRadius: '4px', cursor: 'pointer', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '0.5rem' }}
+          >
+            <Clock size={18} /> REPLAY DE SESSÕES
+          </button>
+
+          <button
             onClick={() => setSupplierTab('CONFIG')}
             className={supplierTab === 'CONFIG' ? 'active-tab' : ''}
             style={{ padding: '0.8rem 1rem', borderRadius: 'var(--radius-md)', display: 'flex', alignItems: 'center', gap: '0.8rem', width: '100%', textAlign: 'left', background: supplierTab === 'CONFIG' ? '#3B82F6' : 'transparent', color: supplierTab === 'CONFIG' ? '#fff' : 'var(--text-main)', fontWeight: supplierTab === 'CONFIG' ? 700 : 500, transition: 'all 0.2s', border: 'none', cursor: 'pointer' }}
@@ -2476,6 +2521,7 @@ const Admin = () => {
               <h1 className="admin-header-title" style={{ fontSize: '1.8rem', color: '#fff', fontWeight: 800, margin: 0 }}>
                 {
                   supplierTab === 'MARKETING' ? 'Marketing Analytics & Funil' :
+                    supplierTab === 'REPLAYS' ? 'Replay de Sessões de Clientes' :
                     supplierTab === 'CLIENTES' ? 'Gestão de Clientes' :
                       supplierTab === 'INTERESSES' ? 'Interesses de Lançamento / Pré-venda' :
                         supplierTab === 'CONFIG' ? 'Configuração de Interface' :
@@ -2495,7 +2541,7 @@ const Admin = () => {
           </div>
           <div style={{ display: 'flex', gap: '1.2rem', alignItems: 'center' }}>
             {/* Botão Global de Privacidade */}
-            {['PEDIDOS', 'FINANCEIRO', 'MARKETING'].includes(supplierTab) && (
+            {['PEDIDOS', 'FINANCEIRO', 'MARKETING', 'REPLAYS'].includes(supplierTab) && (
                <button 
                   onClick={() => setShowValues(!showValues)}
                   className="glass-panel"
@@ -4334,7 +4380,10 @@ const Admin = () => {
             };
 
             // Campanha selecionada para o funil exclusivo
-            const selectedCmpKey = selectedCampaign || (campaignStats[0] ? campaignStats[0].key : '');
+            const activeCmpKeys = campaignStats.map(c => c.key);
+            const selectedCmpKey = activeCmpKeys.includes(selectedCampaign)
+              ? selectedCampaign
+              : (campaignStats[0] ? campaignStats[0].key : '');
             const campaignFunnel = (() => {
               if (!selectedCmpKey) return { s: 0, v: 0, c: 0, ch: 0, cr: 0, p: 0 };
               const [campaign, source] = selectedCmpKey.split('|');
@@ -4915,6 +4964,568 @@ const Admin = () => {
                     </div>
                   </>
                 )}
+              </div>
+            );
+          })() : supplierTab === 'REPLAYS' ? (() => {
+            // Agrupar eventos de analytics por session_id
+            const sessionsMap = {};
+            
+            // Ordenar eventos de forma cronológica crescente para a linha do tempo interna da sessão
+            const sortedEvents = [...analyticsEvents].sort((a, b) => new Date(a.created_at) - new Date(b.created_at));
+            
+            sortedEvents.forEach(e => {
+              const sid = e.session_id;
+              if (!sid) return;
+              
+              if (!sessionsMap[sid]) {
+                sessionsMap[sid] = {
+                  session_id: sid,
+                  user_id: e.user_id,
+                  events: [],
+                  utm_source: e.utm_source || 'Direto',
+                  utm_medium: e.utm_medium || null,
+                  utm_campaign: e.utm_campaign || null,
+                  utm_content: e.utm_content || null,
+                  utm_term: e.utm_term || null,
+                  created_at: e.created_at,
+                  last_event_at: e.created_at,
+                  city: e.metadata?.city || null,
+                  province: e.metadata?.province || (e.utm_source === 'offline' ? 'AB' : null),
+                  device: e.metadata?.device || (e.metadata?.client_user_agent ? (e.metadata.client_user_agent.toLowerCase().includes('mobile') ? 'Mobile' : 'Desktop') : 'Desktop'),
+                  browser: e.metadata?.browser || (e.metadata?.client_user_agent ? (e.metadata.client_user_agent.includes('Chrome') ? 'Chrome' : e.metadata.client_user_agent.includes('Safari') ? 'Safari' : e.metadata.client_user_agent.includes('Firefox') ? 'Firefox' : 'Outro') : 'Outro'),
+                  purchaseCount: 0,
+                  checkoutCount: 0,
+                  paymentMethod: null,
+                  totalValue: 0,
+                  isAbandoned: true,
+                  isPurchased: false
+                };
+              }
+              
+              const sess = sessionsMap[sid];
+              sess.events.push(e);
+              sess.last_event_at = e.created_at;
+              
+              if (e.metadata?.city && !sess.city) sess.city = e.metadata.city;
+              if (e.metadata?.province && !sess.province) sess.province = e.metadata.province;
+              
+              if (e.event_name === 'Purchase' || e.event_name === 'Pagamento aprovado') {
+                sess.isPurchased = true;
+                sess.isAbandoned = false;
+                sess.purchaseCount += 1;
+                if (e.metadata?.value) sess.totalValue = Number(e.metadata.value);
+                if (e.metadata?.payment_method) sess.paymentMethod = e.metadata.payment_method;
+              }
+              if (e.event_name === 'InitiateCheckout' || e.event_name === 'Begin Checkout') {
+                sess.checkoutCount += 1;
+                if (e.metadata?.payment_method) sess.paymentMethod = e.metadata.payment_method;
+                if (e.metadata?.value && sess.totalValue === 0) sess.totalValue = Number(e.metadata.value);
+              }
+              if (e.event_name === 'Selecionou método de pagamento' && e.metadata?.method) {
+                sess.paymentMethod = e.metadata.method;
+              }
+              if (e.event_name === 'AddToCart' && e.metadata?.value && !sess.isPurchased) {
+                sess.totalValue += Number(e.metadata.value);
+              }
+            });
+
+            // Cruzamento complementar com orders para obter meios de pagamento e preencher session_id
+            orders.forEach(o => {
+              if (o.session_id && sessionsMap[o.session_id]) {
+                const sess = sessionsMap[o.session_id];
+                sess.paymentMethod = o.payment_method;
+                sess.totalValue = o.total_price;
+                if (o.status === 'paid') {
+                  sess.isPurchased = true;
+                  sess.isAbandoned = false;
+                }
+                if (o.shipping_address?.city) sess.city = o.shipping_address.city;
+                if (o.shipping_address?.province) sess.province = o.shipping_address.province;
+              }
+            });
+
+            const getCustomerName = (sess) => {
+              if (sess.user_id) {
+                const c = customers.find(cust => cust.id === sess.user_id);
+                if (c) return c.full_name || c.email || 'Usuário Cadastrado';
+              }
+              const o = orders.find(ord => ord.session_id === sess.session_id);
+              if (o) return o.customer_name || 'Visitante Anônimo';
+              return 'Visitante Anônimo';
+            };
+
+            const getCustomerEmail = (sess) => {
+              if (sess.user_id) {
+                const c = customers.find(cust => cust.id === sess.user_id);
+                if (c) return c.email || '';
+              }
+              const o = orders.find(ord => ord.session_id === sess.session_id);
+              if (o) return o.customer_email || '';
+              return '';
+            };
+
+            // Produtos únicos dos eventos de analytics
+            const uniqueProductsInEvents = (() => {
+              const list = {};
+              analyticsEvents.forEach(e => {
+                if (e.product_id) {
+                  const prod = products.find(p => p.id === e.product_id);
+                  if (prod) list[e.product_id] = prod.name;
+                  else list[e.product_id] = `Produto ID ${e.product_id}`;
+                }
+              });
+              return Object.entries(list).map(([id, name]) => ({ id, name }));
+            })();
+
+            // Origens de tráfego nos eventos
+            const uniqueSources = (() => {
+              const set = new Set();
+              analyticsEvents.forEach(e => {
+                set.add(e.utm_source || 'Direto');
+              });
+              return Array.from(set);
+            })();
+
+            // Filtrar sessões localizadas
+            const filteredList = Object.values(sessionsMap).filter(sess => {
+              if (replayClientSearch) {
+                const name = getCustomerName(sess).toLowerCase();
+                const email = getCustomerEmail(sess).toLowerCase();
+                const search = replayClientSearch.toLowerCase();
+                if (!name.includes(search) && !email.includes(search)) return false;
+              }
+              if (replaySessionSearch && !sess.session_id.includes(replaySessionSearch)) return false;
+              if (replayProductFilter !== 'all') {
+                const hasProduct = sess.events.some(e => String(e.product_id) === replayProductFilter);
+                if (!hasProduct) return false;
+              }
+              if (replayStatusFilter === 'purchase' && !sess.isPurchased) return false;
+              if (replayStatusFilter === 'abandoned' && !sess.isAbandoned) return false;
+              if (replayPaymentFilter !== 'all' && sess.paymentMethod !== replayPaymentFilter) return false;
+              if (replaySourceFilter !== 'all' && (sess.utm_source || 'Direto').toLowerCase() !== replaySourceFilter.toLowerCase()) return false;
+              if (replayCampaignFilter) {
+                const cmp = (sess.utm_campaign || '').toLowerCase();
+                if (!cmp.includes(replayCampaignFilter.toLowerCase())) return false;
+              }
+              return true;
+            }).sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+
+            // Helpers de formatação
+            const formatDuration = (ms) => {
+              const totalSecs = Math.floor(ms / 1000);
+              const mins = Math.floor(totalSecs / 60);
+              const secs = totalSecs % 60;
+              if (mins > 0) return `${mins}m ${secs}s`;
+              return `${secs}s`;
+            };
+
+            const getEventIcon = (name) => {
+              switch (name) {
+                case 'PageView': return '👁️';
+                case 'ViewContent': return '👕';
+                case 'Selecionou tamanho': return '📏';
+                case 'Selecionou quantidade': return '➕';
+                case 'AddToCart': return '🛒';
+                case 'Remove From Cart': return '❌';
+                case 'InitiateCheckout':
+                case 'Begin Checkout': return '💳';
+                case 'Informou CEP': return '📮';
+                case 'Informou Província': return '📍';
+                case 'Selecionou método de pagamento': return '💵';
+                case 'Pedido criado': return '📝';
+                case 'Pagamento aprovado': return '✅';
+                case 'Logout': return '🚪';
+                case 'Sessão encerrada': return '⏹️';
+                default: return '🔹';
+              }
+            };
+
+            const getFriendlyEventName = (name) => {
+              switch (name) {
+                case 'PageView': return 'Visualizou Página';
+                case 'ViewContent': return 'Visualizou Produto';
+                case 'Selecionou tamanho': return 'Selecionou Tamanho';
+                case 'Selecionou quantidade': return 'Selecionou Quantidade';
+                case 'AddToCart': return 'Adicionou ao Carrinho';
+                case 'Remove From Cart': return 'Removeu do Carrinho';
+                case 'InitiateCheckout':
+                case 'Begin Checkout': return 'Iniciou Checkout';
+                case 'Informou CEP': return 'Digitou CEP';
+                case 'Informou Província': return 'Selecionou Província';
+                case 'Selecionou método de pagamento': return 'Selecionou Pagamento';
+                case 'Pedido criado': return 'Criou Pedido';
+                case 'Pagamento aprovado': return 'Pagamento Aprovado';
+                case 'Logout': return 'Fez Logout';
+                case 'Sessão encerrada': return 'Sessão Encerrada';
+                default: return name;
+              }
+            };
+
+            // Cálculo dos indicadores estatísticos consolidados
+            const stats = (() => {
+              const purchaseSessions = filteredList.filter(s => s.isPurchased);
+              const abandonedSessions = filteredList.filter(s => s.isAbandoned);
+              
+              let totalPurchaseTime = 0;
+              purchaseSessions.forEach(s => {
+                const first = s.events[0];
+                const purchase = s.events.find(e => e.event_name === 'Purchase' || e.event_name === 'Pagamento aprovado' || e.event_name === 'Pedido criado');
+                if (first && purchase) totalPurchaseTime += Math.max(0, new Date(purchase.created_at) - new Date(first.created_at));
+              });
+              const avgPurchaseTime = purchaseSessions.length > 0 ? formatDuration(totalPurchaseTime / purchaseSessions.length) : 'N/A';
+
+              let totalAbandonTime = 0;
+              abandonedSessions.forEach(s => {
+                const first = s.events[0];
+                const last = s.events[s.events.length - 1];
+                if (first && last) totalAbandonTime += Math.max(0, new Date(last.created_at) - new Date(first.created_at));
+              });
+              const avgAbandonTime = abandonedSessions.length > 0 ? formatDuration(totalAbandonTime / abandonedSessions.length) : 'N/A';
+
+              // Página de maior abandono (última página acessada antes de abandonar)
+              const pageAbandons = {};
+              abandonedSessions.forEach(s => {
+                const last = s.events[s.events.length - 1];
+                if (last) {
+                  let path = last.page || last.metadata?.path || '/';
+                  if (path === '/') path = 'Home';
+                  pageAbandons[path] = (pageAbandons[path] || 0) + 1;
+                }
+              });
+              const topExitPage = Object.entries(pageAbandons).sort((a,b) => b[1] - a[1])[0]?.[0] || 'N/A';
+
+              // Produto de maior abandono
+              const prodAbandons = {};
+              abandonedSessions.forEach(s => {
+                s.events.forEach(e => {
+                  if (e.product_id) {
+                    const prod = products.find(p => p.id === e.product_id);
+                    const name = prod ? prod.name : `Produto #${e.product_id}`;
+                    prodAbandons[name] = (prodAbandons[name] || 0) + 1;
+                  }
+                });
+              });
+              const topExitProduct = Object.entries(prodAbandons).sort((a,b) => b[1] - a[1])[0]?.[0] || 'N/A';
+
+              // Método de pagamento de maior abandono
+              const payAbandons = {};
+              abandonedSessions.forEach(s => {
+                if (s.paymentMethod) {
+                  payAbandons[s.paymentMethod] = (payAbandons[s.paymentMethod] || 0) + 1;
+                }
+              });
+              const topExitPayment = Object.entries(payAbandons).sort((a,b) => b[1] - a[1])[0]?.[0] || 'N/A';
+
+              // Gargalo do funil com mais desistências
+              const counts = { pv: 0, vc: 0, ac: 0, ic: 0, pr: 0 };
+              filteredList.forEach(s => {
+                const names = s.events.map(e => e.event_name);
+                if (names.includes('PageView')) counts.pv++;
+                if (names.includes('ViewContent')) counts.vc++;
+                if (names.includes('AddToCart')) counts.ac++;
+                if (names.includes('InitiateCheckout') || names.includes('Begin Checkout')) counts.ic++;
+                if (s.isPurchased) counts.pr++;
+              });
+              const dropOffs = [
+                { name: 'Home ➔ Produto', lost: counts.pv - counts.vc },
+                { name: 'Produto ➔ Sacola', lost: counts.vc - counts.ac },
+                { name: 'Sacola ➔ Checkout', lost: counts.ac - counts.ic },
+                { name: 'Checkout ➔ Compra', lost: counts.ic - counts.pr }
+              ];
+              const topBottleneck = dropOffs.sort((a,b) => b.lost - a.lost)[0]?.name || 'N/A';
+
+              return { avgPurchaseTime, avgAbandonTime, topExitPage, topExitProduct, topExitPayment, topBottleneck };
+            })();
+
+            const activeReplay = filteredList.find(s => s.session_id === selectedSessionReplay);
+
+            return (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
+                
+                {/* 1. INDICADORES ESTATÍSTICOS */}
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1rem' }}>
+                  <div className="glass-panel" style={{ padding: '1.2rem', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.05)' }}>
+                    <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: 800 }}>Tempo Médio Compra / Abandono</span>
+                    <h3 style={{ margin: '0.3rem 0 0.5rem 0', color: '#fff', fontSize: '1.2rem', fontWeight: 800 }}>
+                      ⏱️ {stats.avgPurchaseTime} / <span style={{ color: '#ef4444' }}>{stats.avgAbandonTime}</span>
+                    </h3>
+                  </div>
+                  <div className="glass-panel" style={{ padding: '1.2rem', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.05)' }}>
+                    <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: 800 }}>Tela de Maior Abandono</span>
+                    <h3 style={{ margin: '0.3rem 0 0.5rem 0', color: 'var(--accent-color)', fontSize: '1.1rem', fontWeight: 800, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                      🚪 {stats.topExitPage}
+                    </h3>
+                  </div>
+                  <div className="glass-panel" style={{ padding: '1.2rem', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.05)' }}>
+                    <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: 800 }}>Produto de Maior Abandono</span>
+                    <h3 style={{ margin: '0.3rem 0 0.5rem 0', color: '#fff', fontSize: '1.1rem', fontWeight: 800, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                      👕 {stats.topExitProduct}
+                    </h3>
+                  </div>
+                  <div className="glass-panel" style={{ padding: '1.2rem', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.05)' }}>
+                    <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: 800 }}>Gargalo Funil / Desistência Pgto</span>
+                    <h3 style={{ margin: '0.3rem 0 0.5rem 0', color: '#F59E0B', fontSize: '1.05rem', fontWeight: 800 }}>
+                      ⚠️ {stats.topBottleneck}
+                    </h3>
+                  </div>
+                </div>
+
+                {/* 2. FILTROS DE BUSCA */}
+                <div className="glass-panel" style={{ padding: '1.5rem', borderRadius: '12px', display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '1rem', border: '1px solid rgba(255,255,255,0.05)' }}>
+                  <div>
+                    <label style={{ display: 'block', fontSize: '0.75rem', color: 'var(--text-muted)', marginBottom: '0.3rem', fontWeight: 700 }}>BUSCAR CLIENTE</label>
+                    <input 
+                      type="text" placeholder="Nome ou Email..."
+                      value={replayClientSearch} onChange={e => setReplayClientSearch(e.target.value)}
+                      style={{ width: '100%', padding: '0.5rem', borderRadius: '4px', background: 'var(--bg-color)', border: '1px solid var(--border-color)', color: '#fff', fontSize: '0.8rem' }}
+                    />
+                  </div>
+                  <div>
+                    <label style={{ display: 'block', fontSize: '0.75rem', color: 'var(--text-muted)', marginBottom: '0.3rem', fontWeight: 700 }}>ID SESSÃO</label>
+                    <input 
+                      type="text" placeholder="Ex: 8a7d3..."
+                      value={replaySessionSearch} onChange={e => setReplaySessionSearch(e.target.value)}
+                      style={{ width: '100%', padding: '0.5rem', borderRadius: '4px', background: 'var(--bg-color)', border: '1px solid var(--border-color)', color: '#fff', fontSize: '0.8rem' }}
+                    />
+                  </div>
+                  <div>
+                    <label style={{ display: 'block', fontSize: '0.75rem', color: 'var(--text-muted)', marginBottom: '0.3rem', fontWeight: 700 }}>PRODUTO VISUALIZADO</label>
+                    <select
+                      value={replayProductFilter} onChange={e => setReplayProductFilter(e.target.value)}
+                      style={{ width: '100%', padding: '0.5rem', borderRadius: '4px', background: 'var(--bg-color)', border: '1px solid var(--border-color)', color: '#fff', fontSize: '0.8rem' }}
+                    >
+                      <option value="all">Todos os Produtos</option>
+                      {uniqueProductsInEvents.map(p => (
+                        <option key={p.id} value={p.id}>{p.name}</option>
+                      ))}
+                    </select>
+                  </div>
+                  <div>
+                    <label style={{ display: 'block', fontSize: '0.75rem', color: 'var(--text-muted)', marginBottom: '0.3rem', fontWeight: 700 }}>STATUS SESSÃO</label>
+                    <select
+                      value={replayStatusFilter} onChange={e => setReplayStatusFilter(e.target.value)}
+                      style={{ width: '100%', padding: '0.5rem', borderRadius: '4px', background: 'var(--bg-color)', border: '1px solid var(--border-color)', color: '#fff', fontSize: '0.8rem' }}
+                    >
+                      <option value="all">Todos os Status</option>
+                      <option value="purchase">Concluiu Compra</option>
+                      <option value="abandoned">Abandonou Funil</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label style={{ display: 'block', fontSize: '0.75rem', color: 'var(--text-muted)', marginBottom: '0.3rem', fontWeight: 700 }}>MEIO DE PAGAMENTO</label>
+                    <select
+                      value={replayPaymentFilter} onChange={e => setReplayPaymentFilter(e.target.value)}
+                      style={{ width: '100%', padding: '0.5rem', borderRadius: '4px', background: 'var(--bg-color)', border: '1px solid var(--border-color)', color: '#fff', fontSize: '0.8rem' }}
+                    >
+                      <option value="all">Todos os Meios</option>
+                      <option value="paypal">PayPal / Cartão</option>
+                      <option value="whatsapp">WhatsApp</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label style={{ display: 'block', fontSize: '0.75rem', color: 'var(--text-muted)', marginBottom: '0.3rem', fontWeight: 700 }}>ORIGEM UTM</label>
+                    <select
+                      value={replaySourceFilter} onChange={e => setReplaySourceFilter(e.target.value)}
+                      style={{ width: '100%', padding: '0.5rem', borderRadius: '4px', background: 'var(--bg-color)', border: '1px solid var(--border-color)', color: '#fff', fontSize: '0.8rem' }}
+                    >
+                      <option value="all">Todas as Origens</option>
+                      {uniqueSources.map(src => (
+                        <option key={src} value={src}>{src}</option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
+
+                {/* 3. LAYOUT DUAS COLUNAS: LISTA vs TIMELINE */}
+                <div style={{ display: 'grid', gridTemplateColumns: '1.2fr 1fr', gap: '1.5rem', alignItems: 'start' }}>
+                  
+                  {/* COLUNA ESQUERDA: LISTA DE SESSÕES */}
+                  <div className="glass-panel" style={{ padding: '1.5rem', borderRadius: '12px', maxHeight: '700px', overflowY: 'auto' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '1rem', borderBottom: '1px solid rgba(255,255,255,0.05)', paddingBottom: '0.5rem' }}>
+                      <h4 style={{ margin: 0, color: '#fff', fontSize: '0.95rem', fontWeight: 700 }}>Sessões Localizadas ({filteredList.length})</h4>
+                      <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Ordenado por data recente</span>
+                    </div>
+
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.8rem' }}>
+                      {filteredList.map(sess => {
+                        const name = getCustomerName(sess);
+                        const firstDate = new Date(sess.created_at);
+                        const lastDate = new Date(sess.last_event_at);
+                        const durationMs = lastDate - firstDate;
+                        const durationStr = formatDuration(durationMs);
+                        
+                        const isSelected = selectedSessionReplay === sess.session_id;
+
+                        return (
+                          <div 
+                            key={sess.session_id}
+                            onClick={() => setSelectedSessionReplay(sess.session_id)}
+                            style={{ 
+                              padding: '1rem', 
+                              borderRadius: '8px', 
+                              background: isSelected ? 'rgba(204,255,0,0.08)' : 'rgba(255,255,255,0.02)',
+                              border: `1px solid ${isSelected ? 'var(--accent-color)' : 'rgba(255,255,255,0.05)'}`,
+                              cursor: 'pointer',
+                              transition: 'all 0.2s ease'
+                            }}
+                            onMouseEnter={(e) => { if(!isSelected) e.currentTarget.style.background = 'rgba(255,255,255,0.04)'; }}
+                            onMouseLeave={(e) => { if(!isSelected) e.currentTarget.style.background = 'rgba(255,255,255,0.02)'; }}
+                          >
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.4rem' }}>
+                              <span style={{ fontWeight: 700, fontSize: '0.9rem', color: '#fff' }}>{name}</span>
+                              <span style={{ 
+                                fontSize: '0.7rem', 
+                                padding: '0.1rem 0.4rem', 
+                                borderRadius: '4px',
+                                fontWeight: 700,
+                                background: sess.isPurchased ? 'rgba(16,185,129,0.15)' : 'rgba(239,68,68,0.15)',
+                                color: sess.isPurchased ? '#10B981' : '#EF4444'
+                              }}>
+                                {sess.isPurchased ? 'COMPROU' : 'ABANDONOU'}
+                              </span>
+                            </div>
+
+                            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.4rem', marginBottom: '0.5rem' }}>
+                              <span style={{ fontSize: '0.7rem', background: 'rgba(255,255,255,0.06)', color: 'var(--text-muted)', padding: '0.1rem 0.3rem', borderRadius: '2px' }}>
+                                📢 {sess.utm_source}
+                              </span>
+                              {sess.utm_campaign && (
+                                <span style={{ fontSize: '0.7rem', background: 'rgba(6,182,212,0.1)', color: '#06B6D4', padding: '0.1rem 0.3rem', borderRadius: '2px' }}>
+                                  🎯 {sess.utm_campaign}
+                                </span>
+                              )}
+                              {sess.paymentMethod && (
+                                <span style={{ fontSize: '0.7rem', background: 'rgba(234,179,8,0.1)', color: '#EAB308', padding: '0.1rem 0.3rem', borderRadius: '2px' }}>
+                                  💵 {sess.paymentMethod.toUpperCase()}
+                                </span>
+                              )}
+                            </div>
+
+                            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.75rem', color: 'var(--text-muted)' }}>
+                              <span>📅 {firstDate.toLocaleDateString('pt-BR')} às {firstDate.toLocaleTimeString('pt-BR', {hour: '2-digit', minute:'2-digit'})}</span>
+                              <span>⏱️ Duração: {durationStr}</span>
+                            </div>
+                          </div>
+                        );
+                      })}
+
+                      {filteredList.length === 0 && (
+                        <div style={{ padding: '2rem', textAlign: 'center', color: 'var(--text-muted)' }}>
+                          Nenhuma sessão localizada para os filtros aplicados.
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* COLUNA DIREITA: LINHA DO TEMPO DETALHADA */}
+                  <div className="glass-panel" style={{ padding: '1.5rem', borderRadius: '12px', maxHeight: '700px', overflowY: 'auto' }}>
+                    {activeReplay ? (
+                      <div>
+                        {/* Info Header da Sessão */}
+                        <div style={{ borderBottom: '1px solid rgba(255,255,255,0.05)', paddingBottom: '1rem', marginBottom: '1.5rem' }}>
+                          <h4 style={{ margin: 0, color: 'var(--accent-color)', fontSize: '1rem', fontWeight: 800, marginBottom: '0.4rem' }}>
+                            Detalhes da Jornada do Cliente
+                          </h4>
+                          <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)', display: 'block', wordBreak: 'break-all' }}>
+                            ID da Sessão: {activeReplay.session_id}
+                          </span>
+                        </div>
+
+                        {/* Metadados Detalhados */}
+                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.8rem', background: 'rgba(255,255,255,0.02)', padding: '1rem', borderRadius: '6px', marginBottom: '1.5rem', fontSize: '0.8rem', border: '1px solid rgba(255,255,255,0.03)' }}>
+                          <div>📱 Dispositivo: <strong style={{ color: '#fff' }}>{activeReplay.device}</strong></div>
+                          <div>🌐 Navegador: <strong style={{ color: '#fff' }}>{activeReplay.browser}</strong></div>
+                          <div>📍 Localização: <strong style={{ color: '#fff' }}>{activeReplay.city ? `${activeReplay.city}, ${activeReplay.province || ''}` : 'Não informada'}</strong></div>
+                          <div>💰 Total Estimado: <strong style={{ color: 'var(--accent-color)' }}>{showValues ? `$${activeReplay.totalValue.toFixed(2)}` : '****'}</strong></div>
+                          <div style={{ gridColumn: 'span 2' }}>📢 Campanha UTM: <strong style={{ color: '#fff' }}>{activeReplay.utm_campaign || 'N/A'} ({activeReplay.utm_source})</strong></div>
+                        </div>
+
+                        {/* Timeline Vertical */}
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', position: 'relative', paddingLeft: '1.5rem', borderLeft: '2px dashed rgba(255,255,255,0.1)' }}>
+                          {activeReplay.events.map((evt, index) => {
+                            const evtDate = new Date(evt.created_at);
+                            let timeDiffStr = '';
+                            if (index > 0) {
+                              const prev = activeReplay.events[index - 1];
+                              const diff = new Date(evt.created_at) - new Date(prev.created_at);
+                              timeDiffStr = `(+ ${formatDuration(diff)})`;
+                            }
+
+                            // Info extra dependendo do evento
+                            let detailStr = '';
+                            if (evt.event_name === 'ViewContent' && evt.metadata?.content_name) {
+                              detailStr = `Visualizou camisa: ${evt.metadata.content_name}`;
+                            } else if (evt.event_name === 'Selecionou tamanho' && evt.metadata?.size) {
+                              detailStr = `Tamanho escolhido: ${evt.metadata.size} (${evt.metadata.content_name || 'Produto'})`;
+                            } else if (evt.event_name === 'Selecionou quantidade' && evt.metadata?.quantity) {
+                              detailStr = `Quantidade ajustada para: ${evt.metadata.quantity}x`;
+                            } else if (evt.event_name === 'AddToCart') {
+                              detailStr = `Adicionado à sacola: ${evt.metadata?.content_name || 'Produto'} por $${Number(evt.metadata?.value || 0).toFixed(2)}`;
+                            } else if (evt.event_name === 'Remove From Cart') {
+                              detailStr = `Item removido: ${evt.metadata?.content_name || 'Produto'}`;
+                            } else if (evt.event_name === 'Informou CEP' && evt.metadata?.postal_code) {
+                              detailStr = `Postal Code digitado: ${evt.metadata.postal_code}`;
+                            } else if (evt.event_name === 'Informou Província' && evt.metadata?.province) {
+                              detailStr = `Província digitada: ${evt.metadata.province}`;
+                            } else if (evt.event_name === 'Selecionou método de pagamento' && evt.metadata?.method) {
+                              detailStr = `Opção de pagamento: ${evt.metadata.method.toUpperCase()}`;
+                            } else if (evt.event_name === 'Pedido criado' && evt.metadata?.order_id) {
+                              detailStr = `Pedido #${evt.metadata.order_id.slice(0,8)} gerado com sucesso`;
+                            } else if (evt.event_name === 'Pagamento aprovado') {
+                              detailStr = `Pagamento confirmado via ${evt.metadata?.payment_method || 'paypal'}`;
+                            } else if (evt.event_name === 'PageView' && evt.metadata?.path) {
+                              detailStr = `Acessou tela: ${evt.metadata.path === '/' ? 'Home (Principal)' : evt.metadata.path}`;
+                            }
+
+                            return (
+                              <div key={evt.id} style={{ position: 'relative', marginBottom: '0.5rem' }}>
+                                {/* Marcador da Linha */}
+                                <div style={{ 
+                                  position: 'absolute', 
+                                  left: '-32px', 
+                                  top: '2px', 
+                                  width: '18px', 
+                                  height: '18px', 
+                                  borderRadius: '50%', 
+                                  background: evt.event_name === 'Pagamento aprovado' ? '#10B981' : evt.event_name === 'PageView' ? '#3B82F6' : '#1f2937',
+                                  display: 'flex',
+                                  alignItems: 'center',
+                                  justifyContent: 'center',
+                                  fontSize: '0.65rem',
+                                  border: '1px solid rgba(255,255,255,0.1)'
+                                }}>
+                                  {getEventIcon(evt.event_name)}
+                                </div>
+
+                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                  <span style={{ fontSize: '0.85rem', fontWeight: 700, color: '#fff' }}>
+                                    {getFriendlyEventName(evt.event_name)}
+                                  </span>
+                                  <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>
+                                    {evtDate.toLocaleTimeString('pt-BR')} <span style={{ color: 'var(--accent-color)' }}>{timeDiffStr}</span>
+                                  </span>
+                                </div>
+
+                                {detailStr && (
+                                  <p style={{ margin: '0.2rem 0 0 0', color: 'var(--text-muted)', fontSize: '0.8rem', paddingLeft: '0.2rem' }}>
+                                    {detailStr}
+                                  </p>
+                                )}
+                              </div>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    ) : (
+                      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '300px', border: '1px dashed rgba(255,255,255,0.1)', borderRadius: '8px', color: 'var(--text-muted)', gap: '0.5rem' }}>
+                        <Clock size={36} color="var(--text-muted)" style={{ opacity: 0.5 }} />
+                        <span>Selecione uma sessão à esquerda para visualizar toda a sequência de ações.</span>
+                      </div>
+                    )}
+                  </div>
+
+                </div>
+
               </div>
             );
           })() : supplierTab === 'AGENTS' ? (

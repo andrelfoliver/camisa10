@@ -259,7 +259,17 @@ export const CartProvider = ({ children }) => {
   };
 
   const removeFromCart = (cartId) => {
-    setCartItems(prev => prev.filter(item => item.cartId !== cartId));
+    const item = cartItems.find(i => i.cartId === cartId);
+    if (item) {
+      trackEvent('Remove From Cart', {
+        content_name: item.name,
+        content_ids: [item.id],
+        size: item.size,
+        quantity: item.quantity,
+        value: item.price * item.quantity
+      });
+    }
+    setCartItems(prev => prev.filter(i => i.cartId !== cartId));
   };
 
   const clearCart = async () => {

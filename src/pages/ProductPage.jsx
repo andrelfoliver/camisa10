@@ -613,7 +613,10 @@ const ProductPage = () => {
                   return (
                     <button
                       key={s}
-                      onClick={() => setSelectedSize(s)}
+                      onClick={() => {
+                        setSelectedSize(s);
+                        trackEvent('Selecionou tamanho', { size: s, content_name: product.name, content_ids: [product.id] });
+                      }}
                       className={`size-box ${selectedSize === s ? 'selected' : ''}`}
                       style={{ position: 'relative' }}
                     >
@@ -879,9 +882,19 @@ const ProductPage = () => {
             ) : (
               <div style={{ display: 'flex', gap: '0.8rem', marginBottom: '2.5rem' }}>
                 <div style={{ display: 'flex', alignItems: 'center', border: '1px solid var(--border-color)', borderRadius: '4px', overflow: 'hidden' }}>
-                  <button onClick={() => setQuantity(Math.max(1, quantity - 1))} style={{ width: '40px', height: '56px', background: 'transparent', color: '#fff', fontSize: '1.2rem' }}>-</button>
+                  <button onClick={() => {
+                    const newQty = Math.max(1, quantity - 1);
+                    if (newQty !== quantity) {
+                      setQuantity(newQty);
+                      trackEvent('Selecionou quantidade', { quantity: newQty, content_name: product.name, content_ids: [product.id] });
+                    }
+                  }} style={{ width: '40px', height: '56px', background: 'transparent', color: '#fff', fontSize: '1.2rem' }}>-</button>
                   <span style={{ width: '30px', textAlign: 'center', fontWeight: 700 }}>{quantity}</span>
-                  <button onClick={() => setQuantity(quantity + 1)} style={{ width: '40px', height: '56px', background: 'transparent', color: '#fff', fontSize: '1.2rem' }}>+</button>
+                  <button onClick={() => {
+                    const newQty = quantity + 1;
+                    setQuantity(newQty);
+                    trackEvent('Selecionou quantidade', { quantity: newQty, content_name: product.name, content_ids: [product.id] });
+                  }} style={{ width: '40px', height: '56px', background: 'transparent', color: '#fff', fontSize: '1.2rem' }}>+</button>
                 </div>
                 <button className="btn-primary" onClick={() => handleAdd(true)} style={{ flex: 1, fontWeight: 900, fontSize: '1rem', height: '56px', borderRadius: '4px', textTransform: 'uppercase', letterSpacing: '1px' }}>
                   {t('product_buy_now')}

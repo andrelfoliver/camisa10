@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { supabase } from '../services/supabase';
+import { trackEvent } from '../services/analytics';
 
 const AuthContext = createContext();
 
@@ -50,6 +51,11 @@ export function AuthProvider({ children }) {
 
   const signOut = async () => {
     window.google?.accounts?.id?.disableAutoSelect();
+    try {
+      await trackEvent('Logout');
+    } catch (e) {
+      console.warn("Logout analytics failed", e);
+    }
     const { error } = await supabase.auth.signOut();
     if (error) throw error;
   };

@@ -475,7 +475,8 @@ const Checkout = () => {
         utm_medium: utms.utm_medium,
         utm_campaign: utms.utm_campaign,
         utm_content: utms.utm_content,
-        utm_term: utms.utm_term
+        utm_term: utms.utm_term,
+        session_id: localStorage.getItem('ifooty_session_id') || null
       };
 
       const { data: insertedOrders, error: orderError } = await supabase.from('orders').insert([orderData]).select();
@@ -483,6 +484,24 @@ const Checkout = () => {
 
       const createdOrder = insertedOrders && insertedOrders[0];
       const orderId = createdOrder ? createdOrder.id : (window.crypto?.randomUUID ? window.crypto.randomUUID() : 'purchase_' + Date.now());
+
+      // Rastrear Pedido criado no analytics local
+      trackEvent('Pedido criado', {
+        order_id: orderId,
+        value: finalTotal,
+        currency: 'CAD',
+        payment_method: paymentDetails ? 'paypal' : 'whatsapp'
+      });
+
+      // Rastrear Pagamento aprovado se for PayPal (já liquidado)
+      if (paymentDetails) {
+        trackEvent('Pagamento aprovado', {
+          order_id: orderId,
+          value: finalTotal,
+          currency: 'CAD',
+          payment_method: 'paypal'
+        });
+      }
 
       // 1.1. Disparar Purchase Analytics
       trackEvent('Purchase', {
@@ -740,6 +759,11 @@ const Checkout = () => {
                       <input
                         type="text" placeholder="Ex: T2X 0V1"
                         value={formData.postalCode} onChange={e => setFormData(prev => ({ ...prev, postalCode: e.target.value.toUpperCase() }))}
+                        onBlur={e => {
+                          if (e.target.value) {
+                            trackEvent('Informou CEP', { postal_code: e.target.value.toUpperCase() });
+                          }
+                        }}
                         style={{ width: '100%', padding: '0.75rem', borderRadius: 'var(--radius-sm)', background: 'var(--bg-color)', border: '1px solid var(--border-color)', color: 'var(--text-main)', fontSize: '1rem' }}
                       />
                     </div>
@@ -800,6 +824,11 @@ const Checkout = () => {
                       <label style={{ display: 'block', marginBottom: '0.5rem', color: 'var(--text-muted)' }}>{t('checkout_province_label')}</label>
                       <input
                         type="text" value={formData.province} onChange={e => setFormData(prev => ({ ...prev, province: e.target.value }))}
+                        onBlur={e => {
+                          if (e.target.value) {
+                            trackEvent('Informou Província', { province: e.target.value });
+                          }
+                        }}
                         style={{ width: '100%', padding: '0.75rem', borderRadius: 'var(--radius-sm)', background: 'var(--bg-color)', border: '1px solid var(--border-color)', color: 'var(--text-main)', fontSize: '1rem' }}
                       />
                     </div>
@@ -984,7 +1013,10 @@ const Checkout = () => {
               </label>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
                 <button
-                  onClick={() => setPaymentMethod('whatsapp')}
+                  onClick={() => {
+                    setPaymentMethod('whatsapp');
+                    trackEvent('Selecionou método de pagamento', { method: 'whatsapp' });
+                  }}
                   style={{
                     display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.8rem', padding: '1.2rem',
                     borderRadius: 'var(--radius-md)', background: paymentMethod === 'whatsapp' ? 'rgba(37, 211, 102, 0.1)' : 'rgba(255,255,255,0.03)',
@@ -996,7 +1028,10 @@ const Checkout = () => {
                   <span style={{ fontSize: '0.9rem', fontWeight: 600, color: paymentMethod === 'whatsapp' ? '#fff' : 'var(--text-muted)' }}>WhatsApp</span>
                 </button>
                 <button
-                  onClick={() => setPaymentMethod('paypal')}
+                  onClick={() => {
+                    setPaymentMethod('paypal');
+                    trackEvent('Selecionou método de pagamento', { method: 'paypal' });
+                  }}
                   style={{
                     display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.8rem', padding: '1.2rem',
                     borderRadius: 'var(--radius-md)', background: paymentMethod === 'paypal' ? 'rgba(0, 112, 186, 0.1)' : 'rgba(255,255,255,0.03)',

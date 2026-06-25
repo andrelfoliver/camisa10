@@ -19,21 +19,52 @@ export function initAnalytics() {
 
   // 1. Gerenciar session_id
   let sessionId = localStorage.getItem(SESSION_KEY);
+  let isNewSession = false;
   if (!sessionId) {
     sessionId = generateUUID();
     localStorage.setItem(SESSION_KEY, sessionId);
+    isNewSession = true;
+    
+    // Limpeza preventiva de UTMs antigas de sessões anteriores
+    const utmParams = ['utm_source', 'utm_medium', 'utm_campaign', 'utm_content', 'utm_term'];
+    utmParams.forEach(key => {
+      localStorage.removeItem(`ifooty_${key}`);
+    });
+    localStorage.removeItem(REFERRER_KEY);
   }
 
   // 2. Capturar parâmetros UTM e Referrer da URL
   const params = new URLSearchParams(window.location.search);
   const utmParams = ['utm_source', 'utm_medium', 'utm_campaign', 'utm_content', 'utm_term'];
   
+  let hasUtm = false;
   utmParams.forEach(key => {
     const value = params.get(key);
     if (value) {
       localStorage.setItem(`ifooty_${key}`, value.trim());
+      hasUtm = true;
     }
   });
+
+  // Autodetectar Meta Ads (fbclid ou social referrer) e Google se não houver UTMs explícitas na URL
+  if (!hasUtm) {
+    const fbclid = params.get('fbclid');
+    const referrer = document.referrer ? document.referrer.toLowerCase() : '';
+    
+    if (fbclid || referrer.includes('facebook.com') || referrer.includes('instagram.com') || referrer.includes('t.co') || referrer.includes('twitter.com')) {
+      let detectedSource = 'facebook';
+      if (referrer.includes('instagram.com')) detectedSource = 'instagram';
+      else if (referrer.includes('t.co') || referrer.includes('twitter.com')) detectedSource = 'twitter';
+      
+      localStorage.setItem('ifooty_utm_source', detectedSource);
+      localStorage.setItem('ifooty_utm_medium', 'cpc');
+      localStorage.setItem('ifooty_utm_campaign', 'Meta Ads (Autodetect)');
+    } else if (referrer.includes('google.com')) {
+      localStorage.setItem('ifooty_utm_source', 'google');
+      localStorage.setItem('ifooty_utm_medium', 'organic');
+      localStorage.setItem('ifooty_utm_campaign', 'Google Search');
+    }
+  }
 
   const ref = params.get('ref') || params.get('agent');
   if (ref) {
@@ -44,6 +75,15 @@ export function initAnalytics() {
   const testCode = params.get('fb_pixel_test_event_code');
   if (testCode) {
     sessionStorage.setItem('ifooty_test_event_code', testCode.trim());
+  }
+
+  // 4. Registrar Sessão encerrada no beforeunload (apenas uma vez)
+  if (!window._ifooty_unload_registered) {
+    window._ifooty_unload_registered = true;
+    window.addEventListener('beforeunload', () => {
+      // Disparar evento de Sessão encerrada de forma assíncrona/best-effort
+      trackEvent('Sessão encerrada');
+    });
   }
 
   // 3. Inicializar Meta Pixel se o ID estiver configurado
@@ -135,11 +175,14 @@ export async function trackEvent(eventName, customData = {}, userData = {}, even
       ? Number(customData.content_ids[0]) 
       : null;
 
+    const page = customData.path || (typeof window !== 'undefined' ? window.location.pathname : null);
+
     const { error } = await supabase.from('analytics_events').insert({
       event_name: eventName,
       session_id: sessionId,
       user_id: userId,
       product_id: productId,
+      page: page,
       metadata: customData,
       ...utms
     });
