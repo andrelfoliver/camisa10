@@ -4450,7 +4450,7 @@ const Admin = () => {
                             {showValues || !kpi.isMonetary ? kpi.val : '****'}
                           </h3>
                           {renderTrendBadge(
-                            kpi.isMonetary ? (kpi.val.replace(/[^0-9.-]/g, '')) : (kpi.val.replace(/[^0-9.-]/g, '')),
+                            String(kpi.val).replace(/[^0-9.-]/g, ''),
                             kpi.prevVal
                           )}
                         </div>
