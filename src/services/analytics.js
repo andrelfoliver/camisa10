@@ -17,6 +17,8 @@ function generateUUID() {
 export function initAnalytics() {
   if (typeof window === 'undefined') return;
 
+  const params = new URLSearchParams(window.location.search);
+
   // 1. Gerenciar session_id
   let sessionId = localStorage.getItem(SESSION_KEY);
   let isNewSession = false;
@@ -40,7 +42,6 @@ export function initAnalytics() {
 
   // 2. Capturar parâmetros de atribuição se for nova sessão ou se a origem não estiver gravada
   if (isNewSession || !localStorage.getItem('ifooty_session_source')) {
-    const params = new URLSearchParams(window.location.search);
     const referrer = document.referrer ? document.referrer.trim() : '';
     const cleanReferrer = referrer.toLowerCase();
     
@@ -147,14 +148,16 @@ export function initAnalytics() {
     localStorage.setItem('ifooty_session_device', device);
     localStorage.setItem('ifooty_session_browser', browser);
 
-    // Buscar dados geográficos (Canadá target) via IP
-    fetch('https://ipapi.co/json/')
+    // Buscar dados geográficos (Canadá target) via IP (CORS-friendly)
+    fetch('https://ipwho.is/')
       .then(res => res.json())
       .then(data => {
-        if (data) {
-          localStorage.setItem('ifooty_session_country', data.country_name || 'Canada');
+        if (data && data.success) {
+          localStorage.setItem('ifooty_session_country', data.country || 'Canada');
           localStorage.setItem('ifooty_session_province', data.region_code || 'AB');
           localStorage.setItem('ifooty_session_city', data.city || 'Calgary');
+        } else {
+          throw new Error('ipwho.is success false');
         }
       })
       .catch(err => {
