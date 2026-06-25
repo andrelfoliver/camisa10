@@ -4100,8 +4100,8 @@ const Admin = () => {
               };
 
               currentOrders.forEach(o => {
-                const prov = (o.shipping_address?.province || 'AB').toUpperCase().trim();
-                const city = (o.shipping_address?.city || 'Desconhecida').trim();
+                const prov = String(o.shipping_address?.province || 'AB').toUpperCase().trim();
+                const city = String(o.shipping_address?.city || 'Desconhecida').trim();
 
                 if (provinces[prov]) {
                   const p = provinces[prov];
@@ -4244,7 +4244,8 @@ const Admin = () => {
                 let totalStock = 0;
                 try {
                   const inv = typeof prod.inventory === 'string' ? JSON.parse(prod.inventory) : prod.inventory;
-                  totalStock = Object.values(inv || {}).reduce((sum, qty) => sum + Number(qty), 0);
+                  const invObj = (inv && typeof inv === 'object') ? inv : {};
+                  totalStock = Object.values(invObj).reduce((sum, qty) => sum + Number(qty), 0);
                 } catch(e) {}
                 return totalStock === 0;
               });
