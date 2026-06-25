@@ -18,6 +18,7 @@ const Auth = () => {
   const [otpCode, setOtpCode] = useState('');
   const [step, setStep] = useState('email'); // 'email' or 'verify'
   const [otpType, setOtpType] = useState('email'); // 'email' or 'signup'
+  const [showEmailForm, setShowEmailForm] = useState(false);
 
   // Container onde o botão oficial do Google será renderizado
   const googleBtnRef = useRef(null);
@@ -280,114 +281,134 @@ const Auth = () => {
               </p>
             )}
 
-            {step === 'email' ? (
-              <form onSubmit={handleSendOtp} style={{ display: 'flex', flexDirection: 'column', gap: '0.8rem', marginTop: '1.5rem' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', margin: '0.5rem 0' }}>
-                  <div style={{ flex: 1, height: '1px', background: 'rgba(255,255,255,0.1)' }}></div>
-                  <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
-                    {language === 'pt' ? 'ou entrar com e-mail' : 'or sign in with email'}
-                  </span>
-                  <div style={{ flex: 1, height: '1px', background: 'rgba(255,255,255,0.1)' }}></div>
-                </div>
+            {showEmailForm || step === 'verify' ? (
+              step === 'email' ? (
+                <form onSubmit={handleSendOtp} style={{ display: 'flex', flexDirection: 'column', gap: '0.8rem', marginTop: '1.5rem' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', margin: '0.5rem 0' }}>
+                    <div style={{ flex: 1, height: '1px', background: 'rgba(255,255,255,0.1)' }}></div>
+                    <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                      {language === 'pt' ? 'ou entrar com e-mail' : 'or sign in with email'}
+                    </span>
+                    <div style={{ flex: 1, height: '1px', background: 'rgba(255,255,255,0.1)' }}></div>
+                  </div>
 
-                <input
-                  type="email"
-                  placeholder={language === 'pt' ? 'Seu melhor e-mail (qualquer provedor)' : 'Your best email (any provider)'}
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  required
-                  style={{
-                    padding: '0.8rem 1rem',
-                    background: 'rgba(255, 255, 255, 0.02)',
-                    border: '1px solid var(--border-color)',
-                    borderRadius: '8px',
-                    color: '#fff',
-                    fontSize: '0.95rem',
-                    outline: 'none',
-                    textAlign: 'center',
-                    transition: 'border-color 0.2s'
-                  }}
-                  onFocus={(e) => e.target.style.borderColor = 'var(--accent-color)'}
-                  onBlur={(e) => e.target.style.borderColor = 'var(--border-color)'}
-                />
-                
-                {email.toLowerCase().includes('gmail.com') && (
-                  <p style={{ color: 'var(--accent-color)', fontSize: '0.8rem', marginTop: '0.2rem', marginBottom: '0.2rem', textAlign: 'center', lineHeight: '1.3' }}>
+                  <input
+                    type="email"
+                    placeholder={language === 'pt' ? 'Seu melhor e-mail (qualquer provedor)' : 'Your best email (any provider)'}
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    required
+                    style={{
+                      padding: '0.8rem 1rem',
+                      background: 'rgba(255, 255, 255, 0.02)',
+                      border: '1px solid var(--border-color)',
+                      borderRadius: '8px',
+                      color: '#fff',
+                      fontSize: '0.95rem',
+                      outline: 'none',
+                      textAlign: 'center',
+                      transition: 'border-color 0.2s'
+                    }}
+                    onFocus={(e) => e.target.style.borderColor = 'var(--accent-color)'}
+                    onBlur={(e) => e.target.style.borderColor = 'var(--border-color)'}
+                  />
+                  
+                  {email.toLowerCase().includes('gmail.com') && (
+                    <p style={{ color: 'var(--accent-color)', fontSize: '0.8rem', marginTop: '0.2rem', marginBottom: '0.2rem', textAlign: 'center', lineHeight: '1.3' }}>
+                      {language === 'pt' 
+                        ? '💡 Dica: Como você usa Gmail, pode clicar no botão "Fazer Login com o Google" no topo para entrar instantaneamente!' 
+                        : '💡 Tip: Since you use Gmail, you can click "Sign in with Google" at the top to sign in instantly!'}
+                    </p>
+                  )}
+                  
+                  <button
+                    type="submit"
+                    className="btn-primary"
+                    style={{
+                      padding: '0.8rem',
+                      borderRadius: '8px',
+                      fontWeight: 700,
+                      fontSize: '0.95rem',
+                      cursor: 'pointer',
+                      background: 'var(--accent-color)',
+                      color: '#000',
+                      border: 'none',
+                      transition: 'transform 0.2s, opacity 0.2s'
+                    }}
+                  >
+                    {language === 'pt' ? 'Receber Código de Acesso' : 'Get Verification Code'}
+                  </button>
+                </form>
+              ) : (
+                <form onSubmit={handleVerifyOtp} style={{ display: 'flex', flexDirection: 'column', gap: '0.8rem', marginTop: '1.5rem' }}>
+                  <p style={{ fontSize: '0.9rem', color: 'var(--text-muted)', margin: '0.5rem 0' }}>
                     {language === 'pt' 
-                      ? '💡 Dica: Como você usa Gmail, pode clicar no botão "Fazer Login com o Google" no topo para entrar instantaneamente!' 
-                      : '💡 Tip: Since you use Gmail, you can click "Sign in with Google" at the top to sign in instantly!'}
+                      ? `Enviamos o código de acesso para:` 
+                      : `We sent the verification code to:`}
+                    <strong style={{ display: 'block', color: '#fff', marginTop: '0.2rem' }}>{email}</strong>
                   </p>
-                )}
-                
-                <button
-                  type="submit"
-                  className="btn-primary"
-                  style={{
-                    padding: '0.8rem',
-                    borderRadius: '8px',
-                    fontWeight: 700,
-                    fontSize: '0.95rem',
-                    cursor: 'pointer',
-                    background: 'var(--accent-color)',
-                    color: '#000',
-                    border: 'none',
-                    transition: 'transform 0.2s, opacity 0.2s'
-                  }}
-                >
-                  {language === 'pt' ? 'Receber Código de Acesso' : 'Get Verification Code'}
-                </button>
-              </form>
+
+                  <input
+                    type="text"
+                    placeholder="Código"
+                    maxLength="8"
+                    required
+                    value={otpCode}
+                    onChange={(e) => setOtpCode(e.target.value.replace(/\D/g, ''))}
+                    style={{
+                      padding: '0.8rem 1rem',
+                      background: 'rgba(255, 255, 255, 0.02)',
+                      border: '1px solid var(--accent-color)',
+                      borderRadius: '8px',
+                      color: '#fff',
+                      fontSize: '1.25rem',
+                      fontWeight: 800,
+                      letterSpacing: '4px',
+                      textAlign: 'center',
+                      outline: 'none'
+                    }}
+                    autoFocus
+                  />
+
+                  <button
+                    type="submit"
+                    className="btn-primary"
+                    style={{
+                      padding: '0.8rem',
+                      borderRadius: '8px',
+                      fontWeight: 700,
+                      fontSize: '0.95rem',
+                      cursor: 'pointer',
+                      background: 'var(--accent-color)',
+                      color: '#000',
+                      border: 'none'
+                    }}
+                  >
+                    {language === 'pt' ? 'Confirmar Código e Entrar' : 'Verify Code & Sign In'}
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => { setStep('email'); setOtpCode(''); }}
+                    style={{
+                      background: 'transparent',
+                      border: 'none',
+                      color: 'var(--text-muted)',
+                      cursor: 'pointer',
+                      fontSize: '0.85rem',
+                      textDecoration: 'underline',
+                      marginTop: '0.5rem'
+                    }}
+                  >
+                    {language === 'pt' ? 'Alterar e-mail' : 'Change email'}
+                  </button>
+                </form>
+              )
             ) : (
-              <form onSubmit={handleVerifyOtp} style={{ display: 'flex', flexDirection: 'column', gap: '0.8rem', marginTop: '1.5rem' }}>
-                <p style={{ fontSize: '0.9rem', color: 'var(--text-muted)', margin: '0.5rem 0' }}>
-                  {language === 'pt' 
-                    ? `Enviamos o código de acesso para:` 
-                    : `We sent the verification code to:`}
-                  <strong style={{ display: 'block', color: '#fff', marginTop: '0.2rem' }}>{email}</strong>
-                </p>
-
-                <input
-                  type="text"
-                  placeholder="Código"
-                  maxLength="8"
-                  required
-                  value={otpCode}
-                  onChange={(e) => setOtpCode(e.target.value.replace(/\D/g, ''))}
-                  style={{
-                    padding: '0.8rem 1rem',
-                    background: 'rgba(255, 255, 255, 0.02)',
-                    border: '1px solid var(--accent-color)',
-                    borderRadius: '8px',
-                    color: '#fff',
-                    fontSize: '1.25rem',
-                    fontWeight: 800,
-                    letterSpacing: '4px',
-                    textAlign: 'center',
-                    outline: 'none'
-                  }}
-                  autoFocus
-                />
-
-                <button
-                  type="submit"
-                  className="btn-primary"
-                  style={{
-                    padding: '0.8rem',
-                    borderRadius: '8px',
-                    fontWeight: 700,
-                    fontSize: '0.95rem',
-                    cursor: 'pointer',
-                    background: 'var(--accent-color)',
-                    color: '#000',
-                    border: 'none'
-                  }}
-                >
-                  {language === 'pt' ? 'Confirmar Código e Entrar' : 'Verify Code & Sign In'}
-                </button>
-
+              <div style={{ marginTop: '1.5rem' }}>
                 <button
                   type="button"
-                  onClick={() => { setStep('email'); setOtpCode(''); }}
+                  onClick={() => setShowEmailForm(true)}
                   style={{
                     background: 'transparent',
                     border: 'none',
@@ -395,12 +416,15 @@ const Auth = () => {
                     cursor: 'pointer',
                     fontSize: '0.85rem',
                     textDecoration: 'underline',
-                    marginTop: '0.5rem'
+                    opacity: 0.6,
+                    transition: 'opacity 0.2s'
                   }}
+                  onMouseEnter={(e) => e.target.style.opacity = 1}
+                  onMouseLeave={(e) => e.target.style.opacity = 0.6}
                 >
-                  {language === 'pt' ? 'Alterar e-mail' : 'Change email'}
+                  {language === 'pt' ? 'Entrar com outro e-mail (Excepcional)' : 'Sign in with other email (Exceptional)'}
                 </button>
-              </form>
+              </div>
             )}
           </>
         )}
