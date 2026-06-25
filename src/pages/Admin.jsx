@@ -198,7 +198,14 @@ const Admin = () => {
   const [orders, setOrders] = useState([]);
   const [analyticsEvents, setAnalyticsEvents] = useState([]);
   const [analyticsLoading, setAnalyticsLoading] = useState(false);
-  const [analyticsPeriod, setAnalyticsPeriod] = useState('all'); // 'all', '24h', '7d', '30d'
+  const [analyticsPeriod, setAnalyticsPeriod] = useState('7d'); // default to 7 days for comparison
+  const [campaignCosts, setCampaignCosts] = useState({});
+  const [selectedCampaign, setSelectedCampaign] = useState('');
+  const [selectedProvince, setSelectedProvince] = useState(null);
+  const [selectedCity, setSelectedCity] = useState(null);
+  const [isEditingCampaignCosts, setIsEditingCampaignCosts] = useState(false);
+  const [editingCostKey, setEditingCostKey] = useState('');
+  const [editingCostVal, setEditingCostVal] = useState('');
   const [testimonials, setTestimonials] = useState([]);
   const [interests, setInterests] = useState([]);
   const [heroUrl, setHeroUrl] = useState('');
@@ -435,7 +442,7 @@ const Admin = () => {
       if (supplierData?.value) setSupplierEmail(supplierData.value);
 
       // Novas configurações na nuvem
-      const { data: cloudSettings } = await supabase.from('store_settings').select('*').in('key', ['queridinhas_ids', 'best_seller_id', 'catalog_ids', 'whatsapp_number', 'hero_slides', 'sent_recovery_emails', 'sent_recovery_emails_2']);
+      const { data: cloudSettings } = await supabase.from('store_settings').select('*').in('key', ['queridinhas_ids', 'best_seller_id', 'catalog_ids', 'whatsapp_number', 'hero_slides', 'sent_recovery_emails', 'sent_recovery_emails_2', 'campaign_costs']);
       if (cloudSettings) {
         cloudSettings.forEach(s => {
           try {
@@ -461,6 +468,9 @@ const Admin = () => {
             }
             if (s.key === 'hero_slides' && Array.isArray(val)) {
               setHeroSlides(val);
+            }
+            if (s.key === 'campaign_costs' && val) {
+              setCampaignCosts(val);
             }
             if (s.key === 'agent_commission_percent') setCommissionRate(Number(s.value));
             if (s.key === 'agent_discount_percent') setDiscountRate(Number(s.value));
@@ -588,7 +598,7 @@ const Admin = () => {
       if (analyticsPeriod !== 'all') {
         const days = analyticsPeriod === '24h' ? 1 : (analyticsPeriod === '7d' ? 7 : 30);
         const limitDate = new Date();
-        limitDate.setDate(limitDate.getDate() - days);
+        limitDate.setDate(limitDate.getDate() - (days * 2));
         query = query.gte('created_at', limitDate.toISOString());
       }
       
@@ -3787,119 +3797,596 @@ const Admin = () => {
               </div>
             );
           })() : supplierTab === 'MARKETING' ? (() => {
-            const funnel = (() => {
+            // 1. Período selecionado e divisão dos dados
+            let days = 7;
+            let isAllTime = analyticsPeriod === 'all';
+            if (analyticsPeriod === '24h') days = 1;
+            else if (analyticsPeriod === '30d') days = 30;
+
+            const now = new Date();
+            const currentStart = new Date();
+            currentStart.setDate(now.getDate() - days);
+            const previousStart = new Date();
+            previousStart.setDate(now.getDate() - (days * 2));
+
+            let currentEvents = analyticsEvents;
+            let previousEvents = [];
+            let currentOrders = orders;
+            let previousOrders = [];
+
+            if (!isAllTime) {
+              currentEvents = analyticsEvents.filter(e => new Date(e.created_at) >= currentStart);
+              previousEvents = analyticsEvents.filter(e => {
+                const d = new Date(e.created_at);
+                return d >= previousStart && d < currentStart;
+              });
+              currentOrders = orders.filter(o => new Date(o.created_at) >= currentStart);
+              previousOrders = orders.filter(o => {
+                const d = new Date(o.created_at);
+                return d >= previousStart && d < currentStart;
+              });
+            } else {
+              // Divisão histórica ao meio para fins de comparação temporal
+              const sortedDates = orders.map(o => new Date(o.created_at).getTime()).sort((a,b) => a-b);
+              if (sortedDates.length > 0) {
+                const midTime = sortedDates[0] + (sortedDates[sortedDates.length - 1] - sortedDates[0]) / 2;
+                const midDate = new Date(midTime);
+                currentEvents = analyticsEvents.filter(e => new Date(e.created_at) >= midDate);
+                previousEvents = analyticsEvents.filter(e => new Date(e.created_at) < midDate);
+                currentOrders = orders.filter(o => new Date(o.created_at) >= midDate);
+                previousOrders = orders.filter(o => new Date(o.created_at) < midDate);
+              }
+            }
+
+            // 2. Método auxiliar para cálculo de métricas de funil estruturado (cascata decrescente)
+            const calculateFunnelMetrics = (events, periodOrders) => {
               const sessions = new Set();
-              const viewSessions = new Set();
-              const cartSessions = new Set();
-              const checkoutSessions = new Set();
+              const views = new Set();
+              const carts = new Set();
+              const checkouts = new Set();
               const purchaseSessions = new Set();
 
-              analyticsEvents.forEach(e => {
+              events.forEach(e => {
                 if (e.session_id) {
                   sessions.add(e.session_id);
-                  if (e.event_name === 'ViewContent') viewSessions.add(e.session_id);
-                  if (e.event_name === 'AddToCart') cartSessions.add(e.session_id);
-                  if (e.event_name === 'InitiateCheckout') checkoutSessions.add(e.session_id);
+                  if (e.event_name === 'ViewContent') views.add(e.session_id);
+                  if (e.event_name === 'AddToCart') carts.add(e.session_id);
+                  if (e.event_name === 'InitiateCheckout') checkouts.add(e.session_id);
                   if (e.event_name === 'Purchase') purchaseSessions.add(e.session_id);
                 }
               });
 
-              let ordersCountForPeriod = orders;
-              if (analyticsPeriod !== 'all') {
-                const days = analyticsPeriod === '24h' ? 1 : (analyticsPeriod === '7d' ? 7 : 30);
-                const limitDate = new Date();
-                limitDate.setDate(limitDate.getDate() - days);
-                ordersCountForPeriod = orders.filter(o => new Date(o.created_at) >= limitDate);
-              }
+              // Pedidos desconsiderando cancelados
+              const activeOrders = periodOrders.filter(o => o.status !== 'cancelled');
+              const ordersCount = activeOrders.length;
+              const paidOrders = activeOrders.filter(o => o.status === 'paid');
+              const paidCount = paidOrders.length;
 
-              const finalPurchaseCount = purchaseSessions.size > 0 ? purchaseSessions.size : ordersCountForPeriod.length;
+              // Cascata progressiva blindada
+              const s = sessions.size;
+              const v = Math.min(views.size, s);
+              const c = Math.min(carts.size, v);
+              const ch = Math.min(checkoutSessions.size > 0 ? checkoutSessions.size : checkouts.size, c);
+              const cr = Math.min(ordersCount, ch);
+              const p = Math.min(paidCount, cr);
+
+              // Taxas de avanço (0% a 100%)
+              const rateView = s > 0 ? (v / s) * 100 : 0;
+              const rateCart = v > 0 ? (c / v) * 100 : 0;
+              const rateCheckout = c > 0 ? (ch / c) * 100 : 0;
+              const rateOrder = ch > 0 ? (cr / ch) * 100 : 0;
+              const ratePaid = cr > 0 ? (p / cr) * 100 : 0;
+              const conversionGlobal = s > 0 ? (p / s) * 100 : 0;
+
+              // Financeiro do período
+              let revenue = 0;
+              let cost = 0;
+              paidOrders.forEach(o => {
+                revenue += getValidRevenue(o);
+                cost += calculateOrderCost(o);
+              });
+              const profit = revenue - cost;
+
+              // Cálculo de custos de campanha (Ad Spend) para o período
+              let spend = 0;
+              events.forEach(e => {
+                if (e.utm_campaign) {
+                  const key = `${e.utm_campaign}|${e.utm_source || 'Direto'}`;
+                  // Dividido pelas sessões globais da campanha para ter uma taxa de custo proporcional
+                  const cmpSpend = Number(campaignCosts[key] || 0);
+                  const cmpSessions = events.filter(ev => ev.utm_campaign === e.utm_campaign).length;
+                  spend += cmpSessions > 0 ? (cmpSpend / cmpSessions) : 0;
+                }
+              });
+              // Para fins de precisão, faremos o somatório dos gastos imputados
+              let totalInputSpend = 0;
+              const detectedCampaignKeys = new Set();
+              events.forEach(e => {
+                if (e.utm_campaign) {
+                  detectedCampaignKeys.add(`${e.utm_campaign}|${e.utm_source || 'Direto'}`);
+                }
+              });
+              periodOrders.forEach(o => {
+                if (o.utm_campaign) {
+                  detectedCampaignKeys.add(`${o.utm_campaign}|${o.utm_source || 'Direto'}`);
+                }
+              });
+              detectedCampaignKeys.forEach(k => {
+                totalInputSpend += Number(campaignCosts[k] || 0);
+              });
 
               return {
-                sessions: sessions.size,
-                views: viewSessions.size,
-                carts: cartSessions.size,
-                checkouts: checkoutSessions.size,
-                purchases: finalPurchaseCount
+                s, v, c, ch, cr, p,
+                rateView, rateCart, rateCheckout, rateOrder, ratePaid,
+                conversionGlobal, revenue, cost, profit, spend: totalInputSpend
+              };
+            };
+
+            const currentFunnel = calculateFunnelMetrics(currentEvents, currentOrders);
+            const previousFunnel = calculateFunnelMetrics(previousEvents, previousOrders);
+
+            // 3. Métricas de Clientes (LTV, Recompra, etc. baseados no histórico total de pedidos pagos)
+            const customerSummary = (() => {
+              const customerStats = {};
+              orders.filter(o => o.status === 'paid').forEach(o => {
+                const email = o.customer_email?.trim().toLowerCase() || 'convidado@ifooty.ca';
+                if (!customerStats[email]) {
+                  customerStats[email] = {
+                    email,
+                    orders: [],
+                    totalSpend: 0
+                  };
+                }
+                customerStats[email].orders.push(new Date(o.created_at));
+                customerStats[email].totalSpend += getValidRevenue(o);
+              });
+
+              const clients = Object.values(customerStats);
+              const totalClients = clients.length;
+              const newClients = clients.filter(c => c.orders.length === 1).length;
+              const repeatClients = clients.filter(c => c.orders.length >= 2).length;
+              const repeatRate = totalClients > 0 ? (repeatClients / totalClients) * 100 : 0;
+
+              let totalDaysBetween = 0;
+              let gapCount = 0;
+              clients.forEach(c => {
+                if (c.orders.length >= 2) {
+                  const dates = c.orders.sort((a,b) => a - b);
+                  for (let i = 1; i < dates.length; i++) {
+                    const diffTime = Math.abs(dates[i] - dates[i-1]);
+                    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+                    totalDaysBetween += diffDays;
+                    gapCount++;
+                  }
+                }
+              });
+              const avgDaysToRepeat = gapCount > 0 ? totalDaysBetween / gapCount : 0;
+              const totalPaidRevenueAllTime = orders.filter(o => o.status === 'paid').reduce((sum, o) => sum + getValidRevenue(o), 0);
+              const ltv = totalClients > 0 ? totalPaidRevenueAllTime / totalClients : 0;
+
+              return {
+                totalClients,
+                newClients,
+                repeatClients,
+                repeatRate,
+                avgDaysToRepeat,
+                ltv
               };
             })();
 
-            const utmStats = (() => {
-              const stats = {};
-              let filteredOrders = orders;
-              if (analyticsPeriod !== 'all') {
-                const days = analyticsPeriod === '24h' ? 1 : (analyticsPeriod === '7d' ? 7 : 30);
-                const limitDate = new Date();
-                limitDate.setDate(limitDate.getDate() - days);
-                filteredOrders = orders.filter(o => new Date(o.created_at) >= limitDate);
-              }
+            // 4. Tempo médio até as ações em segundos
+            const averageTimes = (() => {
+              const times = { cart: [], checkout: [], purchase: [] };
+              const sessionEvents = {};
 
-              filteredOrders.forEach(o => {
-                const source = o.utm_source || 'Direto / Orgânico';
-                const campaign = o.utm_campaign || 'N/A';
-                const key = `${source} | ${campaign}`;
-
-                if (!stats[key]) {
-                  stats[key] = {
-                    source,
-                    campaign,
-                    orders: 0,
-                    revenue: 0,
-                    paidOrders: 0,
-                    paidRevenue: 0
-                  };
-                }
-
-                const price = Number(o.total_price) || 0;
-                stats[key].orders += 1;
-                stats[key].revenue += price;
-                if (o.status === 'paid') {
-                  stats[key].paidOrders += 1;
-                  stats[key].paidRevenue += price;
+              currentEvents.forEach(e => {
+                if (e.session_id) {
+                  if (!sessionEvents[e.session_id]) {
+                    sessionEvents[e.session_id] = [];
+                  }
+                  sessionEvents[e.session_id].push(e);
                 }
               });
 
-              return Object.values(stats).sort((a, b) => b.paidRevenue - a.paidRevenue);
+              Object.values(sessionEvents).forEach(eventsList => {
+                const sorted = eventsList.sort((a, b) => new Date(a.created_at) - new Date(b.created_at));
+                if (sorted.length === 0) return;
+                const t0 = new Date(sorted[0].created_at);
+
+                const cartEvent = sorted.find(e => e.event_name === 'AddToCart');
+                const checkoutEvent = sorted.find(e => e.event_name === 'InitiateCheckout');
+                const purchaseEvent = sorted.find(e => e.event_name === 'Purchase');
+
+                if (cartEvent) {
+                  const t1 = new Date(cartEvent.created_at);
+                  times.cart.push((t1 - t0) / 1000);
+                }
+                if (checkoutEvent) {
+                  const t2 = new Date(checkoutEvent.created_at);
+                  times.checkout.push((t2 - t0) / 1000);
+                }
+                if (purchaseEvent) {
+                  const t3 = new Date(purchaseEvent.created_at);
+                  times.purchase.push((t3 - t0) / 1000);
+                }
+              });
+
+              const getAvgStr = (arr) => {
+                if (arr.length === 0) return 'N/A';
+                const avg = arr.reduce((sum, val) => sum + val, 0) / arr.length;
+                if (avg < 60) return `${avg.toFixed(0)}s`;
+                const mins = Math.floor(avg / 60);
+                const secs = Math.floor(avg % 60);
+                return `${mins}m ${secs}s`;
+              };
+
+              return {
+                cart: getAvgStr(times.cart),
+                checkout: getAvgStr(times.checkout),
+                purchase: getAvgStr(times.purchase)
+              };
             })();
 
-            const mostViewed = (() => {
-              const views = {};
-              analyticsEvents.forEach(e => {
-                if (e.event_name === 'ViewContent' && e.product_id) {
-                  views[e.product_id] = (views[e.product_id] || 0) + 1;
+            // 5. Estruturação das campanhas ativas e cálculo de ROAS
+            const campaignStats = (() => {
+              const statsMap = {};
+              currentEvents.forEach(e => {
+                if (e.utm_campaign) {
+                  const src = e.utm_source || 'Direto';
+                  const key = `${e.utm_campaign}|${src}`;
+                  if (!statsMap[key]) {
+                    statsMap[key] = { campaign: e.utm_campaign, source: src, key, sessions: new Set(), orders: 0, paidOrders: 0, revenue: 0, cost: 0 };
+                  }
+                  statsMap[key].sessions.add(e.session_id);
                 }
               });
 
-              return Object.entries(views)
-                .map(([prodId, count]) => {
-                  const pId = Number(prodId);
-                  const prod = products.find(p => p.id === pId);
-                  return {
-                    id: pId,
-                    name: prod ? prod.name : `Manto #${pId}`,
-                    image: prod ? prod.image : null,
-                    category: prod ? prod.category : 'N/A',
-                    count
-                  };
-                })
-                .sort((a, b) => b.count - a.count)
-                .slice(0, 5);
+              currentOrders.forEach(o => {
+                if (o.utm_campaign) {
+                  const src = o.utm_source || 'Direto';
+                  const key = `${o.utm_campaign}|${src}`;
+                  if (!statsMap[key]) {
+                    statsMap[key] = { campaign: o.utm_campaign, source: src, key, sessions: new Set(), orders: 0, paidOrders: 0, revenue: 0, cost: 0 };
+                  }
+                  statsMap[key].orders += 1;
+                  if (o.status === 'paid') {
+                    statsMap[key].paidOrders += 1;
+                    statsMap[key].revenue += getValidRevenue(o);
+                    statsMap[key].cost += calculateOrderCost(o);
+                  }
+                }
+              });
+
+              const statsList = Object.values(statsMap).map(item => {
+                const sessionsCount = item.sessions.size;
+                const spend = Number(campaignCosts[item.key] || 0);
+                const profit = item.revenue - item.cost;
+                const roas = spend > 0 ? item.revenue / spend : 0;
+                const cpa = item.paidOrders > 0 ? spend / item.paidOrders : 0;
+                const ticket = item.paidOrders > 0 ? item.revenue / item.paidOrders : 0;
+                const margin = item.revenue > 0 ? (profit / item.revenue) * 100 : 0;
+
+                return {
+                  ...item,
+                  sessions: sessionsCount,
+                  spend,
+                  profit,
+                  roas,
+                  cpa,
+                  ticket,
+                  margin
+                };
+              });
+
+              return statsList.sort((a,b) => b.revenue - a.revenue);
+            })();
+
+            // 6. Canada Geographics stats
+            const geoStats = (() => {
+              const provinces = {
+                'AB': { name: 'Alberta', orders: 0, paidOrders: 0, revenue: 0, sessions: new Set(), cities: {} },
+                'BC': { name: 'British Columbia', orders: 0, paidOrders: 0, revenue: 0, sessions: new Set(), cities: {} },
+                'MB': { name: 'Manitoba', orders: 0, paidOrders: 0, revenue: 0, sessions: new Set(), cities: {} },
+                'NB': { name: 'New Brunswick', orders: 0, paidOrders: 0, revenue: 0, sessions: new Set(), cities: {} },
+                'NL': { name: 'Newfoundland', orders: 0, paidOrders: 0, revenue: 0, sessions: new Set(), cities: {} },
+                'NS': { name: 'Nova Scotia', orders: 0, paidOrders: 0, revenue: 0, sessions: new Set(), cities: {} },
+                'ON': { name: 'Ontario', orders: 0, paidOrders: 0, revenue: 0, sessions: new Set(), cities: {} },
+                'PE': { name: 'Prince Edward Island', orders: 0, paidOrders: 0, revenue: 0, sessions: new Set(), cities: {} },
+                'QC': { name: 'Quebec', orders: 0, paidOrders: 0, revenue: 0, sessions: new Set(), cities: {} },
+                'SK': { name: 'Saskatchewan', orders: 0, paidOrders: 0, revenue: 0, sessions: new Set(), cities: {} },
+                'YT': { name: 'Yukon', orders: 0, paidOrders: 0, revenue: 0, sessions: new Set(), cities: {} },
+                'NT': { name: 'Northwest Territories', orders: 0, paidOrders: 0, revenue: 0, sessions: new Set(), cities: {} },
+                'NU': { name: 'Nunavut', orders: 0, paidOrders: 0, revenue: 0, sessions: new Set(), cities: {} }
+              };
+
+              currentOrders.forEach(o => {
+                const prov = (o.shipping_address?.province || 'AB').toUpperCase().trim();
+                const city = (o.shipping_address?.city || 'Desconhecida').trim();
+
+                if (provinces[prov]) {
+                  const p = provinces[prov];
+                  p.orders += 1;
+
+                  const sessionId = currentEvents.find(e => e.event_name === 'Purchase' && e.metadata?.order_id === o.id)?.session_id;
+                  if (sessionId) p.sessions.add(sessionId);
+
+                  if (o.status === 'paid') {
+                    p.paidOrders += 1;
+                    const price = getValidRevenue(o);
+                    p.revenue += price;
+
+                    if (!p.cities[city]) {
+                      p.cities[city] = { orders: 0, revenue: 0, ordersList: [] };
+                    }
+                    p.cities[city].orders += 1;
+                    p.cities[city].revenue += price;
+                    p.cities[city].ordersList.push(o);
+                  }
+                }
+              });
+
+              return Object.entries(provinces).map(([code, p]) => {
+                const sessionCount = p.sessions.size || p.orders;
+                const conversion = sessionCount > 0 ? (p.paidOrders / sessionCount) * 100 : 0;
+                const ticket = p.paidOrders > 0 ? p.revenue / p.paidOrders : 0;
+
+                return {
+                  code,
+                  ...p,
+                  sessions: sessionCount,
+                  conversion,
+                  ticket
+                };
+              });
+            })();
+
+            // 7. Produtos mais vistos expandido
+            const detailedProducts = (() => {
+              const statsMap = {};
+              currentEvents.forEach(e => {
+                if (e.product_id) {
+                  if (!statsMap[e.product_id]) {
+                    statsMap[e.product_id] = { views: 0, carts: 0, checkouts: 0, purchases: 0, revenue: 0 };
+                  }
+                  if (e.event_name === 'ViewContent') statsMap[e.product_id].views += 1;
+                  if (e.event_name === 'AddToCart') statsMap[e.product_id].carts += 1;
+                }
+
+                if (e.metadata?.content_ids && Array.isArray(e.metadata.content_ids)) {
+                  e.metadata.content_ids.forEach(pId => {
+                    const idNum = Number(pId);
+                    if (idNum) {
+                      if (!statsMap[idNum]) {
+                        statsMap[idNum] = { views: 0, carts: 0, checkouts: 0, purchases: 0, revenue: 0 };
+                      }
+                      if (e.event_name === 'InitiateCheckout') statsMap[idNum].checkouts += 1;
+                    }
+                  });
+                }
+              });
+
+              currentOrders.filter(o => o.status === 'paid').forEach(o => {
+                if (o.items && Array.isArray(o.items)) {
+                  o.items.forEach(item => {
+                    const idNum = Number(item.id);
+                    if (idNum) {
+                      if (!statsMap[idNum]) {
+                        statsMap[idNum] = { views: 0, carts: 0, checkouts: 0, purchases: 0, revenue: 0 };
+                      }
+                      statsMap[idNum].purchases += item.quantity || 1;
+                      statsMap[idNum].revenue += (item.price || 0) * (item.quantity || 1);
+                    }
+                  });
+                }
+              });
+
+              return Object.entries(statsMap).map(([prodId, stats]) => {
+                const idNum = Number(prodId);
+                const prod = products.find(p => p.id === idNum);
+                const conversion = stats.views > 0 ? (stats.purchases / stats.views) * 100 : 0;
+                const cartRate = stats.views > 0 ? (stats.carts / stats.views) * 100 : 0;
+
+                return {
+                  id: idNum,
+                  name: prod ? prod.name : `Manto #${idNum}`,
+                  image: prod ? prod.image : null,
+                  category: prod ? prod.category : 'N/A',
+                  ...stats,
+                  conversion,
+                  cartRate
+                };
+              }).sort((a,b) => b.views - a.views).slice(0, 10);
+            })();
+
+            // 8. Alertas inteligentes baseados em regras
+            const alertsList = (() => {
+              const alerts = [];
+              if (previousFunnel.conversionGlobal > 0 && currentFunnel.conversionGlobal < previousFunnel.conversionGlobal * 0.8) {
+                alerts.push({
+                  type: 'danger',
+                  title: 'Taxa de Conversão em Queda',
+                  message: `A conversão global caiu mais de 20% em relação ao período anterior (de ${previousFunnel.conversionGlobal.toFixed(2)}% para ${currentFunnel.conversionGlobal.toFixed(2)}%).`
+                });
+              }
+
+              const checkoutAbandonment = currentFunnel.ch > 0 ? (1 - (currentFunnel.cr / currentFunnel.ch)) * 100 : 0;
+              if (checkoutAbandonment > 70) {
+                alerts.push({
+                  type: 'warning',
+                  title: 'Abandono Crítico de Checkout',
+                  message: `${checkoutAbandonment.toFixed(1)}% dos usuários que iniciaram o checkout não concluíram a compra. Revise o fluxo de pagamentos.`
+                });
+              }
+
+              campaignStats.forEach(c => {
+                if (c.spend > 0 && c.roas < 2.0) {
+                  alerts.push({
+                    type: 'warning',
+                    title: `Baixo ROAS na Campanha ${c.campaign}`,
+                    message: `O retorno sobre investimento está em ${c.roas.toFixed(2)} (abaixo da meta de 2.0) com gasto de $${c.spend.toFixed(2)}.`
+                  });
+                }
+              });
+
+              detailedProducts.forEach(p => {
+                if (p.views >= 10 && p.purchases === 0) {
+                  alerts.push({
+                    type: 'info',
+                    title: `Visualizado mas Sem Vendas: ${p.name}`,
+                    message: `Este produto acumulou ${p.views} visualizações mas nenhuma compra no período atual.`
+                  });
+                }
+              });
+
+              const outOfStockInterests = interests.filter(item => {
+                const prod = products.find(p => p.id === item.product_id);
+                if (!prod) return false;
+                let totalStock = 0;
+                try {
+                  const inv = typeof prod.inventory === 'string' ? JSON.parse(prod.inventory) : prod.inventory;
+                  totalStock = Object.values(inv || {}).reduce((sum, qty) => sum + Number(qty), 0);
+                } catch(e) {}
+                return totalStock === 0;
+              });
+
+              if (outOfStockInterests.length >= 3) {
+                alerts.push({
+                  type: 'info',
+                  title: 'Leads em Produtos Esgotados',
+                  message: `Há ${outOfStockInterests.length} intenções de compra registradas recentemente para produtos que estão com estoque zerado no momento.`
+                });
+              }
+
+              return alerts;
+            })();
+
+            // 9. UTM estatísticas detalhadas abertas
+            const utmExtendedStats = (() => {
+              const map = {};
+              currentOrders.forEach(o => {
+                const src = o.utm_source || 'Direto';
+                const med = o.utm_medium || 'N/A';
+                const cam = o.utm_campaign || 'N/A';
+                const con = o.utm_content || 'N/A';
+                const trm = o.utm_term || 'N/A';
+                const key = `${src}|${med}|${cam}|${con}|${trm}`;
+
+                if (!map[key]) {
+                  map[key] = { source: src, medium: med, campaign: cam, content: con, term: trm, orders: 0, paidOrders: 0, revenue: 0 };
+                }
+
+                map[key].orders += 1;
+                if (o.status === 'paid') {
+                  map[key].paidOrders += 1;
+                  map[key].revenue += getValidRevenue(o);
+                }
+              });
+
+              return Object.values(map).map(item => {
+                const matchingEvents = currentEvents.filter(e =>
+                  e.event_name === 'PageView' &&
+                  (e.utm_source === item.source || (item.source === 'Direto' && !e.utm_source)) &&
+                  (e.utm_campaign === item.campaign || (item.campaign === 'N/A' && !e.utm_campaign))
+                );
+                const sessions = new Set(matchingEvents.map(e => e.session_id)).size;
+                const conversion = sessions > 0 ? (item.paidOrders / sessions) * 100 : 0;
+                const ticket = item.paidOrders > 0 ? item.revenue / item.paidOrders : 0;
+
+                return {
+                  ...item,
+                  sessions,
+                  conversion,
+                  ticket
+                };
+              }).sort((a,b) => b.revenue - a.revenue);
+            })();
+
+            // 10. Salvar gastos de campanha editados em linha
+            const handleSaveCampaignCost = async (campaignKey, costVal) => {
+              const updated = {
+                ...campaignCosts,
+                [campaignKey]: Number(costVal)
+              };
+              setCampaignCosts(updated);
+              await supabase.from('store_settings').upsert({ key: 'campaign_costs', value: JSON.stringify(updated) }, { onConflict: 'key' });
+              setEditingCostKey('');
+            };
+
+            // 11. Renderização das variações temporais (Badges)
+            const renderTrendBadge = (curr, prev) => {
+              const c = Number(curr) || 0;
+              const p = Number(prev) || 0;
+              let diff = 0;
+              if (p > 0) {
+                diff = ((c - p) / p) * 100;
+              } else if (c > 0) {
+                diff = 100;
+              }
+              if (diff === 0) return <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>0%</span>;
+              const isUp = diff > 0;
+              const color = isUp ? '#10B981' : '#EF4444';
+              return (
+                <span style={{ fontSize: '0.75rem', color, fontWeight: 700, display: 'inline-flex', alignItems: 'center', gap: '0.2rem', background: isUp ? 'rgba(16,185,129,0.08)' : 'rgba(239,68,68,0.08)', padding: '0.1rem 0.4rem', borderRadius: '4px' }}>
+                  {isUp ? <ChevronUp size={12} /> : <ChevronDown size={12} />} {isUp ? '+' : ''}{diff.toFixed(1)}%
+                </span>
+              );
+            };
+
+            // Campanha selecionada para o funil exclusivo
+            const selectedCmpKey = selectedCampaign || (campaignStats[0] ? campaignStats[0].key : '');
+            const campaignFunnel = (() => {
+              if (!selectedCmpKey) return { s: 0, v: 0, c: 0, ch: 0, cr: 0, p: 0 };
+              const [campaign, source] = selectedCmpKey.split('|');
+              const campaignEvents = currentEvents.filter(e => e.utm_campaign === campaign && (!source || e.utm_source === source || (source === 'Direto' && !e.utm_source)));
+              const campaignOrders = currentOrders.filter(o => o.utm_campaign === campaign && (!source || o.utm_source === source || (source === 'Direto' && !o.utm_source)));
+
+              const sessions = new Set();
+              const views = new Set();
+              const carts = new Set();
+              const checkouts = new Set();
+
+              campaignEvents.forEach(e => {
+                if (e.session_id) {
+                  sessions.add(e.session_id);
+                  if (e.event_name === 'ViewContent') views.add(e.session_id);
+                  if (e.event_name === 'AddToCart') carts.add(e.session_id);
+                  if (e.event_name === 'InitiateCheckout') checkouts.add(e.session_id);
+                }
+              });
+
+              const activeOrders = campaignOrders.filter(o => o.status !== 'cancelled');
+              const createdOrders = activeOrders.length;
+              const paidOrders = activeOrders.filter(o => o.status === 'paid').length;
+
+              const s = sessions.size;
+              const v = Math.min(views.size, s);
+              const c = Math.min(carts.size, v);
+              const ch = Math.min(checkouts.size, c);
+              const cr = Math.min(createdOrders, ch);
+              const p = Math.min(paidOrders, cr);
+
+              return { s, v, c, ch, cr, p };
             })();
 
             return (
               <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
-                {/* FILTRO DE PERÍODO */}
+                {/* FILTRO DE PERÍODO & ALERTAS INTELIGENTES */}
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'rgba(255,255,255,0.03)', padding: '1rem 1.5rem', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.05)' }}>
-                  <span style={{ fontSize: '0.9rem', color: 'var(--text-muted)' }}>Filtrar métricas por período:</span>
+                  <span style={{ fontSize: '0.9rem', color: 'var(--text-muted)' }}>Filtrar métricas e comparativos por período:</span>
                   <div style={{ display: 'flex', gap: '0.5rem' }}>
                     {[
                       { key: '24h', label: '24 Horas' },
                       { key: '7d', label: '7 Dias' },
                       { key: '30d', label: '30 Dias' },
-                      { key: 'all', label: 'Todo o Período' }
+                      { key: 'all', label: 'Todo o Período (Metades)' }
                     ].map(p => (
                       <button
                         key={p.key}
-                        onClick={() => setAnalyticsPeriod(p.key)}
+                        onClick={() => {
+                          setAnalyticsPeriod(p.key);
+                          setSelectedProvince(null);
+                          setSelectedCity(null);
+                        }}
                         style={{
                           padding: '0.4rem 1rem',
                           borderRadius: '4px',
@@ -3918,47 +4405,91 @@ const Admin = () => {
                   </div>
                 </div>
 
+                {/* ALERTAS INTELIGENTES */}
+                {alertsList.length > 0 && (
+                  <div className="glass-panel" style={{ padding: '1.5rem', borderRadius: '12px', borderLeft: '4px solid var(--accent-color)' }}>
+                    <h4 style={{ margin: '0 0 1rem 0', display: 'flex', alignItems: 'center', gap: '0.5rem', color: '#fff' }}>
+                      <AlertTriangle size={18} color="var(--accent-color)" /> Alertas e Recomendações Automáticas
+                    </h4>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.8rem' }}>
+                      {alertsList.map((alert, idx) => (
+                        <div key={idx} style={{ fontSize: '0.85rem', color: '#ccc', display: 'flex', gap: '0.5rem', padding: '0.5rem', background: 'rgba(255,255,255,0.01)', borderRadius: '6px' }}>
+                          <span style={{ fontWeight: 'bold', color: alert.type === 'danger' ? '#EF4444' : (alert.type === 'warning' ? '#F59E0B' : 'var(--accent-color)') }}>
+                            [{alert.title}]
+                          </span>
+                          <span>{alert.message}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
                 {analyticsLoading ? (
                   <div style={{ textAlign: 'center', padding: '5rem 0' }}>
                     <div style={{ width: '40px', height: '40px', border: '3px solid rgba(204,255,0,0.1)', borderTopColor: 'var(--accent-color)', borderRadius: '50%', animation: 'spin 1s linear infinite', margin: '0 auto' }}></div>
-                    <p style={{ color: 'var(--text-muted)', marginTop: '1rem' }}>Carregando dados de marketing...</p>
+                    <p style={{ color: 'var(--text-muted)', marginTop: '1rem' }}>Carregando métricas consolidadas...</p>
                   </div>
                 ) : (
                   <>
-                    {/* CONTAINER DE TRÊS COLUNAS: FUNIL & PRODUTOS & CONVERSÕES */}
-                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '1.5rem' }}>
+                    {/* TOP EXECUTIVE KPIs CARD GRID */}
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '1rem' }}>
+                      {[
+                        { label: 'Receita Líquida', val: `$${currentFunnel.revenue.toFixed(2)}`, prevVal: previousFunnel.revenue, isMonetary: true },
+                        { label: 'Lucro Líquido', val: `$${currentFunnel.profit.toFixed(2)}`, prevVal: previousFunnel.profit, isMonetary: true },
+                        { label: 'Sessões Únicas', val: currentFunnel.s, prevVal: previousFunnel.s },
+                        { label: 'Pedidos Pagos', val: currentFunnel.p, prevVal: previousFunnel.p },
+                        { label: 'Conversão Global', val: `${currentFunnel.conversionGlobal.toFixed(2)}%`, prevVal: previousFunnel.conversionGlobal },
+                        { label: 'ROAS Global', val: currentFunnel.spend > 0 ? (currentFunnel.revenue / currentFunnel.spend).toFixed(2) : 'N/A', prevVal: previousFunnel.spend > 0 ? (previousFunnel.revenue / previousFunnel.spend) : null },
+                        { label: 'CAC Estimado', val: currentFunnel.p > 0 ? `$${(currentFunnel.spend / currentFunnel.p).toFixed(2)}` : 'N/A', prevVal: previousFunnel.p > 0 ? (previousFunnel.spend / previousFunnel.p) : null },
+                        { label: 'Ticket Médio', val: currentFunnel.p > 0 ? `$${(currentFunnel.revenue / currentFunnel.p).toFixed(2)}` : 'N/A', prevVal: previousFunnel.p > 0 ? (previousFunnel.revenue / previousFunnel.p) : null },
+                      ].map((kpi, idx) => (
+                        <div key={idx} className="glass-panel" style={{ padding: '1.2rem', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.05)' }}>
+                          <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: 800 }}>{kpi.label}</span>
+                          <h3 style={{ margin: '0.3rem 0 0.5rem 0', color: idx < 2 ? 'var(--accent-color)' : '#fff', fontSize: '1.4rem', fontWeight: 800 }}>
+                            {showValues || !kpi.isMonetary ? kpi.val : '****'}
+                          </h3>
+                          {renderTrendBadge(
+                            kpi.isMonetary ? (kpi.val.replace(/[^0-9.-]/g, '')) : (kpi.val.replace(/[^0-9.-]/g, '')),
+                            kpi.prevVal
+                          )}
+                        </div>
+                      ))}
+                    </div>
+
+                    {/* SEÇÃO 1: FUNIL DE SESSÕES & DETALHES DE DROP-OFF */}
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(350px, 1fr))', gap: '1.5rem' }}>
                       
-                      {/* FUNIL DE CONVERSÃO */}
+                      {/* FUNIL GERAL */}
                       <div className="glass-panel" style={{ padding: '2rem', borderRadius: '12px' }}>
                         <h3 style={{ margin: '0 0 1.5rem 0', display: 'flex', alignItems: 'center', gap: '0.5rem', color: '#fff' }}>
-                          <BarChart size={20} color="var(--accent-color)" /> Funil de Sessões
+                          <BarChart size={20} color="var(--accent-color)" /> Funil de Conversão do E-commerce
                         </h3>
                         
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
                           {[
-                            { label: '1. Sessões no Site', count: funnel.sessions, color: '#3B82F6', nextPct: funnel.sessions > 0 ? (funnel.views / funnel.sessions) * 100 : 0 },
-                            { label: '2. Visualizou Produto', count: funnel.views, color: '#A855F7', nextPct: funnel.views > 0 ? (funnel.carts / funnel.views) * 100 : 0 },
-                            { label: '3. Adicionou à Sacola', count: funnel.carts, color: '#F59E0B', nextPct: funnel.carts > 0 ? (funnel.checkouts / funnel.carts) * 100 : 0 },
-                            { label: '4. Iniciou Checkout', count: funnel.checkouts, color: '#10B981', nextPct: funnel.checkouts > 0 ? (funnel.purchases / funnel.checkouts) * 100 : 0 },
-                            { label: '5. Pedido Criado', count: funnel.purchases, color: 'var(--accent-color)' }
+                            { label: '1. Sessões (Page View)', count: currentFunnel.s, color: '#3B82F6', nextPct: currentFunnel.rateView },
+                            { label: '2. Visualizou Produto', count: currentFunnel.v, color: '#A855F7', nextPct: currentFunnel.rateCart },
+                            { label: '3. Adicionou à Sacola', count: currentFunnel.c, color: '#F59E0B', nextPct: currentFunnel.rateCheckout },
+                            { label: '4. Iniciou Checkout', count: currentFunnel.ch, color: '#06B6D4', nextPct: currentFunnel.rateOrder },
+                            { label: '5. Pedido Criado', count: currentFunnel.cr, color: '#10B981', nextPct: currentFunnel.ratePaid },
+                            { label: '6. Pagamento Aprovado', count: currentFunnel.p, color: 'var(--accent-color)' }
                           ].map((step, idx, arr) => {
-                            const rootPct = funnel.sessions > 0 ? (step.count / funnel.sessions) * 100 : 0;
-                            
+                            const rootPct = currentFunnel.s > 0 ? (step.count / currentFunnel.s) * 100 : 0;
                             return (
                               <div key={step.label}>
                                 <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.4rem', fontSize: '0.85rem' }}>
                                   <span style={{ fontWeight: 600, color: 'var(--text-main)' }}>{step.label}</span>
                                   <span style={{ fontWeight: 800, color: step.color }}>
-                                    {step.count} {step.count === 1 ? 'visita' : 'visitas'}
-                                    {idx > 0 && funnel.sessions > 0 && ` (${rootPct.toFixed(1)}%)`}
+                                    {step.count} {step.count === 1 ? 'sessão' : 'sessões'}
+                                    {idx > 0 && currentFunnel.s > 0 && ` (${rootPct.toFixed(1)}%)`}
                                   </span>
                                 </div>
-                                <div style={{ width: '100%', height: '10px', background: 'rgba(255,255,255,0.03)', borderRadius: '5px', overflow: 'hidden' }}>
-                                  <div style={{ width: `${rootPct}%`, height: '100%', background: step.color, borderRadius: '5px', transition: 'width 0.5s' }} />
+                                <div style={{ width: '100%', height: '8px', background: 'rgba(255,255,255,0.03)', borderRadius: '4px', overflow: 'hidden' }}>
+                                  <div style={{ width: `${rootPct}%`, height: '100%', background: step.color, borderRadius: '4px', transition: 'width 0.5s' }} />
                                 </div>
                                 {idx < arr.length - 1 && (
                                   <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '0.3rem', textAlign: 'right', fontStyle: 'italic' }}>
-                                    ↳ Taxa de avanço: {step.nextPct.toFixed(1)}%
+                                    Taxa de avanço: {step.nextPct.toFixed(1)}%
                                   </div>
                                 )}
                               </div>
@@ -3967,139 +4498,419 @@ const Admin = () => {
                         </div>
                       </div>
 
-                      {/* CONVERSÕES E TAXAS */}
-                      <div className="glass-panel" style={{ padding: '2rem', borderRadius: '12px', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
-                        <div>
-                          <h3 style={{ margin: '0 0 1.5rem 0', color: '#fff' }}>Métricas de Desempenho</h3>
-                          
-                          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginBottom: '1.5rem' }}>
-                            <div style={{ background: 'rgba(255,255,255,0.02)', padding: '1rem', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.05)' }}>
-                              <p style={{ margin: 0, fontSize: '0.7rem', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: 800 }}>Taxa de Conversão Global</p>
-                              <h2 style={{ margin: '0.3rem 0 0 0', color: 'var(--accent-color)', fontSize: '1.8rem', fontWeight: 800 }}>
-                                {funnel.sessions > 0 ? `${((funnel.purchases / funnel.sessions) * 100).toFixed(2)}%` : '0.00%'}
-                              </h2>
-                              <span style={{ fontSize: '0.65rem', color: 'var(--text-muted)' }}>Sessões ➔ Vendas</span>
-                            </div>
-                            
-                            <div style={{ background: 'rgba(255,255,255,0.02)', padding: '1rem', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.05)' }}>
-                              <p style={{ margin: 0, fontSize: '0.7rem', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: 800 }}>Taxa do Checkout</p>
-                              <h2 style={{ margin: '0.3rem 0 0 0', color: '#10B981', fontSize: '1.8rem', fontWeight: 800 }}>
-                                {funnel.checkouts > 0 ? `${((funnel.purchases / funnel.checkouts) * 100).toFixed(1)}%` : '0.0%'}
-                              </h2>
-                              <span style={{ fontSize: '0.65rem', color: 'var(--text-muted)' }}>Checkout ➔ Vendas</span>
-                            </div>
-                          </div>
-
-                          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
-                            <div style={{ background: 'rgba(255,255,255,0.02)', padding: '1rem', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.05)' }}>
-                              <p style={{ margin: 0, fontSize: '0.7rem', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: 800 }}>Abandono de Checkout</p>
-                              <h2 style={{ margin: '0.3rem 0 0 0', color: '#EF4444', fontSize: '1.8rem', fontWeight: 800 }}>
-                                {funnel.checkouts > 0 ? `${(100 - (funnel.purchases / funnel.checkouts) * 100).toFixed(1)}%` : '0.0%'}
-                              </h2>
-                              <span style={{ fontSize: '0.65rem', color: 'var(--text-muted)' }}>Iniciaram mas não compraram</span>
-                            </div>
-                            
-                            <div style={{ background: 'rgba(255,255,255,0.02)', padding: '1rem', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.05)' }}>
-                              <p style={{ margin: 0, fontSize: '0.7rem', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: 800 }}>Abandono de Sacola</p>
-                              <h2 style={{ margin: '0.3rem 0 0 0', color: '#F59E0B', fontSize: '1.8rem', fontWeight: 800 }}>
-                                {funnel.carts > 0 ? `${(100 - (funnel.checkouts / funnel.carts) * 100).toFixed(1)}%` : '0.0%'}
-                              </h2>
-                              <span style={{ fontSize: '0.65rem', color: 'var(--text-muted)' }}>Carrinho ➔ Sem checkout</span>
-                            </div>
-                          </div>
-                        </div>
-
-                        <div style={{ marginTop: '1.5rem', padding: '1rem', background: 'rgba(204,255,0,0.02)', borderRadius: '8px', border: '1px solid rgba(204,255,0,0.1)', fontSize: '0.8rem', color: 'var(--text-muted)', lineHeight: '1.4' }}>
-                          💡 <strong>Dica de Escala:</strong> Se o abandono de checkout estiver acima de 70%, considere automatizar o envio de e-mails de recuperação de carrinho ou reduzir as etapas do checkout manual de WhatsApp.
-                        </div>
-                      </div>
-
-                      {/* PRODUTOS MAIS VISTOS */}
+                      {/* DETALHAMENTO DE ABANDONOS (DROP-OFF) */}
                       <div className="glass-panel" style={{ padding: '2rem', borderRadius: '12px' }}>
                         <h3 style={{ margin: '0 0 1.5rem 0', display: 'flex', alignItems: 'center', gap: '0.5rem', color: '#fff' }}>
-                          <Eye size={20} color="var(--accent-color)" /> Produtos Mais Vistos
+                          <X size={20} color="#EF4444" /> Abandono do Funil (Drop-off)
                         </h3>
                         
-                        {mostViewed.length === 0 ? (
-                          <div style={{ textAlign: 'center', padding: '3rem 0', color: 'var(--text-muted)' }}>
-                            Nenhuma visualização registrada neste período.
-                          </div>
-                        ) : (
-                          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.8rem' }}>
-                            {mostViewed.map((item, idx) => (
-                              <div key={item.id} style={{ display: 'flex', alignItems: 'center', gap: '0.8rem', padding: '0.6rem', background: 'rgba(255,255,255,0.01)', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.03)' }}>
-                                <span style={{ fontSize: '0.85rem', fontWeight: 800, color: 'var(--text-muted)', width: '20px' }}>#{idx + 1}</span>
-                                {item.image ? (
-                                  <img src={item.image} alt="" style={{ width: '40px', height: '40px', objectFit: 'contain', borderRadius: '4px', background: '#fff' }} />
-                                ) : (
-                                  <div style={{ width: '40px', height: '40px', background: 'rgba(255,255,255,0.05)', borderRadius: '4px' }} />
-                                )}
-                                <div style={{ flex: 1, minWidth: 0 }}>
-                                  <p style={{ margin: 0, fontSize: '0.85rem', fontWeight: 600, color: '#fff', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{item.name}</p>
-                                  <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>{item.category}</span>
-                                </div>
-                                <span style={{ fontSize: '0.85rem', fontWeight: 800, color: 'var(--accent-color)' }}>{item.count} views</span>
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '1.2rem' }}>
+                          {[
+                            { label: 'Sessão ➔ Produto', lost: currentFunnel.s - currentFunnel.v, prevLost: previousFunnel.s - previousFunnel.v, pct: currentFunnel.s > 0 ? ((currentFunnel.s - currentFunnel.v) / currentFunnel.s) * 100 : 0 },
+                            { label: 'Produto ➔ Carrinho', lost: currentFunnel.v - currentFunnel.c, prevLost: previousFunnel.v - previousFunnel.c, pct: currentFunnel.v > 0 ? ((currentFunnel.v - currentFunnel.c) / currentFunnel.v) * 100 : 0 },
+                            { label: 'Carrinho ➔ Checkout', lost: currentFunnel.c - currentFunnel.ch, prevLost: previousFunnel.c - previousFunnel.ch, pct: currentFunnel.c > 0 ? ((currentFunnel.c - currentFunnel.ch) / currentFunnel.c) * 100 : 0 },
+                            { label: 'Checkout ➔ Pedido', lost: currentFunnel.ch - currentFunnel.cr, prevLost: previousFunnel.ch - previousFunnel.cr, pct: currentFunnel.ch > 0 ? ((currentFunnel.ch - currentFunnel.cr) / currentFunnel.ch) * 100 : 0 },
+                            { label: 'Pedido ➔ Pagamento', lost: currentFunnel.cr - currentFunnel.p, prevLost: previousFunnel.cr - previousFunnel.p, pct: currentFunnel.cr > 0 ? ((currentFunnel.cr - currentFunnel.p) / currentFunnel.cr) * 100 : 0 }
+                          ].map((drop, idx) => (
+                            <div key={idx} style={{ padding: '1rem', background: 'rgba(255,255,255,0.01)', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.03)' }}>
+                              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.4rem', fontSize: '0.85rem' }}>
+                                <span style={{ fontWeight: 600, color: '#fff' }}>{drop.label}</span>
+                                <span style={{ color: '#EF4444', fontWeight: 700 }}>
+                                  -{drop.lost} sessões ({drop.pct.toFixed(1)}%)
+                                </span>
                               </div>
-                            ))}
-                          </div>
-                        )}
+                              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Abandono na transição</span>
+                                {renderTrendBadge(drop.lost, drop.prevLost)}
+                              </div>
+                            </div>
+                          ))}
+                        </div>
                       </div>
 
                     </div>
 
-                    {/* VENDAS POR UTM */}
-                    <div className="glass-panel" style={{ padding: '2rem', borderRadius: '12px' }}>
-                      <h3 style={{ margin: '0 0 1.5rem 0', display: 'flex', alignItems: 'center', gap: '0.5rem', color: '#fff' }}>
-                        <Tag size={20} color="var(--accent-color)" /> Rastreamento UTM - Atribuição de Vendas
-                      </h3>
+                    {/* SEÇÃO 2: ROAS DASHBOARD & FUNIL EXCLUSIVO POR CAMPANHA */}
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(380px, 1fr))', gap: '1.5rem' }}>
                       
-                      <div className="admin-table-wrapper" style={{ overflowX: 'auto' }}>
-                        <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', fontSize: '0.85rem' }}>
-                          <thead>
-                            <tr style={{ borderBottom: '1px solid var(--border-color)', color: 'var(--text-muted)' }}>
-                              <th style={{ padding: '1rem' }}>Origem (utm_source)</th>
-                              <th style={{ padding: '1rem' }}>Campanha (utm_campaign)</th>
-                              <th style={{ padding: '1rem', textAlign: 'center' }}>Sessões (Cliques)</th>
-                              <th style={{ padding: '1rem', textAlign: 'center' }}>Pedidos Criados</th>
-                              <th style={{ padding: '1rem', textAlign: 'center' }}>Pedidos Pagos</th>
-                              <th style={{ padding: '1rem', textAlign: 'right' }}>Conversão</th>
-                              <th style={{ padding: '1rem', textAlign: 'right' }}>Receita Total (CAD)</th>
-                            </tr>
-                          </thead>
-                          <tbody>
-                            {utmStats.length === 0 ? (
-                              <tr>
-                                <td colSpan="7" style={{ textAlign: 'center', padding: '3rem', color: 'var(--text-muted)' }}>
-                                  Nenhuma venda rastreada por UTM ou canal orgânico neste período.
-                                </td>
+                      {/* DASHBOARD ROAS */}
+                      <div className="glass-panel" style={{ padding: '2rem', borderRadius: '12px' }}>
+                        <h3 style={{ margin: '0 0 1.5rem 0', display: 'flex', alignItems: 'center', justifyBehavior: 'space-between', width: '100%', gap: '0.5rem', color: '#fff' }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                            <TrendingUp size={20} color="var(--accent-color)" /> Desempenho ROAS por Campanha
+                          </div>
+                        </h3>
+                        
+                        <div className="admin-table-wrapper" style={{ overflowX: 'auto' }}>
+                          <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', fontSize: '0.8rem' }}>
+                            <thead>
+                              <tr style={{ borderBottom: '1px solid var(--border-color)', color: 'var(--text-muted)' }}>
+                                <th style={{ padding: '0.8rem' }}>Campanha (Origem)</th>
+                                <th style={{ padding: '0.8rem', textAlign: 'center' }}>Gasto (CAD)</th>
+                                <th style={{ padding: '0.8rem', textAlign: 'center' }}>Pedidos (Pagos)</th>
+                                <th style={{ padding: '0.8rem', textAlign: 'right' }}>Receita</th>
+                                <th style={{ padding: '0.8rem', textAlign: 'center' }}>ROAS</th>
+                                <th style={{ padding: '0.8rem', textAlign: 'right' }}>Margem</th>
                               </tr>
-                            ) : (
-                              utmStats.map((item, idx) => {
-                                const sessionCount = analyticsEvents.filter(e => 
-                                  e.event_name === 'PageView' && 
-                                  (e.utm_source === item.source || (!e.utm_source && item.source === 'Direto / Orgânico'))
-                                ).length;
-
-                                const conversionRate = sessionCount > 0 ? (item.paidOrders / sessionCount) * 100 : 0;
-
-                                return (
+                            </thead>
+                            <tbody>
+                              {campaignStats.length === 0 ? (
+                                <tr>
+                                  <td colSpan="6" style={{ textAlign: 'center', padding: '3rem', color: 'var(--text-muted)' }}>
+                                    Nenhuma campanha ativa no período selecionado.
+                                  </td>
+                                </tr>
+                              ) : (
+                                campaignStats.map((item, idx) => (
                                   <tr key={idx} style={{ borderBottom: '1px solid rgba(255,255,255,0.02)' }}>
-                                    <td style={{ padding: '1rem', fontWeight: 600, color: '#fff' }}>{item.source}</td>
-                                    <td style={{ padding: '1rem', color: 'var(--text-muted)' }}>{item.campaign}</td>
-                                    <td style={{ padding: '1rem', textAlign: 'center' }}>{sessionCount || '-'}</td>
-                                    <td style={{ padding: '1rem', textAlign: 'center' }}>{item.orders}</td>
-                                    <td style={{ padding: '1rem', textAlign: 'center', color: '#10B981', fontWeight: 700 }}>{item.paidOrders}</td>
-                                    <td style={{ padding: '1rem', textAlign: 'right', fontWeight: 600 }}>{sessionCount > 0 ? `${conversionRate.toFixed(2)}%` : 'N/A'}</td>
-                                    <td style={{ padding: '1rem', textAlign: 'right', fontWeight: 800, color: 'var(--accent-color)' }}>
-                                      {showValues ? `$${item.paidRevenue.toFixed(2)}` : '****'}
+                                    <td style={{ padding: '0.8rem' }}>
+                                      <div style={{ fontWeight: 600, color: '#fff' }}>{item.campaign}</div>
+                                      <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>{item.source}</div>
+                                    </td>
+                                    <td style={{ padding: '0.8rem', textAlign: 'center' }}>
+                                      {editingCostKey === item.key ? (
+                                        <div style={{ display: 'flex', gap: '0.2rem', justifyContent: 'center' }}>
+                                          <input
+                                            type="number"
+                                            value={editingCostVal}
+                                            onChange={e => setEditingCostVal(e.target.value)}
+                                            style={{ width: '60px', padding: '0.2rem', background: '#111', border: '1px solid #444', color: '#fff', fontSize: '0.75rem', borderRadius: '4px' }}
+                                          />
+                                          <button onClick={() => handleSaveCampaignCost(item.key, editingCostVal)} style={{ padding: '0.2rem 0.4rem', background: 'var(--accent-color)', color: '#000', border: 'none', borderRadius: '3px', cursor: 'pointer', fontSize: '0.7rem', fontWeight: 'bold' }}>✓</button>
+                                        </div>
+                                      ) : (
+                                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.4rem' }}>
+                                          <span>${item.spend.toFixed(2)}</span>
+                                          <button onClick={() => { setEditingCostKey(item.key); setEditingCostVal(item.spend); }} style={{ background: 'transparent', border: 'none', color: 'var(--accent-color)', cursor: 'pointer', fontSize: '0.8rem' }}>✏️</button>
+                                        </div>
+                                      )}
+                                    </td>
+                                    <td style={{ padding: '0.8rem', textAlign: 'center' }}>
+                                      {item.orders} ({item.paidOrders})
+                                    </td>
+                                    <td style={{ padding: '0.8rem', textAlign: 'right', fontWeight: 700, color: 'var(--text-main)' }}>
+                                      {showValues ? `$${item.revenue.toFixed(2)}` : '****'}
+                                    </td>
+                                    <td style={{ padding: '0.8rem', textAlign: 'center', fontWeight: 800, color: item.roas >= 2.0 ? '#10B981' : '#EF4444' }}>
+                                      {item.roas > 0 ? `${item.roas.toFixed(2)}x` : '-'}
+                                    </td>
+                                    <td style={{ padding: '0.8rem', textAlign: 'right', color: item.margin >= 30 ? '#10B981' : 'var(--text-muted)' }}>
+                                      {item.margin.toFixed(0)}%
                                     </td>
                                   </tr>
-                                );
-                              })
-                            )}
-                          </tbody>
-                        </table>
+                                ))
+                              )}
+                            </tbody>
+                          </table>
+                        </div>
                       </div>
+
+                      {/* FUNIL POR CAMPANHA */}
+                      <div className="glass-panel" style={{ padding: '2rem', borderRadius: '12px' }}>
+                        <h3 style={{ margin: '0 0 1.5rem 0', display: 'flex', alignItems: 'center', gap: '0.5rem', color: '#fff' }}>
+                          <BarChart size={20} color="#06B6D4" /> Funil Específico de Campanha
+                        </h3>
+                        
+                        <div style={{ marginBottom: '1.5rem' }}>
+                          <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.85rem', color: 'var(--text-muted)' }}>Selecione a Campanha:</label>
+                          <select
+                            value={selectedCmpKey}
+                            onChange={e => setSelectedCampaign(e.target.value)}
+                            style={{ width: '100%', padding: '0.6rem', borderRadius: '6px', background: 'var(--bg-color)', border: '1px solid var(--border-color)', color: '#fff', fontSize: '0.85rem' }}
+                          >
+                            {campaignStats.map(c => (
+                              <option key={c.key} value={c.key}>{c.campaign} ({c.source})</option>
+                            ))}
+                            {campaignStats.length === 0 && (
+                              <option value="">Nenhuma campanha disponível</option>
+                            )}
+                          </select>
+                        </div>
+
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                          {[
+                            { label: 'Sessões', count: campaignFunnel.s, color: '#3B82F6' },
+                            { label: 'Visualizações', count: campaignFunnel.v, color: '#A855F7' },
+                            { label: 'Carrinho', count: campaignFunnel.c, color: '#F59E0B' },
+                            { label: 'Checkout', count: campaignFunnel.ch, color: '#06B6D4' },
+                            { label: 'Pedidos', count: campaignFunnel.cr, color: '#10B981' },
+                            { label: 'Pagamentos', count: campaignFunnel.p, color: 'var(--accent-color)' }
+                          ].map((step, idx) => {
+                            const rootPct = campaignFunnel.s > 0 ? (step.count / campaignFunnel.s) * 100 : 0;
+                            return (
+                              <div key={step.label}>
+                                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.3rem', fontSize: '0.8rem' }}>
+                                  <span style={{ fontWeight: 600, color: 'var(--text-muted)' }}>{step.label}</span>
+                                  <span style={{ fontWeight: 800, color: step.color }}>{step.count} ({rootPct.toFixed(0)}%)</span>
+                                </div>
+                                <div style={{ width: '100%', height: '6px', background: 'rgba(255,255,255,0.03)', borderRadius: '3px', overflow: 'hidden' }}>
+                                  <div style={{ width: `${rootPct}%`, height: '100%', background: step.color, borderRadius: '3px' }} />
+                                </div>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      </div>
+
+                    </div>
+
+                    {/* SEÇÃO 3: MAPA INTERATIVO DO CANADÁ */}
+                    <div className="glass-panel" style={{ padding: '2rem', borderRadius: '12px' }}>
+                      <h3 style={{ margin: '0 0 1.5rem 0', display: 'flex', alignItems: 'center', gap: '0.5rem', color: '#fff' }}>
+                        <MapPin size={20} color="var(--accent-color)" /> Distribuição Geográfica & Mapa Interativo (Canadá)
+                      </h3>
+
+                      {selectedProvince === null ? (
+                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: '1rem' }}>
+                          {geoStats.map(prov => (
+                            <div
+                              key={prov.code}
+                              onClick={() => setSelectedProvince(prov)}
+                              style={{
+                                background: 'rgba(255,255,255,0.02)',
+                                padding: '1.2rem',
+                                borderRadius: '10px',
+                                border: '1px solid rgba(255,255,255,0.05)',
+                                cursor: 'pointer',
+                                transition: 'all 0.3s ease'
+                              }}
+                              className="interactive-card"
+                            >
+                              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
+                                <span style={{ fontSize: '1.2rem', fontWeight: 800, color: 'var(--accent-color)' }}>{prov.code}</span>
+                                <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>{prov.name}</span>
+                              </div>
+                              <p style={{ margin: '0.2rem 0', fontSize: '0.85rem' }}>Pedidos: <strong>{prov.paidOrders}</strong></p>
+                              <p style={{ margin: '0.2rem 0', fontSize: '0.85rem' }}>Receita: <strong style={{ color: '#10B981' }}>${prov.revenue.toFixed(2)}</strong></p>
+                              <p style={{ margin: '0.2rem 0', fontSize: '0.75rem', color: 'var(--text-muted)' }}>Conv: {prov.conversion.toFixed(1)}% | T.M: ${prov.ticket.toFixed(0)}</p>
+                            </div>
+                          ))}
+                        </div>
+                      ) : selectedCity === null ? (
+                        <div>
+                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
+                            <h4 style={{ margin: 0, color: '#fff', fontWeight: 700 }}>Cidades em {selectedProvince.name} ({selectedProvince.code})</h4>
+                            <button
+                              onClick={() => setSelectedProvince(null)}
+                              style={{ padding: '0.4rem 1rem', background: 'rgba(255,255,255,0.1)', color: '#fff', border: 'none', borderRadius: '4px', cursor: 'pointer', fontSize: '0.85rem' }}
+                            >
+                              ← Voltar para Províncias
+                            </button>
+                          </div>
+
+                          {Object.keys(selectedProvince.cities).length === 0 ? (
+                            <p style={{ color: 'var(--text-muted)', textAlign: 'center' }}>Nenhum pedido pago nesta província no período selecionado.</p>
+                          ) : (
+                            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: '1rem' }}>
+                              {Object.entries(selectedProvince.cities).map(([cityName, data]) => (
+                                <div
+                                  key={cityName}
+                                  onClick={() => setSelectedCity({ cityName, provinceCode: selectedProvince.code, ordersList: data.ordersList })}
+                                  style={{ background: 'rgba(255,255,255,0.02)', padding: '1.2rem', borderRadius: '10px', border: '1px solid rgba(255,255,255,0.05)', cursor: 'pointer' }}
+                                  className="interactive-card"
+                                >
+                                  <h5 style={{ margin: '0 0 0.8rem 0', color: '#fff', fontSize: '1rem' }}>{cityName}</h5>
+                                  <p style={{ margin: '0.2rem 0', fontSize: '0.85rem' }}>Pedidos: <strong>{data.orders}</strong></p>
+                                  <p style={{ margin: '0.2rem 0', fontSize: '0.85rem' }}>Receita: <strong style={{ color: '#10B981' }}>${data.revenue.toFixed(2)}</strong></p>
+                                  <p style={{ margin: '0.2rem 0', fontSize: '0.75rem', color: 'var(--text-muted)' }}>Ticket Médio: ${(data.revenue / data.orders).toFixed(0)}</p>
+                                </div>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+                      ) : (
+                        <div>
+                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
+                            <h4 style={{ margin: 0, color: '#fff', fontWeight: 700 }}>Pedidos em {selectedCity.cityName} ({selectedCity.provinceCode})</h4>
+                            <button
+                              onClick={() => setSelectedCity(null)}
+                              style={{ padding: '0.4rem 1rem', background: 'rgba(255,255,255,0.1)', color: '#fff', border: 'none', borderRadius: '4px', cursor: 'pointer', fontSize: '0.85rem' }}
+                            >
+                              ← Voltar para Cidades
+                            </button>
+                          </div>
+
+                          <div className="admin-table-wrapper">
+                            <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', fontSize: '0.85rem' }}>
+                              <thead>
+                                <tr style={{ borderBottom: '1px solid var(--border-color)', color: 'var(--text-muted)' }}>
+                                  <th style={{ padding: '1rem' }}>ID do Pedido</th>
+                                  <th style={{ padding: '1rem' }}>Cliente</th>
+                                  <th style={{ padding: '1rem' }}>Data</th>
+                                  <th style={{ padding: '1rem' }}>Método</th>
+                                  <th style={{ padding: '1rem', textAlign: 'right' }}>Total (CAD)</th>
+                                </tr>
+                              </thead>
+                              <tbody>
+                                {selectedCity.ordersList.map(order => (
+                                  <tr key={order.id} style={{ borderBottom: '1px solid rgba(255,255,255,0.02)' }}>
+                                    <td style={{ padding: '1rem', color: 'var(--accent-color)', fontWeight: 'bold' }}>#{order.id.slice(0,8)}</td>
+                                    <td style={{ padding: '1rem' }}>
+                                      <div>{order.customer_name}</div>
+                                      <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{order.customer_email}</div>
+                                    </td>
+                                    <td style={{ padding: '1rem' }}>{new Date(order.created_at).toLocaleDateString('pt-BR')}</td>
+                                    <td style={{ padding: '1rem', textTransform: 'capitalize' }}>{order.payment_method}</td>
+                                    <td style={{ padding: '1rem', textAlign: 'right', fontWeight: 'bold' }}>${(order.total_price || 0).toFixed(2)}</td>
+                                  </tr>
+                                ))}
+                              </tbody>
+                            </table>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+
+                    {/* SEÇÃO 4: PRODUTOS DETALHADO & MÉTRICAS DE CLIENTES */}
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(360px, 1fr))', gap: '1.5rem' }}>
+                      
+                      {/* DETALHADO DE PRODUTOS */}
+                      <div className="glass-panel" style={{ padding: '2rem', borderRadius: '12px' }}>
+                        <h3 style={{ margin: '0 0 1.5rem 0', display: 'flex', alignItems: 'center', gap: '0.5rem', color: '#fff' }}>
+                          <Eye size={20} color="var(--accent-color)" /> Desempenho e Conversão por Produto
+                        </h3>
+                        
+                        <div className="admin-table-wrapper" style={{ overflowX: 'auto' }}>
+                          <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', fontSize: '0.8rem' }}>
+                            <thead>
+                              <tr style={{ borderBottom: '1px solid var(--border-color)', color: 'var(--text-muted)' }}>
+                                <th style={{ padding: '0.6rem' }}>Produto</th>
+                                <th style={{ padding: '0.6rem', textAlign: 'center' }}>Views</th>
+                                <th style={{ padding: '0.6rem', textAlign: 'center' }}>Carts</th>
+                                <th style={{ padding: '0.6rem', textAlign: 'center' }}>Vendas</th>
+                                <th style={{ padding: '0.6rem', textAlign: 'right' }}>Receita</th>
+                                <th style={{ padding: '0.6rem', textAlign: 'right' }}>Conversão</th>
+                              </tr>
+                            </thead>
+                            <tbody>
+                              {detailedProducts.map(p => (
+                                <tr key={p.id} style={{ borderBottom: '1px solid rgba(255,255,255,0.02)' }}>
+                                  <td style={{ padding: '0.6rem' }}>
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                                      {p.image && <img src={p.image} alt="" style={{ width: '30px', height: '30px', objectFit: 'contain', background: '#fff', borderRadius: '4px' }} />}
+                                      <span style={{ fontWeight: 600, color: '#fff', display: 'inline-block', maxWidth: '140px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{p.name}</span>
+                                    </div>
+                                  </td>
+                                  <td style={{ padding: '0.6rem', textAlign: 'center' }}>{p.views}</td>
+                                  <td style={{ padding: '0.6rem', textAlign: 'center' }}>{p.carts} ({p.cartRate.toFixed(0)}%)</td>
+                                  <td style={{ padding: '0.6rem', textAlign: 'center', fontWeight: 'bold' }}>{p.purchases}</td>
+                                  <td style={{ padding: '0.6rem', textAlign: 'right', color: 'var(--accent-color)' }}>
+                                    {showValues ? `$${p.revenue.toFixed(2)}` : '****'}
+                                  </td>
+                                  <td style={{ padding: '0.6rem', textAlign: 'right' }}>{p.conversion.toFixed(1)}%</td>
+                                </tr>
+                              ))}
+                            </tbody>
+                          </table>
+                        </div>
+                      </div>
+
+                      {/* PAINEL DE CLIENTES E LTV */}
+                      <div className="glass-panel" style={{ padding: '2rem', borderRadius: '12px', display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+                        <h3 style={{ margin: '0', display: 'flex', alignItems: 'center', gap: '0.5rem', color: '#fff' }}>
+                          <Users size={20} color="var(--accent-color)" /> Comportamento de Clientes & LTV
+                        </h3>
+                        
+                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+                          {[
+                            { label: 'LTV (Lifetime Value)', val: `$${customerSummary.ltv.toFixed(2)}`, desc: 'Receita histórica média por cliente' },
+                            { label: 'Taxa de Recompra', val: `${customerSummary.repeatRate.toFixed(1)}%`, desc: 'Percentual de clientes recorrentes' },
+                            { label: 'Clientes Únicos', val: customerSummary.totalClients, desc: 'Compradores com pagamento aprovado' },
+                            { label: 'Tempo Médio Recompra', val: customerSummary.avgDaysToRepeat > 0 ? `${customerSummary.avgDaysToRepeat.toFixed(0)} dias` : 'N/A', desc: 'Dias médios entre pedidos do mesmo cliente' }
+                          ].map((stat, idx) => (
+                            <div key={idx} style={{ background: 'rgba(255,255,255,0.01)', padding: '1rem', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.03)' }}>
+                              <p style={{ margin: 0, fontSize: '0.75rem', color: 'var(--text-muted)' }}>{stat.label}</p>
+                              <h3 style={{ margin: '0.2rem 0', color: idx === 0 ? 'var(--accent-color)' : '#fff', fontWeight: 800 }}>{stat.val}</h3>
+                              <span style={{ fontSize: '0.65rem', color: 'var(--text-muted)' }}>{stat.desc}</span>
+                            </div>
+                          ))}
+                        </div>
+
+                        <div style={{ padding: '1rem', background: 'rgba(255,255,255,0.02)', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.05)' }}>
+                          <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem', fontSize: '0.85rem' }}>
+                            <span style={{ color: 'var(--text-muted)' }}>Clientes Novos:</span>
+                            <span style={{ fontWeight: 'bold', color: '#fff' }}>{customerSummary.newClients}</span>
+                          </div>
+                          <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.85rem' }}>
+                            <span style={{ color: 'var(--text-muted)' }}>Clientes Recorrentes (2+ compras):</span>
+                            <span style={{ fontWeight: 'bold', color: 'var(--accent-color)' }}>{customerSummary.repeatClients}</span>
+                          </div>
+                        </div>
+                      </div>
+
+                    </div>
+
+                    {/* SEÇÃO 5: UTM DETALHADO & TEMPO MÉDIO DE CONVERSÃO */}
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(360px, 1fr))', gap: '1.5rem' }}>
+                      
+                      {/* DETALHAMENTO DE UTMs */}
+                      <div className="glass-panel" style={{ padding: '2rem', borderRadius: '12px' }}>
+                        <h3 style={{ margin: '0 0 1.5rem 0', display: 'flex', alignItems: 'center', gap: '0.5rem', color: '#fff' }}>
+                          <Tag size={20} color="var(--accent-color)" /> Rastreamento de UTMs Avançado
+                        </h3>
+                        
+                        <div className="admin-table-wrapper" style={{ overflowX: 'auto' }}>
+                          <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', fontSize: '0.75rem' }}>
+                            <thead>
+                              <tr style={{ borderBottom: '1px solid var(--border-color)', color: 'var(--text-muted)' }}>
+                                <th style={{ padding: '0.6rem' }}>UTM Params</th>
+                                <th style={{ padding: '0.6rem', textAlign: 'center' }}>Sessões</th>
+                                <th style={{ padding: '0.6rem', textAlign: 'center' }}>Vendas</th>
+                                <th style={{ padding: '0.6rem', textAlign: 'right' }}>Receita</th>
+                                <th style={{ padding: '0.6rem', textAlign: 'right' }}>Conversão</th>
+                              </tr>
+                            </thead>
+                            <tbody>
+                              {utmExtendedStats.slice(0, 10).map((item, idx) => (
+                                <tr key={idx} style={{ borderBottom: '1px solid rgba(255,255,255,0.02)' }}>
+                                  <td style={{ padding: '0.6rem' }}>
+                                    <div style={{ fontWeight: 600, color: '#fff' }}>{item.source} / {item.medium}</div>
+                                    <div style={{ fontSize: '0.65rem', color: 'var(--text-muted)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: '200px' }}>
+                                      C: {item.campaign} | T: {item.term}
+                                    </div>
+                                  </td>
+                                  <td style={{ padding: '0.6rem', textAlign: 'center' }}>{item.sessions || '-'}</td>
+                                  <td style={{ padding: '0.6rem', textAlign: 'center', fontWeight: 'bold' }}>{item.paidOrders}</td>
+                                  <td style={{ padding: '0.6rem', textAlign: 'right', color: 'var(--accent-color)', fontWeight: 'bold' }}>
+                                    {showValues ? `$${item.revenue.toFixed(2)}` : '****'}
+                                  </td>
+                                  <td style={{ padding: '0.6rem', textAlign: 'right' }}>{item.conversion.toFixed(1)}%</td>
+                                </tr>
+                              ))}
+                              {utmExtendedStats.length === 0 && (
+                                <tr>
+                                  <td colSpan="5" style={{ textAlign: 'center', padding: '2rem', color: 'var(--text-muted)' }}>Nenhum dado UTM registrado.</td>
+                                </tr>
+                              )}
+                            </tbody>
+                          </table>
+                        </div>
+                      </div>
+
+                      {/* TEMPO MÉDIO DE CONVERSÃO */}
+                      <div className="glass-panel" style={{ padding: '2rem', borderRadius: '12px', display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+                        <h3 style={{ margin: '0', display: 'flex', alignItems: 'center', gap: '0.5rem', color: '#fff' }}>
+                          <Clock size={20} color="var(--accent-color)" /> Tempo Médio até a Ação (Speed Metrics)
+                        </h3>
+
+                        <p style={{ margin: 0, fontSize: '0.85rem', color: 'var(--text-muted)', lineHeight: '1.4' }}>
+                          Mede o tempo médio decorrido desde a primeira visualização de página na mesma sessão até a conclusão da ação de compra ou funil.
+                        </p>
+
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                          {[
+                            { label: 'Tempo até Adicionar à Sacola', val: averageTimes.cart, color: '#F59E0B' },
+                            { label: 'Tempo até Iniciar Checkout', val: averageTimes.checkout, color: '#06B6D4' },
+                            { label: 'Tempo até Concluir a Compra', val: averageTimes.purchase, color: 'var(--accent-color)' }
+                          ].map((item, idx) => (
+                            <div key={idx} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '1rem', background: 'rgba(255,255,255,0.01)', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.03)' }}>
+                              <span style={{ fontSize: '0.85rem', fontWeight: 600, color: 'var(--text-muted)' }}>{item.label}</span>
+                              <span style={{ fontSize: '1.1rem', fontWeight: 800, color: item.color }}>{item.val}</span>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+
                     </div>
                   </>
                 )}
