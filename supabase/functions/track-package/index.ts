@@ -110,15 +110,29 @@ const htmlEntities: Record<string, string> = {
 
 async function translateText(text: string): Promise<string> {
   if (!text) return '';
-  // Para textos USPS com formato "Status Curto → Descrição longa", usa apenas o status curto
-  const arrowIdx = text.indexOf('→');
-  const clean = (arrowIdx > 0 ? text.substring(0, arrowIdx) : text).replace(/\/$/, '').trim();
-  if (!clean) return '';
-  // Verifica dicionário primeiro (sem chamar API externa)
-  if (commonTranslations[clean]) return commonTranslations[clean];
-  // Verifica com o texto original também (caso não tenha a seta)
-  const cleanOriginal = text.replace(/\/$/, '').trim();
-  if (commonTranslations[cleanOriginal]) return commonTranslations[cleanOriginal];
+  const raw = text.trim();
+  if (!raw) return '';
+
+  // 1. Tenta o texto completo no dicionário primeiro
+  if (commonTranslations[raw]) return commonTranslations[raw];
+
+  // 2. Para textos USPS com "Status → Descrição longa" ou "Status -> Descrição longa"
+  //    extrai apenas a parte antes da seta (pode ser Unicode → ou ASCII ->)
+  const arrowMatch = raw.match(/^(.+?)\s*(?:→|->)\s+.+$/);
+  if (arrowMatch) {
+    const shortStatus = arrowMatch[1].trim();
+    if (commonTranslations[shortStatus]) return commonTranslations[shortStatus];
+  }
+
+  // 3. Tenta verificar se alguma chave do dicionário está no início do texto
+  for (const key of Object.keys(commonTranslations)) {
+    if (raw.startsWith(key)) return commonTranslations[key];
+  }
+
+  // 4. Texto limpo para tradução via API (sem a parte longa após →)
+  const clean = (arrowMatch ? arrowMatch[1] : raw).replace(/\/$/, '').trim();
+  if (!clean) return raw;
+
   if (/[^\x00-\xff]/.test(clean)) {
     try {
       const res = await fetch(`https://api.mymemory.translated.net/get?q=${encodeURIComponent(clean)}&langpair=zh|pt`);
@@ -142,6 +156,7 @@ async function translateText(text: string): Promise<string> {
   }
   return clean;
 }
+
 
 function isEventInDestinationCountry(locationText: string, statusText: string, country: string): boolean {
   const loc = (locationText || '').toLowerCase();
