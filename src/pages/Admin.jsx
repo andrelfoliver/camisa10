@@ -3954,32 +3954,36 @@ const Admin = () => {
             const previousStart = new Date();
             previousStart.setDate(now.getDate() - (days * 2));
 
-            let currentEvents = analyticsEvents;
+            const filterDate = new Date('2026-06-24T00:00:00');
+            const marketingEvents = analyticsEvents.filter(e => new Date(e.created_at) >= filterDate);
+            const marketingOrders = orders.filter(o => new Date(o.created_at) >= filterDate);
+
+            let currentEvents = marketingEvents;
             let previousEvents = [];
-            let currentOrders = orders;
+            let currentOrders = marketingOrders;
             let previousOrders = [];
 
             if (!isAllTime) {
-              currentEvents = analyticsEvents.filter(e => new Date(e.created_at) >= currentStart);
-              previousEvents = analyticsEvents.filter(e => {
+              currentEvents = marketingEvents.filter(e => new Date(e.created_at) >= currentStart);
+              previousEvents = marketingEvents.filter(e => {
                 const d = new Date(e.created_at);
                 return d >= previousStart && d < currentStart;
               });
-              currentOrders = orders.filter(o => new Date(o.created_at) >= currentStart);
-              previousOrders = orders.filter(o => {
+              currentOrders = marketingOrders.filter(o => new Date(o.created_at) >= currentStart);
+              previousOrders = marketingOrders.filter(o => {
                 const d = new Date(o.created_at);
                 return d >= previousStart && d < currentStart;
               });
             } else {
               // Divisão histórica ao meio para fins de comparação temporal
-              const sortedDates = orders.map(o => new Date(o.created_at).getTime()).sort((a,b) => a-b);
+              const sortedDates = marketingOrders.map(o => new Date(o.created_at).getTime()).sort((a,b) => a-b);
               if (sortedDates.length > 0) {
                 const midTime = sortedDates[0] + (sortedDates[sortedDates.length - 1] - sortedDates[0]) / 2;
                 const midDate = new Date(midTime);
-                currentEvents = analyticsEvents.filter(e => new Date(e.created_at) >= midDate);
-                previousEvents = analyticsEvents.filter(e => new Date(e.created_at) < midDate);
-                currentOrders = orders.filter(o => new Date(o.created_at) >= midDate);
-                previousOrders = orders.filter(o => new Date(o.created_at) < midDate);
+                currentEvents = marketingEvents.filter(e => new Date(e.created_at) >= midDate);
+                previousEvents = marketingEvents.filter(e => new Date(e.created_at) < midDate);
+                currentOrders = marketingOrders.filter(o => new Date(o.created_at) >= midDate);
+                previousOrders = marketingOrders.filter(o => new Date(o.created_at) < midDate);
               }
             }
 
@@ -4121,7 +4125,7 @@ const Admin = () => {
             // 3. Métricas de Clientes (LTV, Recompra, etc. baseados no histórico total de pedidos pagos)
             const customerSummary = (() => {
               const customerStats = {};
-              orders.filter(o => !['cancelled', 'pending', 'failed'].includes(o.status)).forEach(o => {
+              marketingOrders.filter(o => !['cancelled', 'pending', 'failed'].includes(o.status)).forEach(o => {
                 const email = o.customer_email?.trim().toLowerCase() || 'convidado@ifooty.ca';
                 if (!customerStats[email]) {
                   customerStats[email] = {
@@ -4154,7 +4158,7 @@ const Admin = () => {
                 }
               });
               const avgDaysToRepeat = gapCount > 0 ? totalDaysBetween / gapCount : 0;
-              const totalPaidRevenueAllTime = orders.filter(o => !['cancelled', 'pending', 'failed'].includes(o.status)).reduce((sum, o) => sum + getValidRevenue(o), 0);
+              const totalPaidRevenueAllTime = marketingOrders.filter(o => !['cancelled', 'pending', 'failed'].includes(o.status)).reduce((sum, o) => sum + getValidRevenue(o), 0);
               const ltv = totalClients > 0 ? totalPaidRevenueAllTime / totalClients : 0;
 
               return {
@@ -4608,7 +4612,7 @@ const Admin = () => {
               // Cálculo de LTV Histórico / Vitalício por Origem
               const clientSpendMap = {};
               
-              orders.filter(o => !['cancelled', 'pending', 'failed'].includes(o.status)).forEach(o => {
+              marketingOrders.filter(o => !['cancelled', 'pending', 'failed'].includes(o.status)).forEach(o => {
                 const email = o.customer_email?.trim().toLowerCase();
                 if (!email) return;
                 if (!clientSpendMap[email]) {
