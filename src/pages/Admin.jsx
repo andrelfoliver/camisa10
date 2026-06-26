@@ -4292,6 +4292,9 @@ const Admin = () => {
                 'NU': { name: 'Nunavut', orders: 0, paidOrders: 0, revenue: 0, sessions: new Set(), cities: {} }
               };
 
+              // Considera todos os status que representam pedidos pagos/em andamento
+              const isPaidOrder = (status) => !['cancelled', 'pending', 'failed'].includes(status);
+
               currentOrders.forEach(o => {
                 const prov = String(o.shipping_address?.province || 'AB').toUpperCase().trim();
                 const city = String(o.shipping_address?.city || 'Desconhecida').trim();
@@ -4303,7 +4306,7 @@ const Admin = () => {
                   const sessionId = currentEvents.find(e => e.event_name === 'Purchase' && e.metadata?.order_id === o.id)?.session_id;
                   if (sessionId) p.sessions.add(sessionId);
 
-                  if (o.status === 'paid') {
+                  if (isPaidOrder(o.status)) {
                     p.paidOrders += 1;
                     const price = getValidRevenue(o);
                     p.revenue += price;
@@ -4358,7 +4361,7 @@ const Admin = () => {
                 }
               });
 
-              currentOrders.filter(o => o.status === 'paid').forEach(o => {
+              currentOrders.filter(o => !['cancelled', 'pending', 'failed'].includes(o.status)).forEach(o => {
                 if (o.items && Array.isArray(o.items)) {
                   o.items.forEach(item => {
                     const idNum = Number(item.id);
