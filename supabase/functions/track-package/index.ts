@@ -21,6 +21,7 @@ function formatToAMPM(dateStr: string) {
 }
 
 const commonTranslations: Record<string, string> = {
+  // Chinês
   "货物电子信息已经收到": "Informações eletrônicas recebidas",
   "已揽收": "Coletado pelo fornecedor",
   "到达": "Chegou em",
@@ -48,7 +49,55 @@ const commonTranslations: Record<string, string> = {
   "In transit": "Em trânsito",
   "Out for delivery": "Saiu para entrega",
   "Delivered": "Entregue",
-  "Electronic information submitted by shipper": "Informações eletrônicas enviadas pelo remetente"
+  "Electronic information submitted by shipper": "Informações eletrônicas enviadas pelo remetente",
+  // USPS / DHL eCommerce US
+  "In Transit, Arriving On Time": "Em trânsito — chegando no prazo",
+  "In Transit, Arriving Late": "Em trânsito — com atraso",
+  "Departed USPS Facility": "Saiu das instalações do USPS",
+  "Arrived at USPS Facility": "Chegou nas instalações do USPS",
+  "Accepted at USPS Facility": "Aceito nas instalações do USPS",
+  "Accepted at USPS Origin Facility": "Aceito no centro de origem do USPS",
+  "Arrived at USPS Regional Facility": "Chegou ao centro regional do USPS",
+  "Departed USPS Regional Facility": "Saiu do centro regional do USPS",
+  "Arrived at USPS Regional Origin Facility": "Chegou ao centro regional de origem do USPS",
+  "Arrived at USPS Regional Destination Facility": "Chegou ao centro regional de destino do USPS",
+  "Departed USPS Regional Destination Facility": "Saiu do centro regional de destino do USPS",
+  "Arrived at Post Office": "Chegou na agência postal",
+  "Out for Delivery": "Saiu para entrega",
+  "Delivered, In/At Mailbox": "Entregue na caixa de correio",
+  "Delivered, Front Door/Porch": "Entregue na porta da frente",
+  "Delivered, Left with Individual": "Entregue a uma pessoa",
+  "Delivered, Parcel Locker": "Entregue no armário de encomendas",
+  "Delivered, To Agent": "Entregue a um agente",
+  "Delivered": "Entregue",
+  "Delivery Attempt": "Tentativa de entrega",
+  "Delivery Attempted - No Access to Delivery Location": "Tentativa de entrega — sem acesso ao local",
+  "Notice Left (No Authorized Recipient Available)": "Aviso deixado — destinatário não disponível",
+  "Notice Left (No Secure Location Available)": "Aviso deixado — sem local seguro disponível",
+  "Available for Pickup": "Disponível para retirada",
+  "Picked Up by Agent": "Retirado por agente",
+  "Return to Sender": "Devolvido ao remetente",
+  "Shipment Received, Package Acceptance Pending": "Remessa recebida — aceitação pendente",
+  "USPS in possession of item": "Encomenda em posse do USPS",
+  "USPS awaiting item": "USPS aguardando a encomenda",
+  "Pre-Shipment Info Sent to USPS, USPS Awaiting Item": "Informação pré-envio enviada ao USPS — aguardando encomenda",
+  "Shipping Label Created, USPS Awaiting Item": "Etiqueta criada — USPS aguardando encomenda",
+  "Electronic Shipping Info Received": "Informações eletrônicas de envio recebidas",
+  "Processed Through Facility": "Processado no centro de distribuição",
+  "Processed Through USPS Facility": "Processado nas instalações do USPS",
+  "Customs Clearance": "Desembaraço aduaneiro",
+  "Customs Clearance Processing Complete": "Desembaraço aduaneiro concluído",
+  "Inbound Out of Customs": "Saiu da alfândega — entrada no país",
+  "Held in Customs": "Retido na alfândega",
+  "International Dispatch": "Despacho internacional",
+  "Arrived at Hub": "Chegou ao hub de distribuição",
+  "Departed Hub": "Saiu do hub de distribuição",
+  "Package transferred to post office": "Encomenda transferida para a agência postal",
+  "Forwarded": "Encaminhado",
+  "Addressee not available": "Destinatário não disponível",
+  "Insufficient address": "Endereço insuficiente",
+  "No Such Number": "Número inexistente",
+  "Moved, Left no Address": "Mudou de endereço sem deixar novo endereço"
 };
 
 const htmlEntities: Record<string, string> = {
@@ -61,9 +110,15 @@ const htmlEntities: Record<string, string> = {
 
 async function translateText(text: string): Promise<string> {
   if (!text) return '';
-  const clean = text.replace(/\/$/, '').trim();
+  // Para textos USPS com formato "Status Curto → Descrição longa", usa apenas o status curto
+  const arrowIdx = text.indexOf('→');
+  const clean = (arrowIdx > 0 ? text.substring(0, arrowIdx) : text).replace(/\/$/, '').trim();
   if (!clean) return '';
+  // Verifica dicionário primeiro (sem chamar API externa)
   if (commonTranslations[clean]) return commonTranslations[clean];
+  // Verifica com o texto original também (caso não tenha a seta)
+  const cleanOriginal = text.replace(/\/$/, '').trim();
+  if (commonTranslations[cleanOriginal]) return commonTranslations[cleanOriginal];
   if (/[^\x00-\xff]/.test(clean)) {
     try {
       const res = await fetch(`https://api.mymemory.translated.net/get?q=${encodeURIComponent(clean)}&langpair=zh|pt`);
@@ -74,7 +129,7 @@ async function translateText(text: string): Promise<string> {
         return trans;
       }
     } catch { }
-  } else if (/^[a-zA-Z\s,.'-]+$/.test(clean) && clean.length > 3) {
+  } else if (/^[a-zA-Z\s,.'()-]+$/.test(clean) && clean.length > 3) {
     try {
       const res = await fetch(`https://api.mymemory.translated.net/get?q=${encodeURIComponent(clean)}&langpair=en|pt`);
       const d: any = await res.json();
