@@ -4020,7 +4020,7 @@ const Admin = () => {
                 const s = sessionsMap[o.session_id];
                 if (o.status !== 'cancelled') {
                   s.hasOrder = true;
-                  if (o.status === 'paid') {
+                  if (!['cancelled', 'pending', 'failed'].includes(o.status)) {
                     s.hasPaid = true;
                   }
                 }
@@ -4058,7 +4058,7 @@ const Admin = () => {
 
               // Financeiro do período
               const activeOrders = periodOrders.filter(o => o.status !== 'cancelled');
-              const paidOrders = activeOrders.filter(o => o.status === 'paid');
+              const paidOrders = activeOrders.filter(o => !['cancelled', 'pending', 'failed'].includes(o.status));
               
               let revenue = 0;
               let cost = 0;
@@ -4121,7 +4121,7 @@ const Admin = () => {
             // 3. Métricas de Clientes (LTV, Recompra, etc. baseados no histórico total de pedidos pagos)
             const customerSummary = (() => {
               const customerStats = {};
-              orders.filter(o => o.status === 'paid').forEach(o => {
+              orders.filter(o => !['cancelled', 'pending', 'failed'].includes(o.status)).forEach(o => {
                 const email = o.customer_email?.trim().toLowerCase() || 'convidado@ifooty.ca';
                 if (!customerStats[email]) {
                   customerStats[email] = {
@@ -4154,7 +4154,7 @@ const Admin = () => {
                 }
               });
               const avgDaysToRepeat = gapCount > 0 ? totalDaysBetween / gapCount : 0;
-              const totalPaidRevenueAllTime = orders.filter(o => o.status === 'paid').reduce((sum, o) => sum + getValidRevenue(o), 0);
+              const totalPaidRevenueAllTime = orders.filter(o => !['cancelled', 'pending', 'failed'].includes(o.status)).reduce((sum, o) => sum + getValidRevenue(o), 0);
               const ltv = totalClients > 0 ? totalPaidRevenueAllTime / totalClients : 0;
 
               return {
@@ -4242,7 +4242,7 @@ const Admin = () => {
                     statsMap[key] = { campaign: o.utm_campaign, source: src, key, sessions: new Set(), orders: 0, paidOrders: 0, revenue: 0, cost: 0 };
                   }
                   statsMap[key].orders += 1;
-                  if (o.status === 'paid') {
+                  if (!['cancelled', 'pending', 'failed'].includes(o.status)) {
                     statsMap[key].paidOrders += 1;
                     statsMap[key].revenue += getValidRevenue(o);
                     statsMap[key].cost += calculateOrderCost(o);
@@ -4491,7 +4491,7 @@ const Admin = () => {
                 }
 
                 map[key].orders += 1;
-                if (o.status === 'paid') {
+                if (!['cancelled', 'pending', 'failed'].includes(o.status)) {
                   map[key].paidOrders += 1;
                   map[key].revenue += getValidRevenue(o);
                 }
@@ -4577,7 +4577,7 @@ const Admin = () => {
                 const s = sessionsMap[o.session_id];
                 if (o.status !== 'cancelled') {
                   s.hasOrder = true;
-                  if (o.status === 'paid') {
+                  if (!['cancelled', 'pending', 'failed'].includes(o.status)) {
                     s.hasPaid = true;
                     s.paidRevenue += getValidRevenue(o);
                   }
@@ -4608,7 +4608,7 @@ const Admin = () => {
               // Cálculo de LTV Histórico / Vitalício por Origem
               const clientSpendMap = {};
               
-              orders.filter(o => o.status === 'paid').forEach(o => {
+              orders.filter(o => !['cancelled', 'pending', 'failed'].includes(o.status)).forEach(o => {
                 const email = o.customer_email?.trim().toLowerCase();
                 if (!email) return;
                 if (!clientSpendMap[email]) {
@@ -5454,7 +5454,7 @@ const Admin = () => {
                 const sess = sessionsMap[o.session_id];
                 sess.paymentMethod = o.payment_method;
                 sess.totalValue = o.total_price;
-                if (o.status === 'paid') {
+                if (!['cancelled', 'pending', 'failed'].includes(o.status)) {
                   sess.isPurchased = true;
                   sess.isAbandoned = false;
                 }
