@@ -187,44 +187,58 @@ async function fetch17trackData(num: string, isUsps: boolean) {
   if (!apiKey) return { events: [], rawAccepted: null };
   try {
     const cleanNum = num.trim();
+    
+    // Lista de carriers candidatos para obter o rastreamento mais preciso
+    const carriersToTry = isUsps ? [21051, 7047, 190012] : [2001, 7047, 190012];
+    
+    const registerPayload = [{ number: cleanNum }];
+    carriersToTry.forEach(c => {
+      registerPayload.push({ number: cleanNum, carrier: c });
+    });
+
     await fetch('https://api.17track.net/track/v2/register', {
       method: 'POST',
       headers: { '17token': apiKey, 'Content-Type': 'application/json' },
-      body: JSON.stringify([{ number: cleanNum }])
+      body: JSON.stringify(registerPayload)
     });
 
     // PAUSA TÉCNICA: Dá tempo para o servidor do 17track processar o registro
     await new Promise(r => setTimeout(r, 3000));
     
+    const infoPayload = [{ number: cleanNum }];
+    carriersToTry.forEach(c => {
+      infoPayload.push({ number: cleanNum, carrier: c });
+    });
+
     let res = await fetch('https://api.17track.net/track/v2/gettrackinfo', {
       method: 'POST',
       headers: { '17token': apiKey, 'Content-Type': 'application/json' },
-      body: JSON.stringify([{ number: cleanNum }])
+      body: JSON.stringify(infoPayload)
     });
     
     let data: any = await res.json();
     console.log(`DIAGNÓSTICO 17TRACK V2 - Resposta para ${cleanNum}:`, JSON.stringify(data));
     
-    const accepted = data?.data?.accepted?.[0];
-    if (!accepted) return { events: [], rawAccepted: null };
+    const acceptedList = data?.data?.accepted || [];
+    if (acceptedList.length === 0) return { events: [], rawAccepted: null };
 
     const events: any[] = [];
     
-    // 1. Tenta o formato novo (do seu log)
-    const providers = accepted.track_info?.tracking?.providers || [];
-    providers.forEach((p: any) => {
-      if (p.events) events.push(...p.events);
+    acceptedList.forEach((accepted: any) => {
+      const providers = accepted.track_info?.tracking?.providers || [];
+      providers.forEach((p: any) => {
+        if (p.events) events.push(...p.events);
+      });
+
+      const track = accepted.track;
+      if (track) {
+        events.push(...(track.z0 || []), ...(track.z1 || []), ...(track.z2 || []));
+      }
     });
 
-    // 2. Tenta o formato antigo (z0, z1, z2) como backup
-    const track = accepted.track;
-    if (track) {
-      events.push(...(track.z0 || []), ...(track.z1 || []), ...(track.z2 || []));
-    }
-
     if (events.length === 0) {
-      console.log(`17TRACK SEM EVENTOS: O objeto existe mas a lista de eventos está vazia.`);
-      return { events: [], rawAccepted: accepted };
+      console.log(`17TRACK SEM EVENTOS: Nenhuma correspondência nos provedores testados.`);
+      return { events: [], rawAccepted: acceptedList[0] };
     }
 
     // Remover duplicados
@@ -251,8 +265,13 @@ async function fetch17trackData(num: string, isUsps: boolean) {
       };
     }));
 
-    return { events: mappedEvents, rawAccepted: accepted };
-  } catch { return { events: [], rawAccepted: null }; }
+    const bestAccepted = acceptedList.find(a => a.track_info?.tracking?.providers?.length > 0) || acceptedList[0];
+
+    return { events: mappedEvents, rawAccepted: bestAccepted };
+  } catch (err) {
+    console.error("Erro no fetch17trackData:", err);
+    return { events: [], rawAccepted: null };
+  }
 }
 
 // @ts-ignore
@@ -370,6 +389,17 @@ Deno.serve(async (req: Request) => {
 
     if (cn.trackingData) {
       cn.trackingData.city = dbCity;
+    } else if (caData.rawAccepted) {
+      const info = caData.rawAccepted.track_info;
+      cn.trackingData = {
+        referenceNo: info?.reference_number || '',
+        trackingNumber: cleanNum,
+        country: isActualUs ? 'US' : 'CA',
+        date: filteredHistory[filteredHistory.length - 1]?.date || '',
+        lastRecord: filteredHistory[0]?.status || info?.latest_status?.status || '',
+        consigneeName: info?.recipient_info?.name || info?.consignee || '',
+        city: dbCity
+      };
     } else if (dbCity) {
       cn.trackingData = { 
         referenceNo: '', 
