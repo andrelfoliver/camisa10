@@ -4295,16 +4295,30 @@ const Admin = () => {
               // Considera todos os status que representam pedidos pagos/em andamento
               const isPaidOrder = (status) => !['cancelled', 'pending', 'failed'].includes(status);
 
+              // 1. Popular sessões a partir dos eventos analíticos para obter a contagem de tráfego real por província
+              currentEvents.forEach(e => {
+                if (!e.session_id) return;
+                const rawProv = e.metadata?.province || e.province;
+                const prov = normalizeProvince(rawProv);
+                if (prov && provinces[prov]) {
+                  provinces[prov].sessions.add(e.session_id);
+                }
+              });
+
+              // 2. Processar pedidos do período
               currentOrders.forEach(o => {
-                const prov = String(o.shipping_address?.province || 'AB').toUpperCase().trim();
+                const rawProv = o.shipping_address?.province;
+                const prov = normalizeProvince(rawProv);
                 const city = String(o.shipping_address?.city || 'Desconhecida').trim();
 
-                if (provinces[prov]) {
+                if (prov && provinces[prov]) {
                   const p = provinces[prov];
                   p.orders += 1;
 
-                  const sessionId = currentEvents.find(e => e.event_name === 'Purchase' && e.metadata?.order_id === o.id)?.session_id;
-                  if (sessionId) p.sessions.add(sessionId);
+                  // Garantir que a sessão do pedido também conte como tráfego daquela província
+                  if (o.session_id) {
+                    p.sessions.add(o.session_id);
+                  }
 
                   if (isPaidOrder(o.status)) {
                     p.paidOrders += 1;
@@ -4322,8 +4336,11 @@ const Admin = () => {
               });
 
               return Object.entries(provinces).map(([code, p]) => {
-                const sessionCount = p.sessions.size || p.orders;
-                const conversion = sessionCount > 0 ? (p.paidOrders / sessionCount) * 100 : 0;
+                // Sessões detectadas via eventos de analytics
+                const trackedSessions = p.sessions.size;
+                // Denominador: o maior entre sessões rastreadas e pedidos pagos (evita conv > 100%)
+                const sessionCount = Math.max(trackedSessions, p.paidOrders) || p.orders || 1;
+                const conversion = p.paidOrders > 0 ? Math.min((p.paidOrders / sessionCount) * 100, 100) : 0;
                 const ticket = p.paidOrders > 0 ? p.revenue / p.paidOrders : 0;
 
                 return {
