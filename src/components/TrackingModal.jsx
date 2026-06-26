@@ -392,7 +392,7 @@ const TrackingModal = ({ isOpen, onClose, initialTrackingNumber = '' }) => {
   React.useEffect(() => {
     if (isOpen && initialTrackingNumber) {
       setTrackingNumber(initialTrackingNumber);
-      handleSearch(initialTrackingNumber);
+      handleSearch(initialTrackingNumber, false);
     } else if (isOpen && !initialTrackingNumber) {
       // Clear data if opening empty
       setTrackingData(null);
@@ -440,7 +440,7 @@ const TrackingModal = ({ isOpen, onClose, initialTrackingNumber = '' }) => {
     localStorage.setItem('recent_trackings_v2', JSON.stringify(updated));
   };
 
-  const handleSearch = async (manualNum = null) => {
+  const handleSearch = async (manualNum = null, forceRefresh = false) => {
     const num = manualNum || trackingNumber;
     if (!num) {
       toast.error("Digite um número de rastreio.");
@@ -451,7 +451,7 @@ const TrackingModal = ({ isOpen, onClose, initialTrackingNumber = '' }) => {
     
     try {
       const { data, error } = await supabase.functions.invoke('track-package', {
-        body: { trackingNumber: num }
+        body: { trackingNumber: num, forceRefresh }
       });
 
       if (error) throw error;
@@ -553,7 +553,7 @@ const TrackingModal = ({ isOpen, onClose, initialTrackingNumber = '' }) => {
 
         setTrackingNumber(mappedTracking);
         toast.success("Rastreio identificado!");
-        handleSearch(mappedTracking);
+        handleSearch(mappedTracking, true);
       } else {
         const fallbackMatch = cleanText.match(/[A-Z0-9]{10,20}/);
         if (fallbackMatch) {
@@ -650,7 +650,7 @@ const TrackingModal = ({ isOpen, onClose, initialTrackingNumber = '' }) => {
             </button>
 
             <button 
-              onClick={() => handleSearch()}
+              onClick={() => handleSearch(trackingNumber, true)}
               disabled={loading || ocrLoading}
               className="btn-primary"
               style={{ padding: '0 1.5rem', borderRadius: '8px', display: 'flex', alignItems: 'center', gap: '0.5rem' }}
@@ -666,7 +666,7 @@ const TrackingModal = ({ isOpen, onClose, initialTrackingNumber = '' }) => {
               {recentSearches.map((item, idx) => (
                 <div 
                   key={idx} 
-                  onClick={() => handleSearch(item.num)}
+                  onClick={() => handleSearch(item.num, true)}
                   style={{ 
                     background: 'rgba(255,255,255,0.05)', 
                     border: '1px solid rgba(255,255,255,0.1)', 

@@ -181,49 +181,144 @@ async function fetchChineseTracking(num: string) {
   return { trackingData, chineseHistory: history };
 }
 
-async function fetch17trackData(num: string, isUsps: boolean) {
+async function fetch17trackData(num: string, isUsps: boolean, destCountry: string, postalCode: string, dbCity?: string, forceRefresh?: boolean) {
   // @ts-ignore
   const apiKey = Deno.env.get('SEVENTEENTRACK_API_KEY');
-  if (!apiKey) return { events: [], rawAccepted: null };
+  if (!apiKey) return { events: [], rawAccepted: null, debugLogs: [], infoResults: [] };
   try {
     const cleanNum = num.trim();
     
     // Lista de carriers candidatos para obter o rastreamento mais preciso
-    const carriersToTry = isUsps ? [21051, 7047, 190012] : [2001, 7047, 190012];
+    const carriersToTry = isUsps 
+      ? [21051, 7047, 7048, 100765, 101266, 190899, 190094, 190012, 100036, 100247, 100016, 100028, undefined] 
+      : [3041, 7047, 7048, 100765, 101266, 190899, 190094, 190012, undefined];
     
-    const registerPayload = [{ number: cleanNum }];
-    carriersToTry.forEach(c => {
-      registerPayload.push({ number: cleanNum, carrier: c });
+    const cleanPostal = postalCode ? postalCode.trim().replace(/\s+/g, '') : '';
+    const paramVal = cleanPostal ? `${destCountry}-${cleanPostal}` : destCountry;
+
+    // Se forceRefresh for verdadeiro, deleta os registros existentes primeiro para garantir nova associação de parâmetros
+    if (forceRefresh) {
+      console.log("Deletando registros antigos no 17track para forçar nova consulta com parâmetros atualizados...");
+      const deletePayload = carriersToTry.map(c => ({
+        number: cleanNum,
+        ...(c ? { carrier: c } : {})
+      }));
+      try {
+        await fetch('https://api.17track.net/track/v2/deletetrack', {
+          method: 'POST',
+          headers: { '17token': apiKey, 'Content-Type': 'application/json' },
+          body: JSON.stringify(deletePayload)
+        });
+        // Pausa breve para o servidor processar a exclusão
+        await new Promise(r => setTimeout(r, 1500));
+      } catch (err) {
+        console.error("Erro ao deletar no 17track:", err);
+      }
+    }
+
+    // 1. Registra todas as transportadoras em uma única chamada
+    const registerPayload = carriersToTry.map(c => ({
+      number: cleanNum,
+      ...(c ? { carrier: c } : {}),
+      param: paramVal,
+      extra_param: cleanPostal || undefined,
+      destination_postal_code: cleanPostal || undefined,
+      destination_country: destCountry || undefined,
+      destination_city: dbCity || undefined
+    }));
+
+    try {
+      await fetch('https://api.17track.net/track/v2/register', {
+        method: 'POST',
+        headers: { '17token': apiKey, 'Content-Type': 'application/json' },
+        body: JSON.stringify(registerPayload)
+      });
+    } catch (err) {
+      console.error("Erro ao registrar no 17track:", err);
+    }
+
+    // 2. Força retrack em uma única chamada para forçar atualização
+    const retrackPayload = carriersToTry.map(c => ({
+      number: cleanNum,
+      ...(c ? { carrier: c } : {})
+    }));
+
+    try {
+      await fetch('https://api.17track.net/track/v2/retrack', {
+        method: 'POST',
+        headers: { '17token': apiKey, 'Content-Type': 'application/json' },
+        body: JSON.stringify(retrackPayload)
+      });
+    } catch (err) {
+      console.error("Erro ao solicitar re-rastreamento:", err);
+    }
+
+    // PAUSA TÉCNICA: Dá tempo para o servidor do 17track processar o registro e retrack
+    await new Promise(r => setTimeout(r, 4000));
+    
+    // 3. Busca informações de todas as transportadoras em uma única chamada
+    const infoPayload = carriersToTry.map(c => ({
+      number: cleanNum,
+      ...(c ? { carrier: c } : {}),
+      param: paramVal,
+      destination_postal_code: cleanPostal || undefined,
+      destination_country: destCountry || undefined,
+      destination_city: dbCity || undefined
+    }));
+
+    let infoResults: any[] = [];
+    let acceptedList: any[] = [];
+
+    // 1. Tenta obter os dados em tempo real (v2.4) com cacheLevel=Instant
+    try {
+      console.log("Chamando getRealTimeTrackInfo v2.4...");
+      const res = await fetch('https://api.17track.net/track/v2.4/getRealTimeTrackInfo?cacheLevel=Instant', {
+        method: 'POST',
+        headers: { '17token': apiKey, 'Content-Type': 'application/json' },
+        body: JSON.stringify(infoPayload)
+      });
+      const resData = await res.json();
+      if (resData && resData.code === 0 && resData.data && resData.data.accepted) {
+        infoResults.push(resData);
+        acceptedList.push(...(resData.data.accepted || []));
+        console.log(`getRealTimeTrackInfo v2.4 obtido com sucesso: ${resData.data.accepted.length} aceitos.`);
+      } else {
+        console.warn("getRealTimeTrackInfo v2.4 não retornou aceitos. Code:", resData?.code);
+      }
+    } catch (err) {
+      console.warn("Erro no getRealTimeTrackInfo v2.4:", err.message);
+    }
+
+    // 2. Tenta obter também os dados do gettrackinfo (v2) como complemento/fallback
+    try {
+      console.log("Chamando gettrackinfo v2...");
+      const resFallback = await fetch('https://api.17track.net/track/v2/gettrackinfo', {
+        method: 'POST',
+        headers: { '17token': apiKey, 'Content-Type': 'application/json' },
+        body: JSON.stringify(infoPayload)
+      });
+      const resDataFallback = await resFallback.json();
+      if (resDataFallback && resDataFallback.code === 0 && resDataFallback.data && resDataFallback.data.accepted) {
+        infoResults.push(resDataFallback);
+        acceptedList.push(...(resDataFallback.data.accepted || []));
+        console.log(`gettrackinfo v2 obtido com sucesso: ${resDataFallback.data.accepted.length} aceitos.`);
+      } else {
+        console.warn("gettrackinfo v2 não retornou aceitos. Code:", resDataFallback?.code);
+      }
+    } catch (fallbackErr) {
+      console.error("Erro no gettrackinfo v2:", fallbackErr);
+    }
+
+    const debugLogs: string[] = [];
+    acceptedList.forEach((accepted: any) => {
+      const providers = accepted.track_info?.tracking?.providers || [];
+      const providerNames = providers.map((p: any) => `${p.provider?.name} (${p.events?.length || 0})`);
+      debugLogs.push(`CARRIER ${accepted.carrier}: status=${accepted.track_info?.latest_status?.status}, providers=${JSON.stringify(providerNames)}`);
     });
 
-    await fetch('https://api.17track.net/track/v2/register', {
-      method: 'POST',
-      headers: { '17token': apiKey, 'Content-Type': 'application/json' },
-      body: JSON.stringify(registerPayload)
-    });
-
-    // PAUSA TÉCNICA: Dá tempo para o servidor do 17track processar o registro
-    await new Promise(r => setTimeout(r, 3000));
-    
-    const infoPayload = [{ number: cleanNum }];
-    carriersToTry.forEach(c => {
-      infoPayload.push({ number: cleanNum, carrier: c });
-    });
-
-    let res = await fetch('https://api.17track.net/track/v2/gettrackinfo', {
-      method: 'POST',
-      headers: { '17token': apiKey, 'Content-Type': 'application/json' },
-      body: JSON.stringify(infoPayload)
-    });
-    
-    let data: any = await res.json();
-    console.log(`DIAGNÓSTICO 17TRACK V2 - Resposta para ${cleanNum}:`, JSON.stringify(data));
-    
-    const acceptedList = data?.data?.accepted || [];
-    if (acceptedList.length === 0) return { events: [], rawAccepted: null };
+    if (acceptedList.length === 0) return { events: [], rawAccepted: null, debugLogs, infoResults };
 
     const events: any[] = [];
-    
     acceptedList.forEach((accepted: any) => {
       const providers = accepted.track_info?.tracking?.providers || [];
       providers.forEach((p: any) => {
@@ -238,7 +333,7 @@ async function fetch17trackData(num: string, isUsps: boolean) {
 
     if (events.length === 0) {
       console.log(`17TRACK SEM EVENTOS: Nenhuma correspondência nos provedores testados.`);
-      return { events: [], rawAccepted: acceptedList[0] };
+      return { events: [], rawAccepted: acceptedList[0], debugLogs, infoResults };
     }
 
     // Remover duplicados
@@ -251,10 +346,10 @@ async function fetch17trackData(num: string, isUsps: boolean) {
       
       // Limpeza robusta: Troca T por espaço e remove fuso horário (ex: -04:00 ou +02:00)
       displayDate = displayDate
-        .replace('T', ' ')
-        .replace(/[-+]\d{2}:?\d{2}$/, '') // Remove fuso no final
-        .split('.')[0] // Remove milissegundos se houver
-        .trim();
+          .replace('T', ' ')
+          .replace(/[-+]\d{2}:?\d{2}$/, '') // Remove fuso no final
+          .split('.')[0] // Remove milissegundos se houver
+          .trim();
 
       return { 
         rawDate: displayDate,
@@ -265,12 +360,15 @@ async function fetch17trackData(num: string, isUsps: boolean) {
       };
     }));
 
-    const bestAccepted = acceptedList.find(a => a.track_info?.tracking?.providers?.length > 0) || acceptedList[0];
+    // Seleciona o melhor accepted object que possua eventos de provedores ou o primeiro
+    const bestAccepted = acceptedList.find(a => 
+      a.track_info?.tracking?.providers?.some((p: any) => p.events && p.events.length > 0)
+    ) || acceptedList[0];
 
-    return { events: mappedEvents, rawAccepted: bestAccepted };
+    return { events: mappedEvents, rawAccepted: bestAccepted, debugLogs, infoResults };
   } catch (err) {
     console.error("Erro no fetch17trackData:", err);
-    return { events: [], rawAccepted: null };
+    return { events: [], rawAccepted: null, debugLogs: [], infoResults: [] };
   }
 }
 
@@ -281,18 +379,20 @@ Deno.serve(async (req: Request) => {
   console.log("FUNÇÃO INICIADA - Recebendo requisição...");
   
   try {
-    const { trackingNumber } = await req.json();
+    const { trackingNumber, forceRefresh } = await req.json();
     if (!trackingNumber) return new Response(JSON.stringify({ error: 'Número obrigatório' }), { headers: corsHeaders, status: 400 });
 
     const cleanNum = trackingNumber.trim();
     const isUsps = /^(9\d{21}|[A-Z]{2}\d{9}US)$/i.test(cleanNum);
-    console.log(`Buscando número: ${cleanNum}, isUsps: ${isUsps}`);
+    console.log(`Buscando número: ${cleanNum}, isUsps: ${isUsps}, forceRefresh: ${forceRefresh}`);
 
     // @ts-ignore
     const supabase = createClient(Deno.env.get('SUPABASE_URL') || '', Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') || '');
 
-    // Se o número tiver espaço no final, ignoramos o cache para teste
-    if (trackingNumber === cleanNum) {
+    // Ignora cache se forceRefresh for true ou se houver espaço no final
+    const bypassCache = forceRefresh || (trackingNumber !== cleanNum);
+
+    if (!bypassCache) {
       const { data: cached } = await supabase.from('tracking_cache').select('*').eq('tracking_number', cleanNum).maybeSingle();
       if (cached && (Date.now() - new Date(cached.last_updated).getTime()) < 14400000) {
         console.log("Retornando dados do CACHE.");
@@ -302,25 +402,59 @@ Deno.serve(async (req: Request) => {
         });
       }
     } else {
-      console.log("IGNORANDO CACHE (Modo Refresh ativado pelo espaço no final)");
+      console.log("IGNORANDO CACHE (Modo Refresh ativado)");
     }
 
+    // Tenta encontrar o pedido no banco de dados para obter detalhes de endereço ANTES da consulta à API
+    let dbCity = null;
+    let destCountry = isUsps ? 'US' : 'CA';
+    let postalCode = '';
+    let debugOrder = null;
+
+    try {
+      const { data: order } = await supabase
+        .from('orders')
+        .select('*')
+        .ilike('tracking_number', `%${cleanNum}%`)
+        .limit(1)
+        .maybeSingle();
+      if (order) {
+        debugOrder = order;
+        if (order.shipping_address && typeof order.shipping_address === 'object') {
+          dbCity = order.shipping_address.city || null;
+          
+          const rawCountry = (order.shipping_address.country || '').toUpperCase().trim();
+          if (rawCountry.includes('US') || rawCountry.includes('UNITED') || rawCountry.includes('ESTADOS') || rawCountry.includes('EUA')) {
+            destCountry = 'US';
+          } else {
+            destCountry = 'CA';
+          }
+          
+          postalCode = order.shipping_address.postalCode || order.shipping_address.postal_code || order.shipping_address.zip || '';
+        }
+      }
+    } catch (dbErr) {
+      console.error("Erro ao buscar dados do pedido no banco:", dbErr);
+    }
+
+    console.log(`Dados do pedido: destCountry=${destCountry}, postalCode=${postalCode}, dbCity=${dbCity}`);
     console.log("Iniciando buscas externas (China + 17Track)...");
     
-    // Controller para timeout de 15 segundos
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 15000);
+    // Timeout de 14 segundos garantido via Promise.race
+    const timeoutPromise = new Promise((_, reject) => 
+      setTimeout(() => reject(new Error("Timeout de busca externa")), 14000)
+    );
 
     const [cnRes, caRes] = await Promise.allSettled([
-      fetchChineseTracking(cleanNum), 
-      fetch17trackData(cleanNum, isUsps)
+      Promise.race([fetchChineseTracking(cleanNum), timeoutPromise]),
+      Promise.race([fetch17trackData(cleanNum, isUsps || destCountry === 'US', destCountry, postalCode, dbCity, bypassCache), timeoutPromise])
     ]);
-    
-    clearTimeout(timeoutId);
 
     const cn = cnRes.status === 'fulfilled' ? cnRes.value : { trackingData: null, chineseHistory: [] };
-    const caData = caRes.status === 'fulfilled' ? caRes.value : { events: [], rawAccepted: null };
+    const caData = caRes.status === 'fulfilled' ? caRes.value : { events: [], rawAccepted: null, debugLogs: [], infoResults: [] };
     const ca = caData.events || [];
+    const debugLogs = caData.debugLogs || [];
+    const infoResults = caData.infoResults || [];
     
     console.log(`Busca concluída. China: ${cn.chineseHistory.length} eventos, 17Track: ${ca.length} eventos.`);
 
@@ -368,24 +502,8 @@ Deno.serve(async (req: Request) => {
 
     const filteredHistory = allEvents.filter((_, idx) => !toRemove.has(idx));
 
-    // Tenta encontrar a cidade a partir do banco de dados (orders) usando a tracking number
-    let dbCity = null;
-    try {
-      const { data: order } = await supabase
-        .from('orders')
-        .select('shipping_address')
-        .ilike('tracking_number', `%${cleanNum}%`)
-        .limit(1)
-        .maybeSingle();
-      if (order && order.shipping_address && typeof order.shipping_address === 'object') {
-        dbCity = order.shipping_address.city || null;
-      }
-    } catch (dbErr) {
-      console.error("Erro ao buscar cidade do pedido no banco:", dbErr);
-    }
-
-    const country = cn.trackingData?.country?.toUpperCase() || (isUsps ? 'US' : 'CA');
-    const isActualUs = country === 'US' || country === 'USA' || country === 'EUA';
+    const country = cn.trackingData?.country?.toUpperCase() || (isUsps || destCountry === 'US' ? 'US' : 'CA');
+    const isActualUs = country === 'US' || country === 'USA' || country === 'EUA' || destCountry === 'US';
 
     if (cn.trackingData) {
       cn.trackingData.city = dbCity;
@@ -441,7 +559,10 @@ Deno.serve(async (req: Request) => {
       hasCanadaPostData: !isActualUs && (ca.length > 0 || processedHistory.some(h => h.carrier === 'CA')), 
       hasUspsData: isActualUs && (ca.length > 0 || processedHistory.some(h => h.carrier === 'US')), 
       cachedAt: new Date().toISOString(),
-      raw17Track: caData.rawAccepted
+      raw17Track: caData.rawAccepted,
+      debugLogs,
+      infoResults,
+      debugOrder
     };
 
     if (finalData.history.length > 0) {
