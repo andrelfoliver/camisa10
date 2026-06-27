@@ -240,7 +240,7 @@ const Home = () => {
       </section>
 
       {/* FAIXA DE DIFERENCIAIS / TRUST ELEMENT (Otimizado abaixo do Hero) */}
-      <div style={{ 
+      <div className="rebrand-trustbar" style={{ 
         background: '#F8F9FA', 
         borderBottom: '1px solid var(--rebrand-border)',
         padding: '1.2rem 2rem',
@@ -300,7 +300,7 @@ const Home = () => {
             SHOP BY LEAGUE
           </h2>
 
-          <div style={{ display: 'flex', gap: '2.5rem', justifyContent: 'center', flexWrap: 'wrap' }}>
+          <div className="rebrand-league-row" style={{ display: 'flex', gap: '2.5rem', justifyContent: 'center', flexWrap: 'wrap' }}>
             {leagueList.map((league) => (
               <div 
                 key={league.name}
