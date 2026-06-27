@@ -211,25 +211,24 @@ const Home = () => {
         <div className="rebrand-hero-overlay"></div>
 
         <div className="rebrand-hero-content">
-          <span style={{
-            background: 'var(--rebrand-volt)',
-            color: '#121416',
-            fontSize: '0.75rem',
-            fontWeight: 900,
-            textTransform: 'uppercase',
-            padding: '0.4rem 1rem',
-            borderRadius: '2px',
-            letterSpacing: '1px',
-            marginBottom: '1.5rem',
-            display: 'inline-block'
-          }}>
-            🍁 High Quality Stitched Jerseys
-          </span>
           <h1 className="rebrand-hero-title">
-            Canada's Sports <span>Jersey</span> Store
+            Wear Your <span>Team.</span>
           </h1>
+          <p style={{
+            fontFamily: 'var(--rebrand-font-display)',
+            fontSize: '1.5rem',
+            fontWeight: 700,
+            color: 'rgba(255,255,255,0.85)',
+            textTransform: 'uppercase',
+            letterSpacing: '0.5px',
+            marginBottom: '1.2rem',
+            lineHeight: 1.1
+          }}>
+            The Home of Sports Jerseys.
+          </p>
           <p className="rebrand-hero-subtitle">
-            Premium stitched jerseys from the world's biggest leagues. Fast shipping across Canada.
+            Premium stitched jerseys from the world's biggest leagues.<br />
+            Fast shipping across Canada.
           </p>
           <div className="rebrand-hero-buttons">
             <button onClick={() => navigate('/rebrand/colecao/soccer')} className="rebrand-btn rebrand-btn-primary" style={{ background: 'var(--rebrand-volt)', color: '#000', borderColor: 'var(--rebrand-volt)' }}>

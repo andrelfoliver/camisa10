@@ -396,16 +396,30 @@ Deno.serve(async (req: Request) => {
     // Ignora cache se forceRefresh for true ou se houver espaço no final
     const bypassCache = forceRefresh || (trackingNumber !== cleanNum);
 
-    if (!bypassCache) {
+    let cachedRecord = null;
+    let cachedTrackingData = null;
+    let cachedHistory: any[] = [];
+
+    try {
       const { data: cached } = await supabase.from('tracking_cache').select('*').eq('tracking_number', cleanNum).maybeSingle();
-      if (cached && (Date.now() - new Date(cached.last_updated).getTime()) < 14400000) {
+      if (cached) {
+        cachedRecord = cached;
+        cachedTrackingData = cached.status_data?.trackingData || null;
+        cachedHistory = cached.status_data?.history || [];
+      }
+    } catch (err) {
+      console.error("Erro ao buscar cache do banco:", err);
+    }
+
+    if (!bypassCache && cachedRecord) {
+      if ((Date.now() - new Date(cachedRecord.last_updated).getTime()) < 14400000) {
         console.log("Retornando dados do CACHE.");
-        return new Response(JSON.stringify(cached.status_data), { 
+        return new Response(JSON.stringify(cachedRecord.status_data), { 
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },
           status: 200
         });
       }
-    } else {
+    } else if (bypassCache) {
       console.log("IGNORANDO CACHE (Modo Refresh ativado)");
     }
 
@@ -462,7 +476,7 @@ Deno.serve(async (req: Request) => {
     
     console.log(`Busca concluída. China: ${cn.chineseHistory.length} eventos, 17Track: ${ca.length} eventos.`);
 
-    const allEvents = [...ca, ...cn.chineseHistory];
+    const allEvents = [...ca, ...cn.chineseHistory, ...cachedHistory];
     const toRemove = new Set();
 
     // Função auxiliar para normalização agressiva (remove acentos, pontuação, espaços e converte para minúsculo)
@@ -471,12 +485,34 @@ Deno.serve(async (req: Request) => {
       .replace(/[^a-z0-9]/g, '') // Mantém apenas letras e números
       .trim() : '';
 
-    // Deduplicação Inteligente com Normalização Agressiva
-    for (let i = 0; i < allEvents.length; i++) {
-      for (let j = 0; j < allEvents.length; j++) {
+    const normalizeDate = (d: string) => d ? d.replace(/[^0-9]/g, '') : '';
+
+    // 1. Deduplicação primária: mesma transportadora, mesma data/hora e mesmo status
+    const uniqueCombined: any[] = [];
+    const seenKeys = new Set();
+    for (const e of allEvents) {
+      if (!e) continue;
+      const dKey = normalizeDate(e.rawDate || e.date);
+      const sKey = normalize(e.status);
+      const key = `${e.carrier || ''}|${dKey}|${sKey}`;
+      if (!seenKeys.has(key)) {
+        seenKeys.add(key);
+        uniqueCombined.push(e);
+      } else {
+        // Se já vimos, mas a versão atual tem mais informações (como localização), atualiza
+        const idx = uniqueCombined.findIndex(x => `${x.carrier || ''}|${normalizeDate(x.rawDate || x.date)}|${normalize(x.status)}` === key);
+        if (idx !== -1 && !uniqueCombined[idx].location && e.location) {
+          uniqueCombined[idx] = e;
+        }
+      }
+    }
+
+    // 2. Deduplicação Inteligente com Normalização Agressiva entre transportadoras (CN vs CA ou CN vs US)
+    for (let i = 0; i < uniqueCombined.length; i++) {
+      for (let j = 0; j < uniqueCombined.length; j++) {
         if (i === j || toRemove.has(i) || toRemove.has(j)) continue;
-        const a = allEvents[i];
-        const b = allEvents[j];
+        const a = uniqueCombined[i];
+        const b = uniqueCombined[j];
 
         // Só comparamos se forem de transportadoras diferentes (CN vs CA ou CN vs US)
         if (a.carrier === b.carrier) continue;
@@ -504,37 +540,12 @@ Deno.serve(async (req: Request) => {
       }
     }
 
-    const filteredHistory = allEvents.filter((_, idx) => !toRemove.has(idx));
+    const filteredHistory = uniqueCombined.filter((_, idx) => !toRemove.has(idx));
 
-    const country = cn.trackingData?.country?.toUpperCase() || (isUsps || destCountry === 'US' ? 'US' : 'CA');
+    const country = cn.trackingData?.country?.toUpperCase() || cachedTrackingData?.country?.toUpperCase() || (isUsps || destCountry === 'US' ? 'US' : 'CA');
     const isActualUs = country === 'US' || country === 'USA' || country === 'EUA' || destCountry === 'US';
 
-    if (cn.trackingData) {
-      cn.trackingData.city = dbCity;
-    } else if (caData.rawAccepted) {
-      const info = caData.rawAccepted.track_info;
-      cn.trackingData = {
-        referenceNo: info?.reference_number || '',
-        trackingNumber: cleanNum,
-        country: isActualUs ? 'US' : 'CA',
-        date: filteredHistory[filteredHistory.length - 1]?.date || '',
-        lastRecord: filteredHistory[0]?.status || info?.latest_status?.status || '',
-        consigneeName: info?.recipient_info?.name || info?.consignee || '',
-        city: dbCity
-      };
-    } else if (dbCity) {
-      cn.trackingData = { 
-        referenceNo: '', 
-        trackingNumber: cleanNum, 
-        country: isActualUs ? 'US' : 'CA', 
-        date: '', 
-        lastRecord: '', 
-        consigneeName: '',
-        city: dbCity 
-      };
-    }
-
-    // Corrigir/atualizar o carrier para eventos locais
+    // 3. Corrigir/atualizar o carrier para eventos locais
     const processedHistory = filteredHistory.map(event => {
       if (event.carrier === 'CA' || event.carrier === 'US') {
         return {
@@ -553,15 +564,38 @@ Deno.serve(async (req: Request) => {
       return event;
     });
 
+    // 4. Ordenar decrescente (mais recente primeiro) de forma GARANTIDA
+    const sortedHistory = processedHistory.sort((a, b) => {
+      const dateA = new Date(a.rawDate.replace(' ', 'T')).getTime();
+      const dateB = new Date(b.rawDate.replace(' ', 'T')).getTime();
+      if (isNaN(dateA) && isNaN(dateB)) return 0;
+      if (isNaN(dateA)) return 1;
+      if (isNaN(dateB)) return -1;
+      return dateB - dateA;
+    });
+
+    // Obter o primeiro status e a data de envio original (do evento mais antigo)
+    const oldestEvent = sortedHistory[sortedHistory.length - 1];
+    const newestEvent = sortedHistory[0];
+    const computedDate = oldestEvent ? (oldestEvent.date || oldestEvent.rawDate) : '';
+    const computedLastRecord = newestEvent ? newestEvent.status : '';
+
+    // 5. Mesclar dados de cabeçalho para garantir que informações do cache não sejam perdidas
+    const mergedTrackingData = {
+      referenceNo: cn.trackingData?.referenceNo || cachedTrackingData?.referenceNo || caData.rawAccepted?.track_info?.reference_number || '',
+      trackingNumber: cleanNum,
+      country: isActualUs ? 'US' : 'CA',
+      date: computedDate || cn.trackingData?.date || cachedTrackingData?.date || '',
+      lastRecord: computedLastRecord || cn.trackingData?.lastRecord || cachedTrackingData?.lastRecord || caData.rawAccepted?.track_info?.latest_status?.status || '',
+      consigneeName: cn.trackingData?.consigneeName || cachedTrackingData?.consigneeName || caData.rawAccepted?.track_info?.recipient_info?.name || caData.rawAccepted?.track_info?.consignee || '',
+      city: dbCity || cn.trackingData?.city || cachedTrackingData?.city || null
+    };
+
     const finalData = { 
-      trackingData: cn.trackingData, 
-      history: processedHistory.sort((a, b) => {
-        const dateA = new Date(a.rawDate.replace(' ', 'T')).getTime();
-        const dateB = new Date(b.rawDate.replace(' ', 'T')).getTime();
-        return dateB - dateA;
-      }), 
-      hasCanadaPostData: !isActualUs && (ca.length > 0 || processedHistory.some(h => h.carrier === 'CA')), 
-      hasUspsData: isActualUs && (ca.length > 0 || processedHistory.some(h => h.carrier === 'US')), 
+      trackingData: mergedTrackingData, 
+      history: sortedHistory, 
+      hasCanadaPostData: !isActualUs && (ca.length > 0 || sortedHistory.some(h => h.carrier === 'CA')), 
+      hasUspsData: isActualUs && (ca.length > 0 || sortedHistory.some(h => h.carrier === 'US')), 
       cachedAt: new Date().toISOString(),
       raw17Track: caData.rawAccepted,
       debugLogs,

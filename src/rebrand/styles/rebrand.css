@@ -167,7 +167,9 @@
 .rebrand-hero-overlay {
   position: absolute;
   top: 0; left: 0; right: 0; bottom: 0;
-  background: linear-gradient(90deg, rgba(11,12,14,0.95) 0%, rgba(11,12,14,0.7) 45%, rgba(11,12,14,0.2) 100%);
+  background:
+    linear-gradient(to top, rgba(11,12,14,0.98) 0%, rgba(11,12,14,0.7) 40%, rgba(11,12,14,0.15) 100%),
+    linear-gradient(to right, rgba(11,12,14,0.8) 0%, rgba(11,12,14,0.2) 60%, transparent 100%);
   z-index: 2;
 }
 
@@ -183,36 +185,47 @@
   position: relative;
   z-index: 3;
   text-align: left;
-  max-width: 600px;
-  padding: 2rem 0;
+  max-width: 580px;
   color: #FFFFFF;
 }
 
 .rebrand-hero-title {
   font-family: var(--rebrand-font-display);
-  font-size: 6rem;
+  font-size: 6.5rem;
   font-weight: 900;
-  line-height: 0.88;
-  margin-bottom: 1.4rem;
+  line-height: 0.85;
+  margin: 0 0 1rem 0;
   color: #FFFFFF;
   text-transform: uppercase;
-  letter-spacing: -1px;
+  letter-spacing: -2px;
 }
 
 .rebrand-hero-title span {
   color: var(--rebrand-volt);
   font-style: italic;
+  display: block;
+}
+
+.rebrand-hero-subline {
+  font-family: var(--rebrand-font-display);
+  font-size: 1.35rem;
+  font-weight: 700;
+  color: rgba(255,255,255,0.7);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  margin-bottom: 1.2rem;
+  line-height: 1;
 }
 
 .rebrand-hero-subtitle {
   font-family: var(--rebrand-font-main);
-  font-size: 1rem;
+  font-size: 0.95rem;
   font-weight: 400;
-  color: rgba(255,255,255,0.75);
-  margin-bottom: 2.5rem;
+  color: rgba(255,255,255,0.6);
+  margin-bottom: 2rem;
   letter-spacing: 0;
-  line-height: 1.6;
-  max-width: 420px;
+  line-height: 1.65;
+  max-width: 400px;
 }
 
 .rebrand-hero-buttons {
@@ -744,8 +757,8 @@
     min-height: 65vh;
     padding-left: 1.25rem;
     padding-right: 1.25rem;
-    align-items: flex-end;
-    padding-bottom: 2.5rem;
+    align-items: center;
+    padding-bottom: 0;
   }
   .rebrand-hero-content { max-width: 100%; padding: 0; }
   .rebrand-hero-title { font-size: 3rem; letter-spacing: -0.5px; }
