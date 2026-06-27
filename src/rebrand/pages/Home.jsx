@@ -211,54 +211,37 @@ const Home = () => {
         <div className="rebrand-hero-overlay"></div>
 
         <div className="rebrand-hero-content">
-          <h1 className="rebrand-hero-title">
-            Wear Your <span>Team.</span>
-          </h1>
-          <p style={{
-            fontFamily: 'var(--rebrand-font-display)',
-            fontSize: '1.5rem',
-            fontWeight: 700,
-            color: 'rgba(255,255,255,0.85)',
-            textTransform: 'uppercase',
-            letterSpacing: '0.5px',
-            marginBottom: '1.2rem',
-            lineHeight: 1.1
-          }}>
-            The Home of Sports Jerseys.
-          </p>
-          <p className="rebrand-hero-subtitle">
-            Premium stitched jerseys from the world's biggest leagues.<br />
-            Fast shipping across Canada.
-          </p>
-          <div className="rebrand-hero-buttons">
-            <button onClick={() => navigate('/rebrand/colecao/soccer')} className="rebrand-btn rebrand-btn-primary" style={{ background: 'var(--rebrand-volt)', color: '#000', borderColor: 'var(--rebrand-volt)' }}>
-              Shop Jerseys
-            </button>
+          <div className="rebrand-hero-top-group">
+            <h1 className="rebrand-hero-title">
+              Wear Your <span>Team.</span>
+            </h1>
+            <p className="rebrand-hero-subline">
+              The Home of Sports Jerseys.
+            </p>
+          </div>
+
+          <div className="rebrand-hero-bottom-group">
+            <div className="rebrand-hero-buttons">
+              <button onClick={() => navigate('/rebrand/colecao/soccer')} className="rebrand-btn rebrand-btn-primary" style={{ background: 'var(--rebrand-volt)', color: '#000', borderColor: 'var(--rebrand-volt)' }}>
+                Shop Jerseys
+              </button>
+            </div>
           </div>
         </div>
       </section>
 
       {/* FAIXA DE DIFERENCIAIS / TRUST ELEMENT (Otimizado abaixo do Hero) */}
-      <div className="rebrand-trustbar" style={{ 
-        background: '#F8F9FA', 
-        borderBottom: '1px solid var(--rebrand-border)',
-        padding: '1.2rem 2rem',
-        display: 'flex',
-        justifyContent: 'center',
-        gap: '4.5rem',
-        flexWrap: 'wrap',
-        boxShadow: 'inset 0 1px 3px rgba(0,0,0,0.02)'
-      }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', fontSize: '0.85rem', fontWeight: 800, color: 'var(--rebrand-text-main)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+      <div className="rebrand-trustbar">
+        <div className="rebrand-trustbar-item">
           <Check size={16} color="#2b8a3e" style={{ strokeWidth: 3 }} /> Premium Stitched Jerseys
         </div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', fontSize: '0.85rem', fontWeight: 800, color: 'var(--rebrand-text-main)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+        <div className="rebrand-trustbar-item">
           <Truck size={18} color="#2b8a3e" /> Fast Shipping Across Canada
         </div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', fontSize: '0.85rem', fontWeight: 800, color: 'var(--rebrand-text-main)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+        <div className="rebrand-trustbar-item">
           <Star size={16} fill="#FFB100" color="#FFB100" /> Trusted by Sports Fans
         </div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', fontSize: '0.85rem', fontWeight: 800, color: 'var(--rebrand-text-main)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+        <div className="rebrand-trustbar-item">
           <span style={{ fontSize: '1.1rem' }}>🍁</span> Proudly Canadian Owned
         </div>
       </div>

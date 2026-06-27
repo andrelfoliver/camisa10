@@ -4,7 +4,7 @@
 :root {
   --rebrand-font-logo: 'Outfit', sans-serif;   /* Exclusivo para a logo — NÃO alterar */
   --rebrand-font-main: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-  --rebrand-font-display: 'Barlow Condensed', 'Arial Narrow', Impact, sans-serif;
+  --rebrand-font-display: 'Outfit', sans-serif;
   
   /* Cores de Identidade Visual */
   --rebrand-volt: #CCFF00; /* Neon Volt Original */
@@ -63,7 +63,7 @@
   font-family: var(--rebrand-font-logo);
   font-weight: 900;
   font-style: italic;
-  font-size: 2.3rem;
+  font-size: 2.55rem;
   letter-spacing: -1px;
   line-height: 1;
   display: inline-flex;
@@ -77,13 +77,13 @@
 
 .rebrand-logo-text .logo-i {
   color: var(--rebrand-volt);
-  font-size: 2.3rem;
+  font-size: inherit;
   margin-right: 0;
 }
 
 .rebrand-logo-text .logo-dot {
   color: var(--rebrand-volt);
-  font-size: 2.3rem;
+  font-size: inherit;
   margin-left: -1px;
 }
 
@@ -153,8 +153,8 @@
 /* Hero Section */
 .rebrand-hero {
   position: relative;
-  height: 68vh;
-  min-height: 420px;
+  height: 58vh;
+  min-height: 380px;
   background: #0B0C0E url('/assets/rebrand/locker_room_hero.jpg') no-repeat center center;
   background-size: cover;
   overflow: hidden;
@@ -168,8 +168,8 @@
   position: absolute;
   top: 0; left: 0; right: 0; bottom: 0;
   background:
-    linear-gradient(to top, rgba(11,12,14,0.98) 0%, rgba(11,12,14,0.7) 40%, rgba(11,12,14,0.15) 100%),
-    linear-gradient(to right, rgba(11,12,14,0.8) 0%, rgba(11,12,14,0.2) 60%, transparent 100%);
+    linear-gradient(to top, rgba(11,12,14,0.93) 0%, rgba(11,12,14,0.65) 40%, rgba(11,12,14,0.10) 100%),
+    linear-gradient(to right, rgba(11,12,14,0.75) 0%, rgba(11,12,14,0.15) 60%, transparent 100%);
   z-index: 2;
 }
 
@@ -191,9 +191,9 @@
 
 .rebrand-hero-title {
   font-family: var(--rebrand-font-display);
-  font-size: 6.5rem;
+  font-size: clamp(3.2rem, 6.5vw, 5rem);
   font-weight: 900;
-  line-height: 0.85;
+  line-height: 0.95;
   margin: 0 0 1rem 0;
   color: #FFFFFF;
   text-transform: uppercase;
@@ -228,6 +228,10 @@
   max-width: 400px;
 }
 
+.rebrand-hero-bottom-group {
+  margin-top: 1.8rem;
+}
+
 .rebrand-hero-buttons {
   display: flex;
   gap: 1.2rem;
@@ -235,10 +239,10 @@
 }
 
 .rebrand-btn {
-  padding: 0.85rem 2.4rem;
+  padding: 0.95rem 2.65rem;
   font-family: var(--rebrand-font-display);
   font-weight: 800;
-  font-size: 1rem;
+  font-size: 1.1rem;
   text-transform: uppercase;
   border-radius: 3px;
   cursor: pointer;
@@ -248,6 +252,28 @@
   align-items: center;
   justify-content: center;
   text-decoration: none;
+}
+
+.rebrand-trustbar {
+  background: #F8F9FA;
+  border-bottom: 1px solid var(--rebrand-border);
+  padding: 1.2rem 2rem;
+  display: flex;
+  justify-content: center;
+  gap: 4.5rem;
+  flex-wrap: wrap;
+  box-shadow: inset 0 1px 3px rgba(0,0,0,0.02);
+}
+
+.rebrand-trustbar-item {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  font-size: 0.85rem;
+  font-weight: 800;
+  color: var(--rebrand-text-main);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
 }
 
 .rebrand-btn-primary {
@@ -373,11 +399,11 @@
 
 .rebrand-sport-name {
   font-family: var(--rebrand-font-display);
-  font-size: 2.6rem;
+  font-size: 1.65rem;
   font-weight: 900;
   letter-spacing: -0.5px;
   margin: 0 0 1rem 0;
-  line-height: 0.88;
+  line-height: 1.0;
 }
 
 .rebrand-sport-btn {
@@ -751,31 +777,86 @@
   /* Hide logo underline on mobile (cleaner centered look) */
   .rebrand-logo-underline { display: none; }
 
-  /* Hero */
+  /* Hero split layout on mobile */
   .rebrand-hero {
-    height: auto;
-    min-height: 65vh;
-    padding-left: 1.25rem;
-    padding-right: 1.25rem;
-    align-items: center;
-    padding-bottom: 0;
+    height: 42vh !important;
+    min-height: 310px;
+    padding: 1.5rem 1.5rem 4.5rem 1.5rem !important;
+    display: flex;
+    align-items: stretch !important;
+    background-position: 70% center !important;
   }
-  .rebrand-hero-content { max-width: 100%; padding: 0; }
-  .rebrand-hero-title { font-size: 3rem; letter-spacing: -0.5px; }
-  .rebrand-hero-subtitle { font-size: 0.88rem; margin-bottom: 1.5rem; }
+  .rebrand-hero-overlay {
+    background: 
+      linear-gradient(to bottom, rgba(11,12,14,0.92) 0%, rgba(11,12,14,0.5) 35%, transparent 60%),
+      linear-gradient(to top, rgba(11,12,14,0.95) 0%, rgba(11,12,14,0.7) 40%, transparent 60%) !important;
+  }
+  .rebrand-hero-content {
+    max-width: 100%;
+    padding: 0;
+    display: flex !important;
+    flex-direction: column !important;
+    justify-content: space-between !important;
+    align-self: stretch !important;
+    flex-grow: 1 !important;
+    height: 100% !important;
+  }
+  .rebrand-hero-top-group {
+    text-align: left;
+    margin-top: 0.5rem;
+  }
+  .rebrand-hero-bottom-group {
+    text-align: left;
+    margin-top: 0 !important;
+  }
+  .rebrand-hero-title {
+    font-size: 2.8rem;
+    letter-spacing: -1.5px;
+    margin-bottom: 0.3rem;
+    line-height: 0.95;
+  }
+  .rebrand-hero-subline {
+    font-size: 1.05rem;
+    margin-bottom: 0;
+    line-height: 1.1;
+    color: rgba(255,255,255,0.75);
+    letter-spacing: 0.5px;
+  }
+  .rebrand-hero-subtitle {
+    font-size: 0.85rem;
+    margin-bottom: 1.2rem;
+    line-height: 1.35;
+    color: rgba(255,255,255,0.65);
+    max-width: 90%;
+  }
+  .rebrand-hero-buttons .rebrand-btn {
+    padding: 0.8rem 2rem;
+    font-size: 0.9rem;
+    width: 100%;
+    max-width: 260px;
+  }
 
-  /* Trust bar: compact 2×2 grid */
+  /* Trust bar: horizontal carousel/scrollable on mobile */
   .rebrand-trustbar {
-    display: grid !important;
-    grid-template-columns: 1fr 1fr;
-    gap: 0.6rem !important;
-    padding: 0.75rem 1rem !important;
-    justify-items: start;
+    display: flex !important;
+    flex-wrap: nowrap !important;
+    overflow-x: auto !important;
+    scroll-snap-type: x mandatory !important;
+    gap: 2.2rem !important;
+    padding: 1rem 1.5rem !important;
+    justify-content: flex-start !important;
+    -webkit-overflow-scrolling: touch;
+    box-shadow: inset 0 1px 3px rgba(0,0,0,0.02);
   }
-  .rebrand-trustbar > div {
-    font-size: 0.72rem !important;
-    gap: 0.4rem !important;
-    letter-spacing: 0 !important;
+  .rebrand-trustbar::-webkit-scrollbar {
+    display: none;
+  }
+  .rebrand-trustbar-item {
+    flex-shrink: 0 !important;
+    scroll-snap-align: center !important;
+    font-size: 0.8rem !important;
+    gap: 0.5rem !important;
+    white-space: nowrap !important;
   }
 
   /* Sport grid */
