@@ -229,7 +229,7 @@
 }
 
 .rebrand-hero-bottom-group {
-  margin-top: 1.8rem;
+  margin-top: 5.5rem;
 }
 
 .rebrand-hero-buttons {
@@ -717,6 +717,224 @@
   padding: 0 1.5rem 2rem;
 }
 
+/* Season Spotlight Section */
+.rebrand-spotlight-section {
+  background: var(--rebrand-surface);
+  padding: 6rem 2rem;
+  border-top: 1px solid var(--rebrand-border);
+  border-bottom: 1px solid var(--rebrand-border);
+  position: relative;
+  overflow: hidden;
+}
+
+.rebrand-spotlight-carousel-wrapper {
+  position: relative;
+  height: 480px;
+}
+
+.rebrand-spotlight-slide {
+  display: grid;
+  grid-template-columns: 1.2fr 1fr;
+  gap: 4rem;
+  align-items: center;
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 0;
+  transform: translateX(30px);
+  transition: opacity 0.5s ease-in-out, transform 0.5s ease-in-out;
+  pointer-events: none;
+  visibility: hidden;
+  z-index: 1;
+}
+
+.rebrand-spotlight-slide.active {
+  opacity: 1;
+  transform: translateX(0);
+  pointer-events: auto;
+  visibility: visible;
+  z-index: 2;
+}
+
+.rebrand-spotlight-info {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+}
+
+.rebrand-spotlight-badge-container {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: rgba(0,0,0,0.05);
+  padding: 0.4rem 1rem;
+  border-radius: 4px;
+  margin-bottom: 1.5rem;
+}
+
+.rebrand-spotlight-badge {
+  font-size: 0.75rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
+  color: #121416;
+}
+
+.rebrand-spotlight-title {
+  font-family: var(--rebrand-font-display);
+  font-size: clamp(3rem, 5.5vw, 5.5rem);
+  font-weight: 900;
+  line-height: 0.85;
+  letter-spacing: -1.5px;
+  margin: 0 0 1.5rem 0;
+  color: #121416;
+  text-transform: uppercase;
+}
+
+.rebrand-spotlight-price-container {
+  margin-bottom: 2.5rem;
+}
+
+.rebrand-spotlight-price-label {
+  font-size: 1.1rem;
+  color: var(--rebrand-text-muted);
+  display: block;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  margin-bottom: 0.3rem;
+}
+
+.rebrand-spotlight-price {
+  font-family: var(--rebrand-font-display);
+  font-size: 3.5rem;
+  font-weight: 800;
+  letter-spacing: -1px;
+  color: #121416;
+  display: block;
+}
+
+.spotlight-btn {
+  background: #121416 !important;
+  color: #fff !important;
+  border-color: #121416 !important;
+  padding: 1rem 2.5rem;
+  font-weight: 800;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+}
+
+.spotlight-btn:hover {
+  background: #23272b !important;
+  border-color: #23272b !important;
+}
+
+.rebrand-spotlight-image-container {
+  position: relative;
+  height: 480px;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: var(--rebrand-shadow-lg);
+}
+
+.rebrand-spotlight-image {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-size: cover;
+  background-position: center;
+}
+
+.rebrand-spotlight-dots {
+  display: flex;
+  gap: 0.8rem;
+  justify-content: center;
+  margin-top: 2.5rem;
+}
+
+.rebrand-spotlight-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 5px;
+  background: rgba(0,0,0,0.15);
+  border: none;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.rebrand-spotlight-dot.active {
+  width: 32px;
+  background: var(--rebrand-text-main);
+}
+
+/* Filter Tabs */
+.rebrand-filter-tabs {
+  display: flex;
+  gap: 1rem;
+  justify-content: center;
+  margin-bottom: 4rem;
+}
+
+.rebrand-filter-btn {
+  padding: 0.6rem 1.8rem;
+  border-radius: 4px;
+  border: none;
+  font-weight: 800;
+  text-transform: uppercase;
+  font-size: 0.8rem;
+  cursor: pointer;
+  background: transparent;
+  color: var(--rebrand-text-muted);
+  border-bottom: 2px solid transparent;
+  transition: all 0.2s;
+  letter-spacing: 0.5px;
+}
+
+.rebrand-filter-btn.active {
+  background: #121416;
+  color: #ffffff;
+  border-bottom: none;
+}
+
+/* Trending Teams Section */
+.rebrand-teams-section {
+  border-top: 1px solid var(--rebrand-border);
+  border-bottom: 1px solid var(--rebrand-border);
+  padding: 4rem 0;
+  background: var(--rebrand-surface);
+}
+
+.rebrand-teams-title {
+  font-size: 1.5rem;
+  margin-bottom: 2.5rem;
+  color: var(--rebrand-text-main);
+  font-family: var(--rebrand-font-display);
+}
+
+.rebrand-teams-grid {
+  display: flex;
+  gap: 2rem;
+  justify-content: center;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+.rebrand-team-card {
+  background: #ffffff;
+  padding: 1rem 2rem;
+  border-radius: 6px;
+  border: 1px solid var(--rebrand-border);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+  transition: all 0.2s;
+  min-width: 190px;
+}
+
 /* ============================================================
    TABLET BREAKPOINT — ≤ 1024px
    ============================================================ */
@@ -1097,6 +1315,103 @@
   }
   .rebrand-hero-mosaic {
     grid-template-columns: repeat(2, 1fr);
+  }
+
+  /* Season Spotlight mobile layout styling */
+  .rebrand-spotlight-section {
+    padding: 3rem 1.5rem !important;
+  }
+  .rebrand-spotlight-carousel-wrapper {
+    height: auto !important;
+    display: flex;
+    flex-direction: column;
+  }
+  .rebrand-spotlight-slide {
+    display: none !important;
+    grid-template-columns: 1fr !important;
+    gap: 2rem !important;
+    position: relative !important;
+    width: 100% !important;
+    height: auto !important;
+    opacity: 0;
+    transform: none !important;
+    transition: none !important;
+    visibility: hidden !important;
+  }
+  .rebrand-spotlight-slide.active {
+    display: flex !important;
+    flex-direction: column !important;
+    opacity: 1 !important;
+    visibility: visible !important;
+  }
+  .rebrand-spotlight-info {
+    text-align: center !important;
+    align-items: center !important;
+    margin-bottom: 2rem !important;
+  }
+  .rebrand-spotlight-badge-container {
+    margin-bottom: 1rem !important;
+  }
+  .rebrand-spotlight-title {
+    font-size: 2.3rem !important;
+    letter-spacing: -1px !important;
+    margin-bottom: 1rem !important;
+    line-height: 0.95 !important;
+  }
+  .rebrand-spotlight-price-container {
+    margin-bottom: 1.5rem !important;
+  }
+  .rebrand-spotlight-price-label {
+    font-size: 0.9rem !important;
+  }
+  .rebrand-spotlight-price {
+    font-size: 2.4rem !important;
+  }
+  .spotlight-btn {
+    width: 100% !important;
+    max-width: 280px !important;
+  }
+  .rebrand-spotlight-image-container {
+    height: 280px !important;
+    width: 100% !important;
+    margin-top: 1rem !important;
+  }
+
+  /* Filter tabs horizontal scroll carousel on mobile */
+  .rebrand-filter-tabs {
+    display: flex !important;
+    flex-wrap: nowrap !important;
+    overflow-x: auto !important;
+    scroll-snap-type: x mandatory !important;
+    gap: 0.8rem !important;
+    padding: 0.5rem 1.5rem !important;
+    justify-content: flex-start !important;
+    margin-bottom: 2.5rem !important;
+    -webkit-overflow-scrolling: touch;
+  }
+  .rebrand-filter-tabs::-webkit-scrollbar {
+    display: none;
+  }
+  .rebrand-filter-btn {
+    flex-shrink: 0 !important;
+    scroll-snap-align: center !important;
+    padding: 0.5rem 1.2rem !important;
+    font-size: 0.75rem !important;
+    white-space: nowrap !important;
+  }
+
+  /* Trending Teams 2-column grid layout on mobile */
+  .rebrand-teams-grid {
+    display: grid !important;
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 0.8rem !important;
+    padding: 0 1.5rem !important;
+  }
+  .rebrand-team-card {
+    min-width: 0 !important;
+    padding: 0.75rem 1rem !important;
+    gap: 0.6rem !important;
+    justify-content: flex-start !important;
   }
 }
 

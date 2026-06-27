@@ -88,7 +88,7 @@ const Footer = () => {
         </p>
         <div style={{ display: 'flex', gap: '1rem' }}>
           <img src="https://upload.wikimedia.org/wikipedia/commons/b/b5/PayPal.svg" alt="PayPal" style={{ height: '20px', opacity: 0.7 }} />
-          <img src="https://upload.wikimedia.org/wikipedia/commons/4/4f/Interac_association_logo.svg" alt="Interac" style={{ height: '20px', opacity: 0.7 }} />
+          <img src="https://upload.wikimedia.org/wikipedia/commons/3/31/InteracLogo.svg" alt="Interac" style={{ height: '20px', opacity: 0.7 }} />
         </div>
       </div>
     </footer>

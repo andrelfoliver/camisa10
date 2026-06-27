@@ -307,71 +307,50 @@ const Home = () => {
       </section>
 
       {/* 4. SEASON SPOTLIGHT (CMS DINÂMICO DE CAMPANHAS SAZONAIS) */}
-      <section style={{ background: 'var(--rebrand-surface)', padding: '6rem 2rem', borderTop: '1px solid var(--rebrand-border)', borderBottom: '1px solid var(--rebrand-border)', position: 'relative', overflow: 'hidden' }}>
+      <section className="rebrand-spotlight-section">
         <div className="container" style={{ maxWidth: '1200px', margin: '0 auto' }}>
           
-          <div style={{ position: 'relative', height: '480px' }}>
+          <div className="rebrand-spotlight-carousel-wrapper">
             {carouselSlides.map((slide, index) => (
               <div
                 key={slide.sport}
-                style={{
-                  display: 'grid',
-                  gridTemplateColumns: '1.2fr 1fr',
-                  gap: '4rem',
-                  alignItems: 'center',
-                  position: 'absolute',
-                  top: 0, left: 0, width: '100%', height: '100%',
-                  opacity: activeSlide === index ? 1 : 0,
-                  transform: activeSlide === index ? 'translateX(0)' : 'translateX(30px)',
-                  transition: 'opacity 0.8s ease-in-out, transform 0.8s ease-in-out',
-                  pointerEvents: activeSlide === index ? 'auto' : 'none',
-                  zIndex: activeSlide === index ? 2 : 1
-                }}
+                className={`rebrand-spotlight-slide ${activeSlide === index ? 'active' : ''}`}
               >
-                <div>
-                  <div style={{ display: 'inline-flex', alignItems: 'center', gap: '0.5rem', background: 'rgba(0,0,0,0.05)', padding: '0.4rem 1rem', borderRadius: '4px', marginBottom: '1.5rem' }}>
-                    <span style={{ fontSize: '0.75rem', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '1.5px', color: '#121416' }}>{slide.badge}</span>
+                <div className="rebrand-spotlight-info">
+                  <div className="rebrand-spotlight-badge-container">
+                    <span className="rebrand-spotlight-badge">{slide.badge}</span>
                   </div>
-                  <h2 style={{ fontFamily: 'var(--rebrand-font-display)', fontSize: '5.5rem', fontWeight: 900, lineHeight: '0.85', letterSpacing: '-1px', margin: '0 0 1.5rem 0', color: '#121416', textTransform: 'uppercase' }}>
+                  <h2 className="rebrand-spotlight-title">
                     {slide.title}
                   </h2>
-                  <div style={{ marginBottom: '2.5rem' }}>
-                    <span style={{ fontSize: '1.1rem', color: 'var(--rebrand-text-muted)', display: 'block', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '0.3rem' }}>Starting at</span>
-                    <span style={{ fontFamily: 'var(--rebrand-font-display)', fontSize: '3.5rem', fontWeight: 800, letterSpacing: '-1px', color: '#121416', display: 'block' }}>{slide.price}</span>
+                  <div className="rebrand-spotlight-price-container">
+                    <span className="rebrand-spotlight-price-label">Starting at</span>
+                    <span className="rebrand-spotlight-price">{slide.price}</span>
                   </div>
-                  <Link to={slide.link} className="rebrand-btn rebrand-btn-primary" style={{ background: '#121416', color: '#fff', borderColor: '#121416', padding: '1rem 2.5rem', fontWeight: 800, letterSpacing: '1px', textTransform: 'uppercase' }}>
-                    {slide.btnText}
-                  </Link>
+                  <div className="rebrand-spotlight-btn-container">
+                    <Link to={slide.link} className="rebrand-btn rebrand-btn-primary spotlight-btn">
+                      {slide.btnText}
+                    </Link>
+                  </div>
                 </div>
 
-                <div style={{ position: 'relative', height: '480px', borderRadius: '12px', overflow: 'hidden', boxShadow: 'var(--rebrand-shadow-lg)' }}>
-                  <div style={{
-                    position: 'absolute',
-                    top: 0, left: 0, width: '100%', height: '100%',
-                    backgroundImage: `url('${slide.img}')`,
-                    backgroundSize: 'cover',
-                    backgroundPosition: 'center'
-                  }}></div>
+                <div className="rebrand-spotlight-image-container">
+                  <div 
+                    className="rebrand-spotlight-image"
+                    style={{ backgroundImage: `url('${slide.img}')` }}
+                  ></div>
                 </div>
               </div>
             ))}
           </div>
 
           {/* Carousel Dot Indicators */}
-          <div style={{ display: 'flex', gap: '0.8rem', justifyContent: 'center', marginTop: '2.5rem' }}>
+          <div className="rebrand-spotlight-dots">
             {carouselSlides.map((_, index) => (
               <button
                 key={index}
                 onClick={() => setActiveSlide(index)}
-                style={{
-                  width: activeSlide === index ? '32px' : '10px',
-                  height: '10px',
-                  borderRadius: '5px',
-                  background: activeSlide === index ? 'var(--rebrand-text-main)' : 'rgba(0,0,0,0.15)',
-                  border: 'none',
-                  cursor: 'pointer',
-                  transition: 'all 0.3s ease'
-                }}
+                className={`rebrand-spotlight-dot ${activeSlide === index ? 'active' : ''}`}
                 aria-label={`Go to slide ${index + 1}`}
               />
             ))}
@@ -462,25 +441,12 @@ const Home = () => {
         </div>
 
         {/* Tab Filters */}
-        <div style={{ display: 'flex', gap: '1rem', justifyContent: 'center', marginBottom: '4rem' }}>
+        <div className="rebrand-filter-tabs">
           {['all', 'Soccer', 'Basketball', 'Football', 'Baseball', 'Hockey'].map(tab => (
             <button
               key={tab}
               onClick={() => setActiveTab(tab)}
-              style={{
-                padding: '0.6rem 1.8rem',
-                borderRadius: '4px',
-                border: 'none',
-                fontWeight: 800,
-                textTransform: 'uppercase',
-                fontSize: '0.8rem',
-                cursor: 'pointer',
-                background: activeTab === tab ? '#121416' : 'transparent',
-                color: activeTab === tab ? '#ffffff' : 'var(--rebrand-text-muted)',
-                borderBottom: activeTab === tab ? 'none' : '2px solid transparent',
-                transition: 'all 0.2s',
-                letterSpacing: '0.5px'
-              }}
+              className={`rebrand-filter-btn ${activeTab === tab ? 'active' : ''}`}
             >
               {tab === 'all' ? 'Show All' : tab}
             </button>
@@ -575,32 +541,21 @@ const Home = () => {
       </section>
 
       {/* 6. TRENDING TEAMS CAROUSEL */}
-      <section style={{ borderTop: '1px solid var(--rebrand-border)', borderBottom: '1px solid var(--rebrand-border)', padding: '4rem 0', background: 'var(--rebrand-surface)' }}>
+      <section className="rebrand-teams-section">
         <div className="container" style={{ maxWidth: '1400px', margin: '0 auto', textAlign: 'center' }}>
-          <h3 style={{ fontSize: '1.5rem', marginBottom: '2.5rem', color: 'var(--rebrand-text-main)', fontFamily: 'var(--rebrand-font-display)' }}>
+          <h3 className="rebrand-teams-title">
             TRENDING TEAMS IN CANADA
           </h3>
-          <div style={{ display: 'flex', gap: '2rem', justifyContent: 'center', flexWrap: 'wrap', alignItems: 'center' }}>
+          <div className="rebrand-teams-grid">
             {trendingTeams.map((team, idx) => (
               <div 
                 key={idx} 
                 onClick={() => navigate(`/busca?q=${encodeURIComponent(team.name)}`)}
-                style={{ 
-                  background: '#ffffff', 
-                  padding: '1rem 2rem', 
-                  borderRadius: '6px', 
-                  border: '1px solid var(--rebrand-border)',
-                  cursor: 'pointer',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '0.8rem',
-                  transition: 'all 0.2s'
-                }}
-                className="interactive-card"
+                className="rebrand-team-card interactive-card"
               >
                 <span style={{ fontSize: '1.2rem' }}>{team.logo}</span>
                 <div style={{ textAlign: 'left' }}>
-                  <h5 style={{ margin: 0, fontSize: '0.9rem', color: 'var(--rebrand-text-main)' }}>{team.name}</h5>
+                  <h5 style={{ margin: 0, fontSize: '0.9rem', color: 'var(--rebrand-text-main)', lineHeight: '1.2' }}>{team.name}</h5>
                   <span style={{ fontSize: '0.7rem', color: 'var(--rebrand-text-muted)', fontWeight: 700, textTransform: 'uppercase' }}>{team.league}</span>
                 </div>
               </div>
