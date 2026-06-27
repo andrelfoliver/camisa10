@@ -22,6 +22,13 @@ import ExitIntentPopup from './components/ExitIntentPopup';
 import FunkPlayer from './components/FunkPlayer';
 import AiChatbot from './components/AiChatbot';
 
+// Imports do Rebrand Isolado
+import RebrandLayout from './rebrand/components/RebrandLayout';
+import RebrandHome from './rebrand/pages/Home';
+import RebrandCategoryPage from './rebrand/pages/CategoryPage';
+import RebrandProductPage from './rebrand/pages/ProductPage';
+import RebrandAdmin from './rebrand/pages/RebrandAdmin';
+
 import { initAnalytics, trackEvent } from './services/analytics';
 
 const ScrollToTop = () => {
@@ -34,8 +41,9 @@ const ScrollToTop = () => {
 
 const AppLayout = () => {
   const { pathname } = useLocation();
-  const isAdminPage = pathname.startsWith('/admin');
-  const isBlacklisted = ['/checkout', '/auth', '/admin', '/perfil', '/sucesso'].some(p => pathname.startsWith(p));
+  const isAdminPage = pathname.startsWith('/admin') || pathname.startsWith('/rebrand/admin');
+  const isRebrandPage = pathname.startsWith('/rebrand') && !pathname.startsWith('/rebrand/admin');
+  const isBlacklisted = ['/checkout', '/auth', '/admin', '/rebrand/admin', '/perfil', '/sucesso'].some(p => pathname.startsWith(p));
   const [waNumber, setWaNumber] = useState('17788061419');
 
   // Inicializar o Analytics e capturar UTMs em cada mudança de rota (para garantir captura antes do envio do PageView)
@@ -47,7 +55,7 @@ const AppLayout = () => {
     const isCategoryPath = pathname.startsWith('/colecao/');
 
     // Impedir que telas de processo ou admin sejam salvas como "último local de compra"
-    const blacklist = ['/checkout', '/auth', '/admin', '/perfil', '/sucesso'];
+    const blacklist = ['/checkout', '/auth', '/admin', '/rebrand/admin', '/perfil', '/sucesso'];
     const isBlacklisted = blacklist.some(p => pathname.startsWith(p));
 
     if ((shoppingPaths.includes(pathname) || isCategoryPath) && !isBlacklisted) {
@@ -81,8 +89,8 @@ const AppLayout = () => {
 
   return (
     <div className="global-wrapper">
-      <Navbar />
-      <CartSidebar />
+      {!isAdminPage && !isRebrandPage && <Navbar />}
+      {!isRebrandPage && <CartSidebar />}
       <main style={{ flex: 1 }}>
         <Routes>
           <Route path="/" element={<Home />} />
@@ -92,17 +100,26 @@ const AppLayout = () => {
           <Route path="/auth" element={<Auth />} />
           <Route path="/perfil" element={<Profile />} />
           <Route path="/admin" element={<Admin />} />
+          <Route path="/rebrand/admin" element={<RebrandAdmin />} />
           <Route path="/busca" element={<SearchPage />} />
           <Route path="/afiliados" element={<AffiliateProgram />} />
           <Route path="/sucesso" element={<Success />} />
+
+          {/* Rotas de Rebranding Isoladas */}
+          <Route path="/rebrand" element={<RebrandLayout />}>
+            <Route index element={<RebrandHome />} />
+            <Route path="colecao/:category_id" element={<RebrandCategoryPage />} />
+            <Route path="produto/:id" element={<RebrandProductPage />} />
+          </Route>
+
           <Route path="*" element={<NotFound />} />
         </Routes>
       </main>
-      {!isAdminPage && <Footer />}
+      {!isAdminPage && !isRebrandPage && <Footer />}
 
 
       {/* WhatsApp Group Vertical Banner */}
-      {!isAdminPage && (
+      {!isAdminPage && !isRebrandPage && (
         <a 
           href="https://chat.whatsapp.com/KKKNZoOnr57AanDT33KPrT?mode=gi_t" 
           target="_blank" 
@@ -118,16 +135,16 @@ const AppLayout = () => {
         Sales Popup Widget
         Only display on storefront pages, hide on Admin to reduce noise. 
       */}
-      {!isAdminPage && <SalesPopup />}
+      {!isAdminPage && !isRebrandPage && <SalesPopup />}
 
       {/* Exit Intent Feedback Popup - Enabled on all pages except to avoid blocking navigation */}
-      {!isAdminPage && <ExitIntentPopup />}
+      {!isAdminPage && !isRebrandPage && <ExitIntentPopup />}
 
       {/* Funk Player */}
-      {!isAdminPage && <FunkPlayer />}
+      {!isAdminPage && !isRebrandPage && <FunkPlayer />}
 
       {/* AI Chatbot Assistant */}
-      {!isAdminPage && <AiChatbot />}
+      {!isAdminPage && !isRebrandPage && <AiChatbot />}
     </div>
   );
 };

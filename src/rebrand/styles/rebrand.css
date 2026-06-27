@@ -1,0 +1,701 @@
+/* Folha de Estilos Exclusiva do Rebranding iFooty - Canada's Sports Jersey Store */
+/* Fontes carregadas via index.html para evitar FOUT: Outfit (logo), Inter (corpo), Barlow Condensed (títulos) */
+
+:root {
+  --rebrand-font-logo: 'Outfit', sans-serif;   /* Exclusivo para a logo — NÃO alterar */
+  --rebrand-font-main: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  --rebrand-font-display: 'Barlow Condensed', 'Arial Narrow', Impact, sans-serif;
+  
+  /* Cores de Identidade Visual */
+  --rebrand-volt: #CCFF00; /* Neon Volt Original */
+  --rebrand-bg: #FFFFFF; /* Fundo limpo/branco */
+  --rebrand-surface: #F8F9FA; /* Superfície ultra-clara */
+  --rebrand-surface-card: #FFFFFF;
+  --rebrand-text-main: #121416; /* Cinza-carvão escuro (quase preto, mas premium) */
+  --rebrand-text-muted: #6C757D;
+  --rebrand-border: #E9ECEF;
+  --rebrand-shadow-sm: 0 2px 8px rgba(0,0,0,0.04);
+  --rebrand-shadow-md: 0 8px 24px rgba(0,0,0,0.06);
+  --rebrand-shadow-lg: 0 16px 48px rgba(0,0,0,0.1);
+  --rebrand-radius: 8px;
+}
+
+/* Reset de Contexto Rebrand */
+.rebrand-scope {
+  font-family: var(--rebrand-font-main);
+  background-color: var(--rebrand-bg);
+  color: var(--rebrand-text-main);
+  line-height: 1.5;
+}
+
+.rebrand-scope h1,
+.rebrand-scope h2,
+.rebrand-scope h3,
+.rebrand-scope h4 {
+  font-family: var(--rebrand-font-display);
+  text-transform: uppercase;
+  letter-spacing: -0.5px;
+  font-weight: 900;
+  line-height: 0.92;
+}
+
+/* Navbar Estilizada */
+.rebrand-navbar {
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(12px);
+  border-bottom: 1px solid var(--rebrand-border);
+  position: sticky;
+  top: 0;
+  z-index: 1000;
+  transition: all 0.3s ease;
+  padding: 0.5rem 2rem;
+}
+
+.rebrand-navbar-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.5rem 0;
+}
+
+/* Logo — IDENTIDADE DE MARCA PROTEGIDA. Não alterar esta seção. */
+.rebrand-logo-text {
+  font-family: var(--rebrand-font-logo);
+  font-weight: 900;
+  font-style: italic;
+  font-size: 2.3rem;
+  letter-spacing: -1px;
+  line-height: 1;
+  display: inline-flex;
+  align-items: baseline;
+  text-transform: none;
+  color: #ffffff;
+  position: relative;
+  text-decoration: none;
+  user-select: none;
+}
+
+.rebrand-logo-text .logo-i {
+  color: var(--rebrand-volt);
+  font-size: 2.3rem;
+  margin-right: 0;
+}
+
+.rebrand-logo-text .logo-dot {
+  color: var(--rebrand-volt);
+  font-size: 2.3rem;
+  margin-left: -1px;
+}
+
+.rebrand-logo-underline {
+  width: 100%;
+  height: 3px;
+  background: linear-gradient(90deg, var(--rebrand-volt) 0%, transparent 100%);
+  margin-top: 1px;
+  border-radius: 2px;
+}
+
+.rebrand-logo-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.rebrand-slogan {
+  font-family: var(--rebrand-font-main);
+  font-size: 0.6rem;
+  font-weight: 600;
+  letter-spacing: 2.5px;
+  text-transform: uppercase;
+  color: rgba(255,255,255,0.45);
+  margin-top: 3px;
+}
+
+.rebrand-nav-links {
+  display: flex;
+  gap: 1.5rem;
+  justify-content: center;
+  padding: 0.8rem 0;
+  border-top: 1px solid rgba(0,0,0,0.03);
+}
+
+.rebrand-nav-link {
+  text-decoration: none;
+  font-family: var(--rebrand-font-main);
+  font-size: 0.82rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  color: #ffffff;
+  transition: color 0.2s ease;
+  position: relative;
+  letter-spacing: 0.8px;
+}
+
+.rebrand-nav-link:hover {
+  color: var(--rebrand-volt);
+}
+
+.rebrand-nav-link::after {
+  content: '';
+  position: absolute;
+  bottom: -4px;
+  left: 0;
+  width: 0;
+  height: 2px;
+  background-color: var(--rebrand-volt);
+  transition: width 0.2s ease;
+}
+
+.rebrand-nav-link:hover::after {
+  width: 100%;
+}
+
+/* Hero Section */
+.rebrand-hero {
+  position: relative;
+  height: 68vh;
+  min-height: 420px;
+  background: #0B0C0E url('/assets/rebrand/locker_room_hero.jpg') no-repeat center center;
+  background-size: cover;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  padding-left: 8%;
+}
+
+.rebrand-hero-overlay {
+  position: absolute;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: linear-gradient(90deg, rgba(11,12,14,0.95) 0%, rgba(11,12,14,0.7) 45%, rgba(11,12,14,0.2) 100%);
+  z-index: 2;
+}
+
+.rebrand-hero-mosaic {
+  display: none;
+}
+
+.rebrand-hero-img-col {
+  display: none;
+}
+
+.rebrand-hero-content {
+  position: relative;
+  z-index: 3;
+  text-align: left;
+  max-width: 600px;
+  padding: 2rem 0;
+  color: #FFFFFF;
+}
+
+.rebrand-hero-title {
+  font-family: var(--rebrand-font-display);
+  font-size: 6rem;
+  font-weight: 900;
+  line-height: 0.88;
+  margin-bottom: 1.4rem;
+  color: #FFFFFF;
+  text-transform: uppercase;
+  letter-spacing: -1px;
+}
+
+.rebrand-hero-title span {
+  color: var(--rebrand-volt);
+  font-style: italic;
+}
+
+.rebrand-hero-subtitle {
+  font-family: var(--rebrand-font-main);
+  font-size: 1rem;
+  font-weight: 400;
+  color: rgba(255,255,255,0.75);
+  margin-bottom: 2.5rem;
+  letter-spacing: 0;
+  line-height: 1.6;
+  max-width: 420px;
+}
+
+.rebrand-hero-buttons {
+  display: flex;
+  gap: 1.2rem;
+  justify-content: flex-start;
+}
+
+.rebrand-btn {
+  padding: 0.85rem 2.4rem;
+  font-family: var(--rebrand-font-display);
+  font-weight: 800;
+  font-size: 1rem;
+  text-transform: uppercase;
+  border-radius: 3px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  letter-spacing: 1.5px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  text-decoration: none;
+}
+
+.rebrand-btn-primary {
+  background-color: var(--rebrand-volt);
+  color: #121416;
+  border: 2px solid var(--rebrand-volt);
+}
+
+.rebrand-btn-primary:hover {
+  background-color: transparent;
+  color: #FFFFFF;
+  border-color: #FFFFFF;
+  transform: translateY(-2px);
+  box-shadow: 0 10px 20px rgba(204,255,0,0.15);
+}
+
+.rebrand-btn-secondary {
+  background-color: transparent;
+  color: #FFFFFF;
+  border: 2px solid rgba(255,255,255,0.3);
+}
+
+.rebrand-btn-secondary:hover {
+  border-color: #FFFFFF;
+  background-color: rgba(255,255,255,0.05);
+  transform: translateY(-2px);
+}
+
+/* Category Grid - "Shop by Sport" */
+.rebrand-section {
+  padding: 6rem 2rem;
+}
+
+.rebrand-section-header {
+  text-align: center;
+  margin-bottom: 4rem;
+}
+
+.rebrand-section-title {
+  font-family: var(--rebrand-font-display);
+  font-size: 3.5rem;
+  font-weight: 900;
+  letter-spacing: -1px;
+  margin: 0;
+  color: var(--rebrand-text-main);
+  position: relative;
+  display: inline-block;
+  text-transform: uppercase;
+  line-height: 0.9;
+}
+
+.rebrand-section-title::after {
+  content: '';
+  position: absolute;
+  bottom: -10px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 60px;
+  height: 4px;
+  background-color: var(--rebrand-volt);
+}
+
+.rebrand-sport-grid {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 1.5rem;
+}
+
+.rebrand-sport-card {
+  position: relative;
+  height: 450px;
+  border-radius: var(--rebrand-radius);
+  overflow: hidden;
+  cursor: pointer;
+  box-shadow: var(--rebrand-shadow-sm);
+  transition: all 0.4s cubic-bezier(0.165, 0.84, 0.44, 1);
+  background-color: #121416;
+}
+
+.rebrand-sport-card-bg {
+  position: absolute;
+  top: 0; left: 0; width: 100%; height: 100%;
+  background-size: cover;
+  background-position: center top;
+  background-repeat: no-repeat;
+  transition: transform 0.6s cubic-bezier(0.165, 0.84, 0.44, 1);
+}
+
+.rebrand-sport-card-overlay {
+  position: absolute;
+  top: 0; left: 0; width: 100%; height: 100%;
+  background: linear-gradient(360deg, rgba(18,20,22,0.95) 0%, rgba(18,20,22,0.2) 60%, rgba(18,20,22,0.1) 100%);
+  z-index: 2;
+  transition: opacity 0.3s ease;
+}
+
+.rebrand-sport-card:hover {
+  transform: translateY(-8px);
+  box-shadow: var(--rebrand-shadow-lg);
+}
+
+.rebrand-sport-card:hover .rebrand-sport-card-bg {
+  transform: scale(1.06);
+}
+
+.rebrand-sport-card-info {
+  position: absolute;
+  bottom: 0; left: 0; width: 100%;
+  padding: 2rem;
+  z-index: 3;
+  color: #FFFFFF;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  box-sizing: border-box;
+}
+
+.rebrand-sport-icon {
+  font-size: 2rem;
+  margin-bottom: 0.5rem;
+  display: block;
+}
+
+.rebrand-sport-name {
+  font-family: var(--rebrand-font-display);
+  font-size: 2.6rem;
+  font-weight: 900;
+  letter-spacing: -0.5px;
+  margin: 0 0 1rem 0;
+  line-height: 0.88;
+}
+
+.rebrand-sport-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: var(--rebrand-volt);
+  font-family: var(--rebrand-font-main);
+  font-weight: 700;
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 1.2px;
+  opacity: 0;
+  transform: translateY(10px);
+  transition: all 0.3s ease;
+}
+
+.rebrand-sport-card:hover .rebrand-sport-btn {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* Product Cards */
+.rebrand-products-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 2rem;
+}
+
+.rebrand-product-card {
+  background: var(--rebrand-surface-card);
+  border-radius: var(--rebrand-radius);
+  overflow: hidden;
+  border: 1px solid var(--rebrand-border);
+  transition: all 0.3s cubic-bezier(0.165, 0.84, 0.44, 1);
+  position: relative;
+}
+
+.rebrand-product-card:hover {
+  transform: translateY(-5px);
+  box-shadow: var(--rebrand-shadow-md);
+  border-color: rgba(204,255,0,0.4);
+}
+
+.rebrand-product-img-wrapper {
+  position: relative;
+  aspect-ratio: 1;
+  background-color: var(--rebrand-surface);
+  overflow: hidden;
+}
+
+.rebrand-product-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.5s ease;
+}
+
+.rebrand-product-card:hover .rebrand-product-img {
+  transform: scale(1.04);
+}
+
+.rebrand-product-badge {
+  position: absolute;
+  top: 1rem;
+  left: 1rem;
+  background: #121416;
+  color: #FFFFFF;
+  padding: 0.3rem 0.8rem;
+  font-size: 0.7rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  border-radius: 2px;
+  z-index: 2;
+  border-left: 3px solid var(--rebrand-volt);
+}
+
+.rebrand-product-actions {
+  position: absolute;
+  bottom: 1rem;
+  left: 50%;
+  transform: translateX(-50%) translateY(20px);
+  display: flex;
+  gap: 0.5rem;
+  opacity: 0;
+  transition: all 0.3s ease;
+  z-index: 5;
+  width: 90%;
+}
+
+.rebrand-product-card:hover .rebrand-product-actions {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+}
+
+.rebrand-product-btn-quick {
+  flex: 1;
+  background: var(--rebrand-text-main);
+  color: #FFFFFF;
+  border: none;
+  font-family: var(--rebrand-font-display);
+  font-size: 0.85rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  padding: 0.7rem;
+  cursor: pointer;
+  transition: background 0.2s;
+  letter-spacing: 1px;
+}
+
+.rebrand-product-btn-quick:hover {
+  background: var(--rebrand-volt);
+  color: var(--rebrand-text-main);
+}
+
+.rebrand-product-info {
+  padding: 1.5rem;
+}
+
+.rebrand-product-category {
+  font-size: 0.7rem;
+  color: var(--rebrand-text-muted);
+  text-transform: uppercase;
+  font-weight: 700;
+  letter-spacing: 1px;
+  margin-bottom: 0.4rem;
+  display: block;
+}
+
+.rebrand-product-title {
+  font-family: var(--rebrand-font-main);
+  font-size: 0.95rem;
+  margin: 0 0 0.5rem 0;
+  font-weight: 600;
+  color: var(--rebrand-text-main);
+  text-transform: none;
+  letter-spacing: 0;
+  line-height: 1.35;
+  cursor: pointer;
+}
+
+.rebrand-product-title:hover {
+  text-decoration: underline;
+}
+
+.rebrand-product-price-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.rebrand-product-price {
+  font-family: var(--rebrand-font-display);
+  font-size: 1.4rem;
+  font-weight: 800;
+  color: var(--rebrand-text-main);
+  letter-spacing: -0.5px;
+}
+
+.rebrand-product-rating {
+  display: flex;
+  align-items: center;
+  gap: 0.2rem;
+  font-size: 0.8rem;
+  color: #FFB100;
+}
+
+/* Efeito de Foco na Barra de Busca */
+.search-bar-container:focus-within {
+  border-color: var(--rebrand-volt) !important;
+  box-shadow: 0 0 10px rgba(204,255,0,0.2);
+  background: #1a1d20 !important;
+}
+
+/* Ocultar elementos em telas menores */
+@media (max-width: 1024px) {
+  .hide-tablet {
+    display: none !important;
+  }
+}
+
+/* Detalhes de Preço e Desconto Fanatics-Style */
+.rebrand-price-container {
+  display: flex;
+  align-items: baseline;
+  gap: 0.5rem;
+}
+
+.rebrand-price-old {
+  font-size: 0.85rem;
+  text-decoration: line-through;
+  color: var(--rebrand-text-muted);
+}
+
+.rebrand-price-sale {
+  color: #dc3545; /* Vermelho de promoção */
+}
+
+/* Badges adicionais nos cards */
+.rebrand-product-badge-red {
+  position: absolute;
+  top: 1rem;
+  left: 1rem;
+  background: #dc3545;
+  color: #FFFFFF;
+  padding: 0.3rem 0.8rem;
+  font-size: 0.7rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  border-radius: 2px;
+  z-index: 2;
+  border-left: 3px solid var(--rebrand-volt);
+}
+
+/* Seletor de Cores (Color Bullets) nos Cards */
+.rebrand-color-bullets {
+  display: flex;
+  gap: 0.4rem;
+  margin: 0.6rem 0;
+}
+
+.rebrand-color-bullet {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  border: 1px solid rgba(0,0,0,0.15);
+  cursor: pointer;
+  transition: transform 0.1s ease;
+}
+
+.rebrand-color-bullet:hover,
+.rebrand-color-bullet.active {
+  transform: scale(1.25);
+  border-color: #121416;
+}
+
+/* Filtros Estilo Accordion */
+.rebrand-filter-accordion-item {
+  border-bottom: 1px solid var(--rebrand-border);
+  padding: 1.2rem 0;
+}
+
+.rebrand-filter-accordion-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-weight: 700;
+  font-size: 0.85rem;
+  text-transform: uppercase;
+  color: var(--rebrand-text-main);
+  background: transparent;
+  border: none;
+  width: 100%;
+  text-align: left;
+  cursor: pointer;
+}
+
+.rebrand-filter-accordion-content {
+  margin-top: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.8rem;
+}
+
+/* Responsive */
+@media (max-width: 1024px) {
+  .rebrand-sport-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+  .rebrand-hero-mosaic {
+    grid-template-columns: repeat(3, 1fr);
+  }
+  .rebrand-hero-img-col:nth-child(n+4) {
+    display: none;
+  }
+}
+
+@media (max-width: 768px) {
+  .rebrand-navbar {
+    padding: 0.5rem 1rem;
+  }
+  .rebrand-nav-links {
+    overflow-x: auto;
+    justify-content: flex-start;
+    padding-bottom: 0.5rem;
+  }
+  .rebrand-hero-title {
+    font-size: 3rem;
+  }
+  .rebrand-sport-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  .rebrand-hero-mosaic {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 480px) {
+  .rebrand-sport-grid {
+    grid-template-columns: 1fr;
+  }
+  .rebrand-sport-card {
+    height: 350px;
+  }
+  .rebrand-hero-buttons {
+    flex-direction: column;
+    gap: 0.8rem;
+  }
+}
+
+/* Shop By League - Círculos interativos com transição preto e verde Volt */
+.rebrand-league-circle {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  background: #ffffff;
+  border: 1.5px solid var(--rebrand-border);
+  box-shadow: var(--rebrand-shadow-sm);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 2.2rem;
+  margin-bottom: 1rem;
+  transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+  position: relative;
+}
+
+.rebrand-league-circle:hover {
+  border-color: var(--rebrand-volt) !important;
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.15), 0 2px 8px rgba(34, 197, 94, 0.25);
+}
+
