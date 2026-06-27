@@ -707,10 +707,14 @@
   }
   .rebrand-promobar-right { display: none; }
 
-  /* Header */
-  .rebrand-header-main { padding: 0.75rem 1rem; gap: 0.75rem; }
+  /* Header — logo centered between hamburger and icons (Fanatics pattern) */
+  .rebrand-header-main {
+    padding: 0.75rem 1rem;
+    gap: 0;
+    position: relative;
+  }
 
-  /* Hide desktop search, show mobile search icon + hamburger */
+  /* Hide desktop search, show mobile icons + hamburger */
   .rebrand-search-bar-desktop { display: none !important; }
   .rebrand-show-mobile { display: flex !important; }
   .rebrand-hide-mobile { display: none !important; }
@@ -719,32 +723,46 @@
   /* Actions gap */
   .rebrand-header-actions { gap: 1rem; }
 
-  /* Logo size */
-  .rebrand-logo-text { font-size: 1.9rem !important; }
+  /* Logo: absolute center between hamburger and actions */
+  .rebrand-logo-container {
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
+  }
+  .rebrand-logo-text { font-size: 1.8rem !important; }
 
-  /* Hide desktop nav, show hamburger */
+  /* Hide desktop nav */
   .rebrand-hide-mobile.rebrand-nav-links,
   nav.rebrand-hide-mobile { display: none !important; }
+
+  /* Hide logo underline on mobile (cleaner centered look) */
+  .rebrand-logo-underline { display: none; }
 
   /* Hero */
   .rebrand-hero {
     height: auto;
-    min-height: 70vh;
-    padding-left: 5%;
-    padding-right: 5%;
+    min-height: 65vh;
+    padding-left: 1.25rem;
+    padding-right: 1.25rem;
     align-items: flex-end;
-    padding-bottom: 3rem;
+    padding-bottom: 2.5rem;
   }
-  .rebrand-hero-content { max-width: 100%; }
-  .rebrand-hero-title { font-size: 3.2rem; letter-spacing: -0.5px; }
-  .rebrand-hero-subtitle { font-size: 0.9rem; }
+  .rebrand-hero-content { max-width: 100%; padding: 0; }
+  .rebrand-hero-title { font-size: 3rem; letter-spacing: -0.5px; }
+  .rebrand-hero-subtitle { font-size: 0.88rem; margin-bottom: 1.5rem; }
 
-  /* Trust bar */
+  /* Trust bar: compact 2×2 grid */
   .rebrand-trustbar {
-    flex-wrap: wrap;
-    gap: 1rem !important;
-    padding: 1rem !important;
-    justify-content: center;
+    display: grid !important;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.6rem !important;
+    padding: 0.75rem 1rem !important;
+    justify-items: start;
+  }
+  .rebrand-trustbar > div {
+    font-size: 0.72rem !important;
+    gap: 0.4rem !important;
+    letter-spacing: 0 !important;
   }
 
   /* Sport grid */
