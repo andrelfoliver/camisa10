@@ -4050,14 +4050,6 @@ const Admin = () => {
                 if (s.hasPaid) pCount++;
               });
 
-              // Taxas de avanço (0% a 100%)
-              const rateView = sCount > 0 ? (vCount / sCount) * 100 : 0;
-              const rateCart = vCount > 0 ? (cCount / vCount) * 100 : 0;
-              const rateCheckout = cCount > 0 ? (chCount / cCount) * 100 : 0;
-              const rateOrder = chCount > 0 ? (oCount / chCount) * 100 : 0;
-              const ratePaid = oCount > 0 ? (pCount / oCount) * 100 : 0;
-              const conversionGlobal = sCount > 0 ? (pCount / sCount) * 100 : 0;
-
               // Financeiro do período
               const activeOrders = periodOrders.filter(o => o.status !== 'cancelled');
               const paidOrders = activeOrders.filter(o => !['cancelled', 'pending', 'failed'].includes(o.status));
@@ -4069,6 +4061,14 @@ const Admin = () => {
                 cost += calculateOrderCost(o);
               });
               const profit = revenue - cost;
+
+              // Taxas de avanço (0% a 100%)
+              const rateView = sCount > 0 ? (vCount / sCount) * 100 : 0;
+              const rateCart = vCount > 0 ? (cCount / vCount) * 100 : 0;
+              const rateCheckout = cCount > 0 ? (chCount / cCount) * 100 : 0;
+              const rateOrder = chCount > 0 ? (activeOrders.length / chCount) * 100 : 0;
+              const ratePaid = activeOrders.length > 0 ? (paidOrders.length / activeOrders.length) * 100 : 0;
+              const conversionGlobal = sCount > 0 ? (paidOrders.length / sCount) * 100 : 0;
 
               // Cálculo de custos de campanha (Ad Spend) para o período
               let totalInputSpend = 0;
@@ -4091,18 +4091,18 @@ const Admin = () => {
               if (vCount > sCount) console.warn(`[Funnel Validation] Views (${vCount}) maior que Sessões (${sCount})`);
               if (cCount > vCount) console.warn(`[Funnel Validation] Carrinhos (${cCount}) maior que Views (${vCount})`);
               if (chCount > cCount) console.warn(`[Funnel Validation] Checkouts (${chCount}) maior que Carrinhos (${cCount})`);
-              if (oCount > chCount) console.warn(`[Funnel Validation] Pedidos Criados (${oCount}) maior que Checkouts (${chCount})`);
-              if (pCount > oCount) console.warn(`[Funnel Validation] Pagamentos Aprovados (${pCount}) maior que Pedidos Criados (${oCount})`);
+              if (activeOrders.length > chCount) console.warn(`[Funnel Validation] Pedidos Criados (${activeOrders.length}) maior que Checkouts (${chCount})`);
+              if (paidOrders.length > activeOrders.length) console.warn(`[Funnel Validation] Pagamentos Aprovados (${paidOrders.length}) maior que Pedidos Criados (${activeOrders.length})`);
 
-              const hasInconsistency = (vCount > sCount || cCount > vCount || chCount > cCount || oCount > chCount || pCount > oCount);
+              const hasInconsistency = (vCount > sCount || cCount > vCount || chCount > cCount || activeOrders.length > chCount || paidOrders.length > activeOrders.length);
 
               return {
                 s: sCount,
                 v: vCount,
                 c: cCount,
                 ch: chCount,
-                cr: oCount,
-                p: pCount,
+                cr: activeOrders.length,
+                p: paidOrders.length,
                 rateView,
                 rateCart,
                 rateCheckout,
