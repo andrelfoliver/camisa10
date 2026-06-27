@@ -71,6 +71,15 @@ const Navbar = () => {
         {/* NÍVEL 2: Header Principal */}
         <div className="rebrand-header-main">
 
+          {/* Hamburger — LEFT side, mobile only */}
+          <button
+            onClick={() => setMenuOpen(!menuOpen)}
+            className="rebrand-hamburger"
+            aria-label={menuOpen ? 'Close menu' : 'Open menu'}
+          >
+            {menuOpen ? <X size={24} color="#ffffff" /> : <Menu size={24} color="#ffffff" />}
+          </button>
+
           {/* Logo */}
           <div className="rebrand-logo-container" style={{ alignItems: 'flex-start' }}>
             <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start' }}>
@@ -146,14 +155,7 @@ const Navbar = () => {
               </div>
             </button>
 
-            {/* Hamburger — mobile only */}
-            <button
-              onClick={() => setMenuOpen(!menuOpen)}
-              className="rebrand-hamburger"
-              aria-label={menuOpen ? 'Close menu' : 'Open menu'}
-            >
-              {menuOpen ? <X size={24} color="#ffffff" /> : <Menu size={24} color="#ffffff" />}
-            </button>
+
           </div>
         </div>
 
