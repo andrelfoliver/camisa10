@@ -4006,8 +4006,6 @@ const Admin = () => {
                 if (e.event_name === 'ViewContent') s.hasView = true;
                 if (e.event_name === 'AddToCart') s.hasCart = true;
                 if (e.event_name === 'InitiateCheckout' || e.event_name === 'Begin Checkout') s.hasCheckout = true;
-                if (e.event_name === 'Pedido criado') s.hasOrder = true;
-                if (e.event_name === 'Pagamento aprovado' || e.event_name === 'Purchase') s.hasPaid = true;
               });
 
               periodOrders.forEach(o => {
@@ -4561,8 +4559,6 @@ const Admin = () => {
                 if (e.event_name === 'ViewContent') s.hasView = true;
                 if (e.event_name === 'AddToCart') s.hasCart = true;
                 if (e.event_name === 'InitiateCheckout' || e.event_name === 'Begin Checkout') s.hasCheckout = true;
-                if (e.event_name === 'Pedido criado') s.hasOrder = true;
-                if (e.event_name === 'Pagamento aprovado' || e.event_name === 'Purchase') s.hasPaid = true;
               });
 
               currentOrders.forEach(o => {
