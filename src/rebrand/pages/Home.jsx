@@ -3,6 +3,7 @@ import { useNavigate, Link } from 'react-router-dom';
 import { supabase } from '../../services/supabase';
 import { ArrowRight, Star, ShoppingBag, Eye, ShieldCheck, Truck, RefreshCw, BadgeAlert, Check } from 'lucide-react';
 import { useCart } from '../../context/CartContext';
+import { formatProductName } from '../utils/format';
 
 // Mocks premium de outros esportes para simular a loja multiesportiva antes de cadastrar no banco
 const MOCK_PRODUCTS = [
@@ -403,15 +404,8 @@ const Home = () => {
                       </div>
 
                       <div className="rebrand-product-info">
-                        {hasColors && (
-                          <div className="rebrand-product-colors">
-                            {product.colors.map((c, i) => (
-                              <span key={i} className="rebrand-color-dot" style={{ backgroundColor: c }} />
-                            ))}
-                          </div>
-                        )}
                         <h4 className="rebrand-product-title" onClick={() => navigate(`/rebrand/produto/${product.id}`)}>
-                          {product.name}
+                          {formatProductName(product.name)}
                         </h4>
                         <div className="rebrand-product-rating">
                           <Star size={12} fill="currentColor" />
@@ -503,17 +497,8 @@ const Home = () => {
                 <div className="rebrand-product-info">
                   <span className="rebrand-product-category">{product.category}</span>
                   
-                  {/* Colors Bullets */}
-                  {hasColors && (
-                    <div className="rebrand-color-bullets">
-                      {product.colors.map(col => (
-                        <span key={col} className="rebrand-color-bullet" style={{ backgroundColor: col }} title={col} />
-                      ))}
-                    </div>
-                  )}
-
                   <Link to={`/rebrand/produto/${product.id}`} style={{ textDecoration: 'none' }}>
-                    <h4 className="rebrand-product-title" style={{ fontSize: '0.95rem', fontWeight: 700, margin: '0.4rem 0' }}>{product.name}</h4>
+                    <h4 className="rebrand-product-title">{formatProductName(product.name)}</h4>
                   </Link>
 
                   <div className="rebrand-product-price-row">

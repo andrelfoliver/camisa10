@@ -3,6 +3,7 @@ import { useParams, useNavigate, Link } from 'react-router-dom';
 import { supabase } from '../../services/supabase';
 import { Star, ShoppingBag, ArrowLeft, ShieldCheck, Truck, RefreshCw, Calendar, Heart, Share2, Info } from 'lucide-react';
 import { useCart } from '../../context/CartContext';
+import { formatProductName } from '../utils/format';
 
 // Todos os mocks para busca rápida com suporte a cores de time, preços riscados e informações extras
 const ALL_MOCKS = {
@@ -129,7 +130,7 @@ const ProductPage = () => {
             <ArrowLeft size={14} /> Back to Catalog
           </button>
           <span style={{ fontSize: '0.8rem', color: 'var(--rebrand-text-muted)', fontWeight: 600 }}>
-            Home / {product.category.toUpperCase()} / {product.name}
+            Home / {product.category.toUpperCase()} / {formatProductName(product.name)}
           </span>
         </div>
 
@@ -211,7 +212,7 @@ const ProductPage = () => {
             </div>
 
             <h1 style={{ fontSize: '3rem', lineHeight: '0.9', margin: '0 0 1rem 0', color: 'var(--rebrand-text-main)' }}>
-              {product.name}
+              {formatProductName(product.name)}
             </h1>
             
             {/* Rating */}

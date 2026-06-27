@@ -535,19 +535,19 @@
 }
 
 .rebrand-product-title {
-  font-family: var(--rebrand-font-main);
-  font-size: 0.95rem;
-  margin: 0 0 0.5rem 0;
-  font-weight: 600;
-  color: var(--rebrand-text-main);
-  text-transform: none;
-  letter-spacing: 0;
-  line-height: 1.35;
-  cursor: pointer;
+  font-family: var(--rebrand-font-main) !important;
+  font-size: 0.95rem !important;
+  margin: 0.5rem 0 !important;
+  font-weight: 700 !important;
+  color: var(--rebrand-text-main) !important;
+  text-transform: none !important;
+  letter-spacing: 0 !important;
+  line-height: 1.45 !important;
+  cursor: pointer !important;
 }
 
 .rebrand-product-title:hover {
-  text-decoration: underline;
+  text-decoration: none !important;
 }
 
 .rebrand-product-price-row {

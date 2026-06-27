@@ -3,6 +3,7 @@ import { useParams, useNavigate, Link } from 'react-router-dom';
 import { supabase } from '../../services/supabase';
 import { Star, ShoppingBag, Eye, SlidersHorizontal, ArrowLeft, ChevronDown, ChevronUp } from 'lucide-react';
 import { useCart } from '../../context/CartContext';
+import { formatProductName } from '../utils/format';
 
 // Mocks por esporte com variações de cores e preços promocionais
 const SPORT_MOCKS = {
@@ -64,24 +65,9 @@ const ProductCard = ({ product, onAdd, onQuickView }) => {
 
       <div className="rebrand-product-info">
         <span className="rebrand-product-category">{product.category}</span>
-        
-        {/* Seletor de Cores */}
-        {product.colors && product.colors.length > 0 && (
-          <div className="rebrand-color-bullets">
-            {product.colors.map(col => (
-              <span 
-                key={col} 
-                className={`rebrand-color-bullet ${activeColor === col ? 'active' : ''}`}
-                style={{ backgroundColor: col }}
-                onClick={() => setActiveColor(col)}
-                title={col}
-              />
-            ))}
-          </div>
-        )}
 
         <Link to={`/rebrand/produto/${product.id}`} style={{ textDecoration: 'none' }}>
-          <h4 className="rebrand-product-title" style={{ fontSize: '0.95rem', fontWeight: 700, margin: '0.4rem 0' }}>{product.name}</h4>
+          <h4 className="rebrand-product-title">{formatProductName(product.name)}</h4>
         </Link>
 
         <div className="rebrand-product-price-row">
