@@ -30,6 +30,7 @@ import RebrandProductPage from './rebrand/pages/ProductPage';
 import RebrandAdmin from './rebrand/pages/RebrandAdmin';
 import RebrandCheckout from './rebrand/pages/Checkout';
 import RebrandAuth from './rebrand/pages/Auth';
+import RebrandProfile from './rebrand/pages/Profile';
 
 import { initAnalytics, trackEvent } from './services/analytics';
 
@@ -114,6 +115,7 @@ const AppLayout = () => {
             <Route path="produto/:id" element={<RebrandProductPage />} />
             <Route path="checkout" element={<RebrandCheckout />} />
             <Route path="auth" element={<RebrandAuth />} />
+            <Route path="profile" element={<RebrandProfile />} />
           </Route>
 
           <Route path="*" element={<NotFound />} />

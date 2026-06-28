@@ -32,7 +32,7 @@ const Navbar = () => {
         const first = name.split(' ')[0] || 'User';
         setDisplayName(`Hello, ${first}`);
         setAccountStatus('My Account');
-        setAccountLink('/perfil');
+        setAccountLink('/rebrand/profile');
       } else {
         const guestEmail = sessionStorage.getItem('ifooty_guest_email');
         const guestName = sessionStorage.getItem('ifooty_guest_name');
