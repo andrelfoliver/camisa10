@@ -7,7 +7,7 @@ import {
   LogOut, ExternalLink, ChevronUp, ChevronDown, Edit2, Trash2,
   Plus, Save, X, Check, AlertCircle, TrendingUp, Users, DollarSign,
   Clock, Search, RefreshCw, Eye, UserCircle, Award, MessageSquare, Star,
-  Shirt, CreditCard, Globe, Activity, Truck, CheckCircle2, XCircle
+  Shirt, CreditCard, Globe, Activity, Truck, CheckCircle2, XCircle, Menu
 } from 'lucide-react';
 import ProductMedia from '../../components/ProductMedia';
 
@@ -732,7 +732,7 @@ const DashboardSection = ({ showValues, setShowValues }) => {
       </div>
       
       {/* KPIs Finanças e Custo */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: '1.25rem', marginBottom: '1.25rem' }}>
+      <div className="kpi-grid">
         <KpiCard compact label="Vendas (CAD)"       value={showValues ? `$${stats.revenue.toFixed(2)}` : '****'}          icon={DollarSign}   color="#4ADE80" sub="Todos exceto cancelados" />
         <KpiCard compact label="Lucro Real"         value={showValues ? `$${stats.profit.toFixed(2)}` : '****'}           icon={TrendingUp}   color="#22C55E" sub="Receita menos Custo CAD" />
         <KpiCard compact label="Camisas Vendidas"   value={`${stats.jerseys} unid.`}                icon={Shirt}        color="#FFFFFF" />
@@ -741,7 +741,7 @@ const DashboardSection = ({ showValues, setShowValues }) => {
       </div>
 
       {/* KPIs Status dos Pedidos */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: '1.25rem', marginBottom: '2rem' }}>
+      <div className="kpi-grid" style={{ marginBottom: '2rem' }}>
         <KpiCard compact label="Novos"              value={stats.countPending + stats.countPaid}    icon={Clock}        color="#FFB81C" sub="Aguardando confirmação/pagos" />
         <KpiCard compact label="Preparação"         value={stats.countProcessing}                   icon={Activity}     color="#3B82F6" />
         <KpiCard compact label="Enviados"           value={stats.countShipped}                      icon={Truck}        color="#10B981" />
@@ -750,7 +750,7 @@ const DashboardSection = ({ showValues, setShowValues }) => {
       </div>
 
       {/* Charts Section */}
-      <div style={{ display: 'grid', gridTemplateColumns: '3.5fr 2.5fr', gap: '1.5rem', marginBottom: '2rem' }}>
+      <div className="charts-grid">
         {/* Revenue Line Chart */}
         <div style={S.card}>
           <h3 style={{ margin: '0 0 1rem 0', fontSize: '1rem', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
@@ -935,25 +935,27 @@ const DashboardSection = ({ showValues, setShowValues }) => {
       {/* Recent Orders */}
       <div style={S.card}>
         <h3 style={{ margin: '0 0 1.25rem 0', fontSize: '1rem', fontWeight: 700 }}>Pedidos Recentes</h3>
-        <table style={S.table}>
-          <thead>
-            <tr>
-              {['ID', 'Cliente', 'Data', 'Total', 'Status'].map(h => <th key={h} style={S.th}>{h}</th>)}
-            </tr>
-          </thead>
-          <tbody>
-            {recentOrders.map(o => (
-              <tr key={o.id}>
-                <td style={{ ...S.td, color: 'rgba(255,255,255,0.5)', fontSize: '0.78rem' }}>#{String(o.id).slice(-6)}</td>
-                <td style={S.td}>{o.customer_name || o.customer_email || '—'}</td>
-                <td style={{ ...S.td, color: 'rgba(255,255,255,0.5)' }}>{new Date(o.created_at).toLocaleDateString('pt-BR')}</td>
-                <td style={{ ...S.td, fontWeight: 700, color: '#D6FF00' }}>${parseFloat(o.total || o.total_price || 0).toFixed(2)}</td>
-                <td style={S.td}><span style={S.badge(o.status)}>{STATUS_COLORS[o.status]?.label || o.status}</span></td>
+        <div className="table-responsive">
+          <table style={S.table}>
+            <thead>
+              <tr>
+                {['ID', 'Cliente', 'Data', 'Total', 'Status'].map(h => <th key={h} style={S.th}>{h}</th>)}
               </tr>
-            ))}
-            {recentOrders.length === 0 && <tr><td colSpan={5} style={{ ...S.td, textAlign: 'center', color: 'rgba(255,255,255,0.3)' }}>Nenhum pedido encontrado.</td></tr>}
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              {recentOrders.map(o => (
+                <tr key={o.id}>
+                  <td style={{ ...S.td, color: 'rgba(255,255,255,0.5)', fontSize: '0.78rem' }}>#{String(o.id).slice(-6)}</td>
+                  <td style={S.td}>{o.customer_name || o.customer_email || '—'}</td>
+                  <td style={{ ...S.td, color: 'rgba(255,255,255,0.5)' }}>{new Date(o.created_at).toLocaleDateString('pt-BR')}</td>
+                  <td style={{ ...S.td, fontWeight: 700, color: '#D6FF00' }}>${parseFloat(o.total || o.total_price || 0).toFixed(2)}</td>
+                  <td style={S.td}><span style={S.badge(o.status)}>{STATUS_COLORS[o.status]?.label || o.status}</span></td>
+                </tr>
+              ))}
+              {recentOrders.length === 0 && <tr><td colSpan={5} style={{ ...S.td, textAlign: 'center', color: 'rgba(255,255,255,0.3)' }}>Nenhum pedido encontrado.</td></tr>}
+            </tbody>
+          </table>
+        </div>
       </div>
     </div>
   );
@@ -998,7 +1000,7 @@ const OrderDetailModal = ({ order, onClose, onStatusChange, onTrackingChange, sh
           </div>
         </div>
 
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem', marginBottom: '1.5rem' }}>
+        <div className="admin-grid-2" style={{ marginBottom: '1.5rem' }}>
           {/* Cliente */}
           <div style={{ ...S.card, padding: '1.25rem' }}>
             <div style={{ fontSize: '0.75rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em', color: '#D6FF00', marginBottom: '0.75rem' }}>👤 Cliente</div>
@@ -1055,7 +1057,7 @@ const OrderDetailModal = ({ order, onClose, onStatusChange, onTrackingChange, sh
         </div>
 
         {/* Tracking + Status */}
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+        <div className="admin-grid-2 admin-gap-1">
           <div style={{ ...S.card, padding: '1.25rem' }}>
             <div style={{ fontSize: '0.75rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em', color: '#D6FF00', marginBottom: '0.75rem' }}>📦 Rastreio</div>
             <div style={{ display: 'flex', gap: '0.5rem' }}>
@@ -1065,9 +1067,45 @@ const OrderDetailModal = ({ order, onClose, onStatusChange, onTrackingChange, sh
           </div>
           <div style={{ ...S.card, padding: '1.25rem' }}>
             <div style={{ fontSize: '0.75rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em', color: '#D6FF00', marginBottom: '0.75rem' }}>⚙️ Mudar Status</div>
-            <select style={S.input} value={order.status} onChange={e => onStatusChange(order.id, e.target.value)}>
-              {Object.entries(STATUS_COLORS).map(([k, v]) => <option key={k} value={k}>{v.label}</option>)}
-            </select>
+            <div style={{ display: 'flex', gap: '0.5rem' }}>
+              <select style={S.input} value={order.status} onChange={e => onStatusChange(order.id, e.target.value)}>
+                {Object.entries(STATUS_COLORS).map(([k, v]) => <option key={k} value={k}>{v.label}</option>)}
+              </select>
+              <button 
+                onClick={() => {
+                  const templates = {
+                    pending: `Olá *${order.customer_name}*, tudo bem? Passando para avisar que recebemos seu pedido **#${order.id.slice(0, 8)}** na iFooty! 👕 Em breve te passamos as instruções para o Interac e-Transfer.`,
+                    processing: `Olá *${order.customer_name}*, seu pedido **#${order.id.slice(0, 8)}** já entrou em preparação! 👕 Estamos conferindo cada detalhe para que chegue perfeito para você.`,
+                    shipped: `Grande notícia, *${order.customer_name}*! 🚀 Seu pedido **#${order.id.slice(0, 8)}** acaba de ser despachado. Logo você estará com seu novo manto em mãos!`,
+                    completed: `Olá *${order.customer_name}*, o sistema indica que seu pedido **#${order.id.slice(0, 8)}** foi entregue! 📦 Esperamos que goste da qualidade. Se puder, tira uma foto e marca a gente no Instagram @ifooty.ca! 🔥`,
+                    cancelled: `Olá *${order.customer_name}*, infelizmente seu pedido **#${order.id.slice(0, 8)}** precisou ser cancelado. :( Caso tenha alguma dúvida, estamos à disposição aqui no WhatsApp.`
+                  };
+                  const message = templates[order.status] || templates.pending;
+                  const phone = order.customer_phone ? order.customer_phone.replace(/\D/g, '') : '';
+                  const formattedPhone = (phone.length === 10) ? `1${phone}` : phone;
+                  if (formattedPhone) {
+                    window.open(`https://wa.me/${formattedPhone}?text=${encodeURIComponent(message)}`, '_blank');
+                  }
+                }}
+                style={{
+                  padding: '0.65rem 1rem',
+                  borderRadius: '6px',
+                  background: 'rgba(37, 211, 102, 0.1)',
+                  border: '1px solid #25D366',
+                  color: '#25D366',
+                  fontWeight: 700,
+                  cursor: 'pointer',
+                  fontSize: '0.8rem',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '0.4rem',
+                  flexShrink: 0
+                }}
+                title="Re-enviar Notificação WhatsApp"
+              >
+                <MessageSquare size={14} />
+              </button>
+            </div>
           </div>
         </div>
       </div>
@@ -1093,9 +1131,80 @@ const OrdersSection = ({ showToast }) => {
   useEffect(() => { load(); }, [load]);
 
   const handleStatusChange = async (orderId, newStatus) => {
+    const orderToUpdate = orders.find(o => o.id === orderId);
+    if (!orderToUpdate) return;
+
+    // 1. Update status in database
     const { error } = await supabase.from('orders').update({ status: newStatus }).eq('id', orderId);
     if (error) { showToast('Erro ao atualizar status.', 'error'); return; }
-    showToast('Status atualizado!', 'success');
+
+    // 2. Automatic Inventory Sync
+    const itemsList = Array.isArray(orderToUpdate.items) ? orderToUpdate.items : (typeof orderToUpdate.items === 'string' ? (() => { try { return JSON.parse(orderToUpdate.items); } catch { return []; } })() : []);
+    if (itemsList.length > 0) {
+      const previousStatus = orderToUpdate.status;
+      const shouldAddStock = previousStatus !== 'cancelled' && newStatus === 'cancelled';
+      const shouldSubtractStock = previousStatus === 'cancelled' && newStatus !== 'cancelled';
+
+      if (shouldAddStock || shouldSubtractStock) {
+        for (const item of itemsList) {
+          try {
+            const { data: product, error: fetchError } = await supabase
+              .from('products')
+              .select('inventory')
+              .eq('id', item.id || item.product_id)
+              .single();
+
+            if (!fetchError && product && product.inventory) {
+              const currentStock = product.inventory[item.size] || 0;
+              const qtyChange = (item.quantity || 1);
+              const newStock = shouldAddStock 
+                ? currentStock + qtyChange 
+                : Math.max(0, currentStock - qtyChange);
+              
+              if (currentStock !== newStock) {
+                const updatedInventory = { ...product.inventory, [item.size]: newStock };
+                await supabase
+                  .from('products')
+                  .update({ inventory: updatedInventory })
+                  .eq('id', item.id || item.product_id);
+              }
+            }
+          } catch (err) {
+            console.error(`Erro ao sincronizar estoque do item ${item.id}:`, err);
+          }
+        }
+      }
+    }
+
+    // 3. Send email notifications in the background
+    if (['processing', 'shipped', 'completed', 'cancelled'].includes(newStatus)) {
+      fetch('/api/send-status-email', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          order: { ...orderToUpdate, status: newStatus },
+          newStatus: newStatus
+        })
+      }).catch(err => console.error("Erro ao enviar email de status:", err));
+    }
+
+    // 4. Fire WhatsApp status template notification
+    const templates = {
+      pending: `Olá *${orderToUpdate.customer_name}*, tudo bem? Passando para avisar que recebemos seu pedido **#${orderToUpdate.id.slice(0, 8)}** na iFooty! 👕 Em breve te passamos as instruções para o Interac e-Transfer.`,
+      processing: `Olá *${orderToUpdate.customer_name}*, seu pedido **#${orderToUpdate.id.slice(0, 8)}** já entrou em preparação! 👕 Estamos conferindo cada detalhe para que chegue perfeito para você.`,
+      shipped: `Grande notícia, *${orderToUpdate.customer_name}*! 🚀 Seu pedido **#${orderToUpdate.id.slice(0, 8)}** acaba de ser despachado. Logo você estará com seu novo manto em mãos!`,
+      completed: `Olá *${orderToUpdate.customer_name}*, o sistema indica que seu pedido **#${orderToUpdate.id.slice(0, 8)}** foi entregue! 📦 Esperamos que goste da qualidade. Se puder, tira uma foto e marca a gente no Instagram @ifooty.ca! 🔥`,
+      cancelled: `Olá *${orderToUpdate.customer_name}*, infelizmente seu pedido **#${orderToUpdate.id.slice(0, 8)}** precisou ser cancelado. :( Caso tenha alguma dúvida, estamos à disposição aqui no WhatsApp.`
+    };
+
+    const message = templates[newStatus] || templates.pending;
+    const phone = orderToUpdate.customer_phone ? orderToUpdate.customer_phone.replace(/\D/g, '') : '';
+    const formattedPhone = (phone.length === 10) ? `1${phone}` : phone;
+    if (formattedPhone) {
+      window.open(`https://wa.me/${formattedPhone}?text=${encodeURIComponent(message)}`, '_blank');
+    }
+
+    showToast('Status atualizado e e-mail enviado!', 'success');
     setOrders(prev => prev.map(o => o.id === orderId ? { ...o, status: newStatus } : o));
     if (selectedOrder?.id === orderId) setSelectedOrder(prev => ({ ...prev, status: newStatus }));
   };
@@ -1125,38 +1234,40 @@ const OrdersSection = ({ showToast }) => {
       </div>
       <div style={S.card}>
         {loading ? <Loader /> : (
-          <table style={S.table}>
-            <thead>
-              <tr>{['ID', 'Cliente', 'Data', 'Total', 'Status', 'Ações'].map(h => <th key={h} style={S.th}>{h}</th>)}</tr>
-            </thead>
-            <tbody>
-              {filtered.map(o => (
-                <tr key={o.id} style={{ cursor: 'pointer' }} onClick={() => setSelectedOrder(o)}>
-                  <td style={{ ...S.td, color: 'rgba(255,255,255,0.5)', fontSize: '0.78rem', fontFamily: 'monospace' }}>#{String(o.id).slice(-8)}</td>
-                  <td style={S.td}>
-                    <div style={{ fontWeight: 600 }}>{o.customer_name || '—'}</div>
-                    <div style={{ fontSize: '0.75rem', color: 'rgba(255,255,255,0.4)' }}>{o.customer_email || ''}</div>
-                  </td>
-                  <td style={{ ...S.td, color: 'rgba(255,255,255,0.5)', fontSize: '0.82rem', whiteSpace: 'nowrap' }}>{new Date(o.created_at).toLocaleDateString('pt-BR')}</td>
-                  <td style={{ ...S.td, fontWeight: 700, color: '#D6FF00', whiteSpace: 'nowrap' }}>${parseFloat(o.total || o.total_price || 0).toFixed(2)}</td>
-                  <td style={S.td}><span style={S.badge(o.status)}>{STATUS_COLORS[o.status]?.label || o.status}</span></td>
-                  <td style={{ ...S.td }} onClick={e => e.stopPropagation()}>
-                    <div style={{ display: 'flex', gap: '0.5rem' }}>
-                      <button style={S.btnEdit} onClick={() => setSelectedOrder(o)}><Eye size={14} /></button>
-                      <select
-                        value={o.status}
-                        onChange={e => { e.stopPropagation(); handleStatusChange(o.id, e.target.value); }}
-                        style={{ ...S.input, width: 'auto', padding: '0.4rem 0.75rem', fontSize: '0.8rem' }}
-                      >
-                        {Object.entries(STATUS_COLORS).map(([k, v]) => <option key={k} value={k}>{v.label}</option>)}
-                      </select>
-                    </div>
-                  </td>
-                </tr>
-              ))}
-              {filtered.length === 0 && <tr><td colSpan={6} style={{ ...S.td, textAlign: 'center', color: 'rgba(255,255,255,0.3)', padding: '3rem' }}>Nenhum pedido encontrado.</td></tr>}
-            </tbody>
-          </table>
+          <div className="table-responsive">
+            <table style={S.table}>
+              <thead>
+                <tr>{['ID', 'Cliente', 'Data', 'Total', 'Status', 'Ações'].map(h => <th key={h} style={S.th}>{h}</th>)}</tr>
+              </thead>
+              <tbody>
+                {filtered.map(o => (
+                  <tr key={o.id} style={{ cursor: 'pointer' }} onClick={() => setSelectedOrder(o)}>
+                    <td style={{ ...S.td, color: 'rgba(255,255,255,0.5)', fontSize: '0.78rem', fontFamily: 'monospace' }}>#{String(o.id).slice(-8)}</td>
+                    <td style={S.td}>
+                      <div style={{ fontWeight: 600 }}>{o.customer_name || '—'}</div>
+                      <div style={{ fontSize: '0.75rem', color: 'rgba(255,255,255,0.4)' }}>{o.customer_email || ''}</div>
+                    </td>
+                    <td style={{ ...S.td, color: 'rgba(255,255,255,0.5)', fontSize: '0.82rem', whiteSpace: 'nowrap' }}>{new Date(o.created_at).toLocaleDateString('pt-BR')}</td>
+                    <td style={{ ...S.td, fontWeight: 700, color: '#D6FF00', whiteSpace: 'nowrap' }}>${parseFloat(o.total || o.total_price || 0).toFixed(2)}</td>
+                    <td style={S.td}><span style={S.badge(o.status)}>{STATUS_COLORS[o.status]?.label || o.status}</span></td>
+                    <td style={{ ...S.td }} onClick={e => e.stopPropagation()}>
+                      <div style={{ display: 'flex', gap: '0.5rem' }}>
+                        <button style={S.btnEdit} onClick={() => setSelectedOrder(o)}><Eye size={14} /></button>
+                        <select
+                          value={o.status}
+                          onChange={e => { e.stopPropagation(); handleStatusChange(o.id, e.target.value); }}
+                          style={{ ...S.input, width: 'auto', padding: '0.4rem 0.75rem', fontSize: '0.8rem' }}
+                        >
+                          {Object.entries(STATUS_COLORS).map(([k, v]) => <option key={k} value={k}>{v.label}</option>)}
+                        </select>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+                {filtered.length === 0 && <tr><td colSpan={6} style={{ ...S.td, textAlign: 'center', color: 'rgba(255,255,255,0.3)', padding: '3rem' }}>Nenhum pedido encontrado.</td></tr>}
+              </tbody>
+            </table>
+          </div>
         )}
       </div>
 
@@ -3072,6 +3183,17 @@ const RebrandAdmin = () => {
   const [activeTab, setActiveTab] = useState('dashboard');
   const [toast, setToast] = useState(null);
   const [showValues, setShowValues] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 1024);
+    };
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
 
   const showToast = useCallback((message, type = 'success') => {
     setToast({ message, type });
@@ -3122,13 +3244,130 @@ const RebrandAdmin = () => {
         @keyframes slideUp { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
         * { box-sizing: border-box; }
         select option { background: #1A1D20; color: #fff; }
+
+        .admin-grid-2 {
+          display: grid;
+          grid-template-columns: 1fr 1fr;
+          gap: 1.5rem;
+        }
+        .admin-gap-1 {
+          gap: 1rem;
+        }
+        @media (max-width: 768px) {
+          .admin-grid-2 {
+            grid-template-columns: 1fr;
+            gap: 1rem;
+          }
+        }
+        
+        .kpi-grid {
+          display: grid;
+          grid-template-columns: repeat(5, 1fr);
+          gap: 1.25rem;
+          margin-bottom: 1.25rem;
+        }
+        @media (max-width: 1200px) {
+          .kpi-grid {
+            grid-template-columns: repeat(3, 1fr);
+          }
+        }
+        @media (max-width: 640px) {
+          .kpi-grid {
+            grid-template-columns: repeat(2, 1fr);
+          }
+        }
+
+        .charts-grid {
+          display: grid;
+          grid-template-columns: 3.5fr 2.5fr;
+          gap: 1.5rem;
+          margin-bottom: 2rem;
+        }
+        @media (max-width: 768px) {
+          .charts-grid {
+            grid-template-columns: 1fr;
+            gap: 1rem;
+          }
+        }
+
+        .table-responsive {
+          width: 100%;
+          overflow-x: auto;
+          -webkit-overflow-scrolling: touch;
+        }
       `}</style>
+
+      {/* Mobile Top Header */}
+      {isMobile && (
+        <header style={{
+          background: '#0F1012',
+          borderBottom: '1px solid #1A1D20',
+          padding: '0.85rem 1rem',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          position: 'sticky',
+          top: 0,
+          zIndex: 90,
+          height: '56px'
+        }}>
+          <button
+            onClick={() => setSidebarOpen(true)}
+            style={{ background: 'none', border: 'none', color: '#fff', cursor: 'pointer', padding: '0.25rem' }}
+          >
+            <Menu size={22} />
+          </button>
+          <div style={{ display: 'flex', alignItems: 'baseline', gap: '2px', fontSize: '1.2rem', fontWeight: 900, fontFamily: "'Outfit', sans-serif" }}>
+            <span style={{ color: '#D6FF00' }}>i</span>
+            <span style={{ color: '#fff' }}>Footy</span>
+            <span style={{ color: '#D6FF00' }}>.</span>
+          </div>
+          <div style={{ width: '22px' }} />
+        </header>
+      )}
+
+      {/* Mobile Sidebar Backdrop overlay */}
+      {isMobile && sidebarOpen && (
+        <div 
+          onClick={() => setSidebarOpen(false)}
+          style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            background: 'rgba(0,0,0,0.6)',
+            backdropFilter: 'blur(4px)',
+            zIndex: 999
+          }}
+        />
+      )}
 
       <div style={S.layout}>
         {/* Sidebar */}
-        <aside style={S.sidebar}>
+        <aside style={{
+          ...S.sidebar,
+          ...(isMobile ? {
+            transform: sidebarOpen ? 'translateX(0)' : 'translateX(-100%)',
+            transition: 'transform 0.25s ease',
+            boxShadow: sidebarOpen ? '0 0 24px rgba(0,0,0,0.8)' : 'none',
+            zIndex: 1000
+          } : {})
+        }}>
+          {/* Mobile close button inside sidebar header */}
+          {isMobile && (
+            <div style={{ display: 'flex', justifyContent: 'flex-end', padding: '0.75rem 0.75rem 0 0' }}>
+              <button
+                onClick={() => setSidebarOpen(false)}
+                style={{ background: 'none', border: 'none', color: 'rgba(255,255,255,0.4)', cursor: 'pointer', padding: '0.25rem' }}
+              >
+                <X size={20} />
+              </button>
+            </div>
+          )}
+
           {/* Logo */}
-          <div style={{ padding: '1.75rem 1.5rem', borderBottom: '1px solid #1A1D20' }}>
+          <div style={{ padding: isMobile ? '0.75rem 1.5rem 1.75rem 1.5rem' : '1.75rem 1.5rem', borderBottom: '1px solid #1A1D20' }}>
             <div style={{ display: 'flex', alignItems: 'baseline', gap: '2px', fontSize: '1.4rem', fontWeight: 900, fontFamily: "'Outfit', sans-serif" }}>
               <span style={{ color: '#D6FF00' }}>i</span>
               <span style={{ color: '#fff' }}>Footy</span>
@@ -3145,7 +3384,10 @@ const RebrandAdmin = () => {
               return (
                 <button
                   key={item.id}
-                  onClick={() => setActiveTab(item.id)}
+                  onClick={() => {
+                    setActiveTab(item.id);
+                    if (isMobile) setSidebarOpen(false);
+                  }}
                   style={{
                     width: '100%', display: 'flex', alignItems: 'center', gap: '0.75rem',
                     padding: '0.7rem 1rem', borderRadius: '8px', border: 'none', cursor: 'pointer',
@@ -3187,7 +3429,13 @@ const RebrandAdmin = () => {
         </aside>
 
         {/* Main Content */}
-        <main style={S.main}>
+        <main style={{
+          ...S.main,
+          ...(isMobile ? {
+            marginLeft: 0,
+            padding: '1.25rem'
+          } : {})
+        }}>
           {sections[activeTab]}
         </main>
       </div>
