@@ -6,7 +6,7 @@ import {
   LayoutDashboard, ShoppingBag, Package, Compass, Tag, Settings,
   LogOut, ExternalLink, ChevronUp, ChevronDown, Edit2, Trash2,
   Plus, Save, X, Check, AlertCircle, TrendingUp, Users, DollarSign,
-  Clock, Search, RefreshCw, Eye, UserCircle, Award, MessageSquare, Star,
+  Clock, Search, RefreshCw, Eye, EyeOff, UserCircle, Award, MessageSquare, Star,
   Shirt, CreditCard, Globe, Activity, Truck, CheckCircle2, XCircle, Menu
 } from 'lucide-react';
 import ProductMedia from '../../components/ProductMedia';
@@ -3009,7 +3009,7 @@ const DepoimentosSection = ({ showToast }) => {
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
   const [editing, setEditing] = useState(null);
-  const [form, setForm] = useState({ name: '', comment: '', rating: '5', role: '', avatar: '' });
+  const [form, setForm] = useState({ name: '', content: '', rating: '5', location: '', avatar_url: '' });
   const [saving, setSaving] = useState(false);
 
   const load = useCallback(async () => {
@@ -3026,17 +3026,17 @@ const DepoimentosSection = ({ showToast }) => {
 
   const handleSave = async (e) => {
     e.preventDefault();
-    if (!form.name.trim() || !form.comment.trim()) {
+    if (!form.name.trim() || !form.content.trim()) {
       showToast('Preencha o nome e o depoimento.', 'error');
       return;
     }
     setSaving(true);
     const payload = {
       name: form.name.trim(),
-      comment: form.comment.trim(),
+      content: form.content.trim(),
       rating: parseInt(form.rating) || 5,
-      role: form.role.trim() || null,
-      avatar: form.avatar.trim() || null,
+      location: form.location.trim() || null,
+      avatar_url: form.avatar_url.trim() || null,
     };
     const { error } = editing
       ? await supabase.from('testimonials').update(payload).eq('id', editing.id)
@@ -3045,7 +3045,7 @@ const DepoimentosSection = ({ showToast }) => {
     if (error) { showToast('Erro: ' + error.message, 'error'); return; }
     showToast(editing ? 'Depoimento atualizado!' : 'Depoimento criado!', 'success');
     setShowForm(false); setEditing(null);
-    setForm({ name: '', comment: '', rating: '5', role: '', avatar: '' });
+    setForm({ name: '', content: '', rating: '5', location: '', avatar_url: '' });
     load();
   };
 
@@ -3058,8 +3058,19 @@ const DepoimentosSection = ({ showToast }) => {
 
   const openEdit = (d) => {
     setEditing(d);
-    setForm({ name: d.name || '', comment: d.comment || '', rating: String(d.rating || 5), role: d.role || '', avatar: d.avatar || '' });
+    setForm({ name: d.name || '', content: d.content || '', rating: String(d.rating || 5), location: d.location || '', avatar_url: d.avatar_url || '' });
     setShowForm(true);
+  };
+
+  const handleToggleStatus = async (d) => {
+    const newStatus = d.status === 'approved' ? 'pending' : 'approved';
+    const { error } = await supabase.from('testimonials').update({ status: newStatus }).eq('id', d.id);
+    if (error) {
+      showToast('Erro ao alterar visibilidade: ' + error.message, 'error');
+      return;
+    }
+    showToast(newStatus === 'approved' ? 'Depoimento publicado com sucesso!' : 'Depoimento ocultado do site!', 'success');
+    load();
   };
 
   return (
@@ -3068,7 +3079,7 @@ const DepoimentosSection = ({ showToast }) => {
         title="Depoimentos"
         sub="Gerencie avaliações e testemunhos exibidos no site"
         action={
-          <button style={S.btnPrimary} onClick={() => { setEditing(null); setForm({ name: '', comment: '', rating: '5', role: '', avatar: '' }); setShowForm(true); }}>
+          <button style={S.btnPrimary} onClick={() => { setEditing(null); setForm({ name: '', content: '', rating: '5', location: '', avatar_url: '' }); setShowForm(true); }}>
             <Plus size={15} /> Novo Depoimento
           </button>
         }
@@ -3085,7 +3096,7 @@ const DepoimentosSection = ({ showToast }) => {
               </div>
               <div>
                 <label style={S.label}>Cargo / Cidade</label>
-                <input style={S.input} placeholder="Ex: Toronto, ON" value={form.role} onChange={e => setForm({...form, role: e.target.value})} />
+                <input style={S.input} placeholder="Ex: Toronto, ON" value={form.location} onChange={e => setForm({...form, location: e.target.value})} />
               </div>
               <div>
                 <label style={S.label}>Nota ({form.rating} estrelas)</label>
@@ -3098,7 +3109,7 @@ const DepoimentosSection = ({ showToast }) => {
               </div>
               <div>
                 <label style={S.label}>URL do Avatar (opcional)</label>
-                <input style={S.input} placeholder="https://..." value={form.avatar} onChange={e => setForm({...form, avatar: e.target.value})} />
+                <input style={S.input} placeholder="https://..." value={form.avatar_url} onChange={e => setForm({...form, avatar_url: e.target.value})} />
               </div>
             </div>
             <div style={{ marginBottom: '1rem' }}>
@@ -3106,8 +3117,8 @@ const DepoimentosSection = ({ showToast }) => {
               <textarea
                 style={{ ...S.input, minHeight: '90px', resize: 'vertical' }}
                 placeholder="Digite o depoimento do cliente..."
-                value={form.comment}
-                onChange={e => setForm({...form, comment: e.target.value})}
+                value={form.content}
+                onChange={e => setForm({...form, content: e.target.value})}
                 required
               />
             </div>
@@ -3128,20 +3139,46 @@ const DepoimentosSection = ({ showToast }) => {
           {depoimentos.map(d => (
             <div key={d.id} style={{ ...S.card, position: 'relative' }}>
               <div style={{ position: 'absolute', top: '1rem', right: '1rem', display: 'flex', gap: '0.4rem' }}>
+                <button
+                  onClick={() => handleToggleStatus(d)}
+                  style={{
+                    ...S.btnEdit,
+                    background: d.status === 'approved' ? 'rgba(34, 197, 94, 0.1)' : 'rgba(255, 255, 255, 0.05)',
+                    color: d.status === 'approved' ? '#4ADE80' : 'rgba(255, 255, 255, 0.4)',
+                    borderColor: d.status === 'approved' ? 'rgba(34, 197, 94, 0.2)' : 'transparent',
+                  }}
+                  title={d.status === 'approved' ? 'Ocultar do Site' : 'Publicar no Site'}
+                >
+                  {d.status === 'approved' ? <Eye size={13} /> : <EyeOff size={13} />}
+                </button>
                 <button style={S.btnEdit} onClick={() => openEdit(d)}><Edit2 size={13} /></button>
                 <button style={S.btnDanger} onClick={() => handleDelete(d.id)}><Trash2 size={13} /></button>
               </div>
               <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '0.85rem' }}>
-                {d.avatar ? (
-                  <img src={d.avatar} alt={d.name} style={{ width: '40px', height: '40px', borderRadius: '50%', objectFit: 'cover' }} />
+                {d.avatar_url ? (
+                  <img src={d.avatar_url} alt={d.name} style={{ width: '40px', height: '40px', borderRadius: '50%', objectFit: 'cover' }} />
                 ) : (
                   <div style={{ width: '40px', height: '40px', borderRadius: '50%', background: 'rgba(214,255,0,0.12)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
                     <span style={{ fontSize: '1.1rem', fontWeight: 700, color: '#D6FF00' }}>{(d.name || '?')[0].toUpperCase()}</span>
                   </div>
                 )}
                 <div>
-                  <div style={{ fontWeight: 700, fontSize: '0.875rem' }}>{d.name}</div>
-                  {d.role && <div style={{ fontSize: '0.75rem', color: 'rgba(255,255,255,0.4)' }}>{d.role}</div>}
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                    <span style={{ fontWeight: 700, fontSize: '0.875rem' }}>{d.name}</span>
+                    <span style={{
+                      fontSize: '0.625rem',
+                      fontWeight: 700,
+                      textTransform: 'uppercase',
+                      padding: '0.15rem 0.4rem',
+                      borderRadius: '4px',
+                      background: d.status === 'approved' ? 'rgba(34, 197, 94, 0.15)' : 'rgba(255,255,255,0.06)',
+                      color: d.status === 'approved' ? '#4ADE80' : 'rgba(255,255,255,0.4)',
+                      border: d.status === 'approved' ? '1px solid rgba(34, 197, 94, 0.3)' : '1px solid rgba(255,255,255,0.1)'
+                    }}>
+                      {d.status === 'approved' ? 'Publicado' : 'Oculto'}
+                    </span>
+                  </div>
+                  {d.location && <div style={{ fontSize: '0.75rem', color: 'rgba(255,255,255,0.4)' }}>{d.location}</div>}
                 </div>
               </div>
               <div style={{ display: 'flex', gap: '2px', marginBottom: '0.65rem' }}>
@@ -3149,7 +3186,7 @@ const DepoimentosSection = ({ showToast }) => {
                   <Star key={s} size={13} fill={s <= (d.rating || 5) ? '#FBBF24' : 'none'} color={s <= (d.rating || 5) ? '#FBBF24' : 'rgba(255,255,255,0.2)'} />
                 ))}
               </div>
-              <p style={{ margin: 0, fontSize: '0.85rem', lineHeight: 1.6, color: 'rgba(255,255,255,0.7)', fontStyle: 'italic' }}>"{d.comment}"</p>
+              <p style={{ margin: 0, fontSize: '0.85rem', lineHeight: 1.6, color: 'rgba(255,255,255,0.7)', fontStyle: 'italic' }}>"{d.content}"</p>
             </div>
           ))}
           {depoimentos.length === 0 && (
