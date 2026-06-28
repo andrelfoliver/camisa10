@@ -108,7 +108,7 @@ const Navbar = () => {
               ⚡ VIP WhatsApp — 10% Off
             </a>
             <span style={{ color: 'rgba(255,255,255,0.2)' }}>|</span>
-            <Link to="/perfil" style={{ color: '#ffffff', textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '0.3rem' }}>
+            <Link to="/rebrand/profile" style={{ color: '#ffffff', textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '0.3rem' }}>
               <MapPin size={12} /> Track Order
             </Link>
           </div>
@@ -177,7 +177,7 @@ const Navbar = () => {
               </Link>
               {(user || sessionStorage.getItem('ifooty_guest_email')) && (
                 <div className="rebrand-account-dropdown">
-                  <Link to={user ? '/perfil' : '/rebrand/checkout'} style={{ borderBottom: '1px solid #f1f3f5' }}>
+                  <Link to={user ? '/rebrand/profile' : '/rebrand/checkout'} style={{ borderBottom: '1px solid #f1f3f5' }}>
                     {user ? 'My Profile' : 'Guest Checkout'}
                   </Link>
                   <button onClick={handleSignOut} style={{ color: '#dc3545' }}>
