@@ -1362,10 +1362,66 @@ const uploadImageToSupabase = async (file) => {
 };
 
 // ─── Products Section ─────────────────────────────────────────────────────────
+const PRODUCT_CATEGORIES = [
+  'Brasileirão',
+  'Seleções',
+  'Internacionais',
+  'Retrô',
+  'NBA',
+  'Baseball',
+  'Football',
+  'Hockey',
+  'Tênis',
+  'Lançamentos',
+  'Streetwear'
+];
+
+const getProductSport = (p) => {
+  const cat = (p.category || '').toLowerCase();
+  const pName = (p.name || '').toLowerCase();
+  const pLeague = (p.league || '').toLowerCase();
+
+  const isStreetwear = cat === 'streetwear' || cat === 'camisetas' || pName.includes('streetwear') || pName.includes('camiseta');
+  const isTenis = (cat === 'tênis' || cat === 'tenis' || cat === 'shoes' || pName.includes('tênis') || pName.includes('tenis') || pName.includes('sneaker')) && !isStreetwear;
+  const isNba = (cat === 'nba' || cat === 'basquete' || pLeague === 'nba' || pName.includes('nba') || pName.includes('basquete') || pName.includes('basketball') || pName.includes('jersey nba')) && !isStreetwear;
+  
+  const isBaseball = cat === 'baseball' || pLeague === 'mlb' || pName.includes('blue jays') || pName.includes('baseball') || pName.includes('mlb') || pName.includes('dodgers');
+  const isFootball = cat === 'football' || pLeague === 'nfl' || pName.includes('chiefs') || pName.includes('football') || pName.includes('nfl') || pName.includes('cowboys');
+  const isHockey = cat === 'hockey' || pLeague === 'nhl' || pName.includes('maple leafs') || pName.includes('hockey') || pName.includes('nhl') || pName.includes('oilers');
+
+  if (isStreetwear) return 'Streetwear';
+  if (isTenis) return 'Tênis';
+  if (isNba) return 'Basketball';
+  if (isBaseball) return 'Baseball';
+  if (isFootball) return 'Football';
+  if (isHockey) return 'Hockey';
+  
+  return 'Soccer';
+};
+
+const getSoccerSubdivision = (p) => {
+  const cat = (p.category || '').toLowerCase();
+  const pName = (p.name || '').toLowerCase();
+  const pLeague = (p.league || '').toLowerCase();
+
+  const isRetro = cat === 'retrô' || cat.includes('retro') || (p.version || '').toLowerCase().includes('retrô') || pName.includes('retrô') || pName.includes('retro');
+  const isBrasileirao = cat === 'brasileirão' || cat === 'brasileirao' || cat.includes('brasileiro') || pLeague === 'brasileirão' || pName.includes('corinthians') || pName.includes('flamengo') || pName.includes('palmeiras') || pName.includes('são paulo') || pName.includes('santos') || pName.includes('grêmio') || pName.includes('fluminense') || pName.includes('botafogo') || pName.includes('vasco');
+  const isSelecao = cat === 'seleções' || cat === 'selecoes' || pName.includes('seleção') || pName.includes('selecao') || pLeague === 'seleções' || pName.includes('brasil') || pName.includes('argentina') || pName.includes('portugal') || pName.includes('frança') || pName.includes('itália') || pName.includes('espanha');
+  const isInternacional = cat === 'internacionais' || cat.includes('europa') || cat.includes('europe') || (pLeague !== '' && pLeague !== 'brasileirão' && pLeague !== 'seleções' && pLeague !== 'nba') || pName.includes('real madrid') || pName.includes('barcelona') || pName.includes('manchester') || pName.includes('chelsea') || pName.includes('arsenal') || pName.includes('juventus') || pName.includes('milan') || pName.includes('bayern');
+
+  if (isRetro) return 'Retrô';
+  if (isBrasileirao) return 'Brasileirão';
+  if (isSelecao) return 'Seleções';
+  if (isInternacional) return 'Internacionais';
+  return 'Internacionais';
+};
+
 const ProductsSection = ({ showToast }) => {
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
+  const [selectedSport, setSelectedSport] = useState('all');
+  const [selectedSubdivision, setSelectedSubdivision] = useState('all');
   const [editingProduct, setEditingProduct] = useState(null);
   const [form, setForm] = useState({});
   const [saving, setSaving] = useState(false);
@@ -1461,17 +1517,86 @@ const ProductsSection = ({ showToast }) => {
     return Object.values(p.inventory).reduce((acc, qty) => acc + (parseInt(qty) || 0), 0);
   };
 
-  const filtered = products.filter(p => !search || p.name?.toLowerCase().includes(search.toLowerCase()) || p.category?.toLowerCase().includes(search.toLowerCase()));
+  const filtered = products.filter(p => {
+    const sport = getProductSport(p);
+    const matchesSport = selectedSport === 'all' || sport === selectedSport;
+    
+    let matchesSubdivision = true;
+    if (selectedSport === 'Soccer' && selectedSubdivision !== 'all') {
+      const sub = getSoccerSubdivision(p);
+      matchesSubdivision = sub === selectedSubdivision;
+    }
+
+    const matchesSearch = !search || p.name?.toLowerCase().includes(search.toLowerCase()) || p.category?.toLowerCase().includes(search.toLowerCase());
+    return matchesSport && matchesSubdivision && matchesSearch;
+  });
+
+  const SPORTS = ['all', 'Soccer', 'Basketball', 'Football', 'Baseball', 'Hockey', 'Tênis', 'Streetwear'];
+  const SUBDIVISIONS = ['all', 'Brasileirão', 'Seleções', 'Internacionais', 'Retrô'];
 
   return (
     <div>
       <SectionHeader title="Produtos" sub={`${products.length} produtos cadastrados`} action={<button style={S.btnPrimary} onClick={() => openEdit({ id: 'NEW' })}><Plus size={14} /> Novo Produto</button>} />
 
-      <div style={{ marginBottom: '1.5rem' }}>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', marginBottom: '1.5rem' }}>
         <div style={{ position: 'relative', maxWidth: '340px' }}>
           <Search size={14} style={{ position: 'absolute', left: '1rem', top: '50%', transform: 'translateY(-50%)', color: 'rgba(255,255,255,0.35)' }} />
           <input style={{ ...S.input, paddingLeft: '2.5rem' }} placeholder="Buscar produto..." value={search} onChange={e => setSearch(e.target.value)} />
         </div>
+        
+        {/* Esportes / Categorias Principais */}
+        <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap', overflowX: 'auto', paddingBottom: '0.25rem', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
+          {SPORTS.map(sport => (
+            <button
+              key={sport}
+              onClick={() => {
+                setSelectedSport(sport);
+                setSelectedSubdivision('all');
+              }}
+              style={{
+                padding: '0.5rem 1rem',
+                borderRadius: '6px',
+                border: 'none',
+                cursor: 'pointer',
+                fontSize: '0.8rem',
+                fontWeight: 700,
+                textTransform: 'uppercase',
+                letterSpacing: '0.04em',
+                background: selectedSport === sport ? '#D6FF00' : 'rgba(255,255,255,0.06)',
+                color: selectedSport === sport ? '#000' : 'rgba(255,255,255,0.6)',
+                transition: 'all 0.15s'
+              }}
+            >
+              {sport === 'all' ? 'Todos' : sport}
+            </button>
+          ))}
+        </div>
+
+        {/* Subdivisões do Soccer */}
+        {selectedSport === 'Soccer' && (
+          <div style={{ display: 'flex', gap: '0.4rem', flexWrap: 'wrap', alignItems: 'center', overflowX: 'auto', padding: '0.65rem 0.75rem', background: 'rgba(214,255,0,0.02)', borderRadius: '6px', border: '1px solid rgba(214,255,0,0.08)', animation: 'slideUp 0.25s ease' }}>
+            <span style={{ fontSize: '0.72rem', fontWeight: 800, color: '#D6FF00', marginRight: '0.5rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>⚽ Soccer Ligas:</span>
+            {SUBDIVISIONS.map(sub => (
+              <button
+                key={sub}
+                onClick={() => setSelectedSubdivision(sub)}
+                style={{
+                  padding: '0.35rem 0.75rem',
+                  borderRadius: '4px',
+                  border: 'none',
+                  cursor: 'pointer',
+                  fontSize: '0.75rem',
+                  fontWeight: 700,
+                  background: selectedSubdivision === sub ? 'rgba(214,255,0,0.2)' : 'rgba(255,255,255,0.03)',
+                  color: selectedSubdivision === sub ? '#D6FF00' : 'rgba(255,255,255,0.45)',
+                  transition: 'all 0.1s'
+                }}
+              >
+                {sub === 'all' ? 'Todas' : sub}
+              </button>
+            ))}
+          </div>
+        )}
       </div>
 
       {loading ? <Loader /> : (
@@ -1539,7 +1664,7 @@ const ProductsSection = ({ showToast }) => {
                   <label style={S.label}>Categoria</label>
                   <select style={S.input} value={form.category} onChange={e => setForm({...form, category: e.target.value})}>
                     <option value="">Selecionar...</option>
-                    {['soccer', 'basketball', 'football', 'baseball', 'hockey'].map(c => <option key={c} value={c} style={{ textTransform: 'capitalize' }}>{c.charAt(0).toUpperCase() + c.slice(1)}</option>)}
+                    {PRODUCT_CATEGORIES.map(c => <option key={c} value={c}>{c}</option>)}
                   </select>
                 </div>
                 <div style={{ gridColumn: '1 / -1' }}>
