@@ -6,7 +6,8 @@ import {
   LayoutDashboard, ShoppingBag, Package, Compass, Tag, Settings,
   LogOut, ExternalLink, ChevronUp, ChevronDown, Edit2, Trash2,
   Plus, Save, X, Check, AlertCircle, TrendingUp, Users, DollarSign,
-  Clock, Search, RefreshCw, Eye, UserCircle, Award, MessageSquare, Star
+  Clock, Search, RefreshCw, Eye, UserCircle, Award, MessageSquare, Star,
+  Shirt, CreditCard, Globe, Activity, Truck, CheckCircle2, XCircle
 } from 'lucide-react';
 import ProductMedia from '../../components/ProductMedia';
 
@@ -27,11 +28,12 @@ const NAV_ITEMS = [
 ];
 
 const STATUS_COLORS = {
-  pending:   { bg: 'rgba(234,179,8,0.15)',   color: '#FBBF24', label: 'Pendente' },
-  paid:      { bg: 'rgba(34,197,94,0.15)',   color: '#4ADE80', label: 'Pago' },
-  shipped:   { bg: 'rgba(59,130,246,0.15)',  color: '#60A5FA', label: 'Enviado' },
-  delivered: { bg: 'rgba(168,85,247,0.15)', color: '#C084FC', label: 'Entregue' },
-  cancelled: { bg: 'rgba(239,68,68,0.15)',  color: '#F87171', label: 'Cancelado' },
+  pending:    { bg: 'rgba(234,179,8,0.15)',   color: '#FBBF24', label: 'Pendente' },
+  paid:       { bg: 'rgba(34,197,94,0.15)',   color: '#4ADE80', label: 'Pago' },
+  processing: { bg: 'rgba(249,115,22,0.15)',  color: '#FB923C', label: 'Preparando' },
+  shipped:    { bg: 'rgba(59,130,246,0.15)',  color: '#60A5FA', label: 'Enviado' },
+  delivered:  { bg: 'rgba(168,85,247,0.15)', color: '#C084FC', label: 'Entregue' },
+  cancelled:  { bg: 'rgba(239,68,68,0.15)',  color: '#F87171', label: 'Cancelado' },
 };
 
 const DEFAULT_SPOTLIGHT = [
@@ -73,74 +75,201 @@ const Toast = ({ message, type, onClose }) => (
 );
 
 // ─── KPI Card ─────────────────────────────────────────────────────────────────
-const KpiCard = ({ label, value, icon: Icon, color, sub }) => (
-  <div style={{ ...S.card, display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+const KpiCard = ({ label, value, icon: Icon, color, sub, compact }) => (
+  <div style={{
+    background: '#121416',
+    border: '1px solid #1A1D20',
+    borderRadius: '12px',
+    padding: compact ? '1rem 1.15rem' : '1.75rem',
+    display: 'flex',
+    flexDirection: 'column',
+    gap: compact ? '0.45rem' : '1rem'
+  }}>
     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-      <span style={{ fontSize: '0.8rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em', color: 'rgba(255,255,255,0.45)' }}>{label}</span>
-      <div style={{ width: '38px', height: '38px', borderRadius: '10px', background: `${color}20`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-        <Icon size={18} color={color} />
+      <span style={{ fontSize: compact ? '0.72rem' : '0.8rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em', color: 'rgba(255,255,255,0.45)' }}>{label}</span>
+      <div style={{ width: compact ? '32px' : '38px', height: compact ? '32px' : '38px', borderRadius: compact ? '8px' : '10px', background: `${color}20`, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+        <Icon size={compact ? 15 : 18} color={color} />
       </div>
     </div>
     <div>
-      <div style={{ fontSize: '2rem', fontWeight: 800, letterSpacing: '-1px', color: '#fff' }}>{value}</div>
-      {sub && <div style={{ fontSize: '0.78rem', color: 'rgba(255,255,255,0.4)', marginTop: '0.25rem' }}>{sub}</div>}
+      <div style={{ fontSize: compact ? '1.5rem' : '2rem', fontWeight: 800, letterSpacing: '-0.5px', color: '#fff', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{value}</div>
+      {sub && <div style={{ fontSize: compact ? '0.72rem' : '0.78rem', color: 'rgba(255,255,255,0.4)', marginTop: compact ? '0.15rem' : '0.25rem' }}>{sub}</div>}
     </div>
   </div>
 );
 
 // ─── Dashboard Section ────────────────────────────────────────────────────────
-const DashboardSection = () => {
-  const [stats, setStats] = useState({ orders: 0, revenue: 0, users: 0, pending: 0 });
+const DashboardSection = ({ showValues, setShowValues }) => {
+  const [stats, setStats] = useState({
+    orders: 0,
+    revenue: 0,
+    profit: 0,
+    jerseys: 0,
+    costUSD: 0,
+    costCAD: 0,
+    commissionCAD: 0,
+    countPending: 0,
+    countPaid: 0,
+    countProcessing: 0,
+    countShipped: 0,
+    countCompleted: 0,
+    countCancelled: 0,
+    users: 0
+  });
   const [recentOrders, setRecentOrders] = useState([]);
   const [loading, setLoading] = useState(true);
   const [chartData, setChartData] = useState([]);
+
+  const [allOrders, setAllOrders] = useState([]);
+  const [coupons, setCoupons] = useState([]);
+  const [pricing, setPricing] = useState({});
+  const [profilesCount, setProfilesCount] = useState(0);
+  
+  const getInitialMonthRange = () => {
+    try {
+      const nowStr = new Intl.DateTimeFormat('en-CA', {
+        timeZone: 'America/Edmonton',
+        year: 'numeric', month: '2-digit', day: '2-digit'
+      }).format(new Date());
+      const parts = nowStr.split('-');
+      const year = parseInt(parts[0], 10);
+      const month = parseInt(parts[1], 10);
+      
+      const startStr = `${year}-${String(month).padStart(2, '0')}-01`;
+      const lastDay = new Date(year, month, 0).getDate();
+      const endStr = `${year}-${String(month).padStart(2, '0')}-${String(lastDay).padStart(2, '0')}`;
+      
+      return { start: startStr, end: endStr };
+    } catch (e) {
+      return { start: '', end: '' };
+    }
+  };
+
+  const [dateRange, setDateRange] = useState(getInitialMonthRange());
+  const [timePreset, setTimePreset] = useState('month');
+  const [hoveredPoint, setHoveredPoint] = useState(null);
+  const [hoveredBar, setHoveredBar] = useState(null);
+
+  const getPeriodLabel = () => {
+    if (timePreset === 'all') return ' (Todo o Período)';
+    if (timePreset === '7d') return ' (Últimos 7 Dias)';
+    if (timePreset === 'month') {
+      try {
+        const nowStr = new Intl.DateTimeFormat('en-CA', {
+          timeZone: 'America/Edmonton',
+          year: 'numeric', month: '2-digit', day: '2-digit'
+        }).format(new Date());
+        const monthIdx = parseInt(nowStr.split('-')[1], 10) - 1;
+        const months = [
+          'Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho',
+          'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'
+        ];
+        return ` (${months[monthIdx]})`;
+      } catch (e) {
+        return '';
+      }
+    }
+    if (timePreset === 'last_month') {
+      try {
+        const nowStr = new Intl.DateTimeFormat('en-CA', {
+          timeZone: 'America/Edmonton',
+          year: 'numeric', month: '2-digit', day: '2-digit'
+        }).format(new Date());
+        let monthIdx = parseInt(nowStr.split('-')[1], 10) - 2;
+        if (monthIdx < 0) monthIdx += 12;
+        const months = [
+          'Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho',
+          'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'
+        ];
+        return ` (${months[monthIdx]})`;
+      } catch (e) {
+        return '';
+      }
+    }
+    if (dateRange.start && dateRange.end) {
+      try {
+        const sParts = dateRange.start.split('-');
+        const eParts = dateRange.end.split('-');
+        const sDate = new Date(sParts[0], sParts[1] - 1, sParts[2]);
+        const eDate = new Date(eParts[0], eParts[1] - 1, eParts[2]);
+        const sMonth = sDate.toLocaleDateString('pt-BR', { month: 'short' });
+        const eMonth = eDate.toLocaleDateString('pt-BR', { month: 'short' });
+        if (sParts[1] === eParts[1]) {
+          return ` (${sDate.toLocaleDateString('pt-BR', { month: 'long' })})`;
+        }
+        return ` (${sMonth} - ${eMonth})`;
+      } catch (e) {
+        return '';
+      }
+    }
+    return '';
+  };
 
   useEffect(() => {
     async function load() {
       setLoading(true);
       try {
-        const [{ data: orders }, { data: profiles }] = await Promise.all([
+        const [{ data: orders }, { data: profiles }, { data: settings }, { data: dbCoupons }] = await Promise.all([
           supabase.from('orders').select('*').order('created_at', { ascending: false }),
           supabase.from('profiles').select('id'),
+          supabase.from('store_settings').select('*'),
+          supabase.from('coupons').select('*')
         ]);
 
         const validOrders = orders || [];
-        const totalRevenue = validOrders
-          .filter(o => o.status === 'paid' || o.status === 'shipped' || o.status === 'delivered')
-          .reduce((sum, o) => sum + (parseFloat(o.total || o.total_price) || 0), 0);
-        
-        const pending = validOrders.filter(o => o.status === 'pending').length;
-        setStats({ orders: validOrders.length, revenue: totalRevenue, users: profiles?.length || 0, pending });
-        setRecentOrders(validOrders.slice(0, 6));
+        const couponsData = dbCoupons || [];
 
-        // Process data for the last 7 days chart
-        const last7Days = Array.from({ length: 7 }, (_, i) => {
-          const d = new Date();
-          d.setDate(d.getDate() - i);
-          return d.toISOString().split('T')[0];
-        }).reverse();
+        const defaultPricing = {
+          nameNumber: 12,
+          patch: 5,
+          size2XL3XL: 7,
+          size4XL: 10,
+          discounts: [
+            { qty: 2, percent: 4 },
+            { qty: 3, percent: 7 },
+            { qty: 5, percent: 10 },
+            { qty: 10, percent: 15 }
+          ],
+          shippingCost: 0,
+          freeShippingThreshold: 0,
+          promoBasePrice: 47.90,
+          exchangeRateFallback: 1.38,
+          costFan: 9.00,
+          costPlayer: 15.00,
+          costRetro: 15.00,
+          costLongSleeve: 12.00,
+          costKids: 11.00,
+          costBaby: 8.00,
+          costTraining: 17.00,
+          costShorts: 8.00,
+          costNBA: 17.00,
+          costNFL: 23.00,
+          costAdd2XL: 1.00,
+          costAdd3XL4XL: 2.00,
+          costAddPatch: 1.00,
+          costAddCustom: 3.00,
+          surcharge1Item: 5.00,
+          surcharge2Items: 4.00,
+          surcharge3Items: 3.00,
+          affiliateDriveLink: ""
+        };
 
-        const dailyMap = {};
-        last7Days.forEach(date => {
-          dailyMap[date] = { revenue: 0, count: 0 };
-        });
-
-        validOrders.forEach(o => {
-          const dateStr = new Date(o.created_at).toISOString().split('T')[0];
-          if (dailyMap[dateStr] !== undefined) {
-            dailyMap[dateStr].count += 1;
-            if (o.status === 'paid' || o.status === 'shipped' || o.status === 'delivered') {
-              dailyMap[dateStr].revenue += parseFloat(o.total || o.total_price || 0);
+        let pricingData = defaultPricing;
+        if (settings) {
+          const pricingRecord = settings.find(s => s.key === 'pricing');
+          if (pricingRecord) {
+            try {
+              pricingData = JSON.parse(pricingRecord.value);
+            } catch (e) {
+              console.error("Erro parsing pricing:", e);
             }
           }
-        });
+        }
 
-        setChartData(last7Days.map(date => ({
-          date: new Date(date + 'T12:00:00').toLocaleDateString('pt-BR', { weekday: 'short', day: 'numeric' }),
-          revenue: dailyMap[date].revenue,
-          count: dailyMap[date].count
-        })));
-
+        setAllOrders(validOrders);
+        setCoupons(couponsData);
+        setProfilesCount(profiles?.length || 0);
+        setPricing(pricingData);
       } catch (e) {
         console.error(e);
       } finally {
@@ -149,6 +278,268 @@ const DashboardSection = () => {
     }
     load();
   }, []);
+
+  useEffect(() => {
+    if (allOrders.length === 0) return;
+
+    const getCalgaryDateStrOnly = (dateInput) => {
+      if (!dateInput) return '';
+      try {
+        return new Intl.DateTimeFormat('en-CA', {
+          timeZone: 'America/Edmonton',
+          year: 'numeric', month: '2-digit', day: '2-digit'
+        }).format(new Date(dateInput));
+      } catch (e) {
+        return '';
+      }
+    };
+
+    const getValidRevenue = (order) => {
+      if (order?.payment_method === 'parceria') return 0;
+      const gross = Number(order?.total_price || 0);
+      if (order?.payment_method === 'paypal') {
+        return gross - (gross * 0.029) - 0.30;
+      }
+      return gross;
+    };
+
+    const getCalgaryDateStr = (dateInput) => {
+      if (!dateInput) return '';
+      try {
+        const d = new Date(dateInput);
+        return new Intl.DateTimeFormat('pt-BR', {
+          timeZone: 'America/Edmonton',
+          day: '2-digit', month: '2-digit', year: 'numeric',
+          hour: '2-digit', minute: '2-digit'
+        }).format(d).replace(',', ' às');
+      } catch (e) {
+        return '';
+      }
+    };
+
+    const getOrderCommissionBreakdown = (order) => {
+      if (!order || !order.referrer || order.payment_method === 'parceria') return null;
+      const rawRef = order.referrer || 'Sem Indicação';
+      const coupon = coupons.find(c => c.code === rawRef.toUpperCase());
+      const agentName = coupon ? (coupon.agent_id || rawRef) : rawRef;
+      if (!agentName || agentName === 'Sem Indicação') return null;
+
+      const agentOrders = allOrders.filter(o => {
+        const oRef = o.referrer || 'Sem Indicação';
+        const oCoupon = coupons.find(c => c.code === oRef.toUpperCase());
+        const oAgent = oCoupon ? (oCoupon.agent_id || oRef) : oRef;
+        return oAgent === agentName;
+      });
+
+      const agentOrdersCount = agentOrders.length;
+      let rate = 0.08;
+      if (agentOrdersCount >= 51) rate = 0.15;
+      else if (agentOrdersCount >= 26) rate = 0.12;
+      else if (agentOrdersCount >= 11) rate = 0.10;
+
+      const base = getValidRevenue(order) * rate;
+      const orderDateStr = order.created_at ? getCalgaryDateStr(order.created_at) : '';
+      const isCopaPeriod = orderDateStr >= '2026-06-11' && orderDateStr <= '2026-07-19';
+      const seasonal = isCopaPeriod ? getValidRevenue(order) * 0.05 : 0;
+
+      const sortedAgentOrders = [...agentOrders].sort((a, b) => new Date(a.created_at) - new Date(b.created_at));
+      const orderRank = sortedAgentOrders.findIndex(o => o.id === order.id) + 1;
+
+      let performance = 0;
+      if (orderRank === 1) performance = 5;
+      if (orderRank === 5) performance = 10;
+      if (orderRank === 10) performance = 15;
+
+      return {
+        agentName,
+        base,
+        seasonal,
+        performance,
+        total: base + seasonal + performance,
+        rank: orderRank
+      };
+    };
+
+    const calculateOrderCommission = (order) => {
+      const breakdown = getOrderCommissionBreakdown(order);
+      return breakdown ? breakdown.total : 0;
+    };
+
+    const calculateItemBaseCostUSD = (item) => {
+      const name = (item.name || '').toLowerCase();
+      const c = pricing;
+      if (name.includes('nba')) return c.costNBA || 17;
+      if (name.includes('nfl')) return c.costNFL || 23;
+      if (name.includes('jogador') || name.includes('player')) return c.costPlayer || 15;
+      if (name.includes('retrô') || name.includes('retro')) return c.costRetro || 15;
+      if (name.includes('manga longa') || name.includes('long sleeve')) return c.costLongSleeve || 12;
+      if (name.includes('kit infantil') || name.includes('kids')) return c.costKids || 11;
+      if (name.includes('baby') || name.includes('body')) return c.costBaby || 8;
+      if (name.includes('treino') || name.includes('training')) return c.costTraining || 17;
+      if (name.includes('short') || name.includes('bermuda')) return c.costShorts || 8;
+      return c.costFan || 9;
+    };
+
+    const calculateOrderCost = (order) => {
+      if (!order || !order.items) return 0;
+      const rate = order.usd_cad_rate || pricing.exchangeRateFallback || 1.38;
+      
+      const itemsCostUSD = order.items.reduce((acc, item) => {
+        const baseUSD = calculateItemBaseCostUSD(item);
+        let addonsUSD = 0;
+        const size = item.size || 'M';
+        if (size === '2XL') addonsUSD += (pricing.costAdd2XL || 1);
+        if (['3XL', '4XL'].includes(size)) addonsUSD += (pricing.costAdd3XL4XL || 2);
+        if (item.extras?.nameNumber) addonsUSD += (pricing.costAddCustom || 3);
+        if (item.extras?.patch) addonsUSD += (pricing.costAddPatch || 1);
+        return acc + ((baseUSD + addonsUSD) * (item.quantity || 1));
+      }, 0);
+
+      const totalItems = order.items.reduce((sum, item) => sum + (item.quantity || 1), 0);
+      let surchargeUSD = 0;
+      if (totalItems === 1) surchargeUSD = pricing.surcharge1Item || 5;
+      else if (totalItems === 2) surchargeUSD = pricing.surcharge2Items || 4;
+      else if (totalItems === 3) surchargeUSD = pricing.surcharge3Items || 3;
+      
+      const baseCostCAD = (itemsCostUSD + surchargeUSD) * rate;
+      const commissionCAD = calculateOrderCommission(order);
+      return baseCostCAD + commissionCAD;
+    };
+
+    // Filter orders
+    const filteredOrders = allOrders.filter(o => {
+      const orderDate = getCalgaryDateStrOnly(o.created_at);
+      const matchesStart = !dateRange.start || orderDate >= dateRange.start;
+      const matchesEnd = !dateRange.end || orderDate <= dateRange.end;
+      return matchesStart && matchesEnd;
+    });
+
+    const calculatedStats = filteredOrders.reduce((acc, order) => {
+      const isCancelled = order.status === 'cancelled';
+      const itemsCount = order.items?.reduce((s, i) => s + (i.quantity || 1), 0) || 0;
+      
+      if (order.status === 'shipped') acc.countShipped++;
+      if (order.status === 'completed') acc.countCompleted++;
+      if (order.status === 'cancelled') acc.countCancelled++;
+      if (order.status === 'pending') acc.countPending++;
+      if (order.status === 'paid') acc.countPaid++;
+      if (order.status === 'processing') acc.countProcessing++;
+
+      if (!isCancelled) {
+        acc.totalRevenue += getValidRevenue(order);
+        acc.totalJerseys += itemsCount;
+
+        const orderCostCAD = calculateOrderCost(order);
+        acc.totalCostCAD += orderCostCAD;
+        acc.totalCommissionCAD += calculateOrderCommission(order);
+
+        const itemsCostUSD = order.items?.reduce((sum, item) => {
+          const base = calculateItemBaseCostUSD(item);
+          let addons = 0;
+          const size = item.size || 'M';
+          if (size === '2XL') addons += (pricing.costAdd2XL || 1);
+          if (['3XL', '4XL'].includes(size)) addons += (pricing.costAdd3XL4XL || 2);
+          if (item.extras?.nameNumber) addons += (pricing.costAddCustom || 3);
+          if (item.extras?.patch) addons += (pricing.costAddPatch || 1);
+          return sum + ((base + addons) * (item.quantity || 1));
+        }, 0) || 0;
+
+        let surchargeUSD = 0;
+        if (itemsCount === 1) surchargeUSD = pricing.surcharge1Item || 5;
+        else if (itemsCount === 2) surchargeUSD = pricing.surcharge2Items || 4;
+        else if (itemsCount === 3) surchargeUSD = pricing.surcharge3Items || 3;
+
+        acc.totalCostUSD += (itemsCostUSD + surchargeUSD);
+      }
+
+      return acc;
+    }, { 
+      totalRevenue: 0, totalCostCAD: 0, totalCostUSD: 0, totalJerseys: 0,
+      totalCommissionCAD: 0,
+      countShipped: 0, countCompleted: 0, countCancelled: 0, countPending: 0, countPaid: 0, countProcessing: 0
+    });
+
+    const totalProfit = calculatedStats.totalRevenue - calculatedStats.totalCostCAD;
+
+    setStats({
+      orders: filteredOrders.length,
+      revenue: calculatedStats.totalRevenue,
+      profit: totalProfit,
+      jerseys: calculatedStats.totalJerseys,
+      costUSD: calculatedStats.totalCostUSD,
+      costCAD: calculatedStats.totalCostCAD,
+      commissionCAD: calculatedStats.totalCommissionCAD,
+      countPending: calculatedStats.countPending,
+      countPaid: calculatedStats.countPaid,
+      countProcessing: calculatedStats.countProcessing,
+      countShipped: calculatedStats.countShipped,
+      countCompleted: calculatedStats.countCompleted,
+      countCancelled: calculatedStats.countCancelled,
+      users: profilesCount
+    });
+
+    setRecentOrders(filteredOrders.slice(0, 6));
+
+    // Generate dates to show in the chart
+    let chartDays = [];
+    
+    const addDays = (date, days) => {
+      const result = new Date(date);
+      result.setDate(result.getDate() + days);
+      return result;
+    };
+
+    let startD;
+    let endD = new Date();
+
+    if (!dateRange.start && !dateRange.end) {
+      if (allOrders.length > 0) {
+        const oldestOrder = allOrders[allOrders.length - 1];
+        startD = new Date(oldestOrder.created_at);
+      } else {
+        startD = new Date();
+        startD.setDate(startD.getDate() - 7);
+      }
+    } else {
+      startD = new Date(dateRange.start + 'T12:00:00');
+      if (dateRange.end) {
+        endD = new Date(dateRange.end + 'T12:00:00');
+      }
+    }
+
+    const diffTime = Math.abs(endD - startD);
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+    for (let i = 0; i <= diffDays; i++) {
+      chartDays.push(getCalgaryDateStrOnly(addDays(startD, i)));
+    }
+
+    const dailyMap = {};
+    chartDays.forEach(date => {
+      dailyMap[date] = { revenue: 0, count: 0 };
+    });
+
+    filteredOrders.forEach(o => {
+      const dateStr = getCalgaryDateStrOnly(o.created_at);
+      if (dailyMap[dateStr] !== undefined) {
+        dailyMap[dateStr].count += 1;
+        if (o.status !== 'cancelled') {
+          dailyMap[dateStr].revenue += getValidRevenue(o);
+        }
+      }
+    });
+
+    setChartData(chartDays.map(date => {
+      const parts = date.split('-');
+      const localDate = new Date(parts[0], parts[1] - 1, parts[2]);
+      return {
+        date: localDate.toLocaleDateString('pt-BR', { month: 'short', day: 'numeric' }),
+        revenue: dailyMap[date].revenue,
+        count: dailyMap[date].count
+      };
+    }));
+
+  }, [allOrders, dateRange, pricing, coupons, profilesCount]);
 
   if (loading) return <Loader />;
 
@@ -177,14 +568,185 @@ const DashboardSection = () => {
 
   return (
     <div>
-      <SectionHeader title="Dashboard" sub="Visão geral da sua loja iFooty Canada" />
+      <SectionHeader 
+        title="Dashboard" 
+        sub="Visão geral da sua loja iFooty Canada" 
+        action={
+          <button
+            onClick={() => setShowValues(!showValues)}
+            style={{
+              padding: '0.55rem 1rem',
+              borderRadius: '6px',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '0.45rem',
+              fontWeight: 700,
+              color: '#D6FF00',
+              cursor: 'pointer',
+              border: '1px solid rgba(214, 255, 0, 0.25)',
+              background: 'rgba(214, 255, 0, 0.04)',
+              transition: 'all 0.2s',
+              fontSize: '0.78rem'
+            }}
+          >
+            {showValues ? <Eye size={14} /> : <Eye size={14} />}
+            <span>{showValues ? "Ocultar Valores" : "Ver Valores"}</span>
+          </button>
+        }
+      />
+
+      {/* Date Filter Bar */}
+      <div style={{
+        background: '#121416',
+        border: '1px solid #1A1D20',
+        borderRadius: '12px',
+        padding: '0.85rem 1.25rem',
+        marginBottom: '1.5rem',
+        display: 'flex',
+        flexWrap: 'wrap',
+        gap: '1rem',
+        alignItems: 'center',
+        justifyContent: 'space-between'
+      }}>
+        {/* Presets */}
+        <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
+          {[
+            { id: 'all', label: 'Todo o Período' },
+            { id: '7d', label: 'Últimos 7 Dias' },
+            { id: 'month', label: 'Este Mês' },
+            { id: 'last_month', label: 'Mês Passado' }
+          ].map(p => {
+            const isActive = timePreset === p.id;
+            return (
+              <button
+                key={p.id}
+                onClick={() => {
+                  setTimePreset(p.id);
+                  const getCalgaryDateStrOnly = (dateInput) => {
+                    return new Intl.DateTimeFormat('en-CA', {
+                      timeZone: 'America/Edmonton',
+                      year: 'numeric', month: '2-digit', day: '2-digit'
+                    }).format(new Date(dateInput));
+                  };
+                  if (p.id === 'all') {
+                    setDateRange({ start: '', end: '' });
+                  } else if (p.id === '7d') {
+                    const start = new Date();
+                    start.setDate(start.getDate() - 7);
+                    setDateRange({ start: getCalgaryDateStrOnly(start), end: getCalgaryDateStrOnly(new Date()) });
+                  } else if (p.id === 'month') {
+                    const now = new Date();
+                    const start = new Date(now.getFullYear(), now.getMonth(), 1);
+                    const end = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+                    setDateRange({ start: getCalgaryDateStrOnly(start), end: getCalgaryDateStrOnly(end) });
+                  } else if (p.id === 'last_month') {
+                    const now = new Date();
+                    const start = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+                    const end = new Date(now.getFullYear(), now.getMonth(), 0);
+                    setDateRange({ start: getCalgaryDateStrOnly(start), end: getCalgaryDateStrOnly(end) });
+                  }
+                }}
+                style={{
+                  padding: '0.35rem 0.75rem',
+                  borderRadius: '100px',
+                  border: 'none',
+                  background: isActive ? '#D6FF00' : 'rgba(255,255,255,0.04)',
+                  color: isActive ? '#000' : 'rgba(255,255,255,0.6)',
+                  fontSize: '0.75rem',
+                  fontWeight: isActive ? 800 : 500,
+                  cursor: 'pointer',
+                  transition: 'all 0.15s'
+                }}
+              >
+                {p.label}
+              </button>
+            );
+          })}
+        </div>
+
+        {/* Custom Inputs */}
+        <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'center', flexWrap: 'wrap' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+            <span style={{ fontSize: '0.7rem', color: 'rgba(255,255,255,0.4)', textTransform: 'uppercase', fontWeight: 700 }}>De:</span>
+            <input
+              type="date"
+              value={dateRange.start}
+              onChange={e => {
+                setTimePreset('custom');
+                setDateRange({ ...dateRange, start: e.target.value });
+              }}
+              style={{
+                background: 'rgba(255,255,255,0.03)',
+                border: '1px solid #1A1D20',
+                borderRadius: '6px',
+                padding: '0.3rem 0.5rem',
+                color: '#fff',
+                fontSize: '0.75rem',
+                outline: 'none',
+                colorScheme: 'dark'
+              }}
+            />
+          </div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+            <span style={{ fontSize: '0.7rem', color: 'rgba(255,255,255,0.4)', textTransform: 'uppercase', fontWeight: 700 }}>Até:</span>
+            <input
+              type="date"
+              value={dateRange.end}
+              onChange={e => {
+                setTimePreset('custom');
+                setDateRange({ ...dateRange, end: e.target.value });
+              }}
+              style={{
+                background: 'rgba(255,255,255,0.03)',
+                border: '1px solid #1A1D20',
+                borderRadius: '6px',
+                padding: '0.3rem 0.5rem',
+                color: '#fff',
+                fontSize: '0.75rem',
+                outline: 'none',
+                colorScheme: 'dark'
+              }}
+            />
+          </div>
+          {(dateRange.start || dateRange.end) && (
+            <button
+              onClick={() => {
+                setTimePreset('all');
+                setDateRange({ start: '', end: '' });
+              }}
+              style={{
+                padding: '0.3rem 0.6rem',
+                borderRadius: '6px',
+                border: '1px solid rgba(239, 68, 68, 0.2)',
+                background: 'rgba(239, 68, 68, 0.06)',
+                color: '#EF4444',
+                fontSize: '0.72rem',
+                fontWeight: 700,
+                cursor: 'pointer'
+              }}
+            >
+              Limpar
+            </button>
+          )}
+        </div>
+      </div>
       
-      {/* KPIs */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '1.25rem', marginBottom: '2rem' }}>
-        <KpiCard label="Total de Pedidos"  value={stats.orders}                            icon={ShoppingBag}  color="#60A5FA" />
-        <KpiCard label="Receita Confirmada" value={`$${stats.revenue.toFixed(2)}`}          icon={DollarSign}  color="#4ADE80" sub="Pedidos pagos/enviados/entregues" />
-        <KpiCard label="Usuários"           value={stats.users}                             icon={Users}       color="#C084FC" />
-        <KpiCard label="Pendentes"          value={stats.pending}                           icon={Clock}       color="#FBBF24" sub="Aguardando confirmação" />
+      {/* KPIs Finanças e Custo */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: '1.25rem', marginBottom: '1.25rem' }}>
+        <KpiCard compact label="Vendas (CAD)"       value={showValues ? `$${stats.revenue.toFixed(2)}` : '****'}          icon={DollarSign}   color="#4ADE80" sub="Todos exceto cancelados" />
+        <KpiCard compact label="Lucro Real"         value={showValues ? `$${stats.profit.toFixed(2)}` : '****'}           icon={TrendingUp}   color="#22C55E" sub="Receita menos Custo CAD" />
+        <KpiCard compact label="Camisas Vendidas"   value={`${stats.jerseys} unid.`}                icon={Shirt}        color="#FFFFFF" />
+        <KpiCard compact label="Custo (CAD)"        value={showValues ? `$${stats.costCAD.toFixed(2)}` : '****'}          icon={CreditCard}   color="#F59E0B" sub={showValues ? `Comissão: +$${stats.commissionCAD.toFixed(2)}` : 'Comissão: ****'} />
+        <KpiCard compact label="Custo (USD)"        value={showValues ? `$${stats.costUSD.toFixed(2)}` : '****'}          icon={Globe}        color="#64748B" />
+      </div>
+
+      {/* KPIs Status dos Pedidos */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: '1.25rem', marginBottom: '2rem' }}>
+        <KpiCard compact label="Novos"              value={stats.countPending + stats.countPaid}    icon={Clock}        color="#FFB81C" sub="Aguardando confirmação/pagos" />
+        <KpiCard compact label="Preparação"         value={stats.countProcessing}                   icon={Activity}     color="#3B82F6" />
+        <KpiCard compact label="Enviados"           value={stats.countShipped}                      icon={Truck}        color="#10B981" />
+        <KpiCard compact label="Finalizados"        value={stats.countCompleted}                    icon={CheckCircle2} color="#A855F7" />
+        <KpiCard compact label="Cancelados"         value={stats.countCancelled}                    icon={XCircle}      color="#EF4444" />
       </div>
 
       {/* Charts Section */}
@@ -192,7 +754,7 @@ const DashboardSection = () => {
         {/* Revenue Line Chart */}
         <div style={S.card}>
           <h3 style={{ margin: '0 0 1rem 0', fontSize: '1rem', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-            <TrendingUp size={16} color="#4ADE80" /> Faturamento (Últimos 7 dias)
+            <TrendingUp size={16} color="#4ADE80" /> Faturamento{getPeriodLabel()}
           </h3>
           <div style={{ position: 'relative', width: '100%', height: '180px' }}>
             <svg viewBox={`0 0 ${chartWidth} ${chartHeight}`} style={{ width: '100%', height: '100%' }}>
@@ -209,7 +771,7 @@ const DashboardSection = () => {
                 return (
                   <g key={idx}>
                     <line x1={padding} y1={y} x2={chartWidth - padding} y2={y} stroke="rgba(255,255,255,0.06)" strokeDasharray="3" />
-                    <text x={padding - 5} y={y + 4} fill="rgba(255,255,255,0.3)" fontSize="8" textAnchor="end">${val}</text>
+                    <text x={padding - 5} y={y + 4} fill="rgba(255,255,255,0.3)" fontSize="8" textAnchor="end">{showValues ? `$${val}` : '****'}</text>
                   </g>
                 );
               })}
@@ -220,41 +782,152 @@ const DashboardSection = () => {
               {/* Highlight Points */}
               {points.map((p, idx) => (
                 <g key={idx} className="chart-point-group" style={{ cursor: 'pointer' }}>
-                  <circle cx={p.x} cy={p.y} r="4" fill="#0B0C0E" stroke="#D6FF00" strokeWidth="2" />
-                  <circle cx={p.x} cy={p.y} r="8" fill="#D6FF00" opacity="0" className="chart-hover-trigger" />
-                  <text x={p.x} y={chartHeight - 5} fill="rgba(255,255,255,0.4)" fontSize="8" textAnchor="middle" transform={`rotate(-15, ${p.x}, ${chartHeight - 5})`}>
-                    {p.data.date}
-                  </text>
-                  {/* Mini Tooltip overlay on points */}
-                  <title>{`${p.data.date}: $${p.data.revenue.toFixed(2)}`}</title>
+                  <circle 
+                    cx={p.x} 
+                    cy={p.y} 
+                    r={hoveredPoint?.data?.date === p.data.date ? "6" : "4"} 
+                    fill={hoveredPoint?.data?.date === p.data.date ? "#D6FF00" : "#0B0C0E"} 
+                    stroke="#D6FF00" 
+                    strokeWidth="2" 
+                  />
+                  <circle 
+                    cx={p.x} 
+                    cy={p.y} 
+                    r="12" 
+                    fill="transparent" 
+                    onMouseEnter={() => setHoveredPoint(p)}
+                    onMouseLeave={() => setHoveredPoint(null)}
+                    style={{ cursor: 'pointer' }}
+                  />
                 </g>
               ))}
             </svg>
+
+            {/* Interactive HTML Tooltip */}
+            {hoveredPoint && (
+              <div style={{
+                position: 'absolute',
+                left: `${(hoveredPoint.x / chartWidth) * 100}%`,
+                top: `${(hoveredPoint.y / chartHeight) * 100 - 15}%`,
+                transform: 'translate(-50%, -100%)',
+                background: '#1D2024',
+                border: '1px solid #D6FF00',
+                borderRadius: '6px',
+                padding: '0.45rem 0.65rem',
+                fontSize: '0.75rem',
+                color: '#fff',
+                pointerEvents: 'none',
+                whiteSpace: 'nowrap',
+                zIndex: 10,
+                boxShadow: '0 4px 12px rgba(0,0,0,0.6)',
+                fontFamily: "'Inter', sans-serif"
+              }}>
+                <div style={{ fontWeight: 800, color: '#D6FF00', fontSize: '0.82rem' }}>
+                  {showValues ? `$${hoveredPoint.data.revenue.toFixed(2)}` : '****'}
+                </div>
+                <div style={{ fontSize: '0.68rem', color: 'rgba(255,255,255,0.4)', marginTop: '2px', fontWeight: 500 }}>
+                  {hoveredPoint.data.date} ({hoveredPoint.data.count} ped.)
+                </div>
+              </div>
+            )}
           </div>
         </div>
 
         {/* Orders Bar Chart */}
         <div style={S.card}>
           <h3 style={{ margin: '0 0 1rem 0', fontSize: '1rem', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-            <ShoppingBag size={16} color="#60A5FA" /> Volume de Pedidos Diários
+            <ShoppingBag size={16} color="#60A5FA" /> Volume de Pedidos Diários{getPeriodLabel()}
           </h3>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'end', height: '150px', padding: '0 10px', paddingTop: '20px' }}>
-            {chartData.map((d, idx) => {
-              const heightPercent = (d.count / maxCount) * 100;
-              return (
-                <div key={idx} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', flex: 1, gap: '0.5rem' }}>
-                  <span style={{ fontSize: '0.75rem', fontWeight: 700, color: d.count > 0 ? '#60A5FA' : 'rgba(255,255,255,0.2)' }}>{d.count}</span>
-                  <div style={{ 
-                    width: '65%', 
-                    height: `${Math.max(heightPercent, 4)}%`, 
-                    background: d.count > 0 ? 'linear-gradient(to top, #3B82F6, #60A5FA)' : 'rgba(255,255,255,0.05)', 
-                    borderRadius: '4px 4px 0 0',
-                    transition: 'all 0.3s ease'
-                  }} title={`${d.date}: ${d.count} pedidos`} />
-                  <span style={{ fontSize: '0.65rem', color: 'rgba(255,255,255,0.4)', whiteSpace: 'nowrap' }}>{d.date.split(' ')[0]}</span>
+          <div style={{ position: 'relative', width: '100%', height: '180px' }}>
+            <svg viewBox={`0 0 ${chartWidth} ${chartHeight}`} style={{ width: '100%', height: '100%' }}>
+              <defs>
+                <linearGradient id="blue-gradient" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stopColor="#60A5FA" stopOpacity="0.8" />
+                  <stop offset="100%" stopColor="#3B82F6" stopOpacity="0.2" />
+                </linearGradient>
+              </defs>
+              {/* Grid Lines */}
+              {[0, 0.5, 1].map((r, idx) => {
+                const y = padding + r * (chartHeight - padding * 2);
+                const val = Math.round(maxCount * (1 - r));
+                return (
+                  <g key={idx}>
+                    <line x1={padding} y1={y} x2={chartWidth - padding} y2={y} stroke="rgba(255,255,255,0.06)" strokeDasharray="3" />
+                    <text x={padding - 5} y={y + 4} fill="rgba(255,255,255,0.3)" fontSize="8" textAnchor="end">{val}</text>
+                  </g>
+                );
+              })}
+              {/* Bars */}
+              {chartData.map((d, idx) => {
+                const barWidth = (chartWidth - padding * 2) / chartData.length;
+                const x = padding + idx * barWidth;
+                const barHeight = (d.count / maxCount) * (chartHeight - padding * 2);
+                const y = chartHeight - padding - barHeight;
+                const isHovered = hoveredBar?.date === d.date;
+
+                const labelInterval = Math.ceil(chartData.length / 8);
+                const showLabel = idx % labelInterval === 0 || idx === chartData.length - 1;
+
+                return (
+                  <g key={idx}>
+                    {/* Bar Rect */}
+                    <rect
+                      x={x + barWidth * 0.15}
+                      y={Math.min(y, chartHeight - padding - 2)}
+                      width={Math.max(barWidth * 0.7, 1.5)}
+                      height={Math.max(barHeight, 2)}
+                      fill={isHovered ? "#60A5FA" : "url(#blue-gradient)"}
+                      rx="1"
+                    />
+                    {/* Hover Trigger area */}
+                    <rect
+                      x={x}
+                      y={padding}
+                      width={barWidth}
+                      height={chartHeight - padding * 2}
+                      fill="transparent"
+                      onMouseEnter={() => setHoveredBar(d)}
+                      onMouseLeave={() => setHoveredBar(null)}
+                      style={{ cursor: 'pointer' }}
+                    />
+                    {/* X Axis Label */}
+                    {showLabel && (
+                      <text x={x + barWidth / 2} y={chartHeight - 5} fill="rgba(255,255,255,0.4)" fontSize="8" textAnchor="middle">
+                        {d.date.split(' ')[0]}
+                      </text>
+                    )}
+                  </g>
+                );
+              })}
+            </svg>
+
+            {/* Interactive HTML Tooltip for Bar Chart */}
+            {hoveredBar && (
+              <div style={{
+                position: 'absolute',
+                left: `${((padding + chartData.findIndex(d => d.date === hoveredBar.date) * ((chartWidth - padding * 2) / chartData.length) + ((chartWidth - padding * 2) / chartData.length) / 2) / chartWidth) * 100}%`,
+                top: `${((chartHeight - padding - (hoveredBar.count / maxCount) * (chartHeight - padding * 2)) / chartHeight) * 100 - 10}%`,
+                transform: 'translate(-50%, -100%)',
+                background: '#1D2024',
+                border: '1px solid #60A5FA',
+                borderRadius: '6px',
+                padding: '0.45rem 0.65rem',
+                fontSize: '0.75rem',
+                color: '#fff',
+                pointerEvents: 'none',
+                whiteSpace: 'nowrap',
+                zIndex: 10,
+                boxShadow: '0 4px 12px rgba(0,0,0,0.6)',
+                fontFamily: "'Inter', sans-serif"
+              }}>
+                <div style={{ fontWeight: 800, color: '#60A5FA', fontSize: '0.82rem' }}>
+                  {hoveredBar.count} {hoveredBar.count === 1 ? 'pedido' : 'pedidos'}
                 </div>
-              );
-            })}
+                <div style={{ fontSize: '0.68rem', color: 'rgba(255,255,255,0.4)', marginTop: '2px', fontWeight: 500 }}>
+                  {hoveredBar.date}
+                </div>
+              </div>
+            )}
           </div>
         </div>
       </div>
@@ -1112,6 +1785,8 @@ const ClientesSection = ({ showToast }) => {
   const [expandedClient, setExpandedClient] = useState(null);
   const [sentRecoveryEmails, setSentRecoveryEmails] = useState({});
   const [sentRecoveryEmails2, setSentRecoveryEmails2] = useState({});
+  const [filterSegment, setFilterSegment] = useState('all');
+  const [sortBy, setSortBy] = useState('recent');
 
   useEffect(() => {
     let cancelled = false;
@@ -1225,16 +1900,39 @@ const ClientesSection = ({ showToast }) => {
     return () => { cancelled = true; };
   }, []);
 
-  // Reset to first page when search query changes
+  // Reset to first page when filters change
   useEffect(() => {
     setCurrentPage(1);
-  }, [search]);
+  }, [search, filterSegment, sortBy]);
 
-  const filtered = clientes.filter(c =>
-    (c.email || '').toLowerCase().includes(search.toLowerCase()) ||
-    (c.name || '').toLowerCase().includes(search.toLowerCase()) ||
-    (c.phone || '').toLowerCase().includes(search.toLowerCase())
-  );
+  const filtered = clientes
+    .filter(c => {
+      // Text search
+      const q = search.toLowerCase();
+      const matchesSearch = !q ||
+        (c.email || '').toLowerCase().includes(q) ||
+        (c.name || '').toLowerCase().includes(q) ||
+        (c.phone || '').toLowerCase().includes(q);
+      if (!matchesSearch) return false;
+
+      // Segment filter
+      const hasCart = c.cart && c.cart.length > 0;
+      const sentAt1 = sentRecoveryEmails[c.id];
+      const sentAt2 = sentRecoveryEmails2[c.id];
+      if (filterSegment === 'cart')        return hasCart;
+      if (filterSegment === 'no_email')    return hasCart && !sentAt1 && !sentAt2;
+      if (filterSegment === 'buyers')      return c.orders > 0;
+      if (filterSegment === 'no_orders')   return c.orders === 0;
+      return true;
+    })
+    .sort((a, b) => {
+      if (sortBy === 'recent')   return new Date(b.lastOrder || b.registeredAt || 0) - new Date(a.lastOrder || a.registeredAt || 0);
+      if (sortBy === 'oldest')   return new Date(a.lastOrder || a.registeredAt || 0) - new Date(b.lastOrder || b.registeredAt || 0);
+      if (sortBy === 'spent_hi') return b.spent - a.spent;
+      if (sortBy === 'spent_lo') return a.spent - b.spent;
+      if (sortBy === 'orders')   return b.orders - a.orders;
+      return 0;
+    });
 
   const totalPages = Math.ceil(filtered.length / itemsPerPage);
   const indexOfLastItem = currentPage * itemsPerPage;
@@ -1550,6 +2248,75 @@ const ClientesSection = ({ showToast }) => {
           </div>
         }
       />
+
+      {/* Filter Bar */}
+      {!loading && (() => {
+        const segments = [
+          { id: 'all',       label: 'Todos',           count: clientes.length },
+          { id: 'cart',      label: '🛒 Sacola Ativa',  count: clientes.filter(c => c.cart && c.cart.length > 0).length },
+          { id: 'no_email',  label: '⏳ Não Contatados', count: clientes.filter(c => c.cart && c.cart.length > 0 && !sentRecoveryEmails[c.id] && !sentRecoveryEmails2[c.id]).length },
+          { id: 'buyers',    label: '✅ Compradores',    count: clientes.filter(c => c.orders > 0).length },
+          { id: 'no_orders', label: '👤 Sem Pedidos',    count: clientes.filter(c => c.orders === 0).length },
+        ];
+        return (
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap', marginBottom: '1rem', justifyContent: 'space-between' }}>
+            {/* Chips */}
+            <div style={{ display: 'flex', gap: '0.4rem', flexWrap: 'wrap' }}>
+              {segments.map(seg => (
+                <button
+                  key={seg.id}
+                  onClick={() => setFilterSegment(seg.id)}
+                  style={{
+                    padding: '0.35rem 0.75rem',
+                    borderRadius: '100px',
+                    border: filterSegment === seg.id ? 'none' : '1px solid rgba(255,255,255,0.1)',
+                    background: filterSegment === seg.id ? '#D6FF00' : 'rgba(255,255,255,0.04)',
+                    color: filterSegment === seg.id ? '#000' : 'rgba(255,255,255,0.6)',
+                    fontSize: '0.78rem',
+                    fontWeight: filterSegment === seg.id ? 800 : 500,
+                    cursor: 'pointer',
+                    transition: 'all 0.15s',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '0.35rem',
+                  }}
+                >
+                  {seg.label}
+                  <span style={{
+                    background: filterSegment === seg.id ? 'rgba(0,0,0,0.15)' : 'rgba(255,255,255,0.08)',
+                    borderRadius: '100px',
+                    padding: '0 5px',
+                    fontSize: '0.7rem',
+                    fontWeight: 700,
+                  }}>{seg.count}</span>
+                </button>
+              ))}
+            </div>
+
+            {/* Sort dropdown */}
+            <select
+              value={sortBy}
+              onChange={e => setSortBy(e.target.value)}
+              style={{
+                background: 'rgba(255,255,255,0.04)',
+                border: '1px solid rgba(255,255,255,0.1)',
+                borderRadius: '6px',
+                color: '#fff',
+                padding: '0.35rem 0.6rem',
+                fontSize: '0.78rem',
+                cursor: 'pointer',
+                outline: 'none',
+              }}
+            >
+              <option value="recent"   style={{ background: '#1A1D20' }}>↓ Mais Recentes</option>
+              <option value="oldest"   style={{ background: '#1A1D20' }}>↑ Mais Antigos</option>
+              <option value="spent_hi" style={{ background: '#1A1D20' }}>$ Maior Gasto</option>
+              <option value="spent_lo" style={{ background: '#1A1D20' }}>$ Menor Gasto</option>
+              <option value="orders"   style={{ background: '#1A1D20' }}># Mais Pedidos</option>
+            </select>
+          </div>
+        );
+      })()}
 
       {/* Subtle diagnostic log on UI */}
       {(diagInfo.pError || diagInfo.profiles === 0) && (
@@ -1918,24 +2685,38 @@ const ConversasSection = () => {
   const [loading, setLoading] = useState(true);
   const [selected, setSelected] = useState(null);
   const [search, setSearch] = useState('');
+  const [deletingId, setDeletingId] = useState(null);
+  const [confirmDelete, setConfirmDelete] = useState(null);
 
   const load = useCallback(async () => {
     setLoading(true);
     const { data, error } = await supabase
       .from('ai_conversations')
       .select('*')
-      .order('created_at', { ascending: false })
-      .limit(100);
+      .order('updated_at', { ascending: false })
+      .limit(200);
     if (!error) setConversas(data || []);
     setLoading(false);
   }, []);
 
   useEffect(() => { load(); }, [load]);
 
-  const filtered = conversas.filter(c =>
-    (c.user_email || c.user_id || '').toLowerCase().includes(search.toLowerCase()) ||
-    (c.summary || c.last_message || '').toLowerCase().includes(search.toLowerCase())
-  );
+  const handleDelete = async (id) => {
+    setDeletingId(id);
+    const { error } = await supabase.from('ai_conversations').delete().eq('id', id);
+    if (!error) {
+      setConversas(prev => prev.filter(c => c.id !== id));
+      if (selected?.id === id) setSelected(null);
+    }
+    setDeletingId(null);
+    setConfirmDelete(null);
+  };
+
+  const filtered = conversas.filter(c => {
+    const name = c.user_name || 'Visitante Anônimo';
+    const q = search.toLowerCase();
+    return !q || name.toLowerCase().includes(q) || (c.user_ip || '').includes(q);
+  });
 
   return (
     <div>
@@ -1943,39 +2724,50 @@ const ConversasSection = () => {
         title="Conversas IA"
         sub={`${conversas.length} conversas registradas`}
         action={
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', background: 'rgba(255,255,255,0.05)', border: '1px solid #2A2D30', borderRadius: '6px', padding: '0.5rem 0.75rem' }}>
-            <Search size={14} color="rgba(255,255,255,0.4)" />
-            <input
-              style={{ background: 'none', border: 'none', outline: 'none', color: '#fff', fontSize: '0.85rem', width: '200px' }}
-              placeholder="Buscar por usuário..."
-              value={search}
-              onChange={e => setSearch(e.target.value)}
-            />
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+            <button onClick={load} style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '6px', color: 'rgba(255,255,255,0.6)', cursor: 'pointer', padding: '0.4rem 0.6rem', display: 'flex', alignItems: 'center' }} title="Atualizar">
+              ↻
+            </button>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', background: 'rgba(255,255,255,0.05)', border: '1px solid #2A2D30', borderRadius: '6px', padding: '0.5rem 0.75rem' }}>
+              <Search size={14} color="rgba(255,255,255,0.4)" />
+              <input
+                style={{ background: 'none', border: 'none', outline: 'none', color: '#fff', fontSize: '0.85rem', width: '180px' }}
+                placeholder="Buscar por nome ou IP..."
+                value={search}
+                onChange={e => setSearch(e.target.value)}
+              />
+            </div>
           </div>
         }
       />
 
+      {/* Detail Modal */}
       {selected && (
         <div style={S.modal} onClick={() => setSelected(null)}>
-          <div style={{ ...S.modalBox, maxWidth: '680px' }} onClick={e => e.stopPropagation()}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
+          <div style={{ ...S.modalBox, maxWidth: '700px' }} onClick={e => e.stopPropagation()}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '1.25rem' }}>
               <div>
-                <h3 style={{ margin: 0, fontWeight: 700 }}>Conversa</h3>
-                <p style={{ margin: '0.25rem 0 0', fontSize: '0.8rem', color: 'rgba(255,255,255,0.4)' }}>
-                  {selected.user_email || selected.user_id || 'Usuário anônimo'} · {new Date(selected.created_at).toLocaleString('pt-BR')}
+                <h3 style={{ margin: 0, fontWeight: 700, fontSize: '1rem' }}>{selected.user_name || 'Visitante Anônimo'}</h3>
+                <p style={{ margin: '0.2rem 0 0', fontSize: '0.78rem', color: 'rgba(255,255,255,0.4)' }}>
+                  IP: {selected.user_ip || 'N/I'} · {new Date(selected.updated_at || selected.created_at).toLocaleString('pt-BR')}
+                  {selected.user_email && ` · ${selected.user_email}`}
                 </p>
               </div>
               <button style={S.btnSecondary} onClick={() => setSelected(null)}><X size={14} /></button>
             </div>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', maxHeight: '60vh', overflowY: 'auto' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', maxHeight: '62vh', overflowY: 'auto', paddingRight: '0.25rem' }}>
               {(selected.messages || []).map((msg, i) => (
                 <div key={i} style={{ display: 'flex', justifyContent: msg.role === 'user' ? 'flex-end' : 'flex-start' }}>
                   <div style={{
-                    maxWidth: '75%', padding: '0.75rem 1rem',
+                    maxWidth: '78%', padding: '0.75rem 1rem',
                     background: msg.role === 'user' ? 'rgba(214,255,0,0.12)' : 'rgba(255,255,255,0.06)',
                     borderRadius: msg.role === 'user' ? '12px 12px 2px 12px' : '12px 12px 12px 2px',
-                    fontSize: '0.875rem', lineHeight: 1.5, color: msg.role === 'user' ? '#D6FF00' : '#fff',
+                    fontSize: '0.875rem', lineHeight: 1.5,
+                    color: msg.role === 'user' ? '#D6FF00' : 'rgba(255,255,255,0.9)',
                   }}>
+                    <div style={{ fontSize: '0.68rem', color: 'rgba(255,255,255,0.3)', marginBottom: '0.25rem', fontWeight: 600, textTransform: 'uppercase' }}>
+                      {msg.role === 'user' ? (selected.user_name || 'Cliente') : 'Mister Oliver'}
+                    </div>
                     {msg.content}
                   </div>
                 </div>
@@ -1994,7 +2786,6 @@ const ConversasSection = () => {
         <div style={{ ...S.card, textAlign: 'center', padding: '4rem', color: 'rgba(255,255,255,0.3)' }}>
           <MessageSquare size={48} style={{ marginBottom: '1rem', opacity: 0.2 }} />
           <div style={{ fontWeight: 600, fontSize: '1rem', marginBottom: '0.5rem', color: 'rgba(255,255,255,0.5)' }}>Nenhuma conversa registrada</div>
-          <div style={{ fontSize: '0.85rem' }}>As conversas do assistente IA aparecerão aqui quando a tabela <code style={{ color: '#D6FF00' }}>ai_conversations</code> for criada no Supabase.</div>
         </div>
       ) : (
         <div style={S.card}>
@@ -2003,38 +2794,89 @@ const ConversasSection = () => {
               <thead>
                 <tr>
                   <th style={S.th}>Usuário</th>
+                  <th style={S.th}>IP</th>
                   <th style={S.th}>Última mensagem</th>
-                  <th style={S.th}>Mensagens</th>
+                  <th style={S.th}>Msgs</th>
                   <th style={S.th}>Data</th>
                   <th style={S.th}>Ver</th>
+                  <th style={S.th}></th>
                 </tr>
               </thead>
               <tbody>
-                {filtered.map(c => (
-                  <tr key={c.id}
-                    onMouseEnter={e => e.currentTarget.style.background = 'rgba(255,255,255,0.02)'}
-                    onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
-                  >
-                    <td style={S.td}>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-                        <div style={{ width: '32px', height: '32px', borderRadius: '50%', background: 'rgba(96,165,250,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                          <MessageSquare size={14} color="#60A5FA" />
+                {filtered.map(c => {
+                  const msgCount = Array.isArray(c.messages) ? c.messages.length : 0;
+                  const lastMsg = msgCount > 0 ? c.messages[msgCount - 1] : null;
+                  const lastText = lastMsg?.content || c.summary || c.last_message || '—';
+                  const name = c.user_name || 'Visitante Anônimo';
+                  const dateStr = new Date(c.updated_at || c.created_at).toLocaleString('pt-BR', {
+                    day: '2-digit', month: '2-digit', year: '2-digit',
+                    hour: '2-digit', minute: '2-digit'
+                  });
+
+                  return (
+                    <tr key={c.id}
+                      onMouseEnter={e => e.currentTarget.style.background = 'rgba(255,255,255,0.02)'}
+                      onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
+                    >
+                      <td style={S.td}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem' }}>
+                          <div style={{ width: '32px', height: '32px', borderRadius: '50%', background: name === 'Visitante Anônimo' ? 'rgba(255,255,255,0.05)' : 'rgba(214,255,0,0.08)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, fontSize: '0.85rem', fontWeight: 700, color: name === 'Visitante Anônimo' ? 'rgba(255,255,255,0.3)' : '#D6FF00' }}>
+                            {name[0].toUpperCase()}
+                          </div>
+                          <span style={{ fontSize: '0.85rem', fontWeight: 600 }}>{name}</span>
                         </div>
-                        <span style={{ fontSize: '0.85rem', fontWeight: 500 }}>{c.user_email || c.user_id || 'Anônimo'}</span>
-                      </div>
-                    </td>
-                    <td style={{ ...S.td, color: 'rgba(255,255,255,0.55)', maxWidth: '260px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                      {c.summary || c.last_message || '—'}
-                    </td>
-                    <td style={S.td}>{(c.messages || []).length}</td>
-                    <td style={{ ...S.td, color: 'rgba(255,255,255,0.4)', fontSize: '0.8rem' }}>
-                      {new Date(c.created_at).toLocaleDateString('pt-BR')}
-                    </td>
-                    <td style={S.td}>
-                      <button style={S.btnEdit} onClick={() => setSelected(c)}><Eye size={14} /></button>
-                    </td>
-                  </tr>
-                ))}
+                      </td>
+                      <td style={{ ...S.td, fontSize: '0.78rem', color: 'rgba(255,255,255,0.35)', fontFamily: 'monospace' }}>
+                        {c.user_ip || 'N/I'}
+                      </td>
+                      <td style={{ ...S.td, color: 'rgba(255,255,255,0.5)', fontSize: '0.82rem', maxWidth: '260px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                        {lastText}
+                      </td>
+                      <td style={S.td}>
+                        <span style={{ padding: '0.2rem 0.55rem', background: 'rgba(96,165,250,0.1)', color: '#60A5FA', borderRadius: '4px', fontSize: '0.78rem', fontWeight: 700 }}>
+                          {msgCount}
+                        </span>
+                      </td>
+                      <td style={{ ...S.td, fontSize: '0.78rem', color: 'rgba(255,255,255,0.4)' }}>{dateStr}</td>
+                      <td style={{ ...S.td, display: 'flex', gap: '0.4rem', alignItems: 'center' }}>
+                        <button
+                          onClick={() => setSelected(c)}
+                          style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '5px', color: '#60A5FA', cursor: 'pointer', padding: '0.35rem 0.65rem', fontSize: '0.78rem', fontWeight: 600 }}
+                        >
+                          Ver
+                        </button>
+                        {confirmDelete === c.id ? (
+                          <>
+                            <button
+                              onClick={() => handleDelete(c.id)}
+                              disabled={deletingId === c.id}
+                              style={{ background: 'rgba(239,68,68,0.15)', border: '1px solid rgba(239,68,68,0.4)', borderRadius: '5px', color: '#FF4D4D', cursor: 'pointer', padding: '0.35rem 0.65rem', fontSize: '0.78rem', fontWeight: 700 }}
+                            >
+                              {deletingId === c.id ? '...' : 'Confirmar'}
+                            </button>
+                            <button
+                              onClick={() => setConfirmDelete(null)}
+                              style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '5px', color: 'rgba(255,255,255,0.4)', cursor: 'pointer', padding: '0.35rem 0.5rem', fontSize: '0.78rem' }}
+                            >
+                              ✕
+                            </button>
+                          </>
+                        ) : (
+                          <button
+                            onClick={() => setConfirmDelete(c.id)}
+                            style={{ background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.2)', borderRadius: '5px', color: 'rgba(239,68,68,0.7)', cursor: 'pointer', padding: '0.35rem 0.5rem', fontSize: '0.78rem' }}
+                            title="Excluir conversa"
+                          >
+                            🗑
+                          </button>
+                        )}
+                      </td>
+                    </tr>
+                  );
+                })}
+                {filtered.length === 0 && (
+                  <tr><td colSpan={7} style={{ ...S.td, textAlign: 'center', color: 'rgba(255,255,255,0.3)', padding: '3rem' }}>Nenhuma conversa encontrada.</td></tr>
+                )}
               </tbody>
             </table>
           </div>
@@ -2229,6 +3071,7 @@ const RebrandAdmin = () => {
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState('dashboard');
   const [toast, setToast] = useState(null);
+  const [showValues, setShowValues] = useState(false);
 
   const showToast = useCallback((message, type = 'success') => {
     setToast({ message, type });
@@ -2260,7 +3103,7 @@ const RebrandAdmin = () => {
   }
 
   const sections = {
-    dashboard:   <DashboardSection />,
+    dashboard:   <DashboardSection showValues={showValues} setShowValues={setShowValues} />,
     orders:      <OrdersSection showToast={showToast} />,
     products:    <ProductsSection showToast={showToast} />,
     spotlight:   <SpotlightSection showToast={showToast} />,
