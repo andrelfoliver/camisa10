@@ -178,15 +178,19 @@ export const CartProvider = ({ children }) => {
       if (dbSyncTimeout.current) clearTimeout(dbSyncTimeout.current);
       dbSyncTimeout.current = setTimeout(async () => {
         try {
+          // Usa upsert para garantir que funciona mesmo se o perfil ainda não existir na tabela
           const { error } = await supabase
             .from('profiles')
-            .update({ cart: cartItems })
-            .eq('id', user.id);
+            .upsert(
+              { id: user.id, cart: cartItems },
+              { onConflict: 'id', ignoreDuplicates: false }
+            );
             
-          if (error) throw error;
+          if (error) {
+            console.error('Erro ao salvar cesta na nuvem:', error.message, error.details);
+          }
         } catch (err) {
-          console.error("Erro ao salvar cesta na nuvem:", err);
-          // Opcional: Notificar o usuário se falhar repetidamente
+          console.error('Erro inesperado ao salvar cesta:', err);
         }
       }, 1500); // Debounce de 1.5s
     }
