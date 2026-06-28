@@ -154,8 +154,11 @@ const RebrandAuth = () => {
   }, [handleGoogleCallback]);
 
   if (user) {
-    const redirectTo = sessionStorage.getItem('ifooty_redirect_after_login') || '/rebrand';
+    const REBRAND_ADMIN_EMAIL = 'ifootyc@gmail.com';
+    const isRebrandAdmin = user.email?.toLowerCase().trim() === REBRAND_ADMIN_EMAIL;
+    const savedRedirect = sessionStorage.getItem('ifooty_redirect_after_login');
     sessionStorage.removeItem('ifooty_redirect_after_login');
+    const redirectTo = isRebrandAdmin ? '/rebrand/admin' : (savedRedirect || '/rebrand');
     return <Navigate to={redirectTo} replace />;
   }
 

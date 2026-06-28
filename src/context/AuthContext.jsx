@@ -4,7 +4,7 @@ import { trackEvent } from '../services/analytics';
 
 const AuthContext = createContext();
 
-// Email Mestre do Administrador
+// Email Mestre do Administrador (site de produção)
 const ADMIN_EMAIL = 'camisadez085@gmail.com';
 
 export function AuthProvider({ children }) {
