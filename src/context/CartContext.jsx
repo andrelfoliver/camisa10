@@ -36,6 +36,9 @@ const getUserIdFromLocalStorage = () => {
 
 export const CartProvider = ({ children }) => {
   const { user, loading: authLoading } = useAuth();
+
+  // Rastreia o usuário anterior para detectar transição login→logout
+  const prevUserRef = useRef(undefined);
   
   // Inicialização síncrona imediata baseada no localStorage
   const [cartItems, setCartItems] = useState(() => {
@@ -73,10 +76,24 @@ export const CartProvider = ({ children }) => {
       setCartReady(false); // Bloqueia salvamento enquanto inicializa
       
       if (!user) {
-        // CENÁRIO: Logout ou Visitante
-        // Se deslogou, limpamos o estado atual e voltamos para o carrinho de convidado (se houver)
-        const guestItems = JSON.parse(localStorage.getItem(GUEST_KEY) || '[]');
-        setCartItems(guestItems);
+        const wasLoggedIn = prevUserRef.current && prevUserRef.current !== undefined;
+
+        if (wasLoggedIn) {
+          // CENÁRIO: Logout — limpa a cesta completamente
+          // Remove também o cache local do usuário que saiu
+          try {
+            const oldKey = `ifooty_cart_${prevUserRef.current.id}`;
+            localStorage.removeItem(oldKey);
+          } catch (e) {}
+          setCartItems([]);
+          toast.success('Você saiu da conta. Sacola limpa. 🛒');
+        } else {
+          // CENÁRIO: Visitante (app iniciou sem login)
+          const guestItems = JSON.parse(localStorage.getItem(GUEST_KEY) || '[]');
+          setCartItems(guestItems);
+        }
+
+        prevUserRef.current = null;
         setCartReady(true);
         return;
       }
@@ -136,6 +153,7 @@ export const CartProvider = ({ children }) => {
           if (localSaved.length > 0) setCartItems(localSaved);
         } catch (e) {}
       } finally {
+        prevUserRef.current = user; // Atualiza referência DEPOIS de sincronizar
         setIsSyncing(false);
         setCartReady(true); // LIBERA O SALVAMENTO APENAS AQUI
       }

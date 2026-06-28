@@ -572,7 +572,20 @@ const RebrandCheckout = () => {
               <div style={{ display: 'grid', gridTemplateColumns: '1.5fr 1fr', gap: '1rem' }}>
                 <div>
                   <label style={labelStyle}>Full Name</label>
-                  <input type="text" value={formData.name} onChange={e => setFormData(p => ({ ...p, name: e.target.value }))} placeholder="As on your ID" style={inputStyle} />
+                  <input 
+                    type="text" 
+                    value={formData.name} 
+                    onChange={e => {
+                      const val = e.target.value;
+                      setFormData(p => ({ ...p, name: val }));
+                      if (!user) {
+                        sessionStorage.setItem('ifooty_guest_name', val);
+                        window.dispatchEvent(new Event('storage'));
+                      }
+                    }} 
+                    placeholder="As on your ID" 
+                    style={inputStyle} 
+                  />
                 </div>
                 <div>
                   <label style={labelStyle}>Phone Number</label>

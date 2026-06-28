@@ -19,7 +19,53 @@ const Navbar = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { totalItems, setIsCartOpen } = useCart();
-  const { user } = useAuth();
+  const { user, signOut } = useAuth();
+
+  const [displayName, setDisplayName] = useState('Hello, Sign In');
+  const [accountStatus, setAccountStatus] = useState('My Account');
+  const [accountLink, setAccountLink] = useState('/rebrand/auth');
+
+  useEffect(() => {
+    const updateAccountStatus = () => {
+      if (user) {
+        const name = user.user_metadata?.full_name || user.email || '';
+        const first = name.split(' ')[0] || 'User';
+        setDisplayName(`Hello, ${first}`);
+        setAccountStatus('My Account');
+        setAccountLink('/perfil');
+      } else {
+        const guestEmail = sessionStorage.getItem('ifooty_guest_email');
+        const guestName = sessionStorage.getItem('ifooty_guest_name');
+        if (guestEmail) {
+          const first = guestName ? guestName.split(' ')[0] : guestEmail.split('@')[0];
+          setDisplayName(`Hello, ${first}`);
+          setAccountStatus('Guest');
+          setAccountLink('/rebrand/checkout');
+        } else {
+          setDisplayName('Hello, Sign In');
+          setAccountStatus('My Account');
+          setAccountLink('/rebrand/auth');
+        }
+      }
+    };
+
+    updateAccountStatus();
+    // Listen for storage changes (for guest name updates)
+    window.addEventListener('storage', updateAccountStatus);
+    return () => window.removeEventListener('storage', updateAccountStatus);
+  }, [user, location.pathname]);
+
+  const handleSignOut = async (e) => {
+    e.preventDefault();
+    if (user) {
+      await signOut();
+    } else {
+      sessionStorage.removeItem('ifooty_guest_email');
+      sessionStorage.removeItem('ifooty_guest_name');
+      window.dispatchEvent(new Event('storage'));
+    }
+    navigate('/rebrand');
+  };
 
   const [menuOpen, setMenuOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
@@ -120,14 +166,26 @@ const Navbar = () => {
               <Search size={22} color="rgba(255,255,255,0.85)" />
             </button>
 
-            {/* Account */}
-            <Link to={user ? '/perfil' : '/auth'} style={{ color: '#ffffff', textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-              <User size={22} color="rgba(255,255,255,0.8)" />
-              <div style={{ textAlign: 'left' }} className="hide-tablet">
-                <span style={{ display: 'block', fontSize: '0.65rem', color: 'rgba(255,255,255,0.5)' }}>Hello, Sign In</span>
-                <span style={{ fontSize: '0.8rem', fontWeight: 700, color: '#ffffff' }}>My Account</span>
-              </div>
-            </Link>
+            {/* Account with Dropdown */}
+            <div className="rebrand-account-menu-container" style={{ position: 'relative' }}>
+              <Link to={accountLink} style={{ color: '#ffffff', textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                <User size={22} color="rgba(255,255,255,0.8)" />
+                <div style={{ textAlign: 'left' }} className="hide-tablet">
+                  <span style={{ display: 'block', fontSize: '0.65rem', color: 'rgba(255,255,255,0.5)' }}>{displayName}</span>
+                  <span style={{ fontSize: '0.8rem', fontWeight: 700, color: '#ffffff' }}>{accountStatus}</span>
+                </div>
+              </Link>
+              {(user || sessionStorage.getItem('ifooty_guest_email')) && (
+                <div className="rebrand-account-dropdown">
+                  <Link to={user ? '/perfil' : '/rebrand/checkout'} style={{ borderBottom: '1px solid #f1f3f5' }}>
+                    {user ? 'My Profile' : 'Guest Checkout'}
+                  </Link>
+                  <button onClick={handleSignOut} style={{ color: '#dc3545' }}>
+                    {user ? 'Sign Out' : 'Exit Guest'}
+                  </button>
+                </div>
+              )}
+            </div>
 
             {/* Cart */}
             <button
@@ -243,15 +301,76 @@ const Navbar = () => {
         </nav>
 
         <div className="rebrand-drawer-footer">
-          <Link to={user ? '/perfil' : '/auth'} style={{ color: '#ffffff', textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '0.75rem', padding: '1rem 0', borderTop: '1px solid #2C3034' }} onClick={() => setMenuOpen(false)}>
+          <Link to={accountLink} style={{ color: '#ffffff', textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '0.75rem', padding: '1rem 0', borderTop: '1px solid #2C3034' }} onClick={() => setMenuOpen(false)}>
             <User size={20} />
-            <span style={{ fontWeight: 600 }}>{user ? 'My Account' : 'Sign In'}</span>
+            <span style={{ fontWeight: 600 }}>{displayName} ({accountStatus})</span>
           </Link>
+          {(user || sessionStorage.getItem('ifooty_guest_email')) && (
+            <button 
+              onClick={(e) => { handleSignOut(e); setMenuOpen(false); }}
+              style={{
+                width: '100%', padding: '0.8rem 0', background: 'transparent', border: 'none',
+                color: '#dc3545', textAlign: 'left', display: 'flex', alignItems: 'center', gap: '0.75rem',
+                fontSize: '0.95rem', fontWeight: 700, cursor: 'pointer'
+              }}
+            >
+              <User size={20} color="#dc3545" />
+              <span>{user ? 'Sign Out' : 'Exit Guest'}</span>
+            </button>
+          )}
           <a href="https://chat.whatsapp.com/KKKNZoOnr57AanDT33KPrT" target="_blank" rel="noopener noreferrer" style={{ color: 'var(--rebrand-volt)', textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '0.75rem', padding: '1rem 0', borderTop: '1px solid #2C3034', fontWeight: 700 }}>
             ⚡ VIP WhatsApp — 10% Off
           </a>
         </div>
       </div>
+
+      <style>{`
+        .rebrand-account-menu-container:hover .rebrand-account-dropdown {
+          display: block;
+        }
+        .rebrand-account-dropdown {
+          display: none;
+          position: absolute;
+          top: 100%;
+          right: 0;
+          background: #ffffff;
+          border: 1px solid #dee2e6;
+          border-radius: 8px;
+          box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+          padding: 0.4rem 0;
+          min-width: 160px;
+          z-index: 9999;
+          margin-top: 5px;
+        }
+        /* Transparent bridge to prevent mouse-leave when moving to dropdown */
+        .rebrand-account-dropdown::before {
+          content: '';
+          position: absolute;
+          top: -10px;
+          left: 0;
+          right: 0;
+          height: 10px;
+          background: transparent;
+        }
+        .rebrand-account-dropdown a, .rebrand-account-dropdown button {
+          display: block;
+          width: 100%;
+          padding: 0.6rem 1rem;
+          text-align: left;
+          background: none;
+          border: none;
+          color: #121416;
+          font-size: 0.85rem;
+          font-weight: 600;
+          text-decoration: none;
+          cursor: pointer;
+          box-sizing: border-box;
+        }
+        .rebrand-account-dropdown a:hover, .rebrand-account-dropdown button:hover {
+          background: #f8f9fa;
+          color: #dc3545;
+        }
+      `}</style>
     </>
   );
 };
