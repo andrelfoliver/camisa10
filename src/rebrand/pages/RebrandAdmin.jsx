@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { supabase } from '../../services/supabase';
+import { useRebrandAuth } from '../../context/RebrandAuthContext';
+import { supabaseRebrand as supabase } from '../../services/supabase';
 import { useNavigate } from 'react-router-dom';
 import {
   LayoutDashboard, ShoppingBag, Package, Compass, Tag, Settings,
@@ -1101,13 +1102,16 @@ const SettingsSection = ({ showToast }) => {
 };
 
 // ─── Clientes Section ────────────────────────────────────────────────────────
-// ─── Clientes Section ────────────────────────────────────────────────────────
-const ClientesSection = () => {
+const ClientesSection = ({ showToast }) => {
   const [clientes, setClientes] = useState([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
+  const [diagInfo, setDiagInfo] = useState({ profiles: 0, orders: 0, pError: null, oError: null });
   const itemsPerPage = 10;
+  const [expandedClient, setExpandedClient] = useState(null);
+  const [sentRecoveryEmails, setSentRecoveryEmails] = useState({});
+  const [sentRecoveryEmails2, setSentRecoveryEmails2] = useState({});
 
   useEffect(() => {
     let cancelled = false;
@@ -1115,15 +1119,34 @@ const ClientesSection = () => {
       setLoading(true);
 
       // Fetch both sources in parallel
-      const [{ data: profiles, error: pError }, { data: orders, error: oError }] = await Promise.all([
+      const [{ data: profiles, error: pError }, { data: orders, error: oError }, { data: settings }] = await Promise.all([
         supabase.from('profiles').select('*').order('created_at', { ascending: false }),
         supabase.from('orders').select('id, customer_email, customer_name, customer_phone, total_price, status, created_at'),
+        supabase.from('store_settings').select('*').in('key', ['sent_recovery_emails', 'sent_recovery_emails_2'])
       ]);
 
-      if (pError) console.error('[Clientes] Error fetching profiles:', pError.message, pError.details);
-      if (oError) console.error('[Clientes] Error fetching orders:', oError.message, oError.details);
-
       if (cancelled) return;
+      
+      setDiagInfo({
+        profiles: profiles?.length || 0,
+        orders: orders?.length || 0,
+        pError: pError?.message || null,
+        oError: oError?.message || null
+      });
+
+      if (settings) {
+        settings.forEach(s => {
+          if (s.key === 'sent_recovery_emails') {
+            try { setSentRecoveryEmails(JSON.parse(s.value)); } catch(e){}
+          }
+          if (s.key === 'sent_recovery_emails_2') {
+            try { setSentRecoveryEmails2(JSON.parse(s.value)); } catch(e){}
+          }
+        });
+      }
+
+      if (pError) console.error('[Clientes] Error fetching profiles:', pError.message);
+      if (oError) console.error('[Clientes] Error fetching orders:', oError.message);
 
       // Build order stats map keyed by email
       const orderMap = {};
@@ -1132,8 +1155,9 @@ const ClientesSection = () => {
         if (!key) return;
         if (!orderMap[key]) orderMap[key] = { count: 0, spent: 0, lastOrder: null, phone: o.customer_phone || '' };
         orderMap[key].count += 1;
-        const isPaid = ['paid', 'shipped', 'delivered'].includes(o.status);
-        if (isPaid) orderMap[key].spent += parseFloat(o.total_price || 0);
+        // Sum all orders except cancelled ones
+        const isNotCancelled = o.status !== 'cancelled';
+        if (isNotCancelled) orderMap[key].spent += parseFloat(o.total_price || 0);
         if (!orderMap[key].lastOrder || o.created_at > orderMap[key].lastOrder) {
           orderMap[key].lastOrder = o.created_at;
           if (o.customer_phone) orderMap[key].phone = o.customer_phone;
@@ -1145,6 +1169,7 @@ const ClientesSection = () => {
         const emailKey = (p.email || '').toLowerCase().trim();
         const stats = orderMap[emailKey] || { count: 0, spent: 0, lastOrder: null, phone: '' };
         return {
+          id: p.id,
           name: p.full_name || p.name || '',
           email: p.email || '',
           phone: p.phone || stats.phone || '',
@@ -1154,6 +1179,12 @@ const ClientesSection = () => {
           lastOrder: stats.lastOrder || p.created_at,
           registeredAt: p.created_at,
           source: 'profile',
+          cart: p.cart || [],
+          street: p.street || '',
+          apartment: p.apartment || '',
+          city: p.city || '',
+          province: p.province || '',
+          postal_code: p.postal_code || ''
         };
       });
 
@@ -1166,6 +1197,7 @@ const ClientesSection = () => {
         const stats = orderMap[emailKey];
         if (stats) {
           profileList.push({
+            id: 'order-' + emailKey,
             name: o.customer_name || '',
             email: o.customer_email || '',
             phone: stats.phone || '',
@@ -1175,6 +1207,12 @@ const ClientesSection = () => {
             lastOrder: stats.lastOrder,
             registeredAt: null,
             source: 'order',
+            cart: [],
+            street: '',
+            apartment: '',
+            city: '',
+            province: '',
+            postal_code: ''
           });
         }
       });
@@ -1203,10 +1241,205 @@ const ClientesSection = () => {
   const indexOfFirstItem = indexOfLastItem - itemsPerPage;
   const currentItems = filtered.slice(indexOfFirstItem, indexOfLastItem);
 
+  const saveSentRecoveryEmailsToDb = async (newSent, step = 1) => {
+    try {
+      await supabase.from('store_settings').upsert({
+        key: step === 2 ? 'sent_recovery_emails_2' : 'sent_recovery_emails',
+        value: JSON.stringify(newSent)
+      }, { onConflict: 'key' });
+    } catch (err) {
+      console.error(`Erro ao salvar sent_recovery_emails_${step}:`, err);
+    }
+  };
+
+  const getCalgaryDateStr = (dateInput) => {
+    if (!dateInput) return '';
+    try {
+      const d = new Date(dateInput);
+      return new Intl.DateTimeFormat('pt-BR', {
+        timeZone: 'America/Edmonton',
+        day: '2-digit', month: '2-digit', year: 'numeric',
+        hour: '2-digit', minute: '2-digit'
+      }).format(d).replace(',', ' às');
+    } catch (e) {
+      return '';
+    }
+  };
+
+  const formatCartItemDate = (timestamp) => {
+    if (!timestamp) return '';
+    try {
+      const d = new Date(timestamp);
+      return new Intl.DateTimeFormat('pt-BR', {
+        day: '2-digit', month: '2-digit', year: 'numeric',
+        hour: '2-digit', minute: '2-digit'
+      }).format(d).replace(',', ' às');
+    } catch (e) {
+      return '';
+    }
+  };
+
+  const handleSendAbandonedCartEmail = async (customer, step = 1) => {
+    if (!customer.email || !customer.cart || customer.cart.length === 0) {
+      if (showToast) showToast("Cliente não possui e-mail ou sacola ativa.", "error");
+      return;
+    }
+    const discountText = step === 2 ? ' + 5% OFF' : '';
+    if (showToast) showToast(`Disparando ${step}º E-mail de Recuperação${discountText} para ${customer.email}...`, "success");
+    
+    setTimeout(async () => {
+      const nowStr = getCalgaryDateStr(new Date());
+      if (step === 2) {
+        const newSent = { ...sentRecoveryEmails2, [customer.id]: nowStr };
+        setSentRecoveryEmails2(newSent);
+        await saveSentRecoveryEmailsToDb(newSent, 2);
+      } else {
+        const newSent = { ...sentRecoveryEmails, [customer.id]: nowStr };
+        setSentRecoveryEmails(newSent);
+        await saveSentRecoveryEmailsToDb(newSent, 1);
+      }
+      if (showToast) showToast(`E-mail enviado e status atualizado!`, "success");
+    }, 1000);
+  };
+
+  const toggleRecoveryEmailStatus = async (customer, step = 1) => {
+    if (step === 2) {
+      if (sentRecoveryEmails2[customer.id]) {
+        const newSent = { ...sentRecoveryEmails2 };
+        delete newSent[customer.id];
+        setSentRecoveryEmails2(newSent);
+        await saveSentRecoveryEmailsToDb(newSent, 2);
+      } else {
+        const nowStr = getCalgaryDateStr(new Date());
+        const newSent = { ...sentRecoveryEmails2, [customer.id]: nowStr };
+        setSentRecoveryEmails2(newSent);
+        await saveSentRecoveryEmailsToDb(newSent, 2);
+      }
+    } else {
+      if (sentRecoveryEmails[customer.id]) {
+        const newSent = { ...sentRecoveryEmails };
+        delete newSent[customer.id];
+        setSentRecoveryEmails(newSent);
+        await saveSentRecoveryEmailsToDb(newSent, 1);
+      } else {
+        const nowStr = getCalgaryDateStr(new Date());
+        const newSent = { ...sentRecoveryEmails, [customer.id]: nowStr };
+        setSentRecoveryEmails(newSent);
+        await saveSentRecoveryEmailsToDb(newSent, 1);
+      }
+    }
+  };
+
+  const handlePrintInvoice = (title, clientInfo, items) => {
+    const printWindow = window.open('', '_blank');
+    if (!printWindow) {
+      if (showToast) showToast("Pop-up bloqueado. Permita pop-ups para gerar invoice.", "error");
+      return;
+    }
+
+    const itemsHtml = items && items.length > 0 ? items.map(item => `
+      <tr>
+        <td style="padding: 12px 10px; border-bottom: 1px solid #e5e7eb;">
+          <div style="font-weight: 600; color: #111827;">${item.name || 'Produto'}</div>
+          ${item.size ? `<div style="font-size: 12px; color: #6b7280; margin-top: 4px;">Size: ${item.size}</div>` : ''}
+        </td>
+        <td style="padding: 12px 10px; border-bottom: 1px solid #e5e7eb;">
+          <div style="font-size: 13px; color: #4b5563;">
+            ${item.extras?.nameNumber ? `Custom: ${item.extras.customName} #${item.extras.customNumber}` : ''}
+            ${item.extras?.extraCustomization ? `<br/>Extra: ${item.extras.customExtraName}` : ''}
+            ${!item.extras?.nameNumber && !item.extras?.extraCustomization ? 'Standard' : ''}
+          </div>
+        </td>
+        <td style="padding: 12px 10px; border-bottom: 1px solid #e5e7eb; text-align: center; color: #374151;">${item.quantity || 1}</td>
+        <td style="padding: 12px 10px; border-bottom: 1px solid #e5e7eb; text-align: right; color: #374151;">$${Number(item.price || 0).toFixed(2)}</td>
+        <td style="padding: 12px 10px; border-bottom: 1px solid #e5e7eb; text-align: right; font-weight: 600; color: #111827;">$${(Number(item.price || 0) * (item.quantity || 1)).toFixed(2)}</td>
+      </tr>
+    `).join('') : `<tr><td colspan="5" style="padding: 12px 10px; border-bottom: 1px solid #e5e7eb; text-align: center; color: #6b7280;">No items</td></tr>`;
+
+    const subtotal = items && items.length > 0 ? items.reduce((sum, item) => sum + (Number(item.price || 0) * (item.quantity || 1)), 0) : 0;
+    const total = clientInfo.total || subtotal;
+    const diff = subtotal - total;
+
+    const html = `
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <title>Invoice - ${title}</title>
+        <style>
+          body { font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; color: #333; line-height: 1.6; margin: 0; padding: 40px; }
+          table { width: 100%; border-collapse: collapse; }
+          th { text-align: left; border-bottom: 2px solid #000; padding-bottom: 10px; text-transform: uppercase; font-size: 12px; color: #6b7280; }
+        </style>
+      </head>
+      <body>
+        <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 40px;">
+          <div>
+            <h1 style="margin: 0; font-size: 28px; font-weight: 800; letter-spacing: -0.5px;">iFooty.</h1>
+            <p style="margin: 5px 0 0; color: #6b7280; font-size: 14px;">123 Sports Ave, Suite 100<br/>Calgary, AB T2P 1A1<br/>contact@ifooty.ca</p>
+          </div>
+          <div style="text-align: right;">
+            <h2 style="margin: 0; font-size: 24px; color: #111827; letter-spacing: 1px;">INVOICE</h2>
+            <p style="margin: 5px 0 0; color: #6b7280; font-size: 14px;">#${clientInfo.invoiceNo || 'DRAFT'}<br/>Date: ${clientInfo.date || getCalgaryDateStr(new Date())}</p>
+          </div>
+        </div>
+        <table style="margin-bottom: 40px;">
+          <tr>
+            <td style="width: 50%; vertical-align: top;">
+              <h3 style="font-size: 12px; text-transform: uppercase; color: #6b7280; margin-bottom: 10px;">Billed To:</h3>
+              <div style="font-size: 14px; color: #111827; font-weight: 500;">
+                ${clientInfo.name}<br/>
+                ${clientInfo.street}<br/>
+                ${clientInfo.cityProvince}<br/>
+                ${clientInfo.country}<br/>
+                ${clientInfo.email}
+              </div>
+            </td>
+          </tr>
+        </table>
+        <table>
+          <thead>
+            <tr>
+              <th style="width: 25%; padding: 12px 10px;">Item</th>
+              <th style="width: 40%; padding: 12px 10px;">Description</th>
+              <th style="width: 10%; padding: 12px 10px; text-align: center;">Quantity</th>
+              <th style="width: 12%; padding: 12px 10px; text-align: right;">Unit Cost</th>
+              <th style="width: 13%; padding: 12px 10px; text-align: right;">Line Total</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${itemsHtml}
+          </tbody>
+        </table>
+        <table style="width: 40%; margin-left: auto; margin-top: 40px;">
+          <tr style="background-color: #e5e7eb; font-weight: bold; border-top: 2px solid #d1d5db;">
+            <td style="padding: 12px 10px; text-transform: uppercase; font-size: 13px; color: #111827;">Total</td>
+            <td style="padding: 12px 10px; text-align: right; font-size: 16px; color: #111827;">$${total.toFixed(2)}</td>
+          </tr>
+        </table>
+      </body>
+      </html>
+    `;
+    printWindow.document.write(html);
+    printWindow.document.close();
+  };
+
+  const handlePrintCartInvoice = (customer) => {
+    const clientInfo = {
+      name: customer.name || 'Cliente',
+      street: `${customer.street || ''}${customer.apartment ? `, Apt ${customer.apartment}` : ''}`,
+      cityProvince: `${customer.city || ''}, ${customer.province || ''} ${customer.postal_code || ''}`,
+      country: 'Canada',
+      email: customer.email || '',
+      invoiceNo: 'CART-' + (customer.id || 'N/A').toString().substring(0, 6).toUpperCase(),
+      date: getCalgaryDateStr(new Date()),
+      total: customer.cart.reduce((sum, item) => sum + (Number(item.price || 0) * (item.quantity || 1)), 0)
+    };
+    handlePrintInvoice('CART INVOICE', clientInfo, customer.cart);
+  };
+
   const renderPagination = () => {
     if (totalPages <= 1) return null;
     
-    // Generate page numbers to display
     const pages = [];
     for (let i = 1; i <= totalPages; i++) {
       if (
@@ -1220,7 +1453,6 @@ const ClientesSection = () => {
       }
     }
 
-    // Remove consecutive duplicates of '...'
     const uniquePages = pages.filter((page, index) => {
       return page !== '...' || pages[index - 1] !== '...';
     });
@@ -1318,6 +1550,14 @@ const ClientesSection = () => {
           </div>
         }
       />
+
+      {/* Subtle diagnostic log on UI */}
+      {(diagInfo.pError || diagInfo.profiles === 0) && (
+        <div style={{ fontSize: '0.78rem', color: 'rgba(255,255,255,0.3)', padding: '0.5rem 0.8rem', background: 'rgba(255,255,255,0.02)', borderRadius: '6px', border: '1px dashed rgba(255,255,255,0.05)', marginBottom: '1rem', fontFamily: 'monospace' }}>
+          💡 Diag: Profiles={diagInfo.profiles} (Error: {diagInfo.pError || 'None'}), Orders={diagInfo.orders} (Error: {diagInfo.oError || 'None'})
+        </div>
+      )}
+
       {loading ? <Loader /> : (
         <div style={S.card}>
           <div style={{ overflowX: 'auto' }}>
@@ -1333,68 +1573,152 @@ const ClientesSection = () => {
                 </tr>
               </thead>
               <tbody>
-                {currentItems.map((c, i) => (
-                  <tr key={i}
-                    onMouseEnter={e => e.currentTarget.style.background = 'rgba(255,255,255,0.02)'}
-                    onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
-                  >
-                    <td style={S.td}>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-                        {c.avatar_url && c.avatar_url.trim() !== '' && !c.avatar_url.includes('placeholder.com') ? (
-                          <img
-                            src={c.avatar_url}
-                            alt={c.name}
-                            style={{
-                              width: '36px',
-                              height: '36px',
-                              borderRadius: '50%',
-                              objectFit: 'cover',
-                              border: '1px solid rgba(255,255,255,0.1)',
-                              flexShrink: 0
-                            }}
-                          />
-                        ) : (
-                          <div style={{
-                            width: '36px',
-                            height: '36px',
-                            borderRadius: '50%',
-                            background: c.orders > 0 ? 'rgba(214,255,0,0.1)' : 'rgba(255,255,255,0.05)',
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            flexShrink: 0,
-                            fontSize: '1rem',
-                            fontWeight: 700,
-                            color: c.orders > 0 ? '#D6FF00' : 'rgba(255,255,255,0.3)'
-                          }}>
-                            {(c.name || c.email || '?')[0].toUpperCase()}
+                {currentItems.map((c, idx) => {
+                  const isExpanded = expandedClient === c.id;
+                  const hasCart = c.cart && c.cart.length > 0;
+                  const sentAt1 = sentRecoveryEmails[c.id];
+                  const sentAt2 = sentRecoveryEmails2[c.id];
+
+                  return (
+                    <React.Fragment key={c.id || idx}>
+                      <tr
+                        onClick={() => setExpandedClient(isExpanded ? null : c.id)}
+                        style={{
+                          borderBottom: isExpanded ? 'none' : '1px solid #1A1D20',
+                          background: isExpanded ? 'rgba(255,255,255,0.03)' : 'transparent',
+                          transition: 'background 0.2s',
+                          cursor: 'pointer'
+                        }}
+                        onMouseEnter={e => { if (!isExpanded) e.currentTarget.style.background = 'rgba(255,255,255,0.02)'; }}
+                        onMouseLeave={e => { if (!isExpanded) e.currentTarget.style.background = 'transparent'; }}
+                      >
+                        <td style={S.td}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                            {c.avatar_url && c.avatar_url.trim() !== '' && !c.avatar_url.includes('placeholder.com') ? (
+                              <img src={c.avatar_url} alt={c.name} style={{ width: '36px', height: '36px', borderRadius: '50%', objectFit: 'cover', border: '1px solid rgba(255,255,255,0.1)', flexShrink: 0 }} />
+                            ) : (
+                              <div style={{ width: '36px', height: '36px', borderRadius: '50%', background: c.orders > 0 ? 'rgba(214,255,0,0.1)' : 'rgba(255,255,255,0.05)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, fontSize: '1rem', fontWeight: 700, color: c.orders > 0 ? '#D6FF00' : 'rgba(255,255,255,0.3)' }}>
+                                {(c.name || c.email || '?')[0].toUpperCase()}
+                              </div>
+                            )}
+                            <div>
+                              <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', flexWrap: 'wrap' }}>
+                                <span style={{ fontWeight: 600, fontSize: '0.875rem' }}>{c.name || 'Sem nome'}</span>
+                                {hasCart && (
+                                  <span style={{ fontSize: '0.62rem', background: 'rgba(239,68,68,0.15)', color: '#FF4D4D', border: '1px solid rgba(239,68,68,0.3)', padding: '1px 5px', borderRadius: '4px', fontWeight: 800 }}>
+                                    Sacola Ativa ({c.cart.reduce((s, item) => s + (item.quantity || 1), 0)})
+                                  </span>
+                                )}
+                                {hasCart && sentAt2 && <span style={{ fontSize: '0.62rem', background: 'rgba(59,130,246,0.15)', color: '#3B82F6', border: '1px solid rgba(59,130,246,0.3)', padding: '1px 5px', borderRadius: '4px', fontWeight: 800 }}>📧 2º Enviado</span>}
+                                {hasCart && sentAt1 && !sentAt2 && <span style={{ fontSize: '0.62rem', background: 'rgba(16,185,129,0.15)', color: '#10B981', border: '1px solid rgba(16,185,129,0.3)', padding: '1px 5px', borderRadius: '4px', fontWeight: 800 }}>📧 1º Enviado</span>}
+                                {hasCart && !sentAt1 && !sentAt2 && <span style={{ fontSize: '0.62rem', background: 'rgba(245,158,11,0.15)', color: '#F59E0B', border: '1px solid rgba(245,158,11,0.3)', padding: '1px 5px', borderRadius: '4px', fontWeight: 800 }}>⏳ Não Enviado</span>}
+                              </div>
+                              {c.orders === 0 && <div style={{ fontSize: '0.7rem', color: 'rgba(255,255,255,0.25)', marginTop: '1px' }}>Sem pedidos</div>}
+                            </div>
                           </div>
-                        )}
-                        <div>
-                          <div style={{ fontWeight: 600, fontSize: '0.875rem' }}>{c.name || 'Sem nome'}</div>
-                          {c.orders === 0 && <div style={{ fontSize: '0.7rem', color: 'rgba(255,255,255,0.25)', marginTop: '1px' }}>Sem pedidos</div>}
-                        </div>
-                      </div>
-                    </td>
-                    <td style={{ ...S.td, color: 'rgba(255,255,255,0.65)' }}>{c.email || '—'}</td>
-                    <td style={{ ...S.td, color: 'rgba(255,255,255,0.65)' }}>{c.phone || '—'}</td>
-                    <td style={S.td}>
-                      {c.orders > 0 ? (
-                        <span style={{ padding: '0.2rem 0.6rem', background: 'rgba(96,165,250,0.1)', color: '#60A5FA', borderRadius: '4px', fontSize: '0.8rem', fontWeight: 700 }}>
-                          {c.orders} {c.orders === 1 ? 'pedido' : 'pedidos'}
-                        </span>
-                      ) : (
-                        <span style={{ color: 'rgba(255,255,255,0.25)', fontSize: '0.8rem' }}>—</span>
+                        </td>
+                        <td style={{ ...S.td, color: 'rgba(255,255,255,0.65)' }}>{c.email || '—'}</td>
+                        <td style={{ ...S.td, color: 'rgba(255,255,255,0.65)' }}>{c.phone || '—'}</td>
+                        <td style={S.td}>
+                          {c.orders > 0 ? (
+                            <span style={{ padding: '0.2rem 0.6rem', background: 'rgba(96,165,250,0.1)', color: '#60A5FA', borderRadius: '4px', fontSize: '0.8rem', fontWeight: 700 }}>{c.orders}</span>
+                          ) : (
+                            <span style={{ color: 'rgba(255,255,255,0.25)', fontSize: '0.8rem' }}>—</span>
+                          )}
+                        </td>
+                        <td style={{ ...S.td, fontWeight: 700, color: c.spent > 0 ? '#4ADE80' : 'rgba(255,255,255,0.25)' }}>
+                          ${c.spent.toFixed(2)}
+                        </td>
+                        <td style={{ ...S.td, color: 'rgba(255,255,255,0.4)', fontSize: '0.8rem' }}>
+                          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '0.5rem' }}>
+                            <span>{c.lastOrder ? new Date(c.lastOrder).toLocaleDateString('pt-BR') : '—'}</span>
+                            <span style={{ color: 'rgba(255,255,255,0.25)', fontSize: '0.7rem' }}>{isExpanded ? '▲' : '▼'}</span>
+                          </div>
+                        </td>
+                      </tr>
+
+                      {isExpanded && (
+                        <tr style={{ background: 'rgba(0,0,0,0.15)', borderBottom: '1px solid rgba(214,255,0,0.15)' }}>
+                          <td colSpan={6} style={{ padding: '1.5rem' }}>
+                            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '2rem' }}>
+
+                              {/* Endereço */}
+                              <div style={{ flex: '1', minWidth: '220px' }}>
+                                <p style={{ fontSize: '0.7rem', color: 'rgba(255,255,255,0.35)', fontWeight: 700, textTransform: 'uppercase', marginBottom: '0.5rem', letterSpacing: '0.5px' }}>Endereço Registrado</p>
+                                {c.street ? (
+                                  <div style={{ fontSize: '0.85rem', color: '#fff', lineHeight: '1.6' }}>
+                                    <div>{c.street}{c.apartment ? `, Apt ${c.apartment}` : ''}</div>
+                                    <div style={{ color: 'rgba(255,255,255,0.5)' }}>{c.city}, {c.province} {c.postal_code}</div>
+                                  </div>
+                                ) : (
+                                  <p style={{ fontSize: '0.8rem', color: 'rgba(255,255,255,0.3)', fontStyle: 'italic' }}>Nenhum endereço cadastrado.</p>
+                                )}
+                              </div>
+
+                              {/* Sacola */}
+                              <div style={{ flex: '2', minWidth: '320px' }}>
+                                <p style={{ fontSize: '0.7rem', color: 'rgba(255,255,255,0.35)', fontWeight: 700, textTransform: 'uppercase', marginBottom: '0.5rem', letterSpacing: '0.5px' }}>Sacola / Carrinho Ativo</p>
+                                {hasCart ? (
+                                  <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
+                                    {c.cart.map((item, i) => (
+                                      <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', background: 'rgba(255,255,255,0.03)', padding: '0.5rem 0.75rem', borderRadius: '6px', border: '1px solid rgba(255,255,255,0.05)' }}>
+                                        <div style={{ width: '38px', height: '38px', borderRadius: '4px', overflow: 'hidden', background: 'rgba(255,255,255,0.05)', flexShrink: 0 }}>
+                                          <img src={item.image || '/camisas/placeholder.png'} alt="" style={{ width: '100%', height: '100%', objectFit: 'contain' }} onError={e => { e.target.onerror = null; e.target.src = '/camisas/placeholder.png'; }} />
+                                        </div>
+                                        <div style={{ flex: 1 }}>
+                                          <div style={{ fontSize: '0.8rem', color: '#fff', fontWeight: 600 }}>{item.name}</div>
+                                          <div style={{ fontSize: '0.7rem', color: 'rgba(255,255,255,0.4)', marginTop: '2px' }}>
+                                            Tam: <span style={{ color: '#D6FF00', fontWeight: 700 }}>{item.size}</span> | Qtd: {item.quantity || 1} | Preço: ${Number(item.price || 0).toFixed(2)}
+                                            {item.addedAt && ` | Adicionado em: ${formatCartItemDate(item.addedAt)}`}
+                                          </div>
+                                        </div>
+                                      </div>
+                                    ))}
+                                  </div>
+                                ) : (
+                                  <p style={{ fontSize: '0.8rem', color: 'rgba(255,255,255,0.3)', fontStyle: 'italic' }}>Nenhum produto no carrinho atualmente.</p>
+                                )}
+                              </div>
+                            </div>
+
+                            {/* Action Buttons */}
+                            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.75rem', alignItems: 'center', marginTop: '1.25rem', paddingTop: '1.25rem', borderTop: '1px solid rgba(255,255,255,0.05)', flexWrap: 'wrap' }}>
+                              {hasCart && (
+                                <>
+                                  {/* 1st Email group */}
+                                  <div style={{ display: 'flex', gap: '0.35rem', alignItems: 'center' }}>
+                                    <button onClick={(e) => { e.stopPropagation(); toggleRecoveryEmailStatus(c, 1); }} style={{ background: 'rgba(255,255,255,0.04)', color: 'rgba(255,255,255,0.5)', border: '1px solid rgba(255,255,255,0.1)', padding: '0.4rem 0.65rem', borderRadius: '5px', fontSize: '0.78rem', fontWeight: 600, cursor: 'pointer' }}>
+                                      {sentAt1 ? 'Desmarcar 1º' : 'Marcar 1º'}
+                                    </button>
+                                    <button onClick={(e) => { e.stopPropagation(); handleSendAbandonedCartEmail(c, 1); }} style={{ display: 'flex', alignItems: 'center', gap: '0.35rem', background: sentAt1 ? 'rgba(16,185,129,0.1)' : '#D6FF00', color: sentAt1 ? '#10B981' : '#000', border: sentAt1 ? '1px solid rgba(16,185,129,0.3)' : 'none', padding: '0.4rem 0.9rem', borderRadius: '5px', fontSize: '0.82rem', fontWeight: 800, cursor: 'pointer' }}>
+                                      {sentAt1 ? '✓' : '✉'} {sentAt1 ? `1º Enviado (${sentAt1.split(' às ')[0]})` : 'Enviar 1º E-mail'}
+                                    </button>
+                                  </div>
+
+                                  {/* 2nd Email group */}
+                                  <div style={{ display: 'flex', gap: '0.35rem', alignItems: 'center' }}>
+                                    <button onClick={(e) => { e.stopPropagation(); toggleRecoveryEmailStatus(c, 2); }} style={{ background: 'rgba(255,255,255,0.04)', color: 'rgba(255,255,255,0.5)', border: '1px solid rgba(255,255,255,0.1)', padding: '0.4rem 0.65rem', borderRadius: '5px', fontSize: '0.78rem', fontWeight: 600, cursor: 'pointer' }}>
+                                      {sentAt2 ? 'Desmarcar 2º' : 'Marcar 2º'}
+                                    </button>
+                                    <button onClick={(e) => { e.stopPropagation(); handleSendAbandonedCartEmail(c, 2); }} style={{ display: 'flex', alignItems: 'center', gap: '0.35rem', background: sentAt2 ? 'rgba(59,130,246,0.1)' : '#3B82F6', color: sentAt2 ? '#3B82F6' : '#fff', border: sentAt2 ? '1px solid rgba(59,130,246,0.3)' : 'none', padding: '0.4rem 0.9rem', borderRadius: '5px', fontSize: '0.82rem', fontWeight: 800, cursor: 'pointer' }}>
+                                      {sentAt2 ? '✓' : '✉'} {sentAt2 ? `2º Enviado (${sentAt2.split(' às ')[0]})` : 'Enviar 2º (5% OFF)'}
+                                    </button>
+                                  </div>
+
+                                  <div style={{ width: '1px', height: '30px', background: 'rgba(255,255,255,0.1)' }} />
+
+                                  <button onClick={(e) => { e.stopPropagation(); handlePrintCartInvoice(c); }} style={{ background: 'rgba(255,255,255,0.05)', color: '#fff', border: '1px solid rgba(255,255,255,0.1)', padding: '0.4rem 0.9rem', borderRadius: '5px', fontSize: '0.82rem', fontWeight: 600, cursor: 'pointer' }}>
+                                    🖨 Gerar Invoice
+                                  </button>
+                                </>
+                              )}
+                            </div>
+                          </td>
+                        </tr>
                       )}
-                    </td>
-                    <td style={{ ...S.td, fontWeight: 700, color: c.spent > 0 ? '#4ADE80' : 'rgba(255,255,255,0.25)' }}>
-                      {c.spent > 0 ? `$${c.spent.toFixed(2)}` : '—'}
-                    </td>
-                    <td style={{ ...S.td, color: 'rgba(255,255,255,0.4)', fontSize: '0.8rem' }}>
-                      {c.lastOrder ? new Date(c.lastOrder).toLocaleDateString('pt-BR') : '—'}
-                    </td>
-                  </tr>
-                ))}
+                    </React.Fragment>
+                  );
+                })}
                 {filtered.length === 0 && (
                   <tr><td colSpan={6} style={{ ...S.td, textAlign: 'center', color: 'rgba(255,255,255,0.3)', padding: '3rem' }}>Nenhum cliente encontrado.</td></tr>
                 )}
@@ -1410,8 +1734,6 @@ const ClientesSection = () => {
 
 
 // ─── Afiliados Section ────────────────────────────────────────────────────────
-
-
 
 const AfiliadosSection = ({ showToast }) => {
   const [afiliados, setAfiliados] = useState([]);
@@ -1903,10 +2225,8 @@ const SectionHeader = ({ title, sub, action }) => (
 
 // ─── Main Component ───────────────────────────────────────────────────────────
 const RebrandAdmin = () => {
+  const { user, isAdmin, loading: authLoading, signOut } = useRebrandAuth();
   const navigate = useNavigate();
-  const [authChecked, setAuthChecked] = useState(false);
-  const [authorized, setAuthorized] = useState(false);
-  const [adminUser, setAdminUser] = useState(null);
   const [activeTab, setActiveTab] = useState('dashboard');
   const [toast, setToast] = useState(null);
 
@@ -1915,26 +2235,12 @@ const RebrandAdmin = () => {
     setTimeout(() => setToast(null), 4000);
   }, []);
 
-  // Auth guard
-  useEffect(() => {
-    async function checkAuth() {
-      const { data: { session } } = await supabase.auth.getSession();
-      const email = session?.user?.email?.toLowerCase().trim();
-      if (email === REBRAND_ADMIN_EMAIL) {
-        setAuthorized(true);
-        setAdminUser(session.user);
-      }
-      setAuthChecked(true);
-    }
-    checkAuth();
-  }, []);
-
   const handleLogout = async () => {
-    await supabase.auth.signOut();
+    await signOut();
     navigate('/rebrand/auth');
   };
 
-  if (!authChecked) {
+  if (authLoading) {
     return (
       <div style={{ background: '#0B0C0E', minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
         <Loader />
@@ -1942,7 +2248,7 @@ const RebrandAdmin = () => {
     );
   }
 
-  if (!authorized) {
+  if (!isAdmin) {
     return (
       <div style={{ background: '#0B0C0E', minHeight: '100vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '1.5rem', fontFamily: "'Inter', system-ui, sans-serif" }}>
         <span style={{ fontSize: '3rem' }}>🔒</span>
@@ -1959,7 +2265,7 @@ const RebrandAdmin = () => {
     products:    <ProductsSection showToast={showToast} />,
     spotlight:   <SpotlightSection showToast={showToast} />,
     coupons:     <CouponsSection showToast={showToast} />,
-    clientes:    <ClientesSection />,
+    clientes:    <ClientesSection showToast={showToast} />,
     afiliados:   <AfiliadosSection showToast={showToast} />,
     conversas:   <ConversasSection />,
     depoimentos: <DepoimentosSection showToast={showToast} />,
@@ -2020,7 +2326,7 @@ const RebrandAdmin = () => {
           <div style={{ padding: '1rem 0.75rem', borderTop: '1px solid #1A1D20' }}>
             <div style={{ padding: '0.75rem 1rem', background: 'rgba(255,255,255,0.03)', borderRadius: '8px', marginBottom: '0.75rem' }}>
               <div style={{ fontSize: '0.75rem', color: 'rgba(255,255,255,0.35)', marginBottom: '0.15rem' }}>Logado como</div>
-              <div style={{ fontSize: '0.8rem', fontWeight: 600, color: '#fff', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{adminUser?.email}</div>
+              <div style={{ fontSize: '0.8rem', fontWeight: 600, color: '#fff', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{user?.email}</div>
             </div>
             <button
               onClick={() => navigate('/rebrand')}

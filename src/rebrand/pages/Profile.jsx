@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, Navigate } from 'react-router-dom';
-import { useAuth } from '../../context/AuthContext';
-import { supabase } from '../../services/supabase';
+import { useRebrandAuth } from '../../context/RebrandAuthContext';
+import { supabaseRebrand as supabase } from '../../services/supabase';
 import { Package, User, LogOut, ChevronRight, Edit2, Check, X, Truck, Clock, CheckCircle, XCircle, ShoppingBag } from 'lucide-react';
 
 const STATUS_CONFIG = {
@@ -14,7 +14,7 @@ const STATUS_CONFIG = {
 };
 
 const RebrandProfile = () => {
-  const { user, signOut, loading: authLoading } = useAuth();
+  const { user, signOut, loading: authLoading } = useRebrandAuth();
   const navigate = useNavigate();
 
   const [activeTab, setActiveTab] = useState('orders');

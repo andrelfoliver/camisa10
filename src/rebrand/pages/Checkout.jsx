@@ -1,18 +1,18 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { useCart } from '../../context/CartContext';
-import { useAuth } from '../../context/AuthContext';
+import { useRebrandAuth } from '../../context/RebrandAuthContext';
 import { useLanguage } from '../../context/LanguageContext';
 import { ArrowLeft, Truck, MapPin, Save, AlertCircle, X, LogIn, Lock, ShieldCheck } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { PayPalScriptProvider, PayPalButtons } from '@paypal/react-paypal-js';
 import { CreditCard, MessageSquare } from 'lucide-react';
 import WhatsAppIcon from '../../components/WhatsAppIcon';
-import { supabase } from '../../services/supabase';
+import { supabaseRebrand as supabase } from '../../services/supabase';
 import { trackEvent, getSavedUtms, getSavedAttribution } from '../../services/analytics';
 
 const RebrandCheckout = () => {
   const { cartItems, cartTotal, subtotal, discount, clearCart, appliedShipping, pricingConfig } = useCart();
-  const { user } = useAuth();
+  const { user } = useRebrandAuth();
   const { currency, setCurrency, convertPrice, formatPrice } = useLanguage();
   const navigate = useNavigate();
 

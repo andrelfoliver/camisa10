@@ -1,13 +1,13 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { useAuth } from '../../context/AuthContext';
+import { useRebrandAuth } from '../../context/RebrandAuthContext';
 import { UserCircle, ArrowLeft, ShieldAlert } from 'lucide-react';
 import { Navigate, useNavigate } from 'react-router-dom';
-import { supabase } from '../../services/supabase';
+import { supabaseRebrand as supabase } from '../../services/supabase';
 
 const GOOGLE_CLIENT_ID = (import.meta.env.VITE_GOOGLE_CLIENT_ID || '').trim();
 
 const RebrandAuth = () => {
-  const { user, signInWithIdToken } = useAuth();
+  const { user, signInWithIdToken } = useRebrandAuth();
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);

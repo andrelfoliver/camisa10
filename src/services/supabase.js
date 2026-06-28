@@ -1,11 +1,24 @@
 import { createClient } from '@supabase/supabase-js';
 
-// ATENÇÃO: Quando criar o banco no Supabase, pegue a URL e a CHAVE no painel deles
-// Adicione-as criando um arquivo .env na pasta raiz com:
-// VITE_SUPABASE_URL=sua_url
-// VITE_SUPABASE_ANON_KEY=sua_chave
+const supabaseUrl = (import.meta.env.VITE_SUPABASE_URL || 'https://sua_url_vem_aqui.supabase.co').trim();
+const supabaseKey = (import.meta.env.VITE_SUPABASE_ANON_KEY || 'sua_chave_anon_aqui').trim();
 
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || 'https://sua_url_vem_aqui.supabase.co';
-const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY || 'sua_chave_anon_aqui';
+// Cliente Principal da Loja
+export const supabase = createClient(supabaseUrl, supabaseKey, {
+  auth: {
+    storageKey: 'sb-agbskncncrnzmutaubdn-auth-token',
+    persistSession: true,
+    autoRefreshToken: true,
+    detectSessionInUrl: true
+  }
+});
 
-export const supabase = createClient(supabaseUrl, supabaseKey);
+// Cliente Isolado para o Rebrand
+export const supabaseRebrand = createClient(supabaseUrl, supabaseKey, {
+  auth: {
+    storageKey: 'sb-rebrand-auth-token',
+    persistSession: true,
+    autoRefreshToken: true,
+    detectSessionInUrl: true
+  }
+});

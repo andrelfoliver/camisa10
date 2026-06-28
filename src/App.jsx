@@ -31,6 +31,7 @@ import RebrandAdmin from './rebrand/pages/RebrandAdmin';
 import RebrandCheckout from './rebrand/pages/Checkout';
 import RebrandAuth from './rebrand/pages/Auth';
 import RebrandProfile from './rebrand/pages/Profile';
+import { RebrandAuthProvider } from './context/RebrandAuthContext';
 
 import { initAnalytics, trackEvent } from './services/analytics';
 
@@ -103,20 +104,26 @@ const AppLayout = () => {
           <Route path="/auth" element={<Auth />} />
           <Route path="/perfil" element={<Profile />} />
           <Route path="/admin" element={<Admin />} />
-          <Route path="/rebrand/admin" element={<RebrandAdmin />} />
           <Route path="/busca" element={<SearchPage />} />
           <Route path="/afiliados" element={<AffiliateProgram />} />
           <Route path="/sucesso" element={<Success />} />
 
           {/* Rotas de Rebranding Isoladas */}
-          <Route path="/rebrand" element={<RebrandLayout />}>
-            <Route index element={<RebrandHome />} />
-            <Route path="colecao/:category_id" element={<RebrandCategoryPage />} />
-            <Route path="produto/:id" element={<RebrandProductPage />} />
-            <Route path="checkout" element={<RebrandCheckout />} />
-            <Route path="auth" element={<RebrandAuth />} />
-            <Route path="profile" element={<RebrandProfile />} />
-          </Route>
+          <Route path="/rebrand/*" element={
+            <RebrandAuthProvider>
+              <Routes>
+                <Route path="admin" element={<RebrandAdmin />} />
+                <Route element={<RebrandLayout />}>
+                  <Route index element={<RebrandHome />} />
+                  <Route path="colecao/:category_id" element={<RebrandCategoryPage />} />
+                  <Route path="produto/:id" element={<RebrandProductPage />} />
+                  <Route path="checkout" element={<RebrandCheckout />} />
+                  <Route path="auth" element={<RebrandAuth />} />
+                  <Route path="profile" element={<RebrandProfile />} />
+                </Route>
+              </Routes>
+            </RebrandAuthProvider>
+          } />
 
           <Route path="*" element={<NotFound />} />
         </Routes>

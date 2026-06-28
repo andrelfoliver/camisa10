@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { supabase } from '../../services/supabase';
+import { supabaseRebrand as supabase } from '../../services/supabase';
 import { ArrowRight, Star, ShoppingBag, Eye, ShieldCheck, Truck, RefreshCw, BadgeAlert, Check } from 'lucide-react';
 import { useCart } from '../../context/CartContext';
 import { formatProductName } from '../utils/format';

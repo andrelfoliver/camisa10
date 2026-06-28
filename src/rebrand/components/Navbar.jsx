@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { Search, ShoppingBag, User, MapPin, X, Menu } from 'lucide-react';
 import { useCart } from '../../context/CartContext';
-import { useAuth } from '../../context/AuthContext';
+import { useRebrandAuth } from '../../context/RebrandAuthContext';
 
 const NAV_LINKS = [
   { to: '/rebrand/colecao/soccer',       label: 'Soccer',       special: null },
@@ -19,7 +19,7 @@ const Navbar = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { totalItems, setIsCartOpen } = useCart();
-  const { user, signOut } = useAuth();
+  const { user, signOut } = useRebrandAuth();
 
   const [displayName, setDisplayName] = useState('Hello, Sign In');
   const [accountStatus, setAccountStatus] = useState('My Account');
