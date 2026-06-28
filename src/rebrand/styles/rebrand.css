@@ -1015,8 +1015,8 @@ h3.rebrand-sport-name {
 
   /* Hero split layout on mobile */
   .rebrand-hero {
-    height: 42vh !important;
-    min-height: 310px;
+    height: 60vh !important;
+    min-height: 450px;
     padding: 5rem 1.5rem 2.5rem 1.5rem !important;
     display: flex;
     align-items: stretch !important;

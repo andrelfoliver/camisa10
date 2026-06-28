@@ -17,28 +17,28 @@ const Footer = () => {
         <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
           <Truck size={32} color="var(--rebrand-volt)" />
           <div>
-            <h5 style={{ margin: 0, textTransform: 'uppercase', fontStyle: 'italic', fontWeight: 700 }}>Canada-Wide Shipping</h5>
+            <h5 style={{ margin: 0, textTransform: 'uppercase', fontWeight: 700 }}>Canada-Wide Shipping</h5>
             <p style={{ margin: 0, fontSize: '0.8rem', color: '#adb5bd' }}>Free shipping on premium orders</p>
           </div>
         </div>
         <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
           <ShieldCheck size={32} color="var(--rebrand-volt)" />
           <div>
-            <h5 style={{ margin: 0, textTransform: 'uppercase', fontStyle: 'italic', fontWeight: 700 }}>100% Premium Quality</h5>
+            <h5 style={{ margin: 0, textTransform: 'uppercase', fontWeight: 700 }}>100% Premium Quality</h5>
             <p style={{ margin: 0, fontSize: '0.8rem', color: '#adb5bd' }}>Officially stitched details & fabrics</p>
           </div>
         </div>
         <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
           <RefreshCw size={32} color="var(--rebrand-volt)" />
           <div>
-            <h5 style={{ margin: 0, textTransform: 'uppercase', fontStyle: 'italic', fontWeight: 700 }}>Easy Exchange</h5>
+            <h5 style={{ margin: 0, textTransform: 'uppercase', fontWeight: 700 }}>Easy Exchange</h5>
             <p style={{ margin: 0, fontSize: '0.8rem', color: '#adb5bd' }}>Simple and quick exchange program</p>
           </div>
         </div>
         <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
           <HelpCircle size={32} color="var(--rebrand-volt)" />
           <div>
-            <h5 style={{ margin: 0, textTransform: 'uppercase', fontStyle: 'italic', fontWeight: 700 }}>24/7 VIP Support</h5>
+            <h5 style={{ margin: 0, textTransform: 'uppercase', fontWeight: 700 }}>24/7 VIP Support</h5>
             <p style={{ margin: 0, fontSize: '0.8rem', color: '#adb5bd' }}>Talk directly to our team via WhatsApp</p>
           </div>
         </div>
