@@ -36,6 +36,12 @@ const STATUS_COLORS = {
   cancelled:  { bg: 'rgba(239,68,68,0.15)',  color: '#F87171', label: 'Cancelado' },
 };
 
+const getStatusNameColor = (status) => {
+  if (status === 'pending') return '#FBBF24';
+  if (status === 'paid') return '#4ADE80';
+  return '#FFFFFF';
+};
+
 const DEFAULT_SPOTLIGHT = [
   { sport: 'Baseball', badge: '⚾ Summer Collection', title: 'BLUE JAYS JERSEYS', price: '$49.90 CAD', btnText: 'Shop MLB', link: '/rebrand/colecao/baseball', img: '/assets/rebrand/blue_jays.jpg', featuredProducts: '' },
   { sport: 'Football', badge: '🏈 NFL Collection',    title: 'CHIEFS JERSEYS',    price: '$59.90 CAD', btnText: 'Shop NFL', link: '/rebrand/colecao/football', img: '/assets/rebrand/chiefs.jpg',    featuredProducts: '' },
@@ -946,7 +952,7 @@ const DashboardSection = ({ showValues, setShowValues }) => {
               {recentOrders.map(o => (
                 <tr key={o.id}>
                   <td style={{ ...S.td, color: 'rgba(255,255,255,0.5)', fontSize: '0.78rem' }}>#{String(o.id).slice(-6)}</td>
-                  <td style={S.td}>{o.customer_name || o.customer_email || '—'}</td>
+                  <td style={{ ...S.td, color: getStatusNameColor(o.status), fontWeight: 600 }}>{o.customer_name || o.customer_email || '—'}</td>
                   <td style={{ ...S.td, color: 'rgba(255,255,255,0.5)' }}>{new Date(o.created_at).toLocaleDateString('pt-BR')}</td>
                   <td style={{ ...S.td, fontWeight: 700, color: '#D6FF00' }}>${parseFloat(o.total || o.total_price || 0).toFixed(2)}</td>
                   <td style={S.td}><span style={S.badge(o.status)}>{STATUS_COLORS[o.status]?.label || o.status}</span></td>
@@ -1244,7 +1250,7 @@ const OrdersSection = ({ showToast }) => {
                   <tr key={o.id} style={{ cursor: 'pointer' }} onClick={() => setSelectedOrder(o)}>
                     <td style={{ ...S.td, color: 'rgba(255,255,255,0.5)', fontSize: '0.78rem', fontFamily: 'monospace' }}>#{String(o.id).slice(-8)}</td>
                     <td style={S.td}>
-                      <div style={{ fontWeight: 600 }}>{o.customer_name || '—'}</div>
+                      <div style={{ fontWeight: 600, color: getStatusNameColor(o.status) }}>{o.customer_name || '—'}</div>
                       <div style={{ fontSize: '0.75rem', color: 'rgba(255,255,255,0.4)' }}>{o.customer_email || ''}</div>
                     </td>
                     <td style={{ ...S.td, color: 'rgba(255,255,255,0.5)', fontSize: '0.82rem', whiteSpace: 'nowrap' }}>{new Date(o.created_at).toLocaleDateString('pt-BR')}</td>
