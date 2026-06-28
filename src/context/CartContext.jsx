@@ -187,7 +187,7 @@ export const CartProvider = ({ children }) => {
     loadPricing();
   }, []);
 
-  const addToCart = (product, size, extras = { nameNumber: false, patch: false, extraCustomization: false, onlyShirt: false }) => {
+  const addToCart = (product, size, extras = { nameNumber: false, patch: false, extraCustomization: false, onlyShirt: false }, quantity = 1) => {
     const isKids = product?.category?.toLowerCase().includes('infantil') ||
       product?.name?.toLowerCase().includes('infantil') ||
       product?.name?.toLowerCase().includes('kids');
@@ -224,7 +224,7 @@ export const CartProvider = ({ children }) => {
       if (existing) {
         return prev.map(item =>
           item.cartId === cartId
-            ? { ...item, quantity: item.quantity + 1 }
+            ? { ...item, quantity: item.quantity + quantity }
             : item
         );
       }
@@ -235,7 +235,7 @@ export const CartProvider = ({ children }) => {
         extras, 
         addonsPrice, 
         basePrice, 
-        quantity: 1, 
+        quantity, 
         price: finalPrice,
         addedAt: new Date().toISOString()
       }];

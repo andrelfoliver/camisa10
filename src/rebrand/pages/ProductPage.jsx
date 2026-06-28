@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { supabase } from '../../services/supabase';
-import { Star, ShoppingBag, ArrowLeft, ShieldCheck, Truck, RefreshCw, Calendar, Heart, Share2, Info } from 'lucide-react';
+import { Star, ShoppingBag, ArrowLeft, ShieldCheck, Truck, RefreshCw, Calendar, Heart, Share2, Info, ChevronLeft, ChevronRight, Award } from 'lucide-react';
 import { useCart } from '../../context/CartContext';
 import { formatProductName } from '../utils/format';
+import SizeGuideModal from '../../components/SizeGuideModal';
 
 // Todos os mocks para busca rápida com suporte a cores de time, preços riscados e informações extras
 const ALL_MOCKS = {
@@ -25,7 +26,7 @@ const ALL_MOCKS = {
 const ProductPage = () => {
   const { id } = useParams();
   const navigate = useNavigate();
-  const { addToCart } = useCart();
+  const { addToCart, pricingConfig } = useCart();
   const [product, setProduct] = useState(null);
   const [loading, setLoading] = useState(true);
 
@@ -38,6 +39,9 @@ const ProductPage = () => {
 
   // Favorito
   const [isWishlist, setIsWishlist] = useState(false);
+  const [isSizeGuideOpen, setIsSizeGuideOpen] = useState(false);
+  const [activeThumb, setActiveThumb] = useState(0);
+  const [quantity, setQuantity] = useState(1);
 
   useEffect(() => {
     async function loadProductDetails() {
@@ -98,7 +102,7 @@ const ProductPage = () => {
       image: product.image,
       category: product.category,
       color: selectedColor
-    }, selectedSize, extras);
+    }, selectedSize, extras, quantity);
   };
 
   if (loading) {
@@ -120,100 +124,145 @@ const ProductPage = () => {
     );
   }
 
+  const isPlayerVersion = 
+    product?.name?.toLowerCase().includes('player') || 
+    product?.name?.toLowerCase().includes('jogador') ||
+    product?.desc?.toLowerCase().includes('player version') ||
+    product?.desc?.toLowerCase().includes('versão jogador');
+
+  const availableSizes = isPlayerVersion 
+    ? ['S', 'M', 'L', 'XL', '2XL'] 
+    : ['S', 'M', 'L', 'XL', '2XL', '3XL', '4XL'];
+
   return (
-    <div style={{ background: '#ffffff', padding: '3rem 2rem' }} className="rebrand-scope">
+    <div style={{ background: '#ffffff', padding: '1.5rem 2rem 4rem' }} className="rebrand-scope">
       <div className="container" style={{ maxWidth: '1200px', margin: '0 auto' }}>
         
-        {/* Back Link & Breadcrumb */}
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2.5rem' }}>
-          <button onClick={() => navigate(-1)} style={{ display: 'inline-flex', alignItems: 'center', gap: '0.5rem', color: 'var(--rebrand-text-muted)', background: 'transparent', border: 'none', cursor: 'pointer', fontWeight: 700, fontSize: '0.85rem', textTransform: 'uppercase' }}>
+        {/* Back Link */}
+        <div className="rebrand-product-breadcrumb-container" style={{ marginBottom: '1rem' }}>
+          <button onClick={() => navigate(-1)} style={{ display: 'inline-flex', alignItems: 'center', gap: '0.4rem', color: '#6c757d', background: 'transparent', border: 'none', padding: '0.2rem 0', cursor: 'pointer', fontWeight: 700, fontSize: '0.85rem' }}>
             <ArrowLeft size={14} /> Back to Catalog
           </button>
-          <span style={{ fontSize: '0.8rem', color: 'var(--rebrand-text-muted)', fontWeight: 600 }}>
-            Home / {product.category.toUpperCase()} / {formatProductName(product.name)}
-          </span>
         </div>
 
-        <div style={{ display: 'grid', gridTemplateColumns: '1.2fr 1fr', gap: '5rem' }}>
-          
-          {/* Left Column: Product Image & Badges */}
+        <div className="rebrand-product-grid">
+              {/* Left Column: Product Image & Gallery */}
           <div>
-            <div style={{ 
-              background: '#ffffff', 
-              borderRadius: '8px', 
-              overflow: 'hidden', 
-              aspectRatio: '1', 
-              display: 'flex', 
-              alignItems: 'center', 
-              justifyContent: 'center', 
-              border: '1px solid var(--rebrand-border)',
-              position: 'relative',
-              boxShadow: 'var(--rebrand-shadow-sm)'
-            }}>
-              <span style={{
-                position: 'absolute',
-                top: '1.5rem',
-                left: '1.5rem',
-                background: '#121416',
-                color: '#ffffff',
-                padding: '0.4rem 1rem',
-                fontSize: '0.7rem',
-                fontWeight: 800,
-                textTransform: 'uppercase',
-                borderRadius: '3px',
-                borderLeft: '3px solid var(--rebrand-volt)',
-                zIndex: 2
-              }}>
-                100% Stitched
-              </span>
-              <img src={product.image} alt={product.name} style={{ width: '90%', height: '90%', objectFit: 'contain' }} />
-            </div>
-            
-            {/* Shipping Info Card (Fanatics Style) */}
-            <div style={{
-              marginTop: '2rem',
-              background: 'var(--rebrand-surface)',
-              borderRadius: '6px',
-              padding: '1.5rem',
-              border: '1px solid var(--rebrand-border)',
-              display: 'grid',
-              gridTemplateColumns: 'auto 1fr',
-              gap: '1rem',
-              alignItems: 'start'
-            }}>
-              <Truck size={24} color="#2b8a3e" style={{ marginTop: '2px' }} />
-              <div>
-                <h5 style={{ margin: '0 0 0.2rem 0', color: '#2b8a3e', fontSize: '0.85rem', fontWeight: 800, textTransform: 'uppercase' }}>✓ Ready To Ship</h5>
-                <p style={{ margin: 0, fontSize: '0.8rem', color: 'var(--rebrand-text-muted)', lineHeight: 1.5 }}>
-                  This item leaves our warehouse in 1-2 business days. Eligible for free Canada-wide shipping on orders over $99 CAD.
-                </p>
+            <div className="rebrand-product-gallery">
+              {/* Vertical Thumbnails */}
+              <div className="rebrand-product-thumbnails">
+                {[0, 1, 2].map((idx) => {
+                  const zoomStyle = idx === 1 
+                    ? { transform: 'scale(1.4) translateY(5%)' } 
+                    : idx === 2 
+                      ? { transform: 'scale(2.0) translateY(-10%)' } 
+                      : {};
+                  return (
+                    <button
+                      key={idx}
+                      onClick={() => setActiveThumb(idx)}
+                      className={`rebrand-product-thumbnail-btn ${activeThumb === idx ? 'active' : ''}`}
+                    >
+                      <img 
+                        src={product.image} 
+                        alt={`Thumbnail ${idx + 1}`} 
+                        style={{ objectFit: 'contain', ...zoomStyle }} 
+                      />
+                    </button>
+                  );
+                })}
+              </div>
+
+              {/* Main Product Image */}
+              <div className="rebrand-product-main-image-container">
+                <span style={{
+                  position: 'absolute',
+                  top: '1.5rem',
+                  left: '1.5rem',
+                  background: '#121416',
+                  color: '#ffffff',
+                  padding: '0.4rem 1rem',
+                  fontSize: '0.7rem',
+                  fontWeight: 800,
+                  textTransform: 'uppercase',
+                  borderRadius: '3px',
+                  borderLeft: '3px solid var(--rebrand-volt)',
+                  zIndex: 2
+                }}>
+                  Premium Quality
+                </span>
+
+                {/* Left Navigation Arrow */}
+                <button 
+                  onClick={() => setActiveThumb(prev => (prev === 0 ? 2 : prev - 1))}
+                  style={{
+                    position: 'absolute', left: '1rem', top: '50%', transform: 'translateY(-50%)',
+                    background: '#ffffff', border: '1px solid #dee2e6', borderRadius: '50%',
+                    width: '36px', height: '36px', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    cursor: 'pointer', zIndex: 3, boxShadow: '0 2px 6px rgba(0,0,0,0.1)', transition: 'all 0.15s'
+                  }}
+                  onMouseOver={e => e.currentTarget.style.background = '#f8f9fa'}
+                  onMouseOut={e => e.currentTarget.style.background = '#ffffff'}
+                >
+                  <ChevronLeft size={20} color="#121416" />
+                </button>
+
+                <img 
+                  src={product.image} 
+                  alt={product.name} 
+                  style={{ 
+                    width: '90%', 
+                    height: '90%', 
+                    objectFit: 'contain',
+                    transform: activeThumb === 1 
+                      ? 'scale(1.4) translateY(5%)' 
+                      : activeThumb === 2 
+                        ? 'scale(2.2) translateY(-8%)' 
+                        : 'scale(1)'
+                  }} 
+                />
+
+                {/* Right Navigation Arrow */}
+                <button 
+                  onClick={() => setActiveThumb(prev => (prev === 2 ? 0 : prev + 1))}
+                  style={{
+                    position: 'absolute', right: '1rem', top: '50%', transform: 'translateY(-50%)',
+                    background: '#ffffff', border: '1px solid #dee2e6', borderRadius: '50%',
+                    width: '36px', height: '36px', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    cursor: 'pointer', zIndex: 3, boxShadow: '0 2px 6px rgba(0,0,0,0.1)', transition: 'all 0.15s'
+                  }}
+                  onMouseOver={e => e.currentTarget.style.background = '#f8f9fa'}
+                  onMouseOut={e => e.currentTarget.style.background = '#ffffff'}
+                >
+                  <ChevronRight size={20} color="#121416" />
+                </button>
               </div>
             </div>
           </div>
 
           {/* Right Column: Title, Prices, Colors, Customization */}
-          <div>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start' }}>
-              <span style={{ fontSize: '0.8rem', color: 'var(--rebrand-text-muted)', textTransform: 'uppercase', fontWeight: 800, letterSpacing: '1.5px', marginBottom: '0.5rem', display: 'block' }}>
-                Official {product.category} Merchandise
-              </span>
-              <div style={{ display: 'flex', gap: '0.8rem' }}>
-                <button 
-                  onClick={() => setIsWishlist(!isWishlist)}
-                  style={{ background: 'transparent', border: 'none', cursor: 'pointer', color: isWishlist ? '#dc3545' : 'var(--rebrand-text-muted)' }}
-                  title="Add to Wishlist"
-                >
-                  <Heart size={20} fill={isWishlist ? '#dc3545' : 'transparent'} />
-                </button>
-                <button style={{ background: 'transparent', border: 'none', cursor: 'pointer', color: 'var(--rebrand-text-muted)' }} title="Share Product">
-                  <Share2 size={20} />
-                </button>
-              </div>
+          <div style={{ position: 'relative', paddingTop: '0.5rem' }}>
+            {/* Wishlist & Share Buttons (Absolute to not take vertical space) */}
+            <div style={{ position: 'absolute', top: 0, right: 0, display: 'flex', gap: '0.8rem', zIndex: 10 }}>
+              <button 
+                onClick={() => setIsWishlist(!isWishlist)}
+                style={{ background: 'transparent', border: 'none', cursor: 'pointer', color: isWishlist ? '#dc3545' : 'var(--rebrand-text-muted)' }}
+                title="Add to Wishlist"
+              >
+                <Heart size={20} fill={isWishlist ? '#dc3545' : 'transparent'} />
+              </button>
+              <button style={{ background: 'transparent', border: 'none', cursor: 'pointer', color: 'var(--rebrand-text-muted)' }} title="Share Product">
+                <Share2 size={20} />
+              </button>
             </div>
 
-            <h1 style={{ fontSize: '3rem', lineHeight: '0.9', margin: '0 0 1rem 0', color: 'var(--rebrand-text-main)' }}>
+            <h1 className="rebrand-product-detail-title" style={{ marginTop: 0, marginBottom: '0.2rem', paddingRight: '4rem' }}>
               {formatProductName(product.name)}
             </h1>
+            
+            <p style={{ margin: '0 0 1.5rem 0', color: '#2b8a3e', fontWeight: 700, fontSize: '0.9rem' }}>
+              {product.badge || 'Special Event Item'}
+            </p>
             
             {/* Rating */}
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '1.5rem' }}>
@@ -226,86 +275,59 @@ const ProductPage = () => {
               <span style={{ color: 'var(--rebrand-text-muted)', fontSize: '0.85rem' }}>({product.reviews} customer reviews)</span>
             </div>
 
-            {/* Price Box Fanatics Style */}
-            <div style={{ 
-              background: '#F1F3F5', 
-              padding: '1.2rem', 
-              borderRadius: '4px', 
-              marginBottom: '2rem',
-              display: 'flex',
-              alignItems: 'baseline',
-              gap: '1rem'
-            }}>
-              <span style={{ fontSize: '2.5rem', fontWeight: 900, color: product.oldPrice ? '#dc3545' : 'var(--rebrand-text-main)' }}>
-                ${product.price.toFixed(2)} CAD
-              </span>
-              {product.oldPrice && (
-                <span style={{ fontSize: '1.2rem', textDecoration: 'line-through', color: 'var(--rebrand-text-muted)' }}>
-                  Reg. ${product.oldPrice.toFixed(2)}
-                </span>
-              )}
-              <span style={{ 
-                background: product.oldPrice ? '#dc3545' : '#121416', 
-                color: '#ffffff', 
-                fontSize: '0.65rem', 
-                fontWeight: 800, 
-                padding: '0.2rem 0.6rem', 
-                borderRadius: '2px', 
-                textTransform: 'uppercase',
-                marginLeft: 'auto'
-              }}>
-                {product.oldPrice ? 'Sale' : 'Special Event Item'}
+            {/* Price (Fanatics Style: Clean & Inline) */}
+            {(() => {
+              const customFee = nameNumberEnabled ? (pricingConfig?.nameNumber || 11.90) : 0;
+              const sizeFee = ['2XL', '3XL'].includes(selectedSize) 
+                ? (pricingConfig?.size2XL3XL || 7.00) 
+                : (selectedSize === '4XL' ? (pricingConfig?.size4XL || 10.00) : 0);
+              const totalAddons = customFee + sizeFee;
+              const currentPrice = product.price + totalAddons;
+              const regPrice = product.oldPrice ? product.oldPrice + totalAddons : null;
+
+              return (
+                <div style={{ marginBottom: '1.2rem', display: 'flex', alignItems: 'baseline', flexWrap: 'wrap', gap: '0.6rem' }}>
+                  <span style={{ fontSize: '0.85rem', fontWeight: 800, color: 'var(--rebrand-text-muted)', textTransform: 'uppercase' }}>Your Price:</span>
+                  <span style={{ fontSize: '1.8rem', fontWeight: 900, color: '#dc3545' }}>
+                    ${currentPrice.toFixed(2)} CAD
+                  </span>
+                  {regPrice && (
+                    <>
+                      <span style={{ fontSize: '0.95rem', textDecoration: 'line-through', color: 'var(--rebrand-text-muted)' }}>
+                        Reg. ${regPrice.toFixed(2)}
+                      </span>
+                      <span style={{ 
+                        background: '#dc3545', color: '#fff', fontSize: '0.75rem', 
+                        fontWeight: 800, padding: '2px 6px', borderRadius: '3px', textTransform: 'uppercase' 
+                      }}>
+                        Save ${(((regPrice - currentPrice) / regPrice) * 100).toFixed(0)}%
+                      </span>
+                    </>
+                  )}
+                </div>
+              );
+            })()}
+
+
+            {/* Sizes Selection with Size Chart (Fanatics Style) */}
+            <div className="rebrand-size-header-bar" style={{ marginBottom: '0.8rem' }}>
+              <span style={{ fontSize: '0.85rem', fontWeight: 800, color: 'var(--rebrand-text-main)', textTransform: 'uppercase' }}>Size</span>
+              <span 
+                onClick={() => setIsSizeGuideOpen(true)}
+                style={{ fontSize: '0.8rem', color: '#121416', textDecoration: 'underline', fontWeight: 700, cursor: 'pointer', textTransform: 'uppercase' }}
+              >
+                Size Chart
               </span>
             </div>
-
-            {/* Colors Selection */}
-            {product.colors && product.colors.length > 0 && (
-              <div style={{ marginBottom: '2rem' }}>
-                <h5 style={{ fontSize: '0.85rem', marginBottom: '0.8rem', color: 'var(--rebrand-text-main)', textTransform: 'uppercase', fontWeight: 800 }}>Available Colors</h5>
-                <div style={{ display: 'flex', gap: '0.8rem' }}>
-                  {product.colors.map(col => (
-                    <button
-                      key={col}
-                      onClick={() => setSelectedColor(col)}
-                      style={{
-                        width: '32px',
-                        height: '32px',
-                        borderRadius: '50%',
-                        backgroundColor: col,
-                        border: selectedColor === col ? '3px solid #121416' : '1px solid rgba(0,0,0,0.15)',
-                        cursor: 'pointer',
-                        transform: selectedColor === col ? 'scale(1.1)' : 'scale(1)',
-                        transition: 'transform 0.1s'
-                      }}
-                      title={col}
-                    />
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {/* Sizes Selection with Size Chart */}
-            <div style={{ marginBottom: '2rem' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.8rem' }}>
-                <h5 style={{ fontSize: '0.85rem', color: 'var(--rebrand-text-main)', textTransform: 'uppercase', fontWeight: 800, margin: 0 }}>Select Size</h5>
-                <span style={{ fontSize: '0.8rem', color: 'var(--rebrand-volt)', textShadow: '1px 1px 0px #000', fontWeight: 800, cursor: 'pointer', textTransform: 'uppercase' }}>Size Chart</span>
-              </div>
-              <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
-                {['S', 'M', 'L', 'XL', '2XL', '3XL'].map(size => (
+            
+            <div style={{ marginBottom: '1.2rem' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '0.5rem' }}>
+                {availableSizes.map(size => (
                   <button
                     key={size}
                     onClick={() => setSelectedSize(size)}
-                    style={{
-                      width: '45px',
-                      height: '45px',
-                      borderRadius: '4px',
-                      border: `2px solid ${selectedSize === size ? '#121416' : 'var(--rebrand-border)'}`,
-                      background: selectedSize === size ? '#121416' : '#ffffff',
-                      color: selectedSize === size ? '#ffffff' : 'var(--rebrand-text-main)',
-                      fontWeight: 800,
-                      cursor: 'pointer',
-                      transition: 'all 0.2s'
-                    }}
+                    className={`rebrand-size-btn-fanatics ${selectedSize === size ? 'active' : ''}`}
+                    style={{ height: '40px', minWidth: '0' }}
                   >
                     {size}
                   </button>
@@ -313,104 +335,127 @@ const ProductPage = () => {
               </div>
             </div>
 
-            {/* Custom Stitched Personalization */}
+            {/* Custom Stitched Personalization (Compact) */}
             <div style={{
-              background: 'var(--rebrand-surface)',
-              padding: '1.5rem',
-              borderRadius: '8px',
-              border: '1px solid var(--rebrand-border)',
-              marginBottom: '2.5rem'
+              background: '#f8f9fa',
+              padding: '1rem',
+              borderRadius: '6px',
+              border: '1px solid #dee2e6',
+              marginBottom: '1.5rem'
             }}>
               <div 
                 onClick={() => setNameNumberEnabled(!nameNumberEnabled)}
-                style={{ display: 'flex', alignItems: 'center', gap: '0.8rem', cursor: 'pointer', marginBottom: nameNumberEnabled ? '1.5rem' : 0 }}
+                style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', cursor: 'pointer', marginBottom: nameNumberEnabled ? '1rem' : 0 }}
               >
                 <div style={{ 
-                  width: '22px', 
-                  height: '22px', 
-                  borderRadius: '4px', 
-                  border: '2px solid var(--rebrand-text-main)',
-                  background: nameNumberEnabled ? 'var(--rebrand-text-main)' : 'transparent',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  transition: 'all 0.2s'
+                  width: '18px', height: '18px', borderRadius: '3px', border: '2px solid #121416',
+                  background: nameNumberEnabled ? '#121416' : 'transparent',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'all 0.2s'
                 }}>
-                  {nameNumberEnabled && <span style={{ color: 'var(--rebrand-volt)', fontWeight: 800, fontSize: '0.7rem' }}>✓</span>}
+                  {nameNumberEnabled && <span style={{ color: '#fff', fontWeight: 800, fontSize: '0.6rem' }}>✓</span>}
                 </div>
                 <div>
-                  <h6 style={{ margin: 0, fontSize: '0.85rem', color: 'var(--rebrand-text-main)', fontWeight: 800, textTransform: 'uppercase' }}>Add Custom Name & Number</h6>
-                  <span style={{ fontSize: '0.75rem', color: 'var(--rebrand-text-muted)' }}>Stitched custom detailing (+ $11.90 CAD)</span>
+                  <span style={{ fontSize: '0.85rem', color: '#121416', fontWeight: 700 }}>Add Custom Name & Number</span>
+                  <span style={{ fontSize: '0.75rem', color: '#6c757d', marginLeft: '0.4rem' }}>
+                    (+ ${(pricingConfig?.nameNumber || 11.90).toFixed(2)} CAD)
+                  </span>
                 </div>
               </div>
 
               {nameNumberEnabled && (
-                <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '1rem' }}>
-                  <div>
-                    <label style={{ display: 'block', fontSize: '0.7rem', textTransform: 'uppercase', color: 'var(--rebrand-text-muted)', marginBottom: '0.3rem', fontWeight: 700 }}>Player Name</label>
-                    <input 
-                      type="text" 
-                      placeholder="e.g. MAHOMES" 
-                      value={customName}
-                      onChange={e => setCustomName(e.target.value.substring(0, 15))}
-                      style={{ width: '100%', padding: '0.6rem', border: '1px solid var(--rebrand-border)', borderRadius: '4px', textTransform: 'uppercase', fontWeight: 600 }}
-                    />
-                  </div>
-                  <div>
-                    <label style={{ display: 'block', fontSize: '0.7rem', textTransform: 'uppercase', color: 'var(--rebrand-text-muted)', marginBottom: '0.3rem', fontWeight: 700 }}>Number</label>
-                    <input 
-                      type="text" 
-                      placeholder="15" 
-                      value={customNumber}
-                      onChange={e => setCustomNumber(e.target.value.replace(/\D/g, '').substring(0, 2))}
-                      style={{ width: '100%', padding: '0.6rem', border: '1px solid var(--rebrand-border)', borderRadius: '4px', textAlign: 'center', fontWeight: 800 }}
-                    />
-                  </div>
+                <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '0.5rem' }}>
+                  <input 
+                    type="text" 
+                    placeholder="Player Name (e.g. MAHOMES)" 
+                    value={customName}
+                    onChange={e => setCustomName(e.target.value.substring(0, 15))}
+                    style={{ width: '100%', padding: '0.5rem', border: '1px solid #ced4da', borderRadius: '4px', textTransform: 'uppercase', fontSize: '0.8rem', fontWeight: 600 }}
+                  />
+                  <input 
+                    type="text" 
+                    placeholder="Number (e.g. 15)" 
+                    value={customNumber}
+                    onChange={e => setCustomNumber(e.target.value.replace(/\D/g, '').substring(0, 2))}
+                    style={{ width: '100%', padding: '0.5rem', border: '1px solid #ced4da', borderRadius: '4px', textAlign: 'center', fontSize: '0.8rem', fontWeight: 700 }}
+                  />
                 </div>
               )}
             </div>
 
-            {/* Add to Cart CTA */}
-            <button 
-              onClick={handleAddToCart}
-              className="rebrand-btn rebrand-btn-primary" 
-              style={{ 
-                width: '100%', 
-                padding: '1.2rem', 
-                display: 'flex', 
-                alignItems: 'center', 
-                justifyContent: 'center', 
-                gap: '0.8rem', 
-                fontSize: '1rem',
-                background: '#121416',
-                color: '#ffffff',
-                borderColor: '#121416'
-              }}
-            >
-              <ShoppingBag size={20} color="var(--rebrand-volt)" /> Add Jersey to Bag
-            </button>
+            {/* Quantity and Add to Cart Row */}
+            <div style={{ display: 'flex', gap: '1rem', marginBottom: '1.5rem', alignItems: 'stretch' }}>
+              <div style={{ display: 'flex', flexDirection: 'column' }}>
+                <span style={{ fontSize: '0.75rem', fontWeight: 700, color: '#121416', textTransform: 'uppercase', marginBottom: '0.3rem' }}>Quantity</span>
+                <select 
+                  value={quantity} 
+                  onChange={e => setQuantity(Number(e.target.value))}
+                  style={{ 
+                    height: '48px', padding: '0 1rem', borderRadius: '6px', 
+                    border: '1px solid #ced4da', background: '#fff', 
+                    fontSize: '1rem', fontWeight: 600, color: '#121416', cursor: 'pointer', outline: 'none'
+                  }}
+                >
+                  {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map(q => (
+                    <option key={q} value={q}>{q}</option>
+                  ))}
+                </select>
+              </div>
+              
+              <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'flex-end' }}>
+                <button 
+                  onClick={handleAddToCart}
+                  className="rebrand-btn rebrand-btn-primary" 
+                  style={{ 
+                    width: '100%', height: '48px',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.6rem', 
+                    fontSize: '1rem', background: '#121416', color: '#ffffff', border: 'none', borderRadius: '100px'
+                  }}
+                >
+                  <ShoppingBag size={18} color="var(--rebrand-volt)" /> Add to Cart
+                </button>
+              </div>
+            </div>
+
+            {/* Shipping Accordion (Fanatics style) */}
+            <div style={{ borderTop: '1px solid #dee2e6' }}>
+              <div style={{ padding: '1rem 0', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <span style={{ fontWeight: 800, fontSize: '0.9rem', color: '#121416' }}>Shipping</span>
+                <span style={{ fontWeight: 800 }}>−</span>
+              </div>
+              <div style={{ paddingBottom: '1rem', display: 'flex', gap: '0.7rem', alignItems: 'flex-start' }}>
+                <Truck size={18} color="#121416" style={{ flexShrink: 0, marginTop: '2px' }} />
+                <ul style={{ margin: 0, padding: 0, listStyle: 'none', fontSize: '0.8rem', color: '#495057', lineHeight: 1.6 }}>
+                  <li style={{ marginBottom: '0.3rem' }}>This item leaves our warehouse in 1-3 business days.</li>
+                  <li style={{ marginBottom: '0.3rem' }}><strong>✓ Ready To Ship</strong> immediately upon processing.</li>
+                  <li>Eligible for <strong>free Canada-wide shipping</strong> on orders over $99 CAD.</li>
+                </ul>
+              </div>
+            </div>
 
             {/* Quality & Return Assurances */}
             <div style={{ 
               display: 'grid', 
               gridTemplateColumns: 'repeat(3, 1fr)', 
               gap: '1rem', 
-              marginTop: '3rem', 
+              marginTop: '1.5rem', 
               borderTop: '1px solid var(--rebrand-border)', 
-              paddingTop: '2rem',
+              paddingTop: '1.5rem',
               textAlign: 'center'
             }}>
               <div>
-                <ShieldCheck size={24} color="#2b8a3e" style={{ margin: '0 auto 0.5rem auto' }} />
-                <span style={{ display: 'block', fontSize: '0.75rem', fontWeight: 700, color: 'var(--rebrand-text-main)', textTransform: 'uppercase' }}>100% Authentic</span>
+                <Award size={24} color="#2b8a3e" style={{ margin: '0 auto 0.5rem auto' }} />
+                <span style={{ display: 'block', fontSize: '0.75rem', fontWeight: 750, color: 'var(--rebrand-text-main)', textTransform: 'uppercase' }}>Premium Quality</span>
+                <span style={{ display: 'block', fontSize: '0.65rem', color: 'var(--rebrand-text-muted)', marginTop: '0.2rem' }}>High-grade fabrics</span>
               </div>
               <div>
-                <RefreshCw size={24} color="#2b8a3e" style={{ margin: '0 auto 0.5rem auto' }} />
-                <span style={{ display: 'block', fontSize: '0.75rem', fontWeight: 700, color: 'var(--rebrand-text-main)', textTransform: 'uppercase' }}>90-Day Returns</span>
+                <ShieldCheck size={24} color="#2b8a3e" style={{ margin: '0 auto 0.5rem auto' }} />
+                <span style={{ display: 'block', fontSize: '0.75rem', fontWeight: 750, color: 'var(--rebrand-text-main)', textTransform: 'uppercase' }}>Defect Warranty</span>
+                <span style={{ display: 'block', fontSize: '0.65rem', color: 'var(--rebrand-text-muted)', marginTop: '0.2rem' }}>100% factory covered</span>
               </div>
               <div>
                 <Calendar size={24} color="#2b8a3e" style={{ margin: '0 auto 0.5rem auto' }} />
-                <span style={{ display: 'block', fontSize: '0.75rem', fontWeight: 700, color: 'var(--rebrand-text-main)', textTransform: 'uppercase' }}>Fast Shipping</span>
+                <span style={{ display: 'block', fontSize: '0.75rem', fontWeight: 750, color: 'var(--rebrand-text-main)', textTransform: 'uppercase' }}>Fast Shipping</span>
+                <span style={{ display: 'block', fontSize: '0.65rem', color: 'var(--rebrand-text-muted)', marginTop: '0.2rem' }}>With tracking number</span>
               </div>
             </div>
 
@@ -418,6 +463,12 @@ const ProductPage = () => {
 
         </div>
 
+        <SizeGuideModal 
+          isOpen={isSizeGuideOpen} 
+          onClose={() => setIsSizeGuideOpen(false)} 
+          isNba={product?.category?.toLowerCase() === 'basketball'} 
+          isRebrand={true}
+        />
       </div>
     </div>
   );

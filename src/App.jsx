@@ -28,6 +28,8 @@ import RebrandHome from './rebrand/pages/Home';
 import RebrandCategoryPage from './rebrand/pages/CategoryPage';
 import RebrandProductPage from './rebrand/pages/ProductPage';
 import RebrandAdmin from './rebrand/pages/RebrandAdmin';
+import RebrandCheckout from './rebrand/pages/Checkout';
+import RebrandAuth from './rebrand/pages/Auth';
 
 import { initAnalytics, trackEvent } from './services/analytics';
 
@@ -110,6 +112,8 @@ const AppLayout = () => {
             <Route index element={<RebrandHome />} />
             <Route path="colecao/:category_id" element={<RebrandCategoryPage />} />
             <Route path="produto/:id" element={<RebrandProductPage />} />
+            <Route path="checkout" element={<RebrandCheckout />} />
+            <Route path="auth" element={<RebrandAuth />} />
           </Route>
 
           <Route path="*" element={<NotFound />} />

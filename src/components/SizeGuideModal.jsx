@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { X, Ruler, ChevronRight } from 'lucide-react';
 import { useLanguage } from '../context/LanguageContext';
 
-const SizeGuideModal = ({ isOpen, onClose, isShoes, isNba, isStreetwear }) => {
+const SizeGuideModal = ({ isOpen, onClose, isShoes, isNba, isStreetwear, isRebrand }) => {
   const { t, language } = useLanguage();
   const [activeTab, setActiveTab] = useState('fan');
 
@@ -50,10 +50,10 @@ const SizeGuideModal = ({ isOpen, onClose, isShoes, isNba, isStreetwear }) => {
 
   const TableHeader = () => (
     <thead>
-      <tr style={{ background: 'rgba(204, 255, 0, 0.1)' }}>
-        <th style={{ padding: '1rem', textAlign: 'left', borderBottom: '2px solid var(--accent-color)' }}>{language === 'pt' ? 'Tamanho' : 'Size'}</th>
-        <th style={{ padding: '1rem', textAlign: 'center', borderBottom: '2px solid var(--accent-color)' }}>{language === 'pt' ? 'Comprimento' : 'Length'}</th>
-        <th style={{ padding: '1rem', textAlign: 'center', borderBottom: '2px solid var(--accent-color)' }}>{language === 'pt' ? 'Largura / Busto' : 'Width / Bust'}</th>
+      <tr style={{ background: isRebrand ? '#f8f9fa' : 'rgba(204, 255, 0, 0.1)' }}>
+        <th style={{ padding: '1rem', textAlign: 'left', borderBottom: isRebrand ? '2px solid #121416' : '2px solid var(--accent-color)' }}>{language === 'pt' ? 'Tamanho' : 'Size'}</th>
+        <th style={{ padding: '1rem', textAlign: 'center', borderBottom: isRebrand ? '2px solid #121416' : '2px solid var(--accent-color)' }}>{language === 'pt' ? 'Comprimento' : 'Length'}</th>
+        <th style={{ padding: '1rem', textAlign: 'center', borderBottom: isRebrand ? '2px solid #121416' : '2px solid var(--accent-color)' }}>{language === 'pt' ? 'Largura / Busto' : 'Width / Bust'}</th>
       </tr>
     </thead>
   );
@@ -61,7 +61,7 @@ const SizeGuideModal = ({ isOpen, onClose, isShoes, isNba, isStreetwear }) => {
   return (
     <div className="modal-overlay" onClick={onClose} style={{ zIndex: 10000 }}>
       <div 
-        className="modal-content glass-panel" 
+        className={isRebrand ? "modal-content" : "modal-content glass-panel"} 
         onClick={e => e.stopPropagation()}
         style={{ 
           maxWidth: '800px', 
@@ -71,15 +71,30 @@ const SizeGuideModal = ({ isOpen, onClose, isShoes, isNba, isStreetwear }) => {
           display: 'flex', 
           flexDirection: 'column',
           borderRadius: '24px',
-          border: '1px solid var(--border-color)',
-          boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.5)'
+          border: isRebrand ? '1px solid #e9ecef' : '1px solid var(--border-color)',
+          boxShadow: isRebrand ? '0 20px 40px rgba(0,0,0,0.1)' : '0 25px 50px -12px rgba(0, 0, 0, 0.5)',
+          background: isRebrand ? '#ffffff' : undefined,
+          color: isRebrand ? '#121416' : undefined,
+          ...isRebrand ? {
+            '--border-color': '#e9ecef',
+            '--text-muted': '#495057',
+            '--accent-color': '#121416',
+            '--text-main': '#121416'
+          } : {}
         }}
       >
         {/* Header */}
-        <div style={{ padding: '1.5rem 2rem', borderBottom: '1px solid var(--border-color)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'rgba(255,255,255,0.02)' }}>
+        <div style={{ 
+          padding: '1.5rem 2rem', 
+          borderBottom: '1px solid var(--border-color)', 
+          display: 'flex', 
+          justifyContent: 'space-between', 
+          alignItems: 'center', 
+          background: isRebrand ? '#f8f9fa' : 'rgba(255,255,255,0.02)' 
+        }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-            <Ruler className="text-neon" size={24} />
-            <h2 style={{ fontSize: '1.5rem', fontWeight: 800, margin: 0 }}>{language === 'pt' ? 'Guia de Medidas' : 'Size Guide'}</h2>
+            <Ruler className={isRebrand ? "" : "text-neon"} size={24} color={isRebrand ? '#121416' : undefined} />
+            <h2 style={{ fontSize: '1.5rem', fontWeight: 800, margin: 0, color: isRebrand ? '#121416' : undefined }}>{language === 'pt' ? 'Guia de Medidas' : 'Size Guide'}</h2>
           </div>
           <button 
             onClick={onClose} 
@@ -87,17 +102,23 @@ const SizeGuideModal = ({ isOpen, onClose, isShoes, isNba, isStreetwear }) => {
             style={{ 
               padding: '0.6rem', 
               borderRadius: '50%', 
-              background: 'rgba(255,255,255,0.1)', 
-              color: '#fff',
+              background: isRebrand ? '#e9ecef' : 'rgba(255,255,255,0.1)', 
+              color: isRebrand ? '#121416' : '#fff',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              transition: 'all 0.2s',
+               transition: 'all 0.2s',
               border: 'none',
               cursor: 'pointer'
             }}
-            onMouseOver={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.2)'; e.currentTarget.style.color = 'var(--accent-color)'; }}
-            onMouseOut={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.1)'; e.currentTarget.style.color = '#fff'; }}
+             onMouseOver={e => { 
+               e.currentTarget.style.background = isRebrand ? '#dee2e6' : 'rgba(255,255,255,0.2)'; 
+               e.currentTarget.style.color = isRebrand ? '#000000' : 'var(--accent-color)'; 
+             }}
+             onMouseOut={e => { 
+               e.currentTarget.style.background = isRebrand ? '#e9ecef' : 'rgba(255,255,255,0.1)'; 
+               e.currentTarget.style.color = isRebrand ? '#121416' : '#fff'; 
+             }}
           >
             <X size={22} strokeWidth={2.5} />
           </button>
@@ -107,7 +128,7 @@ const SizeGuideModal = ({ isOpen, onClose, isShoes, isNba, isStreetwear }) => {
         <div className="modal-tabs" style={{ 
           display: 'flex', 
           overflowX: 'auto', 
-          background: 'rgba(0,0,0,0.2)', 
+          background: isRebrand ? '#f1f3f5' : 'rgba(0,0,0,0.2)', 
           padding: '0.75rem 1.5rem',
           borderBottom: '1px solid var(--border-color)',
           gap: '0.75rem',
@@ -127,8 +148,12 @@ const SizeGuideModal = ({ isOpen, onClose, isShoes, isNba, isStreetwear }) => {
                 fontSize: '0.85rem',
                 fontWeight: 800,
                 transition: 'all 0.2s',
-                background: activeTab === tab.id ? 'var(--accent-color)' : 'rgba(255,255,255,0.05)',
-                color: activeTab === tab.id ? '#000' : 'var(--text-main)',
+                background: activeTab === tab.id 
+                  ? (isRebrand ? '#121416' : 'var(--accent-color)') 
+                  : (isRebrand ? '#e9ecef' : 'rgba(255,255,255,0.05)'),
+                color: activeTab === tab.id 
+                  ? (isRebrand ? '#ffffff' : '#000') 
+                  : (isRebrand ? '#495057' : 'var(--text-main)'),
                 border: 'none',
                 cursor: 'pointer',
                 minHeight: '38px',
@@ -149,7 +174,7 @@ const SizeGuideModal = ({ isOpen, onClose, isShoes, isNba, isStreetwear }) => {
               
               <div className="table-responsive" style={{ marginBottom: '2.5rem' }}>
                 <p style={{ fontWeight: 800, marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                  <img src="https://upload.wikimedia.org/wikipedia/commons/a/a6/Logo_NIKE.svg" style={{ height: '12px', filter: 'invert(1)' }} alt="Nike" /> Nike
+                  <img src="https://upload.wikimedia.org/wikipedia/commons/a/a6/Logo_NIKE.svg" style={{ height: '12px', filter: isRebrand ? 'none' : 'invert(1)' }} alt="Nike" /> Nike
                 </p>
                 <table style={{ width: '100%', borderCollapse: 'collapse' }}>
                   <TableHeader />
@@ -167,7 +192,7 @@ const SizeGuideModal = ({ isOpen, onClose, isShoes, isNba, isStreetwear }) => {
 
               <div className="table-responsive" style={{ marginBottom: '2.5rem' }}>
                 <p style={{ fontWeight: 800, marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                  <img src="https://upload.wikimedia.org/wikipedia/commons/2/20/Adidas_Logo.svg" style={{ height: '16px', filter: 'invert(1)' }} alt="Adidas" /> Adidas / Puma
+                  <img src="https://upload.wikimedia.org/wikipedia/commons/2/20/Adidas_Logo.svg" style={{ height: '16px', filter: isRebrand ? 'none' : 'invert(1)' }} alt="Adidas" /> Adidas / Puma
                 </p>
                 <table style={{ width: '100%', borderCollapse: 'collapse' }}>
                   <TableHeader />

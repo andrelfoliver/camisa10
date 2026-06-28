@@ -2,7 +2,7 @@ import React from 'react';
 import { Outlet } from 'react-router-dom';
 import Navbar from './Navbar';
 import Footer from './Footer';
-import CartSidebar from '../../components/CartSidebar';
+import RebrandCartSidebar from './RebrandCartSidebar';
 import AiChatbot from '../../components/AiChatbot';
 import ExitIntentPopup from '../../components/ExitIntentPopup';
 import SalesPopup from '../../components/SalesPopup';
@@ -14,8 +14,8 @@ const RebrandLayout = () => {
       {/* Navbar Exclusiva Rebrand */}
       <Navbar />
       
-      {/* Carrinho Lateral Comum (usa o contexto compartilhado, permitindo testes de compras funcionais) */}
-      <CartSidebar />
+      {/* Carrinho Lateral Rebrand - tema light estilo Fanatics */}
+      <RebrandCartSidebar />
 
       {/* Conteúdo da Rota Rebrand */}
       <main style={{ flex: 1, position: 'relative' }}>

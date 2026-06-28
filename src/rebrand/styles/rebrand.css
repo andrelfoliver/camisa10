@@ -1450,3 +1450,269 @@
   box-shadow: 0 8px 16px rgba(0, 0, 0, 0.15), 0 2px 8px rgba(34, 197, 94, 0.25);
 }
 
+/* Product Detail Page Styling */
+.rebrand-product-breadcrumb-container {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 2.5rem;
+  gap: 1.5rem;
+}
+
+.rebrand-product-grid {
+  display: grid;
+  grid-template-columns: 1.2fr 1fr;
+  gap: 5rem;
+}
+
+.rebrand-product-detail-title {
+  font-size: 3rem;
+  line-height: 1.15 !important;
+  margin: 0 0 1rem 0;
+  color: var(--rebrand-text-main);
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+@media (max-width: 991px) {
+  .rebrand-product-grid {
+    gap: 3rem;
+  }
+}
+
+@media (max-width: 768px) {
+  .rebrand-product-breadcrumb-container {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.8rem;
+    margin-bottom: 1.5rem;
+  }
+  
+  .rebrand-product-grid {
+    grid-template-columns: 1fr;
+    gap: 2.5rem;
+  }
+  
+  .rebrand-product-detail-title {
+    font-size: 2rem;
+  }
+}
+
+/* Premium Product Page Gallery (Fanatics-like) */
+.rebrand-product-gallery {
+  display: flex;
+  gap: 1.5rem;
+}
+
+.rebrand-product-thumbnails {
+  display: flex;
+  flex-direction: column;
+  gap: 0.8rem;
+  width: 75px;
+  flex-shrink: 0;
+}
+
+.rebrand-product-thumbnail-btn {
+  width: 75px;
+  height: 75px;
+  border-radius: 4px;
+  border: 1.5px solid var(--rebrand-border);
+  background: #ffffff;
+  overflow: hidden;
+  cursor: pointer;
+  padding: 0;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+}
+
+.rebrand-product-thumbnail-btn.active {
+  border-color: #121416;
+  box-shadow: 0 0 0 1px #121416;
+}
+
+.rebrand-product-thumbnail-btn img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.rebrand-product-main-image-container {
+  flex: 1;
+  background: #ffffff;
+  border-radius: 8px;
+  overflow: hidden;
+  aspect-ratio: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--rebrand-border);
+  position: relative;
+}
+
+.rebrand-product-main-image-container img {
+  width: 90%;
+  height: 90%;
+  object-fit: contain;
+  transition: transform 0.3s ease;
+}
+
+/* Badge Oficial */
+.rebrand-officially-licensed {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: #f8f9fa;
+  border: 1px solid #e9ecef;
+  padding: 0.4rem 0.8rem;
+  border-radius: 4px;
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: #495057;
+  margin-top: 1rem;
+}
+
+/* Caixa de Preços e Parcelamento */
+.rebrand-price-box {
+  background: #ffffff;
+  border: 1px solid var(--rebrand-border);
+  border-radius: 8px;
+  padding: 1.5rem;
+  margin-bottom: 2rem;
+}
+
+.rebrand-price-main-row {
+  display: flex;
+  align-items: baseline;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.rebrand-price-value {
+  font-size: 2.2rem;
+  font-weight: 900;
+  color: #dc3545;
+}
+
+.rebrand-price-value.no-sale {
+  color: var(--rebrand-text-main);
+}
+
+.rebrand-price-reg {
+  font-size: 1.1rem;
+  text-decoration: line-through;
+  color: var(--rebrand-text-muted);
+}
+
+.rebrand-price-save-badge {
+  background: #dc3545;
+  color: #ffffff;
+  font-size: 0.7rem;
+  font-weight: 800;
+  padding: 0.25rem 0.6rem;
+  border-radius: 2px;
+  text-transform: uppercase;
+  margin-left: auto;
+}
+
+.rebrand-klarna-box {
+  background: #f8f9fa;
+  border: 1px solid #e9ecef;
+  border-radius: 6px;
+  padding: 0.8rem 1.2rem;
+  font-size: 0.8rem;
+  font-weight: 500;
+  color: #495057;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.rebrand-klarna-box strong {
+  color: #121416;
+}
+
+.rebrand-klarna-logo {
+  font-weight: 900;
+  color: #ffb3c6;
+  font-style: italic;
+  font-size: 0.95rem;
+  letter-spacing: -0.5px;
+}
+
+/* Barra de Tamanhos Estilo Fanatics */
+.rebrand-size-header-bar {
+  background: #f8f9fa;
+  border: 1px solid #e9ecef;
+  border-bottom: none;
+  border-radius: 4px 4px 0 0;
+  padding: 0.6rem 1rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.rebrand-size-grid-container {
+  border: 1px solid #e9ecef;
+  border-radius: 0 0 4px 4px;
+  padding: 1.2rem;
+  margin-bottom: 2rem;
+}
+
+.rebrand-size-buttons-row {
+  display: flex;
+  gap: 0.6rem;
+  flex-wrap: wrap;
+}
+
+.rebrand-size-btn-fanatics {
+  flex: 1;
+  min-width: 60px;
+  height: 48px;
+  border-radius: 4px;
+  border: 1px solid #ced4da;
+  background: #ffffff;
+  color: #212529;
+  font-size: 0.9rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.rebrand-size-btn-fanatics:hover {
+  border-color: #121416;
+  background: #f8f9fa;
+}
+
+.rebrand-size-btn-fanatics.active {
+  border-color: #121416;
+  background: #121416;
+  color: #ffffff;
+}
+
+/* Responsividade da Galeria */
+@media (max-width: 768px) {
+  .rebrand-product-gallery {
+    flex-direction: column-reverse;
+  }
+  
+  .rebrand-product-thumbnails {
+    flex-direction: row;
+    width: 100%;
+    overflow-x: auto;
+    padding-bottom: 0.4rem;
+  }
+  
+  .rebrand-product-thumbnail-btn {
+    width: 65px;
+    height: 65px;
+  }
+}
+
+
+
