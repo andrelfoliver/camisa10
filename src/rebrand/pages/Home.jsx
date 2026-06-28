@@ -214,17 +214,17 @@ const Home = () => {
         <div className="rebrand-hero-content">
           <div className="rebrand-hero-top-group">
             <h1 className="rebrand-hero-title">
-              Wear Your <span>Team.</span>
+              WEAR YOUR <span>TEAM.</span>
             </h1>
             <p className="rebrand-hero-subline">
-              The Home of Sports Jerseys.
+              THE HOME OF SPORTS JERSEYS.
             </p>
           </div>
 
           <div className="rebrand-hero-bottom-group">
             <div className="rebrand-hero-buttons">
               <button onClick={() => navigate('/rebrand/colecao/soccer')} className="rebrand-btn rebrand-btn-primary" style={{ background: 'var(--rebrand-volt)', color: '#000', borderColor: 'var(--rebrand-volt)' }}>
-                Shop Jerseys
+                SHOP JERSEYS
               </button>
             </div>
           </div>
@@ -250,7 +250,7 @@ const Home = () => {
       {/* 2. SHOP BY SPORT - GRIDS ASSIMÉTRICOS (Mais amplo, vem primeiro) */}
       <section className="rebrand-section container" style={{ maxWidth: '1400px', margin: '0 auto', paddingTop: '4rem' }}>
         <div className="rebrand-section-header">
-          <h2 className="rebrand-section-title">Shop By Sport</h2>
+          <h2 className="rebrand-section-title">Shop by Sport</h2>
         </div>
 
         <div className="rebrand-sport-grid">
@@ -279,8 +279,8 @@ const Home = () => {
           <span style={{ fontSize: '0.8rem', color: 'var(--rebrand-text-muted)', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '2px', display: 'block', marginBottom: '0.5rem' }}>
             Browse officially licensed gear
           </span>
-          <h2 style={{ fontFamily: 'var(--rebrand-font-display)', fontSize: '3.5rem', fontWeight: 900, letterSpacing: '-0.5px', lineHeight: '0.9', margin: '0 0 3rem 0', color: 'var(--rebrand-text-main)', textTransform: 'uppercase' }}>
-            SHOP BY LEAGUE
+          <h2 className="rebrand-section-title" style={{ margin: '0 0 3rem 0' }}>
+            Shop by League
           </h2>
 
           <div className="rebrand-league-row" style={{ display: 'flex', gap: '2.5rem', justifyContent: 'center', flexWrap: 'wrap' }}>

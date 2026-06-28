@@ -4,7 +4,7 @@
 :root {
   --rebrand-font-logo: 'Outfit', sans-serif;   /* Exclusivo para a logo — NÃO alterar */
   --rebrand-font-main: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-  --rebrand-font-display: 'Outfit', sans-serif;
+  --rebrand-font-display: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
   
   /* Cores de Identidade Visual */
   --rebrand-volt: #CCFF00; /* Neon Volt Original */
@@ -32,11 +32,11 @@
 .rebrand-scope h2,
 .rebrand-scope h3,
 .rebrand-scope h4 {
-  font-family: var(--rebrand-font-display);
-  text-transform: uppercase;
-  letter-spacing: -0.5px;
-  font-weight: 900;
-  line-height: 0.92;
+  font-family: var(--rebrand-font-main);
+  text-transform: none;
+  letter-spacing: -0.3px;
+  font-weight: 700;
+  line-height: 1.15;
 }
 
 /* Navbar Estilizada */
@@ -63,7 +63,7 @@
   font-family: var(--rebrand-font-logo);
   font-weight: 900;
   font-style: italic;
-  font-size: 2.55rem;
+  font-size: 2.8rem;
   letter-spacing: -1px;
   line-height: 1;
   display: inline-flex;
@@ -113,7 +113,7 @@
 
 .rebrand-nav-links {
   display: flex;
-  gap: 1.5rem;
+  gap: 2.5rem; /* ~40px de espaçamento entre os itens */
   justify-content: center;
   padding: 0.8rem 0;
   border-top: 1px solid rgba(0,0,0,0.03);
@@ -123,12 +123,12 @@
   text-decoration: none;
   font-family: var(--rebrand-font-main);
   font-size: 0.82rem;
-  font-weight: 700;
+  font-weight: 600;
   text-transform: uppercase;
   color: #ffffff;
   transition: color 0.2s ease;
   position: relative;
-  letter-spacing: 0.8px;
+  letter-spacing: 0.06em; /* Mais sofisticado */
 }
 
 .rebrand-nav-link:hover {
@@ -155,21 +155,30 @@
   position: relative;
   height: 58vh;
   min-height: 380px;
-  background: #0B0C0E url('/assets/rebrand/locker_room_hero.jpg') no-repeat center center;
-  background-size: cover;
   overflow: hidden;
   display: flex;
   align-items: center;
   justify-content: flex-start;
   padding-left: 8%;
+  background: #0B0C0E;
+}
+
+.rebrand-hero::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: url('/assets/rebrand/locker_room_hero.jpg') no-repeat center center;
+  background-size: cover;
+  filter: brightness(1.05); /* Clareado imagem ~5% para destacar Mahomes/James/Matthews */
+  z-index: 1;
 }
 
 .rebrand-hero-overlay {
   position: absolute;
   top: 0; left: 0; right: 0; bottom: 0;
   background:
-    linear-gradient(to top, rgba(11,12,14,0.93) 0%, rgba(11,12,14,0.65) 40%, rgba(11,12,14,0.10) 100%),
-    linear-gradient(to right, rgba(11,12,14,0.75) 0%, rgba(11,12,14,0.15) 60%, transparent 100%);
+    linear-gradient(to top, rgba(11,12,14,0.88) 0%, rgba(11,12,14,0.60) 40%, rgba(11,12,14,0.08) 100%),
+    linear-gradient(to right, rgba(11,12,14,0.70) 0%, rgba(11,12,14,0.10) 60%, transparent 100%);
   z-index: 2;
 }
 
@@ -187,34 +196,37 @@
   text-align: left;
   max-width: 580px;
   color: #FFFFFF;
+  margin-top: -35px; /* Sobe o bloco inteiro em ~35px */
 }
 
 .rebrand-hero-title {
-  font-family: var(--rebrand-font-display);
-  font-size: clamp(3.2rem, 6.5vw, 5rem);
+  font-family: 'Outfit', sans-serif;
+  font-size: clamp(2.4rem, 5.2vw, 3.75rem); /* Reduzido levemente */
   font-weight: 900;
-  line-height: 0.95;
-  margin: 0 0 1rem 0;
+  line-height: 1.05;
+  margin: 0 0 0.9rem 0; /* Subiu o subtítulo em ~10px */
   color: #FFFFFF;
   text-transform: uppercase;
-  letter-spacing: -2px;
+  letter-spacing: -1px;
 }
 
 .rebrand-hero-title span {
   color: var(--rebrand-volt);
   font-style: italic;
-  display: block;
+  display: block; /* Garante a quebra de linha: WEAR YOUR \n TEAM. */
+  margin-top: 0.25rem;
+  font-size: 1.15em; /* TEAM. domina visualmente (~100% vs ~90%) */
 }
 
 .rebrand-hero-subline {
-  font-family: var(--rebrand-font-display);
-  font-size: 1.35rem;
-  font-weight: 700;
-  color: rgba(255,255,255,0.7);
+  font-family: var(--rebrand-font-main);
+  font-size: 1.2rem; /* Aumentado 2px */
+  font-weight: 500; /* Peso Medium */
+  color: rgba(255,255,255,0.95); /* Opacidade em ~95% */
   text-transform: uppercase;
-  letter-spacing: 1px;
-  margin-bottom: 1.2rem;
-  line-height: 1;
+  letter-spacing: 1.6px; /* Diminuído o tracking */
+  margin-bottom: 3.1rem; /* Adicionado +8px de espaço antes do botão */
+  line-height: 1.4;
 }
 
 .rebrand-hero-subtitle {
@@ -229,7 +241,7 @@
 }
 
 .rebrand-hero-bottom-group {
-  margin-top: 5.5rem;
+  margin-top: 2rem;
 }
 
 .rebrand-hero-buttons {
@@ -239,19 +251,24 @@
 }
 
 .rebrand-btn {
-  padding: 0.95rem 2.65rem;
-  font-family: var(--rebrand-font-display);
-  font-weight: 800;
-  font-size: 1.1rem;
+  padding: 1.1rem 3.1rem; /* Aumentado ~10% em altura e largura */
+  font-family: var(--rebrand-font-main);
+  font-weight: 700;
+  font-size: 0.95rem;
   text-transform: uppercase;
-  border-radius: 3px;
+  border-radius: 6px;
   cursor: pointer;
-  transition: all 0.2s ease;
-  letter-spacing: 1.5px;
+  transition: all 200ms ease-in-out;
+  letter-spacing: 0.2px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
   text-decoration: none;
+}
+
+.rebrand-btn:hover {
+  transform: scale(1.02);
+  box-shadow: 0 0 15px rgba(204, 255, 0, 0.4);
 }
 
 .rebrand-trustbar {
@@ -270,10 +287,10 @@
   align-items: center;
   gap: 0.6rem;
   font-size: 0.85rem;
-  font-weight: 800;
+  font-weight: 600;
   color: var(--rebrand-text-main);
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
+  text-transform: none;
+  letter-spacing: 0;
 }
 
 .rebrand-btn-primary {
@@ -313,16 +330,16 @@
 }
 
 .rebrand-section-title {
-  font-family: var(--rebrand-font-display);
-  font-size: 3.5rem;
-  font-weight: 900;
-  letter-spacing: -1px;
+  font-family: var(--rebrand-font-main);
+  font-size: 2.4rem;
+  font-weight: 700;
+  letter-spacing: -0.5px;
   margin: 0;
   color: var(--rebrand-text-main);
   position: relative;
   display: inline-block;
-  text-transform: uppercase;
-  line-height: 0.9;
+  text-transform: none;
+  line-height: 1.15;
 }
 
 .rebrand-section-title::after {
@@ -397,13 +414,14 @@
   display: block;
 }
 
-.rebrand-sport-name {
-  font-family: var(--rebrand-font-display);
-  font-size: 1.65rem;
-  font-weight: 900;
-  letter-spacing: -0.5px;
+h3.rebrand-sport-name {
+  font-family: var(--rebrand-font-main);
+  font-size: 1.4rem;
+  font-weight: 700;
+  letter-spacing: -0.2px;
   margin: 0 0 1rem 0;
-  line-height: 1.0;
+  line-height: 1.2;
+  text-transform: uppercase;
 }
 
 .rebrand-sport-btn {
@@ -474,10 +492,10 @@
   color: #FFFFFF;
   padding: 0.3rem 0.8rem;
   font-size: 0.7rem;
-  font-weight: 800;
-  text-transform: uppercase;
-  letter-spacing: 1px;
-  border-radius: 2px;
+  font-weight: 600;
+  text-transform: none;
+  letter-spacing: 0.2px;
+  border-radius: 4px;
   z-index: 2;
   border-left: 3px solid var(--rebrand-volt);
 }
@@ -505,14 +523,14 @@
   background: var(--rebrand-text-main);
   color: #FFFFFF;
   border: none;
-  font-family: var(--rebrand-font-display);
+  font-family: var(--rebrand-font-main);
   font-size: 0.85rem;
-  font-weight: 800;
+  font-weight: 600;
   text-transform: uppercase;
   padding: 0.7rem;
   cursor: pointer;
   transition: background 0.2s;
-  letter-spacing: 1px;
+  letter-spacing: 0.2px;
 }
 
 .rebrand-product-btn-quick:hover {
@@ -588,10 +606,10 @@
   background: #0B0C0E;
   color: #ffffff;
   padding: 0.6rem 2rem;
-  font-size: 0.72rem;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 1.2px;
+  font-size: 0.76rem;
+  font-weight: 500;
+  text-transform: none;
+  letter-spacing: 0.2px;
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -999,7 +1017,7 @@
   .rebrand-hero {
     height: 42vh !important;
     min-height: 310px;
-    padding: 1.5rem 1.5rem 4.5rem 1.5rem !important;
+    padding: 5rem 1.5rem 2.5rem 1.5rem !important;
     display: flex;
     align-items: stretch !important;
     background-position: 70% center !important;
@@ -1028,17 +1046,21 @@
     margin-top: 0 !important;
   }
   .rebrand-hero-title {
-    font-size: 2.8rem;
-    letter-spacing: -1.5px;
-    margin-bottom: 0.3rem;
-    line-height: 0.95;
+    font-size: 2.5rem;
+    letter-spacing: -1px;
+    margin-bottom: 0.8rem;
+    line-height: 1.15;
+    font-family: 'Outfit', sans-serif;
+    text-transform: uppercase;
   }
   .rebrand-hero-subline {
-    font-size: 1.05rem;
-    margin-bottom: 0;
-    line-height: 1.1;
-    color: rgba(255,255,255,0.75);
-    letter-spacing: 0.5px;
+    font-size: 0.95rem;
+    margin-bottom: 1.5rem;
+    line-height: 1.3;
+    color: rgba(255,255,255,0.85);
+    letter-spacing: 1px;
+    font-weight: 600;
+    text-transform: uppercase;
   }
   .rebrand-hero-subtitle {
     font-size: 0.85rem;
@@ -1048,7 +1070,7 @@
     max-width: 90%;
   }
   .rebrand-hero-buttons .rebrand-btn {
-    padding: 0.8rem 2rem;
+    padding: 0.95rem 2rem;
     font-size: 0.9rem;
     width: 100%;
     max-width: 260px;
@@ -1083,7 +1105,7 @@
     gap: 0.75rem;
   }
   .rebrand-sport-card { height: 280px; }
-  .rebrand-sport-name { font-size: 1.8rem; }
+  h3.rebrand-sport-name { font-size: 1.8rem; }
 
   /* Section padding */
   .rebrand-section-padding { padding: 3rem 1rem !important; }
@@ -1133,7 +1155,7 @@
 
   .rebrand-sport-grid { grid-template-columns: repeat(2, 1fr); }
   .rebrand-sport-card { height: 220px; }
-  .rebrand-sport-name { font-size: 1.4rem; }
+  h3.rebrand-sport-name { font-size: 1.4rem; }
 
   .rebrand-products-grid { grid-template-columns: repeat(2, 1fr); gap: 0.5rem; }
   .rebrand-product-info { padding: 0.6rem; }

@@ -129,7 +129,7 @@ const Navbar = () => {
           {/* Logo */}
           <div className="rebrand-logo-container" style={{ alignItems: 'flex-start' }}>
             <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start' }}>
-              <Link to="/rebrand" className="rebrand-logo-text" style={{ color: '#ffffff', fontSize: '2.2rem' }}>
+              <Link to="/rebrand" className="rebrand-logo-text" style={{ color: '#ffffff', fontSize: '2.5rem' }}>
                 <span className="logo-i">i</span>Footy<span className="logo-dot">.</span>
               </Link>
               <div className="rebrand-logo-underline" style={{ height: '3px' }}></div>
