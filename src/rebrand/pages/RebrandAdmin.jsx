@@ -5,7 +5,7 @@ import {
   LayoutDashboard, ShoppingBag, Package, Compass, Tag, Settings,
   LogOut, ExternalLink, ChevronUp, ChevronDown, Edit2, Trash2,
   Plus, Save, X, Check, AlertCircle, TrendingUp, Users, DollarSign,
-  Clock, Search, RefreshCw, Eye
+  Clock, Search, RefreshCw, Eye, UserCircle, Award, MessageSquare, Star
 } from 'lucide-react';
 import ProductMedia from '../../components/ProductMedia';
 
@@ -13,12 +13,16 @@ import ProductMedia from '../../components/ProductMedia';
 const REBRAND_ADMIN_EMAIL = 'ifootyc@gmail.com';
 
 const NAV_ITEMS = [
-  { id: 'dashboard',  label: 'Dashboard',         icon: LayoutDashboard },
-  { id: 'orders',     label: 'Pedidos',            icon: ShoppingBag },
-  { id: 'products',   label: 'Produtos',           icon: Package },
-  { id: 'spotlight',  label: 'Season Spotlight',   icon: Compass },
-  { id: 'coupons',    label: 'Cupons',             icon: Tag },
-  { id: 'settings',   label: 'Configurações',      icon: Settings },
+  { id: 'dashboard',   label: 'Dashboard',         icon: LayoutDashboard },
+  { id: 'orders',      label: 'Pedidos',            icon: ShoppingBag },
+  { id: 'products',    label: 'Produtos',           icon: Package },
+  { id: 'spotlight',   label: 'Season Spotlight',   icon: Compass },
+  { id: 'coupons',     label: 'Cupons',             icon: Tag },
+  { id: 'clientes',    label: 'Clientes',           icon: UserCircle },
+  { id: 'afiliados',   label: 'Afiliados',          icon: Award },
+  { id: 'conversas',   label: 'Conversas IA',       icon: MessageSquare },
+  { id: 'depoimentos', label: 'Depoimentos',        icon: Star },
+  { id: 'settings',    label: 'Configurações',      icon: Settings },
 ];
 
 const STATUS_COLORS = {
@@ -1096,6 +1100,790 @@ const SettingsSection = ({ showToast }) => {
   );
 };
 
+// ─── Clientes Section ────────────────────────────────────────────────────────
+// ─── Clientes Section ────────────────────────────────────────────────────────
+const ClientesSection = () => {
+  const [clientes, setClientes] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [search, setSearch] = useState('');
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10;
+
+  useEffect(() => {
+    let cancelled = false;
+    async function load() {
+      setLoading(true);
+
+      // Fetch both sources in parallel
+      const [{ data: profiles, error: pError }, { data: orders, error: oError }] = await Promise.all([
+        supabase.from('profiles').select('*').order('created_at', { ascending: false }),
+        supabase.from('orders').select('id, customer_email, customer_name, customer_phone, total_price, status, created_at'),
+      ]);
+
+      if (pError) console.error('[Clientes] Error fetching profiles:', pError.message, pError.details);
+      if (oError) console.error('[Clientes] Error fetching orders:', oError.message, oError.details);
+
+      if (cancelled) return;
+
+      // Build order stats map keyed by email
+      const orderMap = {};
+      (orders || []).forEach(o => {
+        const key = (o.customer_email || '').toLowerCase().trim();
+        if (!key) return;
+        if (!orderMap[key]) orderMap[key] = { count: 0, spent: 0, lastOrder: null, phone: o.customer_phone || '' };
+        orderMap[key].count += 1;
+        const isPaid = ['paid', 'shipped', 'delivered'].includes(o.status);
+        if (isPaid) orderMap[key].spent += parseFloat(o.total_price || 0);
+        if (!orderMap[key].lastOrder || o.created_at > orderMap[key].lastOrder) {
+          orderMap[key].lastOrder = o.created_at;
+          if (o.customer_phone) orderMap[key].phone = o.customer_phone;
+        }
+      });
+
+      // Use profiles as primary source (all registered users)
+      const profileList = (profiles || []).map(p => {
+        const emailKey = (p.email || '').toLowerCase().trim();
+        const stats = orderMap[emailKey] || { count: 0, spent: 0, lastOrder: null, phone: '' };
+        return {
+          name: p.full_name || p.name || '',
+          email: p.email || '',
+          phone: p.phone || stats.phone || '',
+          avatar_url: p.avatar_url || '',
+          orders: stats.count,
+          spent: stats.spent,
+          lastOrder: stats.lastOrder || p.created_at,
+          registeredAt: p.created_at,
+          source: 'profile',
+        };
+      });
+
+      // Also add order-only customers (not in profiles) — guests who checked out
+      const profileEmails = new Set((profiles || []).map(p => (p.email || '').toLowerCase().trim()));
+      (orders || []).forEach(o => {
+        const emailKey = (o.customer_email || '').toLowerCase().trim();
+        if (!emailKey || profileEmails.has(emailKey)) return;
+        profileEmails.add(emailKey); // prevent duplicates
+        const stats = orderMap[emailKey];
+        if (stats) {
+          profileList.push({
+            name: o.customer_name || '',
+            email: o.customer_email || '',
+            phone: stats.phone || '',
+            avatar_url: '',
+            orders: stats.count,
+            spent: stats.spent,
+            lastOrder: stats.lastOrder,
+            registeredAt: null,
+            source: 'order',
+          });
+        }
+      });
+
+      profileList.sort((a, b) => new Date(b.lastOrder || b.registeredAt || 0) - new Date(a.lastOrder || a.registeredAt || 0));
+      setClientes(profileList);
+      setLoading(false);
+    }
+    load();
+    return () => { cancelled = true; };
+  }, []);
+
+  // Reset to first page when search query changes
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [search]);
+
+  const filtered = clientes.filter(c =>
+    (c.email || '').toLowerCase().includes(search.toLowerCase()) ||
+    (c.name || '').toLowerCase().includes(search.toLowerCase()) ||
+    (c.phone || '').toLowerCase().includes(search.toLowerCase())
+  );
+
+  const totalPages = Math.ceil(filtered.length / itemsPerPage);
+  const indexOfLastItem = currentPage * itemsPerPage;
+  const indexOfFirstItem = indexOfLastItem - itemsPerPage;
+  const currentItems = filtered.slice(indexOfFirstItem, indexOfLastItem);
+
+  const renderPagination = () => {
+    if (totalPages <= 1) return null;
+    
+    // Generate page numbers to display
+    const pages = [];
+    for (let i = 1; i <= totalPages; i++) {
+      if (
+        i === 1 ||
+        i === totalPages ||
+        (i >= currentPage - 1 && i <= currentPage + 1)
+      ) {
+        pages.push(i);
+      } else if (i === 2 || i === totalPages - 1) {
+        pages.push('...');
+      }
+    }
+
+    // Remove consecutive duplicates of '...'
+    const uniquePages = pages.filter((page, index) => {
+      return page !== '...' || pages[index - 1] !== '...';
+    });
+
+    return (
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '1.5rem', padding: '0 0.5rem' }}>
+        <div style={{ fontSize: '0.8rem', color: 'rgba(255,255,255,0.45)' }}>
+          Mostrando <span style={{ color: '#fff', fontWeight: 600 }}>{indexOfFirstItem + 1}</span> a <span style={{ color: '#fff', fontWeight: 600 }}>{Math.min(indexOfLastItem, filtered.length)}</span> de <span style={{ color: '#fff', fontWeight: 600 }}>{filtered.length}</span> clientes
+        </div>
+        <div style={{ display: 'flex', gap: '0.35rem', alignItems: 'center' }}>
+          <button
+            onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+            disabled={currentPage === 1}
+            style={{
+              padding: '0.4rem 0.75rem',
+              background: currentPage === 1 ? 'rgba(255,255,255,0.02)' : 'rgba(255,255,255,0.05)',
+              border: '1px solid rgba(255,255,255,0.08)',
+              borderRadius: '6px',
+              color: currentPage === 1 ? 'rgba(255,255,255,0.2)' : '#fff',
+              fontSize: '0.78rem',
+              fontWeight: 500,
+              cursor: currentPage === 1 ? 'not-allowed' : 'pointer',
+              transition: 'all 0.2s',
+            }}
+          >
+            Anterior
+          </button>
+          
+          {uniquePages.map((pageNum, idx) => {
+            if (pageNum === '...') {
+              return (
+                <span key={`dots-${idx}`} style={{ color: 'rgba(255,255,255,0.3)', padding: '0 0.25rem', fontSize: '0.85rem' }}>
+                  ...
+                </span>
+              );
+            }
+            return (
+              <button
+                key={`page-${pageNum}`}
+                onClick={() => setCurrentPage(pageNum)}
+                style={{
+                  width: '30px',
+                  height: '30px',
+                  background: currentPage === pageNum ? '#D6FF00' : 'rgba(255,255,255,0.04)',
+                  border: '1px solid rgba(255,255,255,0.08)',
+                  borderRadius: '6px',
+                  color: currentPage === pageNum ? '#000' : '#fff',
+                  fontSize: '0.8rem',
+                  fontWeight: 600,
+                  cursor: 'pointer',
+                  transition: 'all 0.2s',
+                }}
+              >
+                {pageNum}
+              </button>
+            );
+          })}
+
+          <button
+            onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+            disabled={currentPage === totalPages}
+            style={{
+              padding: '0.4rem 0.75rem',
+              background: currentPage === totalPages ? 'rgba(255,255,255,0.02)' : 'rgba(255,255,255,0.05)',
+              border: '1px solid rgba(255,255,255,0.08)',
+              borderRadius: '6px',
+              color: currentPage === totalPages ? 'rgba(255,255,255,0.2)' : '#fff',
+              fontSize: '0.78rem',
+              fontWeight: 500,
+              cursor: currentPage === totalPages ? 'not-allowed' : 'pointer',
+              transition: 'all 0.2s',
+            }}
+          >
+            Próximo
+          </button>
+        </div>
+      </div>
+    );
+  };
+
+  return (
+    <div>
+      <SectionHeader
+        title="Clientes"
+        sub={`${clientes.length} clientes cadastrados`}
+        action={
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', background: 'rgba(255,255,255,0.05)', border: '1px solid #2A2D30', borderRadius: '6px', padding: '0.5rem 0.75rem' }}>
+            <Search size={14} color="rgba(255,255,255,0.4)" />
+            <input
+              style={{ background: 'none', border: 'none', outline: 'none', color: '#fff', fontSize: '0.85rem', width: '200px' }}
+              placeholder="Buscar por nome, email ou telefone..."
+              value={search}
+              onChange={e => setSearch(e.target.value)}
+            />
+          </div>
+        }
+      />
+      {loading ? <Loader /> : (
+        <div style={S.card}>
+          <div style={{ overflowX: 'auto' }}>
+            <table style={S.table}>
+              <thead>
+                <tr>
+                  <th style={S.th}>Cliente</th>
+                  <th style={S.th}>Email</th>
+                  <th style={S.th}>Telefone</th>
+                  <th style={S.th}>Pedidos</th>
+                  <th style={S.th}>Total Gasto</th>
+                  <th style={S.th}>Último Pedido</th>
+                </tr>
+              </thead>
+              <tbody>
+                {currentItems.map((c, i) => (
+                  <tr key={i}
+                    onMouseEnter={e => e.currentTarget.style.background = 'rgba(255,255,255,0.02)'}
+                    onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
+                  >
+                    <td style={S.td}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                        {c.avatar_url && c.avatar_url.trim() !== '' && !c.avatar_url.includes('placeholder.com') ? (
+                          <img
+                            src={c.avatar_url}
+                            alt={c.name}
+                            style={{
+                              width: '36px',
+                              height: '36px',
+                              borderRadius: '50%',
+                              objectFit: 'cover',
+                              border: '1px solid rgba(255,255,255,0.1)',
+                              flexShrink: 0
+                            }}
+                          />
+                        ) : (
+                          <div style={{
+                            width: '36px',
+                            height: '36px',
+                            borderRadius: '50%',
+                            background: c.orders > 0 ? 'rgba(214,255,0,0.1)' : 'rgba(255,255,255,0.05)',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            flexShrink: 0,
+                            fontSize: '1rem',
+                            fontWeight: 700,
+                            color: c.orders > 0 ? '#D6FF00' : 'rgba(255,255,255,0.3)'
+                          }}>
+                            {(c.name || c.email || '?')[0].toUpperCase()}
+                          </div>
+                        )}
+                        <div>
+                          <div style={{ fontWeight: 600, fontSize: '0.875rem' }}>{c.name || 'Sem nome'}</div>
+                          {c.orders === 0 && <div style={{ fontSize: '0.7rem', color: 'rgba(255,255,255,0.25)', marginTop: '1px' }}>Sem pedidos</div>}
+                        </div>
+                      </div>
+                    </td>
+                    <td style={{ ...S.td, color: 'rgba(255,255,255,0.65)' }}>{c.email || '—'}</td>
+                    <td style={{ ...S.td, color: 'rgba(255,255,255,0.65)' }}>{c.phone || '—'}</td>
+                    <td style={S.td}>
+                      {c.orders > 0 ? (
+                        <span style={{ padding: '0.2rem 0.6rem', background: 'rgba(96,165,250,0.1)', color: '#60A5FA', borderRadius: '4px', fontSize: '0.8rem', fontWeight: 700 }}>
+                          {c.orders} {c.orders === 1 ? 'pedido' : 'pedidos'}
+                        </span>
+                      ) : (
+                        <span style={{ color: 'rgba(255,255,255,0.25)', fontSize: '0.8rem' }}>—</span>
+                      )}
+                    </td>
+                    <td style={{ ...S.td, fontWeight: 700, color: c.spent > 0 ? '#4ADE80' : 'rgba(255,255,255,0.25)' }}>
+                      {c.spent > 0 ? `$${c.spent.toFixed(2)}` : '—'}
+                    </td>
+                    <td style={{ ...S.td, color: 'rgba(255,255,255,0.4)', fontSize: '0.8rem' }}>
+                      {c.lastOrder ? new Date(c.lastOrder).toLocaleDateString('pt-BR') : '—'}
+                    </td>
+                  </tr>
+                ))}
+                {filtered.length === 0 && (
+                  <tr><td colSpan={6} style={{ ...S.td, textAlign: 'center', color: 'rgba(255,255,255,0.3)', padding: '3rem' }}>Nenhum cliente encontrado.</td></tr>
+                )}
+              </tbody>
+            </table>
+            {renderPagination()}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
+
+
+// ─── Afiliados Section ────────────────────────────────────────────────────────
+
+
+
+const AfiliadosSection = ({ showToast }) => {
+  const [afiliados, setAfiliados] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [showForm, setShowForm] = useState(false);
+  const [editing, setEditing] = useState(null);
+  const [form, setForm] = useState({ name: '', email: '', agent_id: '', commission_percent: '10' });
+  const [saving, setSaving] = useState(false);
+
+  const load = useCallback(async () => {
+    setLoading(true);
+    const { data: coupons } = await supabase
+      .from('coupons')
+      .select('*')
+      .not('agent_id', 'is', null)
+      .order('created_at', { ascending: false });
+
+    const agentCodes = (coupons || []).map(c => c.code);
+    let usageMap = {};
+    if (agentCodes.length > 0) {
+      const { data: orders } = await supabase
+        .from('orders')
+        .select('coupon_code, total')
+        .in('coupon_code', agentCodes);
+      (orders || []).forEach(o => {
+        if (!usageMap[o.coupon_code]) usageMap[o.coupon_code] = { count: 0, revenue: 0 };
+        usageMap[o.coupon_code].count += 1;
+        usageMap[o.coupon_code].revenue += parseFloat(o.total || 0);
+      });
+    }
+    setAfiliados((coupons || []).map(c => ({ ...c, usage: usageMap[c.code] || { count: 0, revenue: 0 } })));
+    setLoading(false);
+  }, []);
+
+  useEffect(() => { load(); }, [load]);
+
+  const handleSave = async (e) => {
+    e.preventDefault();
+    if (!form.agent_id.trim() || !form.name.trim()) {
+      showToast('Preencha o nome e o código do afiliado.', 'error');
+      return;
+    }
+    setSaving(true);
+    const payload = {
+      code: form.agent_id.trim().toUpperCase(),
+      discount_percent: parseFloat(form.commission_percent) || 10,
+      agent_id: form.agent_id.trim().toUpperCase(),
+      is_active: true,
+    };
+    const { error } = editing
+      ? await supabase.from('coupons').update(payload).eq('id', editing.id)
+      : await supabase.from('coupons').insert([payload]);
+    setSaving(false);
+    if (error) { showToast('Erro: ' + error.message, 'error'); return; }
+    showToast(editing ? 'Afiliado atualizado!' : 'Afiliado criado!', 'success');
+    setShowForm(false); setEditing(null);
+    setForm({ name: '', email: '', agent_id: '', commission_percent: '10' });
+    load();
+  };
+
+  const handleDelete = async (id) => {
+    if (!window.confirm('Remover afiliado?')) return;
+    await supabase.from('coupons').delete().eq('id', id);
+    showToast('Afiliado removido.', 'success');
+    load();
+  };
+
+  const openEdit = (a) => {
+    setEditing(a);
+    setForm({ name: a.agent_id, email: '', agent_id: a.agent_id, commission_percent: String(a.discount_percent) });
+    setShowForm(true);
+  };
+
+  return (
+    <div>
+      <SectionHeader
+        title="Afiliados"
+        sub="Gerencie influenciadores e seus cupons de desconto"
+        action={
+          <button style={S.btnPrimary} onClick={() => { setEditing(null); setForm({ name: '', email: '', agent_id: '', commission_percent: '10' }); setShowForm(true); }}>
+            <Plus size={15} /> Novo Afiliado
+          </button>
+        }
+      />
+
+      {showForm && (
+        <div style={{ ...S.card, marginBottom: '1.5rem', border: '1px solid rgba(214,255,0,0.2)' }}>
+          <h3 style={{ margin: '0 0 1.25rem', fontWeight: 700, fontSize: '1rem' }}>{editing ? 'Editar Afiliado' : 'Novo Afiliado'}</h3>
+          <form onSubmit={handleSave}>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginBottom: '1rem' }}>
+              <div>
+                <label style={S.label}>Nome do Afiliado</label>
+                <input style={S.input} placeholder="Ex: João Silva" value={form.name} onChange={e => setForm({...form, name: e.target.value})} required />
+              </div>
+              <div>
+                <label style={S.label}>Código (Cupom)</label>
+                <input style={S.input} placeholder="Ex: JOAO10" value={form.agent_id} onChange={e => setForm({...form, agent_id: e.target.value.toUpperCase()})} required />
+              </div>
+              <div>
+                <label style={S.label}>Email (opcional)</label>
+                <input style={S.input} type="email" placeholder="email@exemplo.com" value={form.email} onChange={e => setForm({...form, email: e.target.value})} />
+              </div>
+              <div>
+                <label style={S.label}>Desconto para o cliente (%)</label>
+                <input style={S.input} type="number" min="1" max="100" value={form.commission_percent} onChange={e => setForm({...form, commission_percent: e.target.value})} required />
+              </div>
+            </div>
+            <div style={{ display: 'flex', gap: '0.75rem' }}>
+              <button type="submit" style={S.btnPrimary} disabled={saving}>
+                <Save size={14} />{saving ? 'Salvando...' : 'Salvar'}
+              </button>
+              <button type="button" style={S.btnSecondary} onClick={() => setShowForm(false)}>
+                <X size={14} /> Cancelar
+              </button>
+            </div>
+          </form>
+        </div>
+      )}
+
+      {loading ? <Loader /> : (
+        <div style={S.card}>
+          <div style={{ overflowX: 'auto' }}>
+            <table style={S.table}>
+              <thead>
+                <tr>
+                  <th style={S.th}>Afiliado / Código</th>
+                  <th style={S.th}>Desconto</th>
+                  <th style={S.th}>Vendas</th>
+                  <th style={S.th}>Receita Gerada</th>
+                  <th style={S.th}>Status</th>
+                  <th style={S.th}>Ações</th>
+                </tr>
+              </thead>
+              <tbody>
+                {afiliados.map(a => (
+                  <tr key={a.id}
+                    onMouseEnter={e => e.currentTarget.style.background = 'rgba(255,255,255,0.02)'}
+                    onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
+                  >
+                    <td style={S.td}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                        <div style={{ width: '36px', height: '36px', borderRadius: '50%', background: 'rgba(214,255,0,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                          <Award size={16} color="#D6FF00" />
+                        </div>
+                        <div>
+                          <div style={{ fontWeight: 700, fontSize: '0.875rem', fontFamily: 'monospace', letterSpacing: '0.05em', color: '#D6FF00' }}>{a.code}</div>
+                          <div style={{ fontSize: '0.75rem', color: 'rgba(255,255,255,0.35)' }}>ID: {String(a.id).slice(0,8)}...</div>
+                        </div>
+                      </div>
+                    </td>
+                    <td style={{ ...S.td, fontWeight: 700, color: '#4ADE80' }}>{a.discount_percent}% OFF</td>
+                    <td style={S.td}>{a.usage.count} pedidos</td>
+                    <td style={{ ...S.td, fontWeight: 600 }}>${a.usage.revenue.toFixed(2)}</td>
+                    <td style={S.td}>
+                      <span style={{ padding: '0.2rem 0.6rem', background: a.is_active ? 'rgba(34,197,94,0.15)' : 'rgba(255,255,255,0.05)', color: a.is_active ? '#4ADE80' : 'rgba(255,255,255,0.3)', borderRadius: '4px', fontSize: '0.75rem', fontWeight: 700 }}>
+                        {a.is_active ? 'Ativo' : 'Inativo'}
+                      </span>
+                    </td>
+                    <td style={S.td}>
+                      <div style={{ display: 'flex', gap: '0.5rem' }}>
+                        <button style={S.btnEdit} onClick={() => openEdit(a)}><Edit2 size={14} /></button>
+                        <button style={S.btnDanger} onClick={() => handleDelete(a.id)}><Trash2 size={14} /></button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+                {afiliados.length === 0 && (
+                  <tr><td colSpan={6} style={{ ...S.td, textAlign: 'center', color: 'rgba(255,255,255,0.3)', padding: '3rem' }}>Nenhum afiliado cadastrado.</td></tr>
+                )}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
+
+// ─── Conversas IA Section ─────────────────────────────────────────────────────
+const ConversasSection = () => {
+  const [conversas, setConversas] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [selected, setSelected] = useState(null);
+  const [search, setSearch] = useState('');
+
+  const load = useCallback(async () => {
+    setLoading(true);
+    const { data, error } = await supabase
+      .from('ai_conversations')
+      .select('*')
+      .order('created_at', { ascending: false })
+      .limit(100);
+    if (!error) setConversas(data || []);
+    setLoading(false);
+  }, []);
+
+  useEffect(() => { load(); }, [load]);
+
+  const filtered = conversas.filter(c =>
+    (c.user_email || c.user_id || '').toLowerCase().includes(search.toLowerCase()) ||
+    (c.summary || c.last_message || '').toLowerCase().includes(search.toLowerCase())
+  );
+
+  return (
+    <div>
+      <SectionHeader
+        title="Conversas IA"
+        sub={`${conversas.length} conversas registradas`}
+        action={
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', background: 'rgba(255,255,255,0.05)', border: '1px solid #2A2D30', borderRadius: '6px', padding: '0.5rem 0.75rem' }}>
+            <Search size={14} color="rgba(255,255,255,0.4)" />
+            <input
+              style={{ background: 'none', border: 'none', outline: 'none', color: '#fff', fontSize: '0.85rem', width: '200px' }}
+              placeholder="Buscar por usuário..."
+              value={search}
+              onChange={e => setSearch(e.target.value)}
+            />
+          </div>
+        }
+      />
+
+      {selected && (
+        <div style={S.modal} onClick={() => setSelected(null)}>
+          <div style={{ ...S.modalBox, maxWidth: '680px' }} onClick={e => e.stopPropagation()}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
+              <div>
+                <h3 style={{ margin: 0, fontWeight: 700 }}>Conversa</h3>
+                <p style={{ margin: '0.25rem 0 0', fontSize: '0.8rem', color: 'rgba(255,255,255,0.4)' }}>
+                  {selected.user_email || selected.user_id || 'Usuário anônimo'} · {new Date(selected.created_at).toLocaleString('pt-BR')}
+                </p>
+              </div>
+              <button style={S.btnSecondary} onClick={() => setSelected(null)}><X size={14} /></button>
+            </div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', maxHeight: '60vh', overflowY: 'auto' }}>
+              {(selected.messages || []).map((msg, i) => (
+                <div key={i} style={{ display: 'flex', justifyContent: msg.role === 'user' ? 'flex-end' : 'flex-start' }}>
+                  <div style={{
+                    maxWidth: '75%', padding: '0.75rem 1rem',
+                    background: msg.role === 'user' ? 'rgba(214,255,0,0.12)' : 'rgba(255,255,255,0.06)',
+                    borderRadius: msg.role === 'user' ? '12px 12px 2px 12px' : '12px 12px 12px 2px',
+                    fontSize: '0.875rem', lineHeight: 1.5, color: msg.role === 'user' ? '#D6FF00' : '#fff',
+                  }}>
+                    {msg.content}
+                  </div>
+                </div>
+              ))}
+              {(!selected.messages || selected.messages.length === 0) && (
+                <div style={{ textAlign: 'center', color: 'rgba(255,255,255,0.3)', padding: '2rem' }}>
+                  {selected.summary || selected.last_message || 'Sem mensagens detalhadas.'}
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {loading ? <Loader /> : conversas.length === 0 ? (
+        <div style={{ ...S.card, textAlign: 'center', padding: '4rem', color: 'rgba(255,255,255,0.3)' }}>
+          <MessageSquare size={48} style={{ marginBottom: '1rem', opacity: 0.2 }} />
+          <div style={{ fontWeight: 600, fontSize: '1rem', marginBottom: '0.5rem', color: 'rgba(255,255,255,0.5)' }}>Nenhuma conversa registrada</div>
+          <div style={{ fontSize: '0.85rem' }}>As conversas do assistente IA aparecerão aqui quando a tabela <code style={{ color: '#D6FF00' }}>ai_conversations</code> for criada no Supabase.</div>
+        </div>
+      ) : (
+        <div style={S.card}>
+          <div style={{ overflowX: 'auto' }}>
+            <table style={S.table}>
+              <thead>
+                <tr>
+                  <th style={S.th}>Usuário</th>
+                  <th style={S.th}>Última mensagem</th>
+                  <th style={S.th}>Mensagens</th>
+                  <th style={S.th}>Data</th>
+                  <th style={S.th}>Ver</th>
+                </tr>
+              </thead>
+              <tbody>
+                {filtered.map(c => (
+                  <tr key={c.id}
+                    onMouseEnter={e => e.currentTarget.style.background = 'rgba(255,255,255,0.02)'}
+                    onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
+                  >
+                    <td style={S.td}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                        <div style={{ width: '32px', height: '32px', borderRadius: '50%', background: 'rgba(96,165,250,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                          <MessageSquare size={14} color="#60A5FA" />
+                        </div>
+                        <span style={{ fontSize: '0.85rem', fontWeight: 500 }}>{c.user_email || c.user_id || 'Anônimo'}</span>
+                      </div>
+                    </td>
+                    <td style={{ ...S.td, color: 'rgba(255,255,255,0.55)', maxWidth: '260px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                      {c.summary || c.last_message || '—'}
+                    </td>
+                    <td style={S.td}>{(c.messages || []).length}</td>
+                    <td style={{ ...S.td, color: 'rgba(255,255,255,0.4)', fontSize: '0.8rem' }}>
+                      {new Date(c.created_at).toLocaleDateString('pt-BR')}
+                    </td>
+                    <td style={S.td}>
+                      <button style={S.btnEdit} onClick={() => setSelected(c)}><Eye size={14} /></button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
+
+// ─── Depoimentos Section ──────────────────────────────────────────────────────
+const DepoimentosSection = ({ showToast }) => {
+  const [depoimentos, setDepoimentos] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [showForm, setShowForm] = useState(false);
+  const [editing, setEditing] = useState(null);
+  const [form, setForm] = useState({ name: '', comment: '', rating: '5', role: '', avatar: '' });
+  const [saving, setSaving] = useState(false);
+
+  const load = useCallback(async () => {
+    setLoading(true);
+    const { data } = await supabase
+      .from('testimonials')
+      .select('*')
+      .order('created_at', { ascending: false });
+    setDepoimentos(data || []);
+    setLoading(false);
+  }, []);
+
+  useEffect(() => { load(); }, [load]);
+
+  const handleSave = async (e) => {
+    e.preventDefault();
+    if (!form.name.trim() || !form.comment.trim()) {
+      showToast('Preencha o nome e o depoimento.', 'error');
+      return;
+    }
+    setSaving(true);
+    const payload = {
+      name: form.name.trim(),
+      comment: form.comment.trim(),
+      rating: parseInt(form.rating) || 5,
+      role: form.role.trim() || null,
+      avatar: form.avatar.trim() || null,
+    };
+    const { error } = editing
+      ? await supabase.from('testimonials').update(payload).eq('id', editing.id)
+      : await supabase.from('testimonials').insert([payload]);
+    setSaving(false);
+    if (error) { showToast('Erro: ' + error.message, 'error'); return; }
+    showToast(editing ? 'Depoimento atualizado!' : 'Depoimento criado!', 'success');
+    setShowForm(false); setEditing(null);
+    setForm({ name: '', comment: '', rating: '5', role: '', avatar: '' });
+    load();
+  };
+
+  const handleDelete = async (id) => {
+    if (!window.confirm('Remover depoimento?')) return;
+    await supabase.from('testimonials').delete().eq('id', id);
+    showToast('Depoimento removido.', 'success');
+    load();
+  };
+
+  const openEdit = (d) => {
+    setEditing(d);
+    setForm({ name: d.name || '', comment: d.comment || '', rating: String(d.rating || 5), role: d.role || '', avatar: d.avatar || '' });
+    setShowForm(true);
+  };
+
+  return (
+    <div>
+      <SectionHeader
+        title="Depoimentos"
+        sub="Gerencie avaliações e testemunhos exibidos no site"
+        action={
+          <button style={S.btnPrimary} onClick={() => { setEditing(null); setForm({ name: '', comment: '', rating: '5', role: '', avatar: '' }); setShowForm(true); }}>
+            <Plus size={15} /> Novo Depoimento
+          </button>
+        }
+      />
+
+      {showForm && (
+        <div style={{ ...S.card, marginBottom: '1.5rem', border: '1px solid rgba(214,255,0,0.2)' }}>
+          <h3 style={{ margin: '0 0 1.25rem', fontWeight: 700, fontSize: '1rem' }}>{editing ? 'Editar Depoimento' : 'Novo Depoimento'}</h3>
+          <form onSubmit={handleSave}>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginBottom: '1rem' }}>
+              <div>
+                <label style={S.label}>Nome</label>
+                <input style={S.input} placeholder="Ex: Carlos M." value={form.name} onChange={e => setForm({...form, name: e.target.value})} required />
+              </div>
+              <div>
+                <label style={S.label}>Cargo / Cidade</label>
+                <input style={S.input} placeholder="Ex: Toronto, ON" value={form.role} onChange={e => setForm({...form, role: e.target.value})} />
+              </div>
+              <div>
+                <label style={S.label}>Nota ({form.rating} estrelas)</label>
+                <input style={S.input} type="range" min="1" max="5" value={form.rating} onChange={e => setForm({...form, rating: e.target.value})} />
+                <div style={{ display: 'flex', gap: '3px', marginTop: '0.35rem' }}>
+                  {[1,2,3,4,5].map(s => (
+                    <Star key={s} size={14} fill={s <= parseInt(form.rating) ? '#FBBF24' : 'none'} color={s <= parseInt(form.rating) ? '#FBBF24' : 'rgba(255,255,255,0.2)'} />
+                  ))}
+                </div>
+              </div>
+              <div>
+                <label style={S.label}>URL do Avatar (opcional)</label>
+                <input style={S.input} placeholder="https://..." value={form.avatar} onChange={e => setForm({...form, avatar: e.target.value})} />
+              </div>
+            </div>
+            <div style={{ marginBottom: '1rem' }}>
+              <label style={S.label}>Depoimento</label>
+              <textarea
+                style={{ ...S.input, minHeight: '90px', resize: 'vertical' }}
+                placeholder="Digite o depoimento do cliente..."
+                value={form.comment}
+                onChange={e => setForm({...form, comment: e.target.value})}
+                required
+              />
+            </div>
+            <div style={{ display: 'flex', gap: '0.75rem' }}>
+              <button type="submit" style={S.btnPrimary} disabled={saving}>
+                <Save size={14} />{saving ? 'Salvando...' : 'Salvar'}
+              </button>
+              <button type="button" style={S.btnSecondary} onClick={() => setShowForm(false)}>
+                <X size={14} /> Cancelar
+              </button>
+            </div>
+          </form>
+        </div>
+      )}
+
+      {loading ? <Loader /> : (
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: '1rem' }}>
+          {depoimentos.map(d => (
+            <div key={d.id} style={{ ...S.card, position: 'relative' }}>
+              <div style={{ position: 'absolute', top: '1rem', right: '1rem', display: 'flex', gap: '0.4rem' }}>
+                <button style={S.btnEdit} onClick={() => openEdit(d)}><Edit2 size={13} /></button>
+                <button style={S.btnDanger} onClick={() => handleDelete(d.id)}><Trash2 size={13} /></button>
+              </div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '0.85rem' }}>
+                {d.avatar ? (
+                  <img src={d.avatar} alt={d.name} style={{ width: '40px', height: '40px', borderRadius: '50%', objectFit: 'cover' }} />
+                ) : (
+                  <div style={{ width: '40px', height: '40px', borderRadius: '50%', background: 'rgba(214,255,0,0.12)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                    <span style={{ fontSize: '1.1rem', fontWeight: 700, color: '#D6FF00' }}>{(d.name || '?')[0].toUpperCase()}</span>
+                  </div>
+                )}
+                <div>
+                  <div style={{ fontWeight: 700, fontSize: '0.875rem' }}>{d.name}</div>
+                  {d.role && <div style={{ fontSize: '0.75rem', color: 'rgba(255,255,255,0.4)' }}>{d.role}</div>}
+                </div>
+              </div>
+              <div style={{ display: 'flex', gap: '2px', marginBottom: '0.65rem' }}>
+                {[1,2,3,4,5].map(s => (
+                  <Star key={s} size={13} fill={s <= (d.rating || 5) ? '#FBBF24' : 'none'} color={s <= (d.rating || 5) ? '#FBBF24' : 'rgba(255,255,255,0.2)'} />
+                ))}
+              </div>
+              <p style={{ margin: 0, fontSize: '0.85rem', lineHeight: 1.6, color: 'rgba(255,255,255,0.7)', fontStyle: 'italic' }}>"{d.comment}"</p>
+            </div>
+          ))}
+          {depoimentos.length === 0 && (
+            <div style={{ ...S.card, textAlign: 'center', padding: '4rem', color: 'rgba(255,255,255,0.3)', gridColumn: '1 / -1' }}>
+              <Star size={48} style={{ marginBottom: '1rem', opacity: 0.2 }} />
+              <div style={{ fontWeight: 600, fontSize: '1rem', marginBottom: '0.5rem', color: 'rgba(255,255,255,0.5)' }}>Nenhum depoimento cadastrado</div>
+              <div style={{ fontSize: '0.85rem' }}>Crie depoimentos para exibir na página inicial do site.</div>
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  );
+};
+
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 const Loader = () => (
   <div style={{ display: 'flex', justifyContent: 'center', padding: '4rem' }}>
@@ -1166,12 +1954,16 @@ const RebrandAdmin = () => {
   }
 
   const sections = {
-    dashboard: <DashboardSection />,
-    orders:    <OrdersSection showToast={showToast} />,
-    products:  <ProductsSection showToast={showToast} />,
-    spotlight: <SpotlightSection showToast={showToast} />,
-    coupons:   <CouponsSection showToast={showToast} />,
-    settings:  <SettingsSection showToast={showToast} />,
+    dashboard:   <DashboardSection />,
+    orders:      <OrdersSection showToast={showToast} />,
+    products:    <ProductsSection showToast={showToast} />,
+    spotlight:   <SpotlightSection showToast={showToast} />,
+    coupons:     <CouponsSection showToast={showToast} />,
+    clientes:    <ClientesSection />,
+    afiliados:   <AfiliadosSection showToast={showToast} />,
+    conversas:   <ConversasSection />,
+    depoimentos: <DepoimentosSection showToast={showToast} />,
+    settings:    <SettingsSection showToast={showToast} />,
   };
 
   return (
