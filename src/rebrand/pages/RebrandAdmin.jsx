@@ -10,6 +10,7 @@ import {
   Shirt, CreditCard, Globe, Activity, Truck, CheckCircle2, XCircle, Menu
 } from 'lucide-react';
 import ProductMedia from '../../components/ProductMedia';
+import TrackingModal from '../../components/TrackingModal';
 
 // ─── Constants ───────────────────────────────────────────────────────────────
 const REBRAND_ADMIN_EMAIL = 'ifootyc@gmail.com';
@@ -969,7 +970,7 @@ const DashboardSection = ({ showValues, setShowValues }) => {
 
 // ─── Orders Section ───────────────────────────────────────────────────────────
 // ─── Order Detail Modal ───────────────────────────────────────────────────────
-const OrderDetailModal = ({ order, onClose, onStatusChange, onTrackingChange, showToast }) => {
+const OrderDetailModal = ({ order, onClose, onStatusChange, onTrackingChange, showToast, onOpenTracking }) => {
   const [tracking, setTracking] = useState(order.tracking_number || '');
   const [savingTracking, setSavingTracking] = useState(false);
   const items = Array.isArray(order.items) ? order.items : (typeof order.items === 'string' ? (() => { try { return JSON.parse(order.items); } catch { return []; } })() : []);
@@ -1070,6 +1071,33 @@ const OrderDetailModal = ({ order, onClose, onStatusChange, onTrackingChange, sh
               <input style={{ ...S.input, flex: 1 }} value={tracking} onChange={e => setTracking(e.target.value)} placeholder="Ex: 1Z999AA10123456784" />
               <button style={{ ...S.btnPrimary, flexShrink: 0 }} onClick={handleSaveTracking} disabled={savingTracking}><Save size={14} /></button>
             </div>
+            {order.tracking_number && (() => {
+              const trackingCodes = order.tracking_number.split(/[,;\s]+/).map(s => s.trim()).filter(Boolean);
+              return trackingCodes.map((code, idx) => (
+                <button
+                  key={code}
+                  onClick={() => onOpenTracking && onOpenTracking(code)}
+                  style={{
+                    width: '100%',
+                    padding: '0.5rem',
+                    borderRadius: '6px',
+                    background: 'rgba(214,255,0,0.1)',
+                    border: '1px solid #D6FF00',
+                    color: '#D6FF00',
+                    fontWeight: 700,
+                    cursor: 'pointer',
+                    fontSize: '0.75rem',
+                    marginTop: '0.5rem',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: '0.35rem'
+                  }}
+                >
+                  <Package size={14} /> Testar Rastreio {trackingCodes.length > 1 ? `#${idx + 1}` : ''} ({code})
+                </button>
+              ));
+            })()}
           </div>
           <div style={{ ...S.card, padding: '1.25rem' }}>
             <div style={{ fontSize: '0.75rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em', color: '#D6FF00', marginBottom: '0.75rem' }}>⚙️ Mudar Status</div>
@@ -1120,7 +1148,7 @@ const OrderDetailModal = ({ order, onClose, onStatusChange, onTrackingChange, sh
 };
 
 // ─── Orders Section ───────────────────────────────────────────────────────────
-const OrdersSection = ({ showToast }) => {
+const OrdersSection = ({ showToast, onOpenTracking }) => {
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState('all');
@@ -1224,7 +1252,20 @@ const OrdersSection = ({ showToast }) => {
 
   return (
     <div>
-      <SectionHeader title="Pedidos" sub={`${orders.length} pedidos no total`} action={<button style={S.btnSecondary} onClick={load}><RefreshCw size={14} /> Atualizar</button>} />
+      <SectionHeader 
+        title="Pedidos" 
+        sub={`${orders.length} pedidos no total`} 
+        action={
+          <div style={{ display: 'flex', gap: '0.5rem' }}>
+            <button style={S.btnPrimary} onClick={() => onOpenTracking && onOpenTracking('')}>
+              <Package size={14} /> Rastrear Envio
+            </button>
+            <button style={S.btnSecondary} onClick={load}>
+              <RefreshCw size={14} /> Atualizar
+            </button>
+          </div>
+        } 
+      />
       <div style={{ display: 'flex', gap: '1rem', marginBottom: '1.5rem', flexWrap: 'wrap' }}>
         <div style={{ flex: 1, minWidth: '220px', position: 'relative' }}>
           <Search size={14} style={{ position: 'absolute', left: '1rem', top: '50%', transform: 'translateY(-50%)', color: 'rgba(255,255,255,0.35)' }} />
@@ -1284,6 +1325,7 @@ const OrdersSection = ({ showToast }) => {
           onStatusChange={handleStatusChange}
           onTrackingChange={(id, track) => setOrders(prev => prev.map(o => o.id === id ? { ...o, tracking_number: track } : o))}
           showToast={showToast}
+          onOpenTracking={onOpenTracking}
         />
       )}
     </div>
@@ -3228,6 +3270,8 @@ const RebrandAdmin = () => {
   const [showValues, setShowValues] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [isTrackModalOpen, setIsTrackModalOpen] = useState(false);
+  const [trackingCodeToView, setTrackingCodeToView] = useState('');
 
   useEffect(() => {
     const checkMobile = () => {
@@ -3269,7 +3313,7 @@ const RebrandAdmin = () => {
 
   const sections = {
     dashboard:   <DashboardSection showValues={showValues} setShowValues={setShowValues} />,
-    orders:      <OrdersSection showToast={showToast} />,
+    orders:      <OrdersSection showToast={showToast} onOpenTracking={(code) => { setTrackingCodeToView(code); setIsTrackModalOpen(true); }} />,
     products:    <ProductsSection showToast={showToast} />,
     spotlight:   <SpotlightSection showToast={showToast} />,
     coupons:     <CouponsSection showToast={showToast} />,
@@ -3484,6 +3528,14 @@ const RebrandAdmin = () => {
       </div>
 
       {toast && <Toast message={toast.message} type={toast.type} onClose={() => setToast(null)} />}
+
+      {isTrackModalOpen && (
+        <TrackingModal
+          isOpen={isTrackModalOpen}
+          onClose={() => setIsTrackModalOpen(false)}
+          initialTrackingNumber={trackingCodeToView}
+        />
+      )}
     </>
   );
 };
