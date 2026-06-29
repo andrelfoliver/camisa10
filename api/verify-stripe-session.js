@@ -28,7 +28,7 @@ export default async function handler(req, res) {
       }
 
       // Update order status in Supabase database using secure RPC (to bypass RLS safely)
-      const { error } = await supabase.rpc('confirm_stripe_payment', {
+      const { data: orderRows, error } = await supabase.rpc('confirm_stripe_payment', {
         order_id_input: orderId,
         payment_intent_input: session.payment_intent
       });
@@ -38,15 +38,11 @@ export default async function handler(req, res) {
         return res.status(500).json({ error: `Erro no Banco (RPC): ${error.message} (Código: ${error.code})` });
       }
 
-      // Fetch the updated order to send the payment confirmation email to the customer
-      try {
-        const { data: orderRow } = await supabase
-          .from('orders')
-          .select('*')
-          .eq('id', orderId)
-          .single();
+      const orderRow = orderRows?.[0];
 
-        if (orderRow) {
+      // Send the payment confirmation email to the customer
+      if (orderRow) {
+        try {
           const host = req.headers.host;
           const protocol = host.includes('localhost') ? 'http' : 'https';
           await fetch(`${protocol}://${host}/api/send-order-email`, {
@@ -58,9 +54,9 @@ export default async function handler(req, res) {
               order: orderRow
             })
           });
+        } catch (emailErr) {
+          console.error('Failed to send confirmation email on success:', emailErr);
         }
-      } catch (emailErr) {
-        console.error('Failed to send confirmation email on success:', emailErr);
       }
 
       return res.status(200).json({ success: true, orderId });

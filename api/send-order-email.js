@@ -264,7 +264,14 @@ export default async function handler(req, res) {
                   <tr><td style="padding: 8px 0; color: #718096; width: 120px;">Nome:</td><td style="padding: 8px 0; color: #1a202c; font-weight: 600;">${order.customer_name}</td></tr>
                   <tr><td style="padding: 8px 0; color: #718096;">E-mail:</td><td style="padding: 8px 0; color: #1a202c;">${order.customer_email}</td></tr>
                   <tr><td style="padding: 8px 0; color: #718096;">WhatsApp:</td><td style="padding: 8px 0; color: #1a202c;">${order.customer_phone}</td></tr>
-                  <tr><td style="padding: 8px 0; color: #718096;">Pagamento:</td><td style="padding: 8px 0; color: #1a202c;">${isPaidOnline ? `<span style="background: #D1FAE5; color: #065F46; padding: 4px 8px; border-radius: 4px; font-weight: bold; font-size: 0.85rem;">💰 PAGO ONLINE (${order.payment_method.toUpperCase()})</span>` : 'WhatsApp (Pendente)'}</td></tr>
+                  <tr><td style="padding: 8px 0; color: #718096;">Pagamento:</td><td style="padding: 8px 0; color: #1a202c;">
+                    ${order.status === 'paid'
+                      ? `<span style="background: #D1FAE5; color: #065F46; padding: 4px 8px; border-radius: 4px; font-weight: bold; font-size: 0.85rem;">💰 PAGO ONLINE (${order.payment_method.toUpperCase()})</span>`
+                      : (order.payment_method === 'paypal' || order.payment_method === 'stripe')
+                        ? `<span style="background: #FEF3C7; color: #92400E; padding: 4px 8px; border-radius: 4px; font-weight: bold; font-size: 0.85rem;">⏳ ${order.payment_method.toUpperCase()} (Aguardando)</span>`
+                        : 'WhatsApp (Pendente)'
+                    }
+                  </td></tr>
                   ${order.payment_id ? `<tr><td style="padding: 8px 0; color: #718096;">ID Transação:</td><td style="padding: 8px 0; color: #4a5568; font-family: monospace; font-size: 0.85rem;">${order.payment_id}</td></tr>` : ''}
                 </table>
               </div>
