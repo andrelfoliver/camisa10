@@ -163,6 +163,13 @@ const Home = () => {
     }
   };
 
+  const handleApplyPromo = () => {
+    const el = document.getElementById('trending-fan-gear');
+    if (el) {
+      el.scrollIntoView({ behavior: 'smooth' });
+    }
+  };
+
   useEffect(() => {
     async function loadTestimonials() {
       try {
@@ -551,8 +558,137 @@ const Home = () => {
         </div>
       </section>
 
+      {/* Special Offer (Combos) Section - Clean & Minimal Integration */}
+      <section className="rebrand-section container" style={{ maxWidth: '1400px', margin: '3rem auto 1.5rem auto', padding: '0 1.5rem' }}>
+        <div style={{ 
+          background: '#ffffff', 
+          border: '1px solid var(--rebrand-border)', 
+          borderRadius: '8px', 
+          padding: '2.5rem 1.5rem', 
+          textAlign: 'center' 
+        }}>
+          <h2 style={{ 
+            fontSize: '1.25rem', 
+            textTransform: 'uppercase', 
+            letterSpacing: '1px', 
+            color: 'var(--rebrand-text-main)', 
+            fontWeight: 800, 
+            marginBottom: '1.5rem',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: '0.4rem'
+          }}>
+            ⚡ Special Bundle Deals
+          </h2>
+
+          <div style={{ display: 'flex', justifyContent: 'center', gap: '1.5rem', flexWrap: 'wrap', maxWidth: '800px', margin: '0 auto' }}>
+            {/* Combo 2 Jerseys */}
+            <div style={{ 
+              flex: 1, 
+              minWidth: '260px', 
+              background: '#fdfdfd', 
+              border: '1px solid var(--rebrand-border)', 
+              borderRadius: '6px', 
+              padding: '1.5rem', 
+              display: 'flex', 
+              flexDirection: 'column', 
+              justifyContent: 'space-between',
+              boxSizing: 'border-box'
+            }}>
+              <div>
+                <h3 style={{ fontSize: '1.1rem', fontWeight: 700, color: 'var(--rebrand-text-main)', margin: '0 0 0.5rem 0' }}>Buy 2 Jerseys</h3>
+                <p style={{ color: 'var(--rebrand-text-muted)', fontSize: '0.8rem', margin: '0 0 1.25rem 0' }}>
+                  Get them for only <strong>$91.97 CAD</strong> (Save $3.83)
+                </p>
+              </div>
+
+              <button 
+                onClick={handleApplyPromo}
+                style={{
+                  width: '100%',
+                  padding: '0.65rem',
+                  borderRadius: '4px',
+                  background: '#121416',
+                  border: 'none',
+                  color: '#ffffff',
+                  fontWeight: 600,
+                  fontSize: '0.8rem',
+                  cursor: 'pointer',
+                  transition: 'opacity 0.2s'
+                }}
+                className="interactive-card"
+              >
+                Select Jerseys
+              </button>
+            </div>
+
+            {/* Combo 3 Jerseys */}
+            <div style={{ 
+              flex: 1, 
+              minWidth: '260px', 
+              background: '#fdfdfd', 
+              border: '1px solid var(--rebrand-border)', 
+              borderRadius: '6px', 
+              padding: '1.5rem', 
+              display: 'flex', 
+              flexDirection: 'column', 
+              justifyContent: 'space-between',
+              boxSizing: 'border-box',
+              position: 'relative'
+            }}>
+              <div style={{
+                position: 'absolute',
+                top: '-0.6rem',
+                right: '1rem',
+                background: 'var(--rebrand-volt)',
+                color: '#000000',
+                padding: '0.15rem 0.5rem',
+                borderRadius: '3px',
+                fontSize: '0.6rem',
+                fontWeight: 800,
+                textTransform: 'uppercase',
+                letterSpacing: '0.5px'
+              }}>
+                Best Deal
+              </div>
+
+              <div>
+                <h3 style={{ fontSize: '1.1rem', fontWeight: 700, color: 'var(--rebrand-text-main)', margin: '0 0 0.5rem 0' }}>Buy 3 Jerseys</h3>
+                <p style={{ color: 'var(--rebrand-text-muted)', fontSize: '0.8rem', margin: '0 0 1.25rem 0' }}>
+                  Get them for only <strong>$133.64 CAD</strong> (Save $10.06)
+                </p>
+              </div>
+
+              <button 
+                onClick={handleApplyPromo}
+                style={{
+                  width: '100%',
+                  padding: '0.65rem',
+                  borderRadius: '4px',
+                  background: '#121416',
+                  border: 'none',
+                  color: '#ffffff',
+                  fontWeight: 600,
+                  fontSize: '0.8rem',
+                  cursor: 'pointer',
+                  transition: 'opacity 0.2s'
+                }}
+                className="interactive-card"
+              >
+                Select Jerseys
+              </button>
+            </div>
+          </div>
+
+          <span style={{ display: 'block', marginTop: '1.25rem', color: 'var(--rebrand-text-muted)', fontSize: '0.7rem' }}>
+            * Discounts are calculated and applied automatically at checkout
+          </span>
+        </div>
+      </section>
+
       {/* 5. FEATURED COLLECTIONS & PRODUCTS WITH PRICE DISCOUNTS */}
-      <section className="rebrand-section container" style={{ maxWidth: '1400px', margin: '0 auto' }}>
+      <section id="trending-fan-gear" className="rebrand-section container" style={{ maxWidth: '1400px', margin: '0 auto' }}>
         <div className="rebrand-section-header" style={{ marginBottom: '2.5rem' }}>
           <h2 className="rebrand-section-title">Trending Fan Gear</h2>
         </div>
