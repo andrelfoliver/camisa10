@@ -66,6 +66,7 @@ const ProductPage = () => {
               oldPrice: (data.price || 89.90) + 20.00,
               category: 'Soccer',
               image: data.image || data.images?.[0] || 'https://images.unsplash.com/photo-1508098682722-e99c43a406b2?w=800',
+              gallery: data.gallery || [],
               rating: data.rating || 4.8,
               reviews: data.reviews_count || 32,
               colors: ['#000000', '#ffffff', '#e31837'],
@@ -148,96 +149,93 @@ const ProductPage = () => {
         <div className="rebrand-product-grid">
               {/* Left Column: Product Image & Gallery */}
           <div>
-            <div className="rebrand-product-gallery">
-              {/* Vertical Thumbnails */}
-              <div className="rebrand-product-thumbnails">
-                {[0, 1, 2].map((idx) => {
-                  const zoomStyle = idx === 1 
-                    ? { transform: 'scale(1.4) translateY(5%)' } 
-                    : idx === 2 
-                      ? { transform: 'scale(2.0) translateY(-10%)' } 
-                      : {};
-                  return (
-                    <button
-                      key={idx}
-                      onClick={() => setActiveThumb(idx)}
-                      className={`rebrand-product-thumbnail-btn ${activeThumb === idx ? 'active' : ''}`}
-                    >
-                      <img 
-                        src={product.image} 
-                        alt={`Thumbnail ${idx + 1}`} 
-                        style={{ objectFit: 'contain', ...zoomStyle }} 
-                      />
-                    </button>
-                  );
-                })}
-              </div>
+            {(() => {
+              const images = [product.image, ...(product.gallery || [])].filter(Boolean);
+              return (
+                <div className="rebrand-product-gallery">
+                  {/* Vertical Thumbnails */}
+                  <div className="rebrand-product-thumbnails">
+                    {images.map((img, idx) => (
+                      <button
+                        key={idx}
+                        onClick={() => setActiveThumb(idx)}
+                        className={`rebrand-product-thumbnail-btn ${activeThumb === idx ? 'active' : ''}`}
+                      >
+                        <img 
+                          src={img} 
+                          alt={`Thumbnail ${idx + 1}`} 
+                          style={{ objectFit: 'contain' }} 
+                        />
+                      </button>
+                    ))}
+                  </div>
 
-              {/* Main Product Image */}
-              <div className="rebrand-product-main-image-container">
-                <span style={{
-                  position: 'absolute',
-                  top: '1.5rem',
-                  left: '1.5rem',
-                  background: '#121416',
-                  color: '#ffffff',
-                  padding: '0.4rem 1rem',
-                  fontSize: '0.7rem',
-                  fontWeight: 800,
-                  textTransform: 'uppercase',
-                  borderRadius: '3px',
-                  borderLeft: '3px solid var(--rebrand-volt)',
-                  zIndex: 2
-                }}>
-                  Premium Quality
-                </span>
+                  {/* Main Product Image */}
+                  <div className="rebrand-product-main-image-container">
+                    <span style={{
+                      position: 'absolute',
+                      top: '1.5rem',
+                      left: '1.5rem',
+                      background: '#121416',
+                      color: '#ffffff',
+                      padding: '0.4rem 1rem',
+                      fontSize: '0.7rem',
+                      fontWeight: 800,
+                      textTransform: 'uppercase',
+                      borderRadius: '3px',
+                      borderLeft: '3px solid var(--rebrand-volt)',
+                      zIndex: 2
+                    }}>
+                      Premium Quality
+                    </span>
 
-                {/* Left Navigation Arrow */}
-                <button 
-                  onClick={() => setActiveThumb(prev => (prev === 0 ? 2 : prev - 1))}
-                  style={{
-                    position: 'absolute', left: '1rem', top: '50%', transform: 'translateY(-50%)',
-                    background: '#ffffff', border: '1px solid #dee2e6', borderRadius: '50%',
-                    width: '36px', height: '36px', display: 'flex', alignItems: 'center', justifyContent: 'center',
-                    cursor: 'pointer', zIndex: 3, boxShadow: '0 2px 6px rgba(0,0,0,0.1)', transition: 'all 0.15s'
-                  }}
-                  onMouseOver={e => e.currentTarget.style.background = '#f8f9fa'}
-                  onMouseOut={e => e.currentTarget.style.background = '#ffffff'}
-                >
-                  <ChevronLeft size={20} color="#121416" />
-                </button>
+                    {/* Left Navigation Arrow */}
+                    {images.length > 1 && (
+                      <button 
+                        onClick={() => setActiveThumb(prev => (prev === 0 ? images.length - 1 : prev - 1))}
+                        style={{
+                          position: 'absolute', left: '1rem', top: '50%', transform: 'translateY(-50%)',
+                          background: '#ffffff', border: '1px solid #dee2e6', borderRadius: '50%',
+                          width: '36px', height: '36px', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                          cursor: 'pointer', zIndex: 3, boxShadow: '0 2px 6px rgba(0,0,0,0.1)', transition: 'all 0.15s'
+                        }}
+                        onMouseOver={e => e.currentTarget.style.background = '#f8f9fa'}
+                        onMouseOut={e => e.currentTarget.style.background = '#ffffff'}
+                      >
+                        <ChevronLeft size={20} color="#121416" />
+                      </button>
+                    )}
 
-                <img 
-                  src={product.image} 
-                  alt={product.name} 
-                  style={{ 
-                    width: '90%', 
-                    height: '90%', 
-                    objectFit: 'contain',
-                    transform: activeThumb === 1 
-                      ? 'scale(1.4) translateY(5%)' 
-                      : activeThumb === 2 
-                        ? 'scale(2.2) translateY(-8%)' 
-                        : 'scale(1)'
-                  }} 
-                />
+                    <img 
+                      src={images[activeThumb] || product.image} 
+                      alt={product.name} 
+                      style={{ 
+                        width: '100%', 
+                        height: '100%', 
+                        objectFit: 'contain'
+                      }} 
+                    />
 
-                {/* Right Navigation Arrow */}
-                <button 
-                  onClick={() => setActiveThumb(prev => (prev === 2 ? 0 : prev + 1))}
-                  style={{
-                    position: 'absolute', right: '1rem', top: '50%', transform: 'translateY(-50%)',
-                    background: '#ffffff', border: '1px solid #dee2e6', borderRadius: '50%',
-                    width: '36px', height: '36px', display: 'flex', alignItems: 'center', justifyContent: 'center',
-                    cursor: 'pointer', zIndex: 3, boxShadow: '0 2px 6px rgba(0,0,0,0.1)', transition: 'all 0.15s'
-                  }}
-                  onMouseOver={e => e.currentTarget.style.background = '#f8f9fa'}
-                  onMouseOut={e => e.currentTarget.style.background = '#ffffff'}
-                >
-                  <ChevronRight size={20} color="#121416" />
-                </button>
-              </div>
-            </div>
+                    {/* Right Navigation Arrow */}
+                    {images.length > 1 && (
+                      <button 
+                        onClick={() => setActiveThumb(prev => (prev === images.length - 1 ? 0 : prev + 1))}
+                        style={{
+                          position: 'absolute', right: '1rem', top: '50%', transform: 'translateY(-50%)',
+                          background: '#ffffff', border: '1px solid #dee2e6', borderRadius: '50%',
+                          width: '36px', height: '36px', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                          cursor: 'pointer', zIndex: 3, boxShadow: '0 2px 6px rgba(0,0,0,0.1)', transition: 'all 0.15s'
+                        }}
+                        onMouseOver={e => e.currentTarget.style.background = '#f8f9fa'}
+                        onMouseOut={e => e.currentTarget.style.background = '#ffffff'}
+                      >
+                        <ChevronRight size={20} color="#121416" />
+                      </button>
+                    )}
+                  </div>
+                </div>
+              );
+            })()}
           </div>
 
           {/* Right Column: Title, Prices, Colors, Customization */}

@@ -1402,18 +1402,45 @@ const getProductSport = (p) => {
 const getSoccerSubdivision = (p) => {
   const cat = (p.category || '').toLowerCase();
   const pName = (p.name || '').toLowerCase();
-  const pLeague = (p.league || '').toLowerCase();
+  const pLeague = p.league || '';
+  const pVersion = (p.version || '').toLowerCase();
 
-  const isRetro = cat === 'retrô' || cat.includes('retro') || (p.version || '').toLowerCase().includes('retrô') || pName.includes('retrô') || pName.includes('retro');
-  const isBrasileirao = cat === 'brasileirão' || cat === 'brasileirao' || cat.includes('brasileiro') || pLeague === 'brasileirão' || pName.includes('corinthians') || pName.includes('flamengo') || pName.includes('palmeiras') || pName.includes('são paulo') || pName.includes('santos') || pName.includes('grêmio') || pName.includes('fluminense') || pName.includes('botafogo') || pName.includes('vasco');
-  const isSelecao = cat === 'seleções' || cat === 'selecoes' || pName.includes('seleção') || pName.includes('selecao') || pLeague === 'seleções' || pName.includes('brasil') || pName.includes('argentina') || pName.includes('portugal') || pName.includes('frança') || pName.includes('itália') || pName.includes('espanha');
-  const isInternacional = cat === 'internacionais' || cat.includes('europa') || cat.includes('europe') || (pLeague !== '' && pLeague !== 'brasileirão' && pLeague !== 'seleções' && pLeague !== 'nba') || pName.includes('real madrid') || pName.includes('barcelona') || pName.includes('manchester') || pName.includes('chelsea') || pName.includes('arsenal') || pName.includes('juventus') || pName.includes('milan') || pName.includes('bayern');
+  const isRetro = cat === 'retrô' || cat.includes('retro') || pVersion.includes('retrô') || pName.includes('retrô') || pName.includes('retro');
+  if (isRetro) return 'Retro Collection';
 
-  if (isRetro) return 'Retrô';
-  if (isBrasileirao) return 'Brasileirão';
-  if (isSelecao) return 'Seleções';
-  if (isInternacional) return 'Internacionais';
-  return 'Internacionais';
+  const isNew = p.is_new || cat === 'lançamentos' || cat.includes('lançament');
+  if (isNew) return 'New Arrivals';
+
+  const isSelecao = cat === 'seleções' || cat === 'selecoes' || pName.includes('seleção') || pName.includes('selecao') || pLeague === 'Seleções' || pName.includes('brasil') || pName.includes('argentina') || pName.includes('portugal') || pName.includes('frança') || pName.includes('itália') || pName.includes('espanha');
+  if (isSelecao) return 'National Teams';
+
+  if (pLeague === 'Liga Profesional') return 'Argentine League';
+  if (pLeague === 'Brasileirão') return 'Brazilian League';
+  if (pLeague === 'Bundesliga') return 'Bundesliga';
+  if (pLeague === 'La Liga') return 'La Liga';
+  if (pLeague === 'Ligue 1') return 'Ligue 1';
+  if (pLeague === 'MLS') return 'MLS';
+  if (pLeague === 'Premier League') return 'Premier League';
+  if (pLeague === 'Saudi Pro League') return 'Saudi Pro League';
+  if (pLeague === 'Serie A') return 'Serie A';
+  
+  return 'Other Leagues';
+};
+
+const SOCCER_SUB_MAPPING = {
+  'Argentine League': { category: 'Internacionais', league: 'Liga Profesional' },
+  'Brazilian League': { category: 'Brasileirão', league: 'Brasileirão' },
+  'Bundesliga': { category: 'Internacionais', league: 'Bundesliga' },
+  'La Liga': { category: 'Internacionais', league: 'La Liga' },
+  'Ligue 1': { category: 'Internacionais', league: 'Ligue 1' },
+  'MLS': { category: 'Internacionais', league: 'MLS' },
+  'National Teams': { category: 'Seleções', league: 'Seleções' },
+  'New Arrivals': { category: 'Lançamentos', league: 'Lançamentos' },
+  'Premier League': { category: 'Internacionais', league: 'Premier League' },
+  'Retro Collection': { category: 'Retrô', league: 'Retrô' },
+  'Saudi Pro League': { category: 'Internacionais', league: 'Saudi Pro League' },
+  'Serie A': { category: 'Internacionais', league: 'Serie A' },
+  'Other Leagues': { category: 'Internacionais', league: 'Other' }
 };
 
 const ProductsSection = ({ showToast }) => {
@@ -1454,6 +1481,7 @@ const ProductsSection = ({ showToast }) => {
       name: product.name || '',
       price: product.price || '',
       category: product.category || '',
+      league: product.league || '',
       mainCategory: mainCat,
       subCategory: subCat,
       image: product.image || '',
@@ -1477,10 +1505,12 @@ const ProductsSection = ({ showToast }) => {
   };
 
   const handleSubCategoryChange = (val) => {
+    const mapped = SOCCER_SUB_MAPPING[val] || { category: 'Internacionais', league: 'Other' };
     setForm(prev => ({
       ...prev,
       subCategory: val,
-      category: val
+      category: mapped.category,
+      league: mapped.league
     }));
   };
 
@@ -1540,6 +1570,8 @@ const ProductsSection = ({ showToast }) => {
       name: form.name,
       price: parseFloat(form.price),
       category: form.category,
+      league: form.league || null,
+      is_new: form.subCategory === 'New Arrivals',
       image: imageUrl,
       gallery: form.gallery || [],
       description: form.description,
@@ -1572,8 +1604,22 @@ const ProductsSection = ({ showToast }) => {
     
     let matchesSubdivision = true;
     if (selectedSport === 'Soccer' && selectedSubdivision !== 'all') {
-      const sub = getSoccerSubdivision(p);
-      matchesSubdivision = sub === selectedSubdivision;
+      const pName = (p.name || '').toLowerCase();
+      const pCat = (p.category || '').toLowerCase();
+      const pVersion = (p.version || '').toLowerCase();
+
+      if (selectedSubdivision === 'Seleções') {
+        matchesSubdivision = pCat === 'seleções' || pCat === 'selecoes' || pName.includes('seleção') || pName.includes('selecao') || p.league === 'Seleções' || pName.includes('brasil') || pName.includes('argentina') || pName.includes('portugal') || pName.includes('frança') || pName.includes('itália') || pName.includes('espanha');
+      } else if (selectedSubdivision === 'Retrô') {
+        matchesSubdivision = pCat === 'retrô' || pCat.includes('retro') || pVersion.includes('retrô') || pName.includes('retrô') || pName.includes('retro');
+      } else if (selectedSubdivision === 'Other') {
+        const mainLeagues = ['Brasileirão', 'Premier League', 'La Liga', 'Serie A', 'Bundesliga', 'Ligue 1', 'MLS', 'Saudi Pro League', 'Liga Profesional'];
+        const isSelecao = pCat === 'seleções' || pCat === 'selecoes' || pName.includes('seleção') || pName.includes('selecao') || p.league === 'Seleções' || pName.includes('brasil') || pName.includes('argentina') || pName.includes('portugal') || pName.includes('frança') || pName.includes('itália') || pName.includes('espanha');
+        const isRetro = pCat === 'retrô' || pCat.includes('retro') || pVersion.includes('retrô') || pName.includes('retrô') || pName.includes('retro');
+        matchesSubdivision = !mainLeagues.includes(p.league) && !isSelecao && !isRetro;
+      } else {
+        matchesSubdivision = p.league === selectedSubdivision;
+      }
     }
 
     const matchesSearch = !search || p.name?.toLowerCase().includes(search.toLowerCase()) || p.category?.toLowerCase().includes(search.toLowerCase());
@@ -1581,7 +1627,7 @@ const ProductsSection = ({ showToast }) => {
   });
 
   const SPORTS = ['all', 'Soccer', 'Basketball', 'Football', 'Baseball', 'Hockey', 'Tênis', 'Streetwear'];
-  const SUBDIVISIONS = ['all', 'Brasileirão', 'Seleções', 'Internacionais', 'Retrô'];
+  const SUBDIVISIONS = ['all', 'Liga Profesional', 'Brasileirão', 'Bundesliga', 'La Liga', 'Ligue 1', 'MLS', 'Seleções', 'Premier League', 'Retrô', 'Saudi Pro League', 'Serie A', 'Other'];
 
   return (
     <div>
@@ -1641,7 +1687,7 @@ const ProductsSection = ({ showToast }) => {
                   transition: 'all 0.1s'
                 }}
               >
-                {sub === 'all' ? 'Todas' : sub}
+                {sub === 'all' ? 'Todas' : sub === 'Other' ? 'Outras' : sub}
               </button>
             ))}
           </div>
@@ -1728,9 +1774,9 @@ const ProductsSection = ({ showToast }) => {
                     <option value="Streetwear">Streetwear</option>
                   </select>
                 </div>
-                {form.mainCategory === 'Soccer' && (
+                 {form.mainCategory === 'Soccer' && (
                   <div style={{ gridColumn: '1 / -1' }}>
-                    <label style={S.label}>Subcategoria Soccer</label>
+                    <label style={S.label}>Subcategoria Soccer (Liga/Coleção)</label>
                     <select 
                       style={S.input} 
                       required 
@@ -1738,10 +1784,19 @@ const ProductsSection = ({ showToast }) => {
                       onChange={e => handleSubCategoryChange(e.target.value)}
                     >
                       <option value="">Selecionar...</option>
-                      <option value="Brasileirão">Brasileirão</option>
-                      <option value="Seleções">Seleções</option>
-                      <option value="Internacionais">Internacionais</option>
-                      <option value="Retrô">Retrô</option>
+                      <option value="Argentine League">Argentine League</option>
+                      <option value="Brazilian League">Brazilian League</option>
+                      <option value="Bundesliga">Bundesliga</option>
+                      <option value="La Liga">La Liga</option>
+                      <option value="Ligue 1">Ligue 1</option>
+                      <option value="MLS">MLS</option>
+                      <option value="National Teams">National Teams</option>
+                      <option value="New Arrivals">New Arrivals</option>
+                      <option value="Premier League">Premier League</option>
+                      <option value="Retro Collection">Retro Collection</option>
+                      <option value="Saudi Pro League">Saudi Pro League</option>
+                      <option value="Serie A">Serie A</option>
+                      <option value="Other Leagues">Other Leagues</option>
                     </select>
                   </div>
                 )}

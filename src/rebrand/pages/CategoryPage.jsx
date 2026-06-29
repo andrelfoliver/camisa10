@@ -47,7 +47,9 @@ const ProductCard = ({ product, onAdd, onQuickView }) => {
             {product.badge}
           </span>
         )}
-        <img src={product.image} alt={product.name} className="rebrand-product-img" />
+        <Link to={`/rebrand/produto/${product.id}`}>
+          <img src={product.image} alt={product.name} className="rebrand-product-img" />
+        </Link>
         
         {/* Hover Actions */}
         <div className="rebrand-product-actions">
@@ -110,11 +112,12 @@ const CategoryPage = () => {
 
   // Estados dos Accordions de Filtro (Section Toggles)
   const [sections, setSections] = useState({
-    department: true,
-    gender: true,
-    players: true,
-    size: true,
-    price: true
+    department: false,
+    league: true,
+    gender: false,
+    players: false,
+    size: false,
+    price: false
   });
 
   const toggleSection = (sec) => {
@@ -125,6 +128,7 @@ const CategoryPage = () => {
   const [selectedSize, setSelectedSize] = useState('All');
   const [selectedPrice, setSelectedPrice] = useState('All');
   const [selectedGender, setSelectedGender] = useState('All');
+  const [selectedLeague, setSelectedLeague] = useState('All');
 
   useEffect(() => {
     async function loadCategoryProducts() {
@@ -145,6 +149,10 @@ const CategoryPage = () => {
               price: p.price || 89.90,
               oldPrice: idx % 2 === 0 ? (p.price || 89.90) + 30.00 : null,
               category: 'Soccer',
+              dbCategory: p.category,
+              version: p.version,
+              is_new: p.is_new,
+              league: p.league || p.category || 'Other',
               image: p.image || p.images?.[0] || 'https://images.unsplash.com/photo-1508098682722-e99c43a406b2?w=600',
               rating: p.rating || 4.8,
               reviews: p.reviews_count || 32,
@@ -168,6 +176,32 @@ const CategoryPage = () => {
   }, [category_id]);
 
   const filteredProducts = products.filter(p => {
+    // Filtro de liga
+    if (selectedLeague !== 'All') {
+      const pName = (p.name || '').toLowerCase();
+      const pCat = (p.dbCategory || '').toLowerCase();
+      const pVersion = (p.version || '').toLowerCase();
+      const pLeague = (p.league || '').toLowerCase();
+
+      if (selectedLeague === 'Seleções') {
+        const isSelecao = pCat === 'seleções' || pCat === 'selecoes' || pName.includes('seleção') || pName.includes('selecao') || p.league === 'Seleções' || pName.includes('brasil') || pName.includes('argentina') || pName.includes('portugal') || pName.includes('frança') || pName.includes('itália') || pName.includes('espanha');
+        if (!isSelecao) return false;
+      } else if (selectedLeague === 'Retrô') {
+        const isRetro = pCat === 'retrô' || pCat.includes('retro') || pVersion.includes('retrô') || pName.includes('retrô') || pName.includes('retro');
+        if (!isRetro) return false;
+      } else if (selectedLeague === 'Lançamentos') {
+        const isNew = p.is_new || pCat === 'lançamentos' || pCat.includes('lançament');
+        if (!isNew) return false;
+      } else if (selectedLeague === 'Other') {
+        const mainLeagues = ['Brasileirão', 'Premier League', 'La Liga', 'Serie A', 'Bundesliga', 'Ligue 1', 'MLS', 'Saudi Pro League', 'Liga Profesional'];
+        const isSelecao = pCat === 'seleções' || pCat === 'selecoes' || pName.includes('seleção') || pName.includes('selecao') || p.league === 'Seleções' || pName.includes('brasil') || pName.includes('argentina') || pName.includes('portugal') || pName.includes('frança') || pName.includes('itália') || pName.includes('espanha');
+        const isRetro = pCat === 'retrô' || pCat.includes('retro') || pVersion.includes('retrô') || pName.includes('retrô') || pName.includes('retro');
+        if (mainLeagues.includes(p.league) || isSelecao || isRetro) return false;
+      } else {
+        if (p.league !== selectedLeague) return false;
+      }
+    }
+
     // Filtro de gênero/categoria
     if (selectedGender !== 'All' && Math.random() > 0.7) return false;
     
@@ -249,6 +283,47 @@ const CategoryPage = () => {
                 </div>
               )}
             </div>
+
+            {/* Accordion: League (Soccer category only) */}
+            {category_id.toLowerCase() === 'soccer' && (
+              <div className="rebrand-filter-accordion-item">
+                <button className="rebrand-filter-accordion-header" onClick={() => toggleSection('league')}>
+                  <span>League / Competition</span>
+                  {sections.league ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
+                </button>
+                {sections.league && (
+                  <div className="rebrand-filter-accordion-content">
+                    {[
+                      { label: 'All Leagues', val: 'All' },
+                      { label: 'Argentine League', val: 'Liga Profesional' },
+                      { label: 'Brazilian League', val: 'Brasileirão' },
+                      { label: 'Bundesliga', val: 'Bundesliga' },
+                      { label: 'La Liga', val: 'La Liga' },
+                      { label: 'Ligue 1', val: 'Ligue 1' },
+                      { label: 'MLS', val: 'MLS' },
+                      { label: 'National Teams', val: 'Seleções' },
+                      { label: 'New Arrivals', val: 'Lançamentos' },
+                      { label: 'Premier League', val: 'Premier League' },
+                      { label: 'Retro Collection', val: 'Retrô' },
+                      { label: 'Saudi Pro League', val: 'Saudi Pro League' },
+                      { label: 'Serie A', val: 'Serie A' },
+                      { label: 'Other Leagues', val: 'Other' }
+                    ].map(league => (
+                      <label key={league.val} style={{ display: 'flex', alignItems: 'center', gap: '0.8rem', cursor: 'pointer', fontSize: '0.85rem', fontWeight: 500 }}>
+                        <input 
+                          type="radio" 
+                          name="leagueFilter" 
+                          checked={selectedLeague === league.val}
+                          onChange={() => setSelectedLeague(league.val)}
+                          style={{ accentColor: '#000000', width: '16px', height: '16px' }} 
+                        />
+                        <span>{league.label}</span>
+                      </label>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
 
             {/* Accordion: Gender / Age */}
             <div className="rebrand-filter-accordion-item">
