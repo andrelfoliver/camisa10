@@ -19,3 +19,8 @@ WHERE id = 1382;
 --    (Permite salvar a lista de desejos de cada usuário)
 ALTER TABLE profiles 
   ADD COLUMN IF NOT EXISTS wishlist JSONB DEFAULT '[]'::jsonb;
+
+-- 4. Adicionar coluna 'is_trending' na tabela products
+--    (Permite marcar produtos para exibição na seção Trending Fan Gear)
+ALTER TABLE products 
+  ADD COLUMN IF NOT EXISTS is_trending BOOLEAN DEFAULT false;

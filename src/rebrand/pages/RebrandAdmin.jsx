@@ -1531,6 +1531,7 @@ const ProductsSection = ({ showToast }) => {
       is_new: product.is_new || false,
       is_bestseller: product.is_bestseller || false,
       is_sale: product.is_sale || false,
+      is_trending: product.is_trending || false,
       image: product.image || '',
       gallery: product.gallery || [],
       description: product.description || '',
@@ -1622,6 +1623,7 @@ const ProductsSection = ({ showToast }) => {
       is_new: form.is_new || form.subCategory === 'New Arrivals',
       is_bestseller: !!form.is_bestseller,
       is_sale: !!form.is_sale,
+      is_trending: !!form.is_trending,
       image: imageUrl,
       gallery: form.gallery || [],
       description: form.description,
@@ -1903,6 +1905,16 @@ const ProductsSection = ({ showToast }) => {
                       style={{ cursor: 'pointer' }}
                     />
                     🏷️ Promoção (On Sale)
+                  </label>
+
+                  <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer', fontSize: '0.85rem' }}>
+                    <input 
+                      type="checkbox" 
+                      checked={!!form.is_trending} 
+                      onChange={e => setForm({ ...form, is_trending: e.target.checked })} 
+                      style={{ cursor: 'pointer' }}
+                    />
+                    ⚡ Trending Fan Gear
                   </label>
                 </div>
                 <div style={{ gridColumn: '1 / -1' }}>

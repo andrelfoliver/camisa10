@@ -136,23 +136,59 @@ const Home = () => {
   useEffect(() => {
     async function loadProducts() {
       try {
+        let salesRanking = {};
+        try {
+          const { data: settingsData } = await supabase
+            .from('store_settings')
+            .select('value')
+            .eq('key', 'product_sales_ranking')
+            .single();
+          if (settingsData && settingsData.value) {
+            salesRanking = typeof settingsData.value === 'string' 
+              ? JSON.parse(settingsData.value) 
+              : settingsData.value;
+          }
+        } catch (e) {
+          console.error("Failed to load sales ranking settings:", e);
+        }
+
         const { data, error } = await supabase
           .from('products')
           .select('*')
-          .limit(4);
+          .order('id', { ascending: false });
+
         if (data) {
-          const formatted = data.map((p, idx) => ({
-            id: p.id,
-            name: p.name,
-            price: p.price || 89.90,
-            oldPrice: idx % 2 === 0 ? (p.price || 89.90) + 20.00 : null,
-            category: 'Soccer',
-            image: p.image || p.images?.[0] || 'https://images.unsplash.com/photo-1508098682722-e99c43a406b2?w=600',
-            rating: p.rating || 4.8,
-            reviews: p.reviews_count || 32,
-            colors: ['#000000', '#ffffff', '#e31837'],
-            badge: idx % 2 === 0 ? 'Almost Gone' : ''
-          }));
+          const formatted = data.map((p, idx) => {
+            const salesCount = salesRanking[p.id] || 0;
+            const isBestseller = p.is_bestseller || salesCount > 0;
+            const isBasketball = p.category === 'NBA' || p.category === 'Basketball';
+            const isFootball = p.category === 'NFL' || p.category === 'Football';
+            const isBaseball = p.category === 'MLB' || p.category === 'Baseball';
+            const isHockey = p.category === 'NHL' || p.category === 'Hockey';
+            
+            let displayCategory = 'Soccer';
+            if (isBasketball) displayCategory = 'Basketball';
+            else if (isFootball) displayCategory = 'Football';
+            else if (isBaseball) displayCategory = 'Baseball';
+            else if (isHockey) displayCategory = 'Hockey';
+
+            return {
+              id: p.id,
+              name: p.name,
+              price: p.price || 89.90,
+              oldPrice: p.is_sale ? (p.price || 89.90) + 30.00 : null,
+              category: displayCategory,
+              dbCategory: p.category,
+              image: p.image || p.images?.[0] || 'https://images.unsplash.com/photo-1508098682722-e99c43a406b2?w=600',
+              rating: p.rating || 4.8,
+              reviews: p.reviews_count || 32,
+              colors: ['#000000', '#ffffff', '#e31837'],
+              badge: isBestseller ? 'Best Seller' : (p.is_sale ? 'Sale' : (p.is_new ? 'New Arrival' : '')),
+              salesCount: salesCount,
+              is_bestseller: isBestseller,
+              is_trending: p.is_trending || false
+            };
+          });
           setDbProducts(formatted);
         }
       } catch (err) {
@@ -164,11 +200,16 @@ const Home = () => {
     loadProducts();
   }, []);
 
-  const allProducts = [...MOCK_PRODUCTS, ...dbProducts];
-  
-  const filteredProducts = activeTab === 'all' 
-    ? allProducts 
-    : allProducts.filter(p => p.category.toLowerCase() === activeTab.toLowerCase());
+  const getTrendingProducts = () => {
+    if (activeTab === 'all') {
+      return dbProducts.filter(p => p.is_trending).slice(0, 6);
+    }
+    return dbProducts
+      .filter(p => p.is_trending && p.category.toLowerCase() === activeTab.toLowerCase())
+      .slice(0, 6);
+  };
+
+  const filteredProducts = getTrendingProducts();
 
   const sportsCategories = [
     { name: 'Soccer', img: '/assets/rebrand/real_madrid.jpg', link: 'soccer', bgSize: 'auto 100%', bgPos: 'center top' },
@@ -448,81 +489,88 @@ const Home = () => {
         </div>
 
         {/* Products Grid */}
-        <div className="rebrand-products-grid">
-          {filteredProducts.map((product) => {
-            const hasColors = product.colors && product.colors.length > 0;
-            return (
-              <div key={product.id} className="rebrand-product-card">
-                <div className="rebrand-product-img-wrapper">
-                  {product.badge && (
-                    <span className={product.badge.toLowerCase().includes('almost') ? "rebrand-product-badge-red" : "rebrand-product-badge"}>
-                      {product.badge}
-                    </span>
-                  )}
-                  <img src={product.image} alt={product.name} className="rebrand-product-img" />
-                  
-                  {/* Hover Actions */}
-                  <div className="rebrand-product-actions">
-                    <button 
-                      onClick={() => {
-                        addToCart({
-                          id: product.id,
-                          name: product.name,
-                          price: product.price,
-                          image: product.image
-                        }, 'M');
-                      }} 
-                      className="rebrand-product-btn-quick"
-                    >
-                      <ShoppingBag size={14} style={{ marginRight: '0.4rem' }} /> Add to Cart
-                    </button>
-                    <button 
-                      onClick={() => navigate(`/rebrand/produto/${product.id}`)}
-                      style={{
-                        background: 'rgba(255,255,255,0.9)',
-                        border: 'none',
-                        padding: '0.7rem',
-                        cursor: 'pointer',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        color: 'var(--rebrand-text-main)'
-                      }}
-                    >
-                      <Eye size={16} />
-                    </button>
-                  </div>
-                </div>
-
-                <div className="rebrand-product-info">
-                  <span className="rebrand-product-category">{product.category}</span>
-                  
-                  <Link to={`/rebrand/produto/${product.id}`} style={{ textDecoration: 'none' }}>
-                    <h4 className="rebrand-product-title">{formatProductName(product.name)}</h4>
-                  </Link>
-
-                  <div className="rebrand-product-price-row">
-                    <div className="rebrand-price-container">
-                      <span className="rebrand-product-price ${product.oldPrice ? 'rebrand-price-sale' : ''}">
-                        ${product.price.toFixed(2)} CAD
+        {filteredProducts.length === 0 ? (
+          <div style={{ textAlign: 'center', padding: '4rem 1rem', border: '1px dashed var(--rebrand-border)', borderRadius: '10px', color: 'var(--rebrand-text-muted)' }}>
+            <p style={{ margin: 0, fontWeight: 600, fontSize: '0.95rem' }}>No products marked as trending yet.</p>
+            <p style={{ margin: '0.25rem 0 0 0', fontSize: '0.85rem' }}>Configure trending products in the admin panel to show them here.</p>
+          </div>
+        ) : (
+          <div className="rebrand-products-grid">
+            {filteredProducts.map((product) => {
+              const hasColors = product.colors && product.colors.length > 0;
+              return (
+                <div key={product.id} className="rebrand-product-card">
+                  <div className="rebrand-product-img-wrapper">
+                    {product.badge && (
+                      <span className={product.badge.toLowerCase().includes('almost') ? "rebrand-product-badge-red" : "rebrand-product-badge"}>
+                        {product.badge}
                       </span>
-                      {product.oldPrice && (
-                        <span className="rebrand-price-old">${product.oldPrice.toFixed(2)}</span>
-                      )}
+                    )}
+                    <img src={product.image} alt={product.name} className="rebrand-product-img" />
+                    
+                    {/* Hover Actions */}
+                    <div className="rebrand-product-actions">
+                      <button 
+                        onClick={() => {
+                          addToCart({
+                            id: product.id,
+                            name: product.name,
+                            price: product.price,
+                            image: product.image
+                          }, 'M');
+                        }} 
+                        className="rebrand-product-btn-quick"
+                      >
+                        <ShoppingBag size={14} style={{ marginRight: '0.4rem' }} /> Add to Cart
+                      </button>
+                      <button 
+                        onClick={() => navigate(`/rebrand/produto/${product.id}`)}
+                        style={{
+                          background: 'rgba(255,255,255,0.9)',
+                          border: 'none',
+                          padding: '0.7rem',
+                          cursor: 'pointer',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          color: 'var(--rebrand-text-main)'
+                        }}
+                      >
+                        <Eye size={16} />
+                      </button>
                     </div>
-                    <span className="rebrand-product-rating">
-                      <Star size={13} fill="#FFB100" color="#FFB100" /> {product.rating}
-                    </span>
                   </div>
 
-                  <span style={{ fontSize: '0.65rem', color: '#2b8a3e', fontWeight: 800, marginTop: '0.4rem', display: 'block', textTransform: 'uppercase' }}>
-                    ✓ Free Shipping Eligible
-                  </span>
+                  <div className="rebrand-product-info">
+                    <span className="rebrand-product-category">{product.category}</span>
+                    
+                    <Link to={`/rebrand/produto/${product.id}`} style={{ textDecoration: 'none' }}>
+                      <h4 className="rebrand-product-title">{formatProductName(product.name)}</h4>
+                    </Link>
+
+                    <div className="rebrand-product-price-row">
+                      <div className="rebrand-price-container">
+                        <span className="rebrand-product-price ${product.oldPrice ? 'rebrand-price-sale' : ''}">
+                          ${product.price.toFixed(2)} CAD
+                        </span>
+                        {product.oldPrice && (
+                          <span className="rebrand-price-old">${product.oldPrice.toFixed(2)}</span>
+                        )}
+                      </div>
+                      <span className="rebrand-product-rating">
+                        <Star size={13} fill="#FFB100" color="#FFB100" /> {product.rating}
+                      </span>
+                    </div>
+
+                    <span style={{ fontSize: '0.65rem', color: '#2b8a3e', fontWeight: 800, marginTop: '0.4rem', display: 'block', textTransform: 'uppercase' }}>
+                      ✓ Free Shipping Eligible
+                    </span>
+                  </div>
                 </div>
-              </div>
-            );
-          })}
-        </div>
+              );
+            })}
+          </div>
+        )}
       </section>
 
       {/* 6. TRENDING TEAMS CAROUSEL */}
