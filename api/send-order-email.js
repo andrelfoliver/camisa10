@@ -325,7 +325,7 @@ export default async function handler(req, res) {
 
     // --- EMAIL 1.5: ADICIONAL PAYPAL/STRIPE GESTOR --- (enviado quando pago via PayPal ou Stripe)
     let paymentConfirmRes = { data: null, error: null };
-    if (!supplierOnly && (order.payment_method === 'paypal' || order.payment_method === 'stripe')) {
+    if (!supplierOnly && (order.payment_method === 'paypal' || order.payment_method === 'stripe') && order.status === 'paid') {
       try {
         paymentConfirmRes = await resend.emails.send({
           from: 'iFooty Alerts <vendas@ifooty.ca>',
