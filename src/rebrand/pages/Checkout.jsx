@@ -333,7 +333,7 @@ const RebrandCheckout = () => {
         }).eq('id', user.id);
       } catch {}
     }
-    return orderData;
+    return insertedOrders?.[0] || orderData;
   };
 
   const handleSubmitOrder = async () => {
