@@ -7,7 +7,7 @@ export default defineConfig({
   server: {
     proxy: {
       '/api': {
-        target: 'https://camisa10-ca.vercel.app',
+        target: 'https://www.ifooty.ca',
         changeOrigin: true,
         secure: false
       }

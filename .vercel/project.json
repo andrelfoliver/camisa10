@@ -1,1 +1,15 @@
-{"projectId":"prj_1Xu8gcgZ18G2lGtbFjg0f83hitlr","orgId":"team_ldOsrM2hQesEFcWiajlbpr04","projectName":"camisa10-ca"}
+{
+  "projectId": "prj_1Xu8gcgZ18G2lGtbFjg0f83hitlr",
+  "orgId": "team_ldOsrM2hQesEFcWiajlbpr04",
+  "settings": {
+    "createdAt": 1775990102549,
+    "framework": "vite",
+    "devCommand": null,
+    "installCommand": null,
+    "buildCommand": null,
+    "outputDirectory": null,
+    "rootDirectory": null,
+    "directoryListing": false,
+    "nodeVersion": "24.x"
+  }
+}

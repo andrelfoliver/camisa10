@@ -30,8 +30,7 @@ export default async function handler(req, res) {
         price_data: {
           currency: stripeCurrency,
           product_data: {
-            name: `${item.name} (${item.size || 'M'})`,
-            images: item.image ? [item.image.startsWith('http') ? item.image : `https://ifooty.ca${item.image}`] : []
+            name: `${item.name} (${item.size || 'M'})`
           },
           unit_amount: Math.max(1, Math.round(unitPrice * 100))
         },
