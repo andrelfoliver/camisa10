@@ -64,8 +64,12 @@ const RebrandCheckout = () => {
 
   const finalTotal = paymentMethod === 'paypal'
     ? Number(((baseFinalTotal + 0.30) / 0.951).toFixed(2))
-    : baseFinalTotal;
+    : paymentMethod === 'stripe'
+      ? Number(((baseFinalTotal + 0.30) / 0.965).toFixed(2))
+      : baseFinalTotal;
   const paypalFee = paymentMethod === 'paypal'
+    ? Number((finalTotal - baseFinalTotal).toFixed(2)) : 0;
+  const stripeFee = paymentMethod === 'stripe'
     ? Number((finalTotal - baseFinalTotal).toFixed(2)) : 0;
 
   const displaySubtotal = convertPrice(subtotal);
@@ -76,8 +80,12 @@ const RebrandCheckout = () => {
   const displayBaseFinalTotal = displaySubtotal - displayDiscount - displayCouponDiscount + displayShipping;
   const displayFinalTotal = paymentMethod === 'paypal'
     ? Number(((displayBaseFinalTotal + 0.30) / 0.951).toFixed(2))
-    : displayBaseFinalTotal;
+    : paymentMethod === 'stripe'
+      ? Number(((displayBaseFinalTotal + 0.30) / 0.965).toFixed(2))
+      : displayBaseFinalTotal;
   const displayPaypalFee = paymentMethod === 'paypal'
+    ? Number((displayFinalTotal - displayBaseFinalTotal).toFixed(2)) : 0;
+  const displayStripeFee = paymentMethod === 'stripe'
     ? Number((displayFinalTotal - displayBaseFinalTotal).toFixed(2)) : 0;
 
   const initialPayPalOptions = useMemo(() => ({
@@ -417,6 +425,7 @@ const RebrandCheckout = () => {
           shippingCost: convertPrice(currentShipping),
           discountPercent: appliedCoupon ? appliedCoupon.discount_percent : 0,
           flatDiscount: convertPrice(discount),
+          stripeFee: convertPrice(stripeFee),
           successUrl: `${window.location.origin}/rebrand/sucesso`,
           cancelUrl: window.location.href
         })
@@ -801,6 +810,11 @@ const RebrandCheckout = () => {
                 {paymentMethod === 'paypal' && (
                   <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.85rem', color: '#b45309', fontWeight: 600 }}>
                     <span>PayPal Fee (4.9% + $0.30)</span><span>+{formatPrice(displayPaypalFee)}</span>
+                  </div>
+                )}
+                {paymentMethod === 'stripe' && (
+                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.85rem', color: '#b45309', fontWeight: 600 }}>
+                    <span>Card Fee (3.5% + $0.30)</span><span>+{formatPrice(displayStripeFee)}</span>
                   </div>
                 )}
               </div>

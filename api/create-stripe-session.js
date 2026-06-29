@@ -7,7 +7,7 @@ export default async function handler(req, res) {
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
-  const { orderId, items, currency = 'CAD', shippingCost = 0, discountPercent = 0, flatDiscount = 0, successUrl, cancelUrl } = req.body;
+  const { orderId, items, currency = 'CAD', shippingCost = 0, stripeFee = 0, discountPercent = 0, flatDiscount = 0, successUrl, cancelUrl } = req.body;
 
   if (!orderId || !items || !items.length || !successUrl || !cancelUrl) {
     return res.status(400).json({ error: 'Missing required parameters.' });
@@ -47,6 +47,20 @@ export default async function handler(req, res) {
             name: 'Shipping / Frete'
           },
           unit_amount: Math.round(Number(shippingCost) * 100)
+        },
+        quantity: 1
+      });
+    }
+
+    // Add Stripe Fee line item if applicable
+    if (Number(stripeFee) > 0) {
+      line_items.push({
+        price_data: {
+          currency: stripeCurrency,
+          product_data: {
+            name: 'Card Processing Fee (3.5% + $0.30)'
+          },
+          unit_amount: Math.round(Number(stripeFee) * 100)
         },
         quantity: 1
       });
