@@ -27,19 +27,15 @@ export default async function handler(req, res) {
         return res.status(400).json({ error: 'No orderId associated with this session' });
       }
 
-      // Update order status in Supabase database
-      const { data, error } = await supabase
-        .from('orders')
-        .update({
-          status: 'paid',
-          payment_id: session.payment_intent,
-          paid_at: new Date().toISOString()
-        })
-        .eq('id', orderId);
+      // Update order status in Supabase database using secure RPC (to bypass RLS safely)
+      const { error } = await supabase.rpc('confirm_stripe_payment', {
+        order_id_input: orderId,
+        payment_intent_input: session.payment_intent
+      });
 
       if (error) {
         console.error('Error updating order in database:', error);
-        return res.status(500).json({ error: `Erro no Banco: ${error.message} (Código: ${error.code})` });
+        return res.status(500).json({ error: `Erro no Banco (RPC): ${error.message} (Código: ${error.code})` });
       }
 
       return res.status(200).json({ success: true, orderId });

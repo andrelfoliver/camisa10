@@ -11,6 +11,7 @@ const Success = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const stripeSessionId = searchParams.get('stripe_session_id');
+  const isRebrand = location.pathname.startsWith('/rebrand');
   
   const { waNumber, paid } = location.state || {};
   const [verifying, setVerifying] = React.useState(!!stripeSessionId);
@@ -88,7 +89,7 @@ const Success = () => {
               <MessageCircle size={24} />
               Falar com Suporte no WhatsApp
             </button>
-            <Link to="/" className="btn-secondary" style={{ width: '100%', justifyContent: 'center', padding: '1rem', textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+            <Link to={isRebrand ? "/rebrand" : "/"} className="btn-secondary" style={{ width: '100%', justifyContent: 'center', padding: '1rem', textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
               <Home size={20} />
               Voltar ao Início
             </Link>
@@ -167,7 +168,7 @@ const Success = () => {
           </div>
 
           <a
-            href="/"
+            href={isRebrand ? "/rebrand" : "/"}
             className="btn-secondary"
             style={{
               width: '100%',
