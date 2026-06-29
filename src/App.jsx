@@ -47,7 +47,7 @@ const AppLayout = () => {
   const { pathname } = useLocation();
   const isAdminPage = pathname.startsWith('/admin') || pathname.startsWith('/rebrand/admin');
   const isRebrandPage = pathname.startsWith('/rebrand') && !pathname.startsWith('/rebrand/admin');
-  const isBlacklisted = ['/checkout', '/auth', '/admin', '/rebrand/admin', '/perfil', '/sucesso'].some(p => pathname.startsWith(p));
+  const isBlacklisted = ['/checkout', '/auth', '/admin', '/rebrand/admin', '/perfil', '/sucesso', '/rebrand/sucesso'].some(p => pathname.startsWith(p));
   const [waNumber, setWaNumber] = useState('17788061419');
 
   // Inicializar o Analytics e capturar UTMs em cada mudança de rota (para garantir captura antes do envio do PageView)
@@ -59,7 +59,7 @@ const AppLayout = () => {
     const isCategoryPath = pathname.startsWith('/colecao/');
 
     // Impedir que telas de processo ou admin sejam salvas como "último local de compra"
-    const blacklist = ['/checkout', '/auth', '/admin', '/rebrand/admin', '/perfil', '/sucesso'];
+    const blacklist = ['/checkout', '/auth', '/admin', '/rebrand/admin', '/perfil', '/sucesso', '/rebrand/sucesso'];
     const isBlacklisted = blacklist.some(p => pathname.startsWith(p));
 
     if ((shoppingPaths.includes(pathname) || isCategoryPath) && !isBlacklisted) {
@@ -120,6 +120,7 @@ const AppLayout = () => {
                   <Route path="checkout" element={<RebrandCheckout />} />
                   <Route path="auth" element={<RebrandAuth />} />
                   <Route path="profile" element={<RebrandProfile />} />
+                  <Route path="sucesso" element={<Success />} />
                 </Route>
               </Routes>
             </RebrandAuthProvider>

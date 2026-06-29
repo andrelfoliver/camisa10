@@ -345,7 +345,7 @@ const RebrandCheckout = () => {
       await clearCart();
       const encodedMessage = encodeURIComponent(message);
       window.open(`https://wa.me/${String(waNumber).replace(/\D/g, '')}?text=${encodedMessage}`, '_blank');
-      navigate('/sucesso', { state: { orderMessage: message, waNumber } });
+      navigate('/rebrand/sucesso', { state: { orderMessage: message, waNumber } });
     } catch (error) {
       showPopup(`Error: ${error.message}`);
     } finally { setIsSubmitting(false); }
@@ -388,7 +388,7 @@ const RebrandCheckout = () => {
     try {
       await saveOrderToDatabase(details);
       await clearCart();
-      navigate('/sucesso', { state: { paid: true } });
+      navigate('/rebrand/sucesso', { state: { paid: true } });
     } catch { showPopup('Error saving order. Please contact us on WhatsApp.'); }
     finally { setIsSubmitting(false); }
   };
@@ -416,7 +416,7 @@ const RebrandCheckout = () => {
           shippingCost: convertPrice(currentShipping),
           discountPercent: appliedCoupon ? appliedCoupon.discount_percent : 0,
           flatDiscount: convertPrice(discount),
-          successUrl: `${window.location.origin}/sucesso`,
+          successUrl: `${window.location.origin}/rebrand/sucesso`,
           cancelUrl: window.location.href
         })
       });
