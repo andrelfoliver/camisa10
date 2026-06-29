@@ -55,7 +55,9 @@ const chatbotTranslations = {
 export default function AiChatbot() {
   const navigate = useNavigate();
   const { language } = useLanguage();
-  const ct = chatbotTranslations[language] || chatbotTranslations.pt;
+  const isRebrand = window.location.pathname.startsWith('/rebrand');
+  const activeLang = isRebrand ? 'en' : language;
+  const ct = chatbotTranslations[activeLang] || chatbotTranslations.pt;
   const [isOpen, setIsOpen] = useState(false);
   const [input, setInput] = useState('');
   const [messages, setMessages] = useState([]);
@@ -189,10 +191,10 @@ Posso te ajudar com:
       try {
         setMessages(JSON.parse(savedChat));
       } catch (e) {
-        setMessages(getInitialMessages(name, language));
+        setMessages(getInitialMessages(name, activeLang));
       }
     } else {
-      setMessages(getInitialMessages(name, language));
+      setMessages(getInitialMessages(name, activeLang));
     }
 
     const fetchWhatsapp = async () => {
@@ -217,17 +219,17 @@ Posso te ajudar com:
     }, 8000);
 
     return () => clearTimeout(timer);
-  }, []);
+  }, [activeLang]);
 
   // Translate initial/welcome messages if they are the default ones when language changes
   useEffect(() => {
     if (messages.length > 0) {
-      const updatedMessages = translateInitialMessages(messages, userName, language);
+      const updatedMessages = translateInitialMessages(messages, userName, activeLang);
       if (JSON.stringify(updatedMessages) !== JSON.stringify(messages)) {
         saveMessages(updatedMessages);
       }
     }
-  }, [language]);
+  }, [activeLang]);
 
   // Save messages to sessionStorage
   const saveMessages = (updatedMessages) => {
@@ -325,16 +327,16 @@ Posso te ajudar com:
       .filter(m => m.content && !m.content.includes("Como posso te chamar?") && !m.content.includes("How can I call you?"))
       .slice(-5);
 
-    let intro = language === 'en'
+    let intro = activeLang === 'en'
       ? `Hello, my name is ${userName || 'Visitor'}. I was chatting with iFooty's AI and would like to speak with support.\n\n`
       : `Olá, meu nome é ${userName || 'Visitante'}. Estava conversando com a IA da iFooty e gostaria de falar com o suporte.\n\n`;
     
     let historyText = '';
     if (chatHistory.length > 0) {
-      historyText = language === 'en' ? `*Chat history:*\n` : `*Histórico da conversa:*\n`;
+      historyText = activeLang === 'en' ? `*Chat history:*\n` : `*Histórico da conversa:*\n`;
       chatHistory.forEach(m => {
         const sender = m.role === 'user'
-          ? (language === 'en' ? 'Client' : 'Cliente')
+          ? (activeLang === 'en' ? 'Client' : 'Cliente')
           : 'IA';
         let cleanContent = m.content
           .replace(/\*\*(.*?)\*\*/g, '$1')
@@ -369,7 +371,7 @@ Posso te ajudar com:
         /rastrear|rastreio|pedido|tamanho|frete|camisa|quanto|preço|preco|onde|como|quais|comprar|pagar|pagamento|track|order|size|shipping|delivery|price|payment|how|where|what/i.test(text);
 
       if (isQuestionOrLongText) {
-        activeName = language === 'en' ? 'Visitor' : 'Visitante';
+        activeName = activeLang === 'en' ? 'Visitor' : 'Visitante';
         sessionStorage.setItem('ifooty_ai_chat_user_name', activeName);
         setUserName(activeName);
       } else {
@@ -380,16 +382,16 @@ Posso te ajudar com:
         const userMsg = { role: 'user', content: name };
         const welcomeMsg = {
           role: 'assistant',
-          content: language === 'en'
+          content: activeLang === 'en'
             ? `Nice to meet you, **${name}**! 🤝 How can I help you today?
-
+ 
 I can help you with:
 - 📐 **Calculate your ideal size** (just type your height and weight)
 - 🚚 **Delivery times and shipping**
 - 💳 **Payment methods in Canada and USA**
 - 👕 **Find the coolest jerseys in the store!**`
             : `Prazer em te conhecer, **${name}**! 🤝 Como posso te ajudar hoje?
-
+ 
 Posso te ajudar com:
 - 📐 **Calcular seu tamanho ideal** (basta digitar sua altura e peso)
 - 🚚 **Prazos de entrega e frete**
@@ -415,7 +417,7 @@ Posso te ajudar com:
         messages: newMessages.map(m => ({ role: m.role, content: m.content })),
         sessionId,
         userName: activeName,
-        language
+        language: activeLang
       });
 
       if (response.data && response.data.reply) {
@@ -535,7 +537,7 @@ Posso te ajudar com:
             e.currentTarget.style.transform = 'scale(1) translateY(0)';
             e.currentTarget.style.boxShadow = '0 8px 25px rgba(0, 0, 0, 0.6), 0 0 15px var(--accent-glow)';
           }}
-          title={language === 'en' ? 'Mister Oliver - AI Assistant' : 'Mister Oliver - Assistente de IA'}
+          title={activeLang === 'en' ? 'Mister Oliver - AI Assistant' : 'Mister Oliver - Assistente de IA'}
         >
           <img 
             src="/avatar-ifooty-ai.png" 
@@ -639,7 +641,7 @@ Posso te ajudar com:
                     setSessionId(newId);
                     setUserName('');
                     
-                    const initialMsgs = getInitialMessages('', language);
+                    const initialMsgs = getInitialMessages('', activeLang);
                     setMessages(initialMsgs);
                     setShowConfirmReset(false);
                   }}

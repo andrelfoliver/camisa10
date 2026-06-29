@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { supabaseRebrand as supabase } from '../../services/supabase';
-import { ArrowRight, Star, ShoppingBag, Eye, ShieldCheck, Truck, RefreshCw, BadgeAlert, Check } from 'lucide-react';
+import { ArrowRight, Star, ShoppingBag, Eye, ShieldCheck, Truck, RefreshCw, BadgeAlert, Check, ChevronLeft, ChevronRight } from 'lucide-react';
 import { useCart } from '../../context/CartContext';
 import { formatProductName } from '../utils/format';
 
@@ -96,14 +96,90 @@ const CAROUSEL_SLIDES = [
   }
 ];
 
+const TESTIMONIAL_TRANSLATIONS = {
+  'd6223893-7227-40c3-947d-11f96921ae06': 'Wonderful service, friendliness, perfect support, and most importantly: the quality jersey, gorgeous, in perfect condition! More than satisfied! Thank you so much!!',
+  '4cd53ea6-8c6c-4ccb-926a-47f0f965365f': 'I bought the Brazil national team 2026 fan jersey! Great quality and wonderful delivery service and support!  ',
+  '8621ceeb-e57c-4623-923b-9ca53c2e09d9': '10/10 service and support! Had issues with Canada Post but iFooty was always helping out',
+  'c42b0670-7ddc-4f1b-aa16-5f1f566ccfdf': 'Excellent service, help with choosing size, fast replies, and follow-up from beginning to end. The jersey is beautiful! I chose the blue Brazil team one size L, I am 1.70m and 70kg. If you prefer it slightly looser, choose one size up from what you normally wear for this model. The fit is great and the quality is very good! Recommended and would buy again! :)',
+  '1d9377f8-c8d4-483f-ad3d-03fd509f21bc': 'Impeccable service, product of the highest quality, congratulations on the professionalism, highly recommend.',
+  '8af20883-0fda-4ab4-bbf9-0728df655c82': 'Great service, arrived super fast, and the jerseys are of excellent quality. I will definitely order more times and have already recommended it to several friends.',
+  'afddf8e2-cba3-4ab9-95de-d9cc4f8bc7ad': 'I bought the Flamengo one and was impressed with the quality! Andre always replies quickly. I already ordered two more since then. Truly personalized service!',
+  '3cd2b279-a8d1-4d99-b4de-64e214ecc314': 'Excellent service, the jersey arrived on time, good material, highly recommended!!',
+  '4466d176-24fa-4b6e-beb5-20b7de3d9832': 'I ordered the Brazil jersey on Monday and André delivered it to me the same day. Beautiful yellow jersey, excellent material.',
+  'bc3752ac-06c3-4985-afbc-00e236468124': 'I bought the yellow national team jersey for my husband for his birthday. The jersey was very well packaged, authentic feeling, and arrived right on time. He loved the gift and already wore it to watch the friendlies.',
+  '61523a73-de03-4b2c-9145-1e32944bd4ae': 'I am from FlaVancouver! I ordered the home and a retro one. What beautiful jerseys, man! Premium quality indeed, fast delivery.',
+  'af06103b-7539-4065-b263-562c56bce71d': 'The national team blue away jersey looks beautiful! Top-quality material, perfect stitching. They helped me choose the size and nailed it. 10/10!',
+  'c27f242e-dad0-477a-b9cc-23fbc100eafa': 'I have already bought about 5 Palmeiras jerseys here - home, away, retro... All impeccable! Best jersey store in Canada without a doubt. Always fast delivery!',
+  'bcd87307-07e4-491a-bcdd-73fbd2977793': 'The Real Madrid jersey for my brother turned out so beautiful! Payment by E-Transfer is super convenient. Already looking at what my next one will be, haha',
+  '39605814-2aac-44e6-8a4e-ec913f8251f7': 'I bought the Palmeiras one (my favorite team) and the quality really surprised me! Top-notch material, impeccable stitching. After that, I have already placed 3 more orders. Extremely trustworthy!',
+  '4a2931bc-fe9f-42bd-bf89-0cf42dbab9ba': 'I received my order 😍 great quality, highly recommend!',
+  'ebf63b5a-2098-4cef-9f21-a5c33d014129': 'Ordered Brazil jerseys for the whole family to watch the Copa America games. André replied super fast; one size came wrong but he quickly exchanged it. Thanks.',
+  'f9a99182-37bc-4ec2-a9ed-86913fdc6ff4': 'Excellent customer service, they were super helpful! The jerseys are great and of high quality, we will definitely buy more!'
+};
+
 const Home = () => {
   const navigate = useNavigate();
   const { addToCart } = useCart();
   const [dbProducts, setDbProducts] = useState([]);
+  const [testimonials, setTestimonials] = useState([]);
+  const [showEnglish, setShowEnglish] = useState({});
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('all');
   const [activeSlide, setActiveSlide] = useState(0);
   const [carouselSlides, setCarouselSlides] = useState(CAROUSEL_SLIDES);
+
+  const toggleTranslation = (id) => {
+    setShowEnglish(prev => ({ ...prev, [id]: !prev[id] }));
+  };
+
+  const handleTestimonialNext = () => {
+    const el = document.getElementById('testimonials-scroll');
+    if (!el) return;
+    const card = el.children[0];
+    if (!card) return;
+    const cardWidth = card.getBoundingClientRect().width + 32; // card width + gap (2rem = 32px)
+    
+    // Check if we are at the end of the scroll (with a 15px threshold to account for rounding)
+    const isAtEnd = el.scrollLeft + el.clientWidth >= el.scrollWidth - 15;
+    if (isAtEnd) {
+      el.scrollTo({ left: 0, behavior: 'smooth' });
+    } else {
+      el.scrollBy({ left: cardWidth, behavior: 'smooth' });
+    }
+  };
+
+  const handleTestimonialPrev = () => {
+    const el = document.getElementById('testimonials-scroll');
+    if (!el) return;
+    const card = el.children[0];
+    if (!card) return;
+    const cardWidth = card.getBoundingClientRect().width + 32;
+    
+    const isAtStart = el.scrollLeft <= 15;
+    if (isAtStart) {
+      el.scrollTo({ left: el.scrollWidth, behavior: 'smooth' });
+    } else {
+      el.scrollBy({ left: -cardWidth, behavior: 'smooth' });
+    }
+  };
+
+  useEffect(() => {
+    async function loadTestimonials() {
+      try {
+        const { data } = await supabase
+          .from('testimonials')
+          .select('*')
+          .eq('status', 'approved')
+          .order('id', { ascending: false });
+        if (data) {
+          setTestimonials(data);
+        }
+      } catch (err) {
+        console.error("Error loading testimonials:", err);
+      }
+    }
+    loadTestimonials();
+  }, []);
 
   useEffect(() => {
     const timer = setInterval(() => {
@@ -419,7 +495,13 @@ const Home = () => {
                             {product.badge}
                           </span>
                         )}
-                        <img src={product.image} alt={product.name} className="rebrand-product-img" />
+                        <img 
+                          src={product.image} 
+                          alt={product.name} 
+                          className="rebrand-product-img" 
+                          onClick={() => navigate(`/rebrand/produto/${product.id}`)}
+                          style={{ cursor: 'pointer' }}
+                        />
                         
                         <div className="rebrand-product-actions">
                           <button 
@@ -506,7 +588,13 @@ const Home = () => {
                         {product.badge}
                       </span>
                     )}
-                    <img src={product.image} alt={product.name} className="rebrand-product-img" />
+                    <img 
+                      src={product.image} 
+                      alt={product.name} 
+                      className="rebrand-product-img" 
+                      onClick={() => navigate(`/rebrand/produto/${product.id}`)}
+                      style={{ cursor: 'pointer' }}
+                    />
                     
                     {/* Hover Actions */}
                     <div className="rebrand-product-actions">
@@ -596,6 +684,157 @@ const Home = () => {
           </div>
         </div>
       </section>
+
+      {/* 7. CLIENT TESTIMONIALS (SOCIAL PROOF) */}
+      {testimonials.length > 0 && (
+        <section className="rebrand-section container" style={{ maxWidth: '1400px', margin: '4rem auto 2rem auto', padding: '0 1.5rem' }}>
+          <style>{`
+            .testimonials-card-responsive {
+              flex: 0 0 100% !important;
+            }
+            @media (min-width: 768px) {
+              .testimonials-card-responsive {
+                flex: 0 0 calc(50% - 1rem) !important;
+              }
+            }
+            @media (min-width: 1024px) {
+              .testimonials-card-responsive {
+                flex: 0 0 calc(33.333% - 1.333rem) !important;
+              }
+            }
+          `}</style>
+          
+          <div className="rebrand-section-header" style={{ marginBottom: '2.5rem', textAlign: 'center' }}>
+            <h2 className="rebrand-section-title" style={{ fontSize: '2.2rem', marginBottom: '0.5rem' }}>What Our Customers Say</h2>
+            <p style={{ color: 'var(--rebrand-text-muted)', fontSize: '0.9rem', marginTop: '0.25rem' }}>Real feedback from sports fans across Canada</p>
+          </div>
+
+          <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
+            <button 
+              onClick={handleTestimonialPrev}
+              style={{
+                position: 'absolute',
+                left: '-1.2rem',
+                zIndex: 10,
+                background: '#ffffff',
+                border: '1px solid var(--rebrand-border)',
+                borderRadius: '50%',
+                width: '40px',
+                height: '40px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                cursor: 'pointer',
+                boxShadow: '0 4px 10px rgba(0,0,0,0.1)'
+              }}
+              aria-label="Previous testimonials"
+            >
+              <ChevronLeft size={20} />
+            </button>
+
+            <div 
+              id="testimonials-scroll"
+              style={{ 
+                display: 'flex', 
+                gap: '2rem', 
+                overflowX: 'auto', 
+                scrollSnapType: 'x mandatory', 
+                scrollbarWidth: 'none', 
+                msOverflowStyle: 'none',
+                padding: '0.5rem 0.2rem',
+                width: '100%'
+              }}
+            >
+              {testimonials.map((t) => (
+                <div 
+                  key={t.id} 
+                  style={{ 
+                    background: '#ffffff', 
+                    border: '1px solid var(--rebrand-border)', 
+                    borderRadius: '10px', 
+                    padding: '2rem', 
+                    display: 'flex', 
+                    flexDirection: 'column', 
+                    justifyContent: 'space-between', 
+                    minHeight: '220px', 
+                    transition: 'box-shadow .2s',
+                    boxSizing: 'border-box',
+                    scrollSnapAlign: 'start'
+                  }} 
+                  className="interactive-card testimonials-card-responsive"
+                >
+                  <div>
+                    <div style={{ display: 'flex', gap: '0.2rem', marginBottom: '1rem', color: '#FFB100' }}>
+                      {Array.from({ length: t.rating || 5 }).map((_, idx) => (
+                        <Star key={idx} size={15} fill="currentColor" color="currentColor" />
+                      ))}
+                    </div>
+                    <p style={{ fontStyle: 'italic', color: 'var(--rebrand-text-main)', fontSize: '0.92rem', lineHeight: '1.6', margin: 0 }}>
+                      "{showEnglish[t.id] ? TESTIMONIAL_TRANSLATIONS[t.id] : t.content}"
+                    </p>
+                    {TESTIMONIAL_TRANSLATIONS[t.id] && (
+                      <button 
+                        onClick={() => toggleTranslation(t.id)}
+                        style={{
+                          background: 'none',
+                          border: 'none',
+                          color: 'var(--rebrand-text-muted)',
+                          fontSize: '0.75rem',
+                          fontWeight: 700,
+                          cursor: 'pointer',
+                          padding: 0,
+                          marginTop: '0.5rem',
+                          textDecoration: 'underline',
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '0.2rem'
+                        }}
+                      >
+                        {showEnglish[t.id] ? 'Show Original' : 'Translate to English'}
+                      </button>
+                    )}
+                  </div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginTop: '1.5rem', borderTop: '1px solid #f3f4f6', paddingTop: '1rem' }}>
+                    {t.avatar_url ? (
+                      <img src={t.avatar_url} alt={t.name} style={{ width: '38px', height: '38px', borderRadius: '50%', objectFit: 'cover' }} />
+                    ) : (
+                      <div style={{ width: '38px', height: '38px', borderRadius: '50%', background: '#f3f4f6', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, fontSize: '0.85rem', color: '#121416' }}>
+                        {t.name ? t.name[0].toUpperCase() : 'U'}
+                      </div>
+                    )}
+                    <div>
+                      <h5 style={{ margin: 0, fontWeight: 700, fontSize: '0.85rem', color: '#121416' }}>{t.name}</h5>
+                      <span style={{ fontSize: '0.7rem', color: 'var(--rebrand-text-muted)', fontWeight: 600 }}>{t.location || 'Verified Buyer'}</span>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            <button 
+              onClick={handleTestimonialNext}
+              style={{
+                position: 'absolute',
+                right: '-1.2rem',
+                zIndex: 10,
+                background: '#ffffff',
+                border: '1px solid var(--rebrand-border)',
+                borderRadius: '50%',
+                width: '40px',
+                height: '40px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                cursor: 'pointer',
+                boxShadow: '0 4px 10px rgba(0,0,0,0.1)'
+              }}
+              aria-label="Next testimonials"
+            >
+              <ChevronRight size={20} />
+            </button>
+          </div>
+        </section>
+      )}
 
     </div>
   );
