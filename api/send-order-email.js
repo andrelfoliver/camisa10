@@ -15,17 +15,19 @@ export default async function handler(req, res) {
   }
 
   // --- DICIONÁRIO DE TRADUÇÃO PARA E-MAILS (CLIENTE) ---
+  const isPaidOnline = order.payment_method === 'paypal' || order.payment_method === 'stripe';
+
   const emailLocales = {
     pt: {
-      customerSubject: order.payment_method === 'paypal'
+      customerSubject: isPaidOnline
         ? '✅ Pagamento Confirmado! Seu pedido na iFooty'
         : '⚽ Pedido Recebido! Próximos passos na iFooty',
       greeting: 'Recebemos seu pedido',
-      nextStepsTitle: order.payment_method === 'paypal'
+      nextStepsTitle: isPaidOnline
         ? '🎉 Pagamento Confirmado!'
         : '🚀 O que acontece agora?',
-      nextStepsBody: order.payment_method === 'paypal'
-        ? 'Seu pagamento via <strong>PayPal / Cartão</strong> foi processado e confirmado com sucesso. Nossa equipe já está conferindo e preparando os detalhes do seu pedido!'
+      nextStepsBody: isPaidOnline
+        ? 'Seu pagamento via <strong>Cartão / PayPal</strong> foi processado e verificado com sucesso. Nossa equipe já está conferindo e preparando os detalhes do seu pedido!'
         : 'Como você já enviou o resumo do pedido via <strong>WhatsApp</strong>, nossa equipe já está conferindo os detalhes (estoque e tamanhos). <strong>Em breve, entraremos em contato com você para enviar os dados para o pagamento via e-Transfer Interac.</strong>',
       itemsSummary: 'Resumo dos Itens',
       sizeLabel: 'Tamanho',
@@ -33,21 +35,21 @@ export default async function handler(req, res) {
       customLabel: 'CUSTOMIZAÇÃO',
       patchesLabel: '+ Patches inclusos',
       footerQuestion: 'Dúvidas? Fale conosco no WhatsApp ou responda a este e-mail.',
-      ctaButton: order.payment_method === 'paypal'
+      ctaButton: isPaidOnline
         ? 'Ver no WhatsApp'
         : 'Aguarde nosso contato',
       footerCopyright: 'Vestindo a paixão brasileira no Canadá.'
     },
     en: {
-      customerSubject: order.payment_method === 'paypal'
+      customerSubject: isPaidOnline
         ? '✅ Payment Confirmed! Your iFooty order'
         : '⚽ Order Received! Next steps at iFooty',
       greeting: 'We received your order',
-      nextStepsTitle: order.payment_method === 'paypal'
+      nextStepsTitle: isPaidOnline
         ? '🎉 Payment Confirmed!'
         : '🚀 What happens now?',
-      nextStepsBody: order.payment_method === 'paypal'
-        ? 'Your payment via <strong>PayPal / Card</strong> has been successfully processed and confirmed. Our team is already checking and preparing the details of your order!'
+      nextStepsBody: isPaidOnline
+        ? 'Your payment via <strong>Card / PayPal</strong> has been successfully processed and confirmed. Our team is already checking and preparing the details of your order!'
         : 'Since you already sent the order summary via <strong>WhatsApp</strong>, our team is already checking the details (stock and sizes). <strong>Soon, we will contact you to send the payment details via Interac e-Transfer.</strong>',
       itemsSummary: 'Order Summary',
       sizeLabel: 'Size',
@@ -55,7 +57,7 @@ export default async function handler(req, res) {
       customLabel: 'CUSTOMIZATION',
       patchesLabel: '+ Patches included',
       footerQuestion: 'Questions? Contact us on WhatsApp or reply to this email.',
-      ctaButton: order.payment_method === 'paypal'
+      ctaButton: isPaidOnline
         ? 'Check WhatsApp details'
         : 'Wait for our contact',
       footerCopyright: 'Wearing the passion in Canada.'
@@ -262,7 +264,7 @@ export default async function handler(req, res) {
                   <tr><td style="padding: 8px 0; color: #718096; width: 120px;">Nome:</td><td style="padding: 8px 0; color: #1a202c; font-weight: 600;">${order.customer_name}</td></tr>
                   <tr><td style="padding: 8px 0; color: #718096;">E-mail:</td><td style="padding: 8px 0; color: #1a202c;">${order.customer_email}</td></tr>
                   <tr><td style="padding: 8px 0; color: #718096;">WhatsApp:</td><td style="padding: 8px 0; color: #1a202c;">${order.customer_phone}</td></tr>
-                  <tr><td style="padding: 8px 0; color: #718096;">Pagamento:</td><td style="padding: 8px 0; color: #1a202c;">${order.payment_method === 'paypal' ? '<span style="background: #D1FAE5; color: #065F46; padding: 4px 8px; border-radius: 4px; font-weight: bold; font-size: 0.85rem;">💰 PAGO VIA PAYPAL</span>' : 'WhatsApp (Pendente)'}</td></tr>
+                  <tr><td style="padding: 8px 0; color: #718096;">Pagamento:</td><td style="padding: 8px 0; color: #1a202c;">${isPaidOnline ? `<span style="background: #D1FAE5; color: #065F46; padding: 4px 8px; border-radius: 4px; font-weight: bold; font-size: 0.85rem;">💰 PAGO ONLINE (${order.payment_method.toUpperCase()})</span>` : 'WhatsApp (Pendente)'}</td></tr>
                   ${order.payment_id ? `<tr><td style="padding: 8px 0; color: #718096;">ID Transação:</td><td style="padding: 8px 0; color: #4a5568; font-family: monospace; font-size: 0.85rem;">${order.payment_id}</td></tr>` : ''}
                 </table>
               </div>
@@ -321,51 +323,51 @@ export default async function handler(req, res) {
       console.log('ℹ️ supplierOnly=true — skipping admin email.');
     }
 
-    // --- EMAIL 1.5: ADICIONAL PAYPAL GESTOR --- (enviado quando pago via PayPal)
-    let paypalPaymentRes = { data: null, error: null };
-    if (!supplierOnly && order.payment_method === 'paypal') {
+    // --- EMAIL 1.5: ADICIONAL PAYPAL/STRIPE GESTOR --- (enviado quando pago via PayPal ou Stripe)
+    let paymentConfirmRes = { data: null, error: null };
+    if (!supplierOnly && (order.payment_method === 'paypal' || order.payment_method === 'stripe')) {
       try {
-        paypalPaymentRes = await resend.emails.send({
+        paymentConfirmRes = await resend.emails.send({
           from: 'iFooty Alerts <vendas@ifooty.ca>',
           to: [adminEmail || 'camisadez085@gmail.com'],
           replyTo: adminEmail || 'camisadez085@gmail.com',
-          subject: `💰 PEDIDO PAGO (PayPal): ${order.customer_name}`,
+          subject: `💰 CONFIRMED PAYMENT (${order.payment_method.toUpperCase()}): ${order.customer_name}`,
           html: `
             <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; max-width: 600px; margin: 0 auto; border: 1px solid #edf2f7; border-radius: 12px; overflow: hidden; background: #ffffff;">
-              <div style="padding: 30px; background: #0070BA; text-align: center;">
+              <div style="padding: 30px; background: #22c55e; text-align: center;">
                 <h1 style="margin: 0; color: #FFFFFF; font-family: sans-serif; font-size: 2rem; font-weight: 800;">
-                  💰 Pagamento Recebido!
+                  💰 Payment Confirmed!
                 </h1>
-                <p style="color: #ffffff; margin-top: 5px; font-size: 0.9rem; opacity: 0.9; text-transform: uppercase; letter-spacing: 2px;">PayPal / Cartão de Crédito</p>
+                <p style="color: #ffffff; margin-top: 5px; font-size: 0.9rem; opacity: 0.9; text-transform: uppercase; letter-spacing: 2px;">${order.payment_method.toUpperCase()} / Credit Card</p>
               </div>
               <div style="padding: 30px;">
                 <p style="font-size: 1.1rem; color: #1a202c; margin-bottom: 20px;">
-                  O pagamento do pedido de <strong>${order.customer_name}</strong> foi confirmado com sucesso via PayPal.
+                  The payment for the order from <strong>${order.customer_name}</strong> has been successfully confirmed via ${order.payment_method.toUpperCase()}.
                 </p>
                 <div style="background: #f7fafc; padding: 20px; border-radius: 8px; border: 1px solid #edf2f7; margin-bottom: 25px;">
                   <table style="width: 100%; border-collapse: collapse; font-size: 0.95rem;">
-                    <tr><td style="padding: 6px 0; color: #718096; width: 140px;">Cliente:</td><td style="padding: 6px 0; color: #1a202c; font-weight: 600;">${order.customer_name}</td></tr>
+                    <tr><td style="padding: 6px 0; color: #718096; width: 140px;">Customer:</td><td style="padding: 6px 0; color: #1a202c; font-weight: 600;">${order.customer_name}</td></tr>
                     <tr><td style="padding: 6px 0; color: #718096;">WhatsApp:</td><td style="padding: 6px 0; color: #1a202c;">${order.customer_phone}</td></tr>
-                    <tr><td style="padding: 6px 0; color: #718096;">Valor Pago:</td><td style="padding: 6px 0; color: #0f172a; font-weight: bold;">$${order.total_price.toFixed(2)} CAD</td></tr>
-                    <tr><td style="padding: 6px 0; color: #718096;">Método:</td><td style="padding: 6px 0; color: #0070BA; font-weight: bold;">PayPal / Credit Card</td></tr>
-                    <tr><td style="padding: 6px 0; color: #718096;">ID Transação:</td><td style="padding: 6px 0; color: #4a5568; font-family: monospace;">${order.payment_id || 'N/A'}</td></tr>
-                    <tr><td style="padding: 6px 0; color: #718096;">Data/Hora:</td><td style="padding: 6px 0; color: #1a202c;">${new Date().toLocaleString('pt-BR')}</td></tr>
+                    <tr><td style="padding: 6px 0; color: #718096;">Total Paid:</td><td style="padding: 6px 0; color: #0f172a; font-weight: bold;">$${order.total_price.toFixed(2)} CAD</td></tr>
+                    <tr><td style="padding: 6px 0; color: #718096;">Method:</td><td style="padding: 6px 0; color: #22c55e; font-weight: bold;">${order.payment_method.toUpperCase()} / Credit Card</td></tr>
+                    <tr><td style="padding: 6px 0; color: #718096;">Transaction ID:</td><td style="padding: 6px 0; color: #4a5568; font-family: monospace;">${order.payment_id || 'N/A'}</td></tr>
+                    <tr><td style="padding: 6px 0; color: #718096;">Date/Time:</td><td style="padding: 6px 0; color: #1a202c;">${new Date().toLocaleString('en-US')}</td></tr>
                   </table>
                 </div>
                 <div style="text-align: center;">
-                  <p style="color: #718096; font-size: 0.9rem; margin-bottom: 0;">Esse pedido já está registrado no banco de dados como PAGO.</p>
+                  <p style="color: #718096; font-size: 0.9rem; margin-bottom: 0;">This order is registered in the database as PAID.</p>
                 </div>
               </div>
             </div>
           `
         });
-        if (paypalPaymentRes.error) {
-          console.error('❌ Resend PayPal Payment Alert Error:', JSON.stringify(paypalPaymentRes.error, null, 2));
+        if (paymentConfirmRes.error) {
+          console.error('❌ Resend Payment Alert Error:', JSON.stringify(paymentConfirmRes.error, null, 2));
         } else {
-          console.log('✅ PayPal Payment Alert Sent:', paypalPaymentRes.data?.id);
+          console.log('✅ Payment Alert Sent:', paymentConfirmRes.data?.id);
         }
-      } catch (errPay) {
-        console.error('❌ Error sending PayPal Payment email:', errPay);
+      } catch (errConfirm) {
+        console.error('❌ Error sending Payment email:', errConfirm);
       }
     }
 

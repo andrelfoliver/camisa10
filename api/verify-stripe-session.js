@@ -38,6 +38,31 @@ export default async function handler(req, res) {
         return res.status(500).json({ error: `Erro no Banco (RPC): ${error.message} (Código: ${error.code})` });
       }
 
+      // Fetch the updated order to send the payment confirmation email to the customer
+      try {
+        const { data: orderRow } = await supabase
+          .from('orders')
+          .select('*')
+          .eq('id', orderId)
+          .single();
+
+        if (orderRow) {
+          const host = req.headers.host;
+          const protocol = host.includes('localhost') ? 'http' : 'https';
+          await fetch(`${protocol}://${host}/api/send-order-email`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              language: 'en',
+              adminEmail: 'ifootyc@gmail.com',
+              order: orderRow
+            })
+          });
+        }
+      } catch (emailErr) {
+        console.error('Failed to send confirmation email on success:', emailErr);
+      }
+
       return res.status(200).json({ success: true, orderId });
     } else {
       return res.status(400).json({ success: false, error: 'Payment not completed' });

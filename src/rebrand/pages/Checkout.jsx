@@ -321,6 +321,7 @@ const RebrandCheckout = () => {
         body: JSON.stringify({ 
           language: 'en', 
           adminEmail: 'ifootyc@gmail.com',
+          adminOnly: paymentMethod === 'stripe',
           order: { ...orderData, customer_name: data.name, customer_email: user?.email || guestEmail, customer_phone: data.phone } 
         })
       });
