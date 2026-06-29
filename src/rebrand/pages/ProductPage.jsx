@@ -42,6 +42,9 @@ const ProductPage = () => {
   const [isSizeGuideOpen, setIsSizeGuideOpen] = useState(false);
   const [activeThumb, setActiveThumb] = useState(0);
   const [quantity, setQuantity] = useState(1);
+  const [isShippingOpen, setIsShippingOpen] = useState(true);
+  const [isDescriptionOpen, setIsDescriptionOpen] = useState(false);
+  const [selectedInclusions, setSelectedInclusions] = useState('full');
 
   useEffect(() => {
     async function loadProductDetails() {
@@ -73,6 +76,8 @@ const ProductPage = () => {
               desc: data.description || 'Premium stitched sports jersey. Features authentic player details, breathable mesh elements, and lightweight tailored design for maximum performance and look.'
             });
             setSelectedColor('#000000');
+            const isKids = data.name?.toLowerCase().includes('infantil') || data.name?.toLowerCase().includes('kids') || data.name?.toLowerCase().includes('child') || data.name?.toLowerCase().includes('bebê') || data.name?.toLowerCase().includes('baby');
+            setSelectedSize(isKids ? '22' : 'M');
           }
         } catch (err) {
           console.error("Error loading DB product detail:", err);
@@ -87,19 +92,25 @@ const ProductPage = () => {
   const handleAddToCart = () => {
     if (!product) return;
     
+    const finalPrice = isKidsKit 
+      ? (selectedInclusions === 'shirt' 
+         ? (['24', '26', '28'].includes(selectedSize) ? 42.90 : 37.90) 
+         : (['24', '26', '28'].includes(selectedSize) ? 54.90 : 49.90))
+      : product.price;
+
     const extras = {
       nameNumber: nameNumberEnabled,
       customName: nameNumberEnabled ? customName.toUpperCase() : '',
       customNumber: nameNumberEnabled ? customNumber : '',
       patch: false,
       extraCustomization: false,
-      onlyShirt: false
+      onlyShirt: isKidsKit && selectedInclusions === 'shirt'
     };
 
     addToCart({
       id: id,
-      name: product.name,
-      price: product.price,
+      name: product.name + (isKidsKit ? ` - Size ${selectedSize} (${selectedInclusions === 'shirt' ? 'Shirt Only' : 'Full Kit'})` : ''),
+      price: finalPrice,
       image: product.image,
       category: product.category,
       color: selectedColor
@@ -125,15 +136,26 @@ const ProductPage = () => {
     );
   }
 
-  const isPlayerVersion = 
-    product?.name?.toLowerCase().includes('player') || 
-    product?.name?.toLowerCase().includes('jogador') ||
-    product?.desc?.toLowerCase().includes('player version') ||
-    product?.desc?.toLowerCase().includes('versão jogador');
+  const isKidsKit = 
+    product?.name?.toLowerCase().includes('infantil') || 
+    product?.name?.toLowerCase().includes('kids') ||
+    product?.name?.toLowerCase().includes('child') ||
+    product?.name?.toLowerCase().includes('bebê') ||
+    product?.name?.toLowerCase().includes('baby');
 
-  const availableSizes = isPlayerVersion 
-    ? ['S', 'M', 'L', 'XL', '2XL'] 
-    : ['S', 'M', 'L', 'XL', '2XL', '3XL', '4XL'];
+  const isPlayerVersion = 
+    !isKidsKit && (
+      product?.name?.toLowerCase().includes('player') || 
+      product?.name?.toLowerCase().includes('jogador') ||
+      product?.desc?.toLowerCase().includes('player version') ||
+      product?.desc?.toLowerCase().includes('versão jogador')
+    );
+
+  const availableSizes = isKidsKit
+    ? ['16', '18', '20', '22', '24', '26', '28']
+    : (isPlayerVersion 
+      ? ['S', 'M', 'L', 'XL', '2XL'] 
+      : ['S', 'M', 'L', 'XL', '2XL', '3XL', '4XL']);
 
   return (
     <div style={{ background: '#ffffff', padding: '1.5rem 2rem 4rem' }} className="rebrand-scope">
@@ -276,12 +298,26 @@ const ProductPage = () => {
             {/* Price (Fanatics Style: Clean & Inline) */}
             {(() => {
               const customFee = nameNumberEnabled ? (pricingConfig?.nameNumber || 11.90) : 0;
-              const sizeFee = ['2XL', '3XL'].includes(selectedSize) 
+              let basePrice = product.price;
+              
+              if (isKidsKit) {
+                if (selectedInclusions === 'shirt') {
+                  basePrice = ['24', '26', '28'].includes(selectedSize) ? 42.90 : 37.90;
+                } else {
+                  basePrice = ['24', '26', '28'].includes(selectedSize) ? 54.90 : 49.90;
+                }
+              }
+
+              const sizeFee = (!isKidsKit && ['2XL', '3XL'].includes(selectedSize))
                 ? (pricingConfig?.size2XL3XL || 7.00) 
-                : (selectedSize === '4XL' ? (pricingConfig?.size4XL || 10.00) : 0);
+                : (!isKidsKit && selectedSize === '4XL' ? (pricingConfig?.size4XL || 10.00) : 0);
               const totalAddons = customFee + sizeFee;
-              const currentPrice = product.price + totalAddons;
-              const regPrice = product.oldPrice ? product.oldPrice + totalAddons : null;
+              const currentPrice = basePrice + totalAddons;
+              const regPrice = isKidsKit 
+                ? (selectedInclusions === 'shirt' 
+                   ? (['24', '26', '28'].includes(selectedSize) ? 79.90 : 69.90) 
+                   : (['24', '26', '28'].includes(selectedSize) ? 104.90 : 89.90)) + totalAddons
+                : (product.oldPrice ? product.oldPrice + totalAddons : null);
 
               return (
                 <div style={{ marginBottom: '1.2rem', display: 'flex', alignItems: 'baseline', flexWrap: 'wrap', gap: '0.6rem' }}>
@@ -332,6 +368,48 @@ const ProductPage = () => {
                 ))}
               </div>
             </div>
+
+            {isKidsKit && (
+              <div style={{ marginBottom: '1.5rem' }}>
+                <span style={{ display: 'block', fontSize: '0.75rem', fontWeight: 800, color: '#121416', textTransform: 'uppercase', marginBottom: '0.5rem' }}>Included Items</span>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.5rem' }}>
+                  <button
+                    type="button"
+                    onClick={() => setSelectedInclusions('full')}
+                    style={{
+                      height: '40px',
+                      background: selectedInclusions === 'full' ? 'rgba(43,138,62,0.08)' : '#fff',
+                      border: selectedInclusions === 'full' ? '2px solid #2b8a3e' : '1px solid #ced4da',
+                      borderRadius: '6px',
+                      fontSize: '0.8rem',
+                      fontWeight: 700,
+                      color: selectedInclusions === 'full' ? '#2b8a3e' : '#495057',
+                      cursor: 'pointer',
+                      transition: 'all 0.15s'
+                    }}
+                  >
+                    Full Kit (Shirt + Shorts)
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setSelectedInclusions('shirt')}
+                    style={{
+                      height: '40px',
+                      background: selectedInclusions === 'shirt' ? 'rgba(43,138,62,0.08)' : '#fff',
+                      border: selectedInclusions === 'shirt' ? '2px solid #2b8a3e' : '1px solid #ced4da',
+                      borderRadius: '6px',
+                      fontSize: '0.8rem',
+                      fontWeight: 700,
+                      color: selectedInclusions === 'shirt' ? '#2b8a3e' : '#495057',
+                      cursor: 'pointer',
+                      transition: 'all 0.15s'
+                    }}
+                  >
+                    Shirt Only
+                  </button>
+                </div>
+              </div>
+            )}
 
             {/* Custom Stitched Personalization (Compact) */}
             <div style={{
@@ -416,18 +494,39 @@ const ProductPage = () => {
 
             {/* Shipping Accordion (Fanatics style) */}
             <div style={{ borderTop: '1px solid #dee2e6' }}>
-              <div style={{ padding: '1rem 0', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <div 
+                onClick={() => setIsShippingOpen(!isShippingOpen)}
+                style={{ padding: '1rem 0', display: 'flex', justifyContent: 'space-between', alignItems: 'center', cursor: 'pointer' }}
+              >
                 <span style={{ fontWeight: 800, fontSize: '0.9rem', color: '#121416' }}>Shipping</span>
-                <span style={{ fontWeight: 800 }}>−</span>
+                <span style={{ fontWeight: 850, fontSize: '1.2rem', color: '#121416', userSelect: 'none' }}>{isShippingOpen ? '−' : '+'}</span>
               </div>
-              <div style={{ paddingBottom: '1rem', display: 'flex', gap: '0.7rem', alignItems: 'flex-start' }}>
-                <Truck size={18} color="#121416" style={{ flexShrink: 0, marginTop: '2px' }} />
-                <ul style={{ margin: 0, padding: 0, listStyle: 'none', fontSize: '0.8rem', color: '#495057', lineHeight: 1.6 }}>
-                  <li style={{ marginBottom: '0.3rem' }}>This item leaves our warehouse in 1-3 business days.</li>
-                  <li style={{ marginBottom: '0.3rem' }}><strong>✓ Ready To Ship</strong> immediately upon processing.</li>
-                  <li>Eligible for <strong>free Canada-wide shipping</strong> on orders over $99 CAD.</li>
-                </ul>
+              {isShippingOpen && (
+                <div style={{ paddingBottom: '1rem', display: 'flex', gap: '0.7rem', alignItems: 'flex-start' }}>
+                  <Truck size={18} color="#121416" style={{ flexShrink: 0, marginTop: '2px' }} />
+                  <ul style={{ margin: 0, padding: 0, listStyle: 'none', fontSize: '0.8rem', color: '#495057', lineHeight: 1.6 }}>
+                    <li style={{ marginBottom: '0.3rem' }}>This item leaves our warehouse in 1-3 business days.</li>
+                    <li style={{ marginBottom: '0.3rem' }}><strong>✓ Ready To Ship</strong> immediately upon processing.</li>
+                    <li>Eligible for <strong>free Canada-wide shipping</strong> on orders over $99 CAD.</li>
+                  </ul>
+                </div>
+              )}
+            </div>
+
+            {/* Description Accordion */}
+            <div style={{ borderTop: '1px solid #dee2e6' }}>
+              <div 
+                onClick={() => setIsDescriptionOpen(!isDescriptionOpen)}
+                style={{ padding: '1rem 0', display: 'flex', justifyContent: 'space-between', alignItems: 'center', cursor: 'pointer' }}
+              >
+                <span style={{ fontWeight: 800, fontSize: '0.9rem', color: '#121416' }}>Description</span>
+                <span style={{ fontWeight: 850, fontSize: '1.2rem', color: '#121416', userSelect: 'none' }}>{isDescriptionOpen ? '−' : '+'}</span>
               </div>
+              {isDescriptionOpen && (
+                <div style={{ paddingBottom: '1rem', fontSize: '0.85rem', color: '#495057', lineHeight: 1.6 }}>
+                  {product.desc}
+                </div>
+              )}
             </div>
 
             {/* Quality & Return Assurances */}

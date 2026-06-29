@@ -26,6 +26,55 @@ export default async function handler(req, res) {
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
+  const apiKey = process.env.OPENAI_API_KEY;
+  if (!apiKey) {
+    return res.status(500).json({ error: 'OpenAI API key is not configured' });
+  }
+
+  // Handle Description Generation Action
+  if (req.body.action === 'generate-description') {
+    const { productName, category } = req.body;
+    if (!productName) {
+      return res.status(400).json({ error: 'Product Name is required' });
+    }
+    try {
+      const prompt = `Write a short, premium, and appealing e-commerce product description in English for a sports apparel item.
+Product Name: "${productName}"
+Category: "${category || 'Sports Jersey'}"
+
+Guidelines:
+1. Write 2 to 3 sentences maximum.
+2. Focus on premium qualities: stitched logos/details, high-quality breathable fabric, comfort for matchday or casual streetwear wear.
+3. Keep it professional, enticing, and clean. No hashtags or markdown formatting, just the paragraph text.`;
+
+      const response = await axios.post(
+        'https://api.openai.com/v1/chat/completions',
+        {
+          model: 'gpt-4o-mini',
+          messages: [
+            { role: 'system', content: 'You are an expert copywriter for high-end sports apparel stores.' },
+            { role: 'user', content: prompt }
+          ],
+          temperature: 0.7,
+          max_tokens: 150
+        },
+        {
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${apiKey}`
+          },
+          timeout: 10000
+        }
+      );
+
+      const description = response.data.choices[0].message.content.trim();
+      return res.status(200).json({ description });
+    } catch (error) {
+      console.error('Error generating description:', error.response?.data || error.message);
+      return res.status(500).json({ error: 'Failed to generate description' });
+    }
+  }
+
   const { messages, sessionId, userName, language } = req.body;
   const lang = language || 'pt';
   
@@ -60,10 +109,6 @@ export default async function handler(req, res) {
   // 2. Cap conversation history to avoid payload/token bloat (keep last 10 messages)
   const history = messages.slice(-10);
 
-  const apiKey = process.env.OPENAI_API_KEY;
-  if (!apiKey) {
-    return res.status(500).json({ error: 'OpenAI API key is not configured' });
-  }
 
   try {
     // 1. Fetch active products catalog from Supabase

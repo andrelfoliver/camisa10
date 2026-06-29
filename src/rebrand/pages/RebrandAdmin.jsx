@@ -1456,6 +1456,40 @@ const ProductsSection = ({ showToast }) => {
   const [imageFile, setImageFile] = useState(null);
   const [imagePreview, setImagePreview] = useState(null);
   const [uploading, setUploading] = useState(false);
+  const [generatingDescription, setGeneratingDescription] = useState(false);
+
+  const generateAIDescription = async () => {
+    if (!form.name) {
+      showToast('Por favor, insira o nome do produto primeiro.', 'error');
+      return;
+    }
+    setGeneratingDescription(true);
+    try {
+      const response = await fetch('/api/chat', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          action: 'generate-description',
+          productName: form.name,
+          category: form.mainCategory || 'Soccer'
+        })
+      });
+      const data = await response.json();
+      if (data.description) {
+        setForm(prev => ({ ...prev, description: data.description }));
+        showToast('Descrição gerada com sucesso!', 'success');
+      } else {
+        showToast(data.error || 'Erro ao gerar descrição.', 'error');
+      }
+    } catch (err) {
+      console.error(err);
+      showToast('Erro de conexão ao gerar descrição.', 'error');
+    } finally {
+      setGeneratingDescription(false);
+    }
+  };
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -1903,7 +1937,32 @@ const ProductsSection = ({ showToast }) => {
                 </div>
 
                 <div style={{ gridColumn: '1 / -1' }}>
-                  <label style={S.label}>Descrição</label>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.4rem' }}>
+                    <label style={{ ...S.label, marginBottom: 0 }}>Descrição</label>
+                    <button 
+                      type="button" 
+                      onClick={generateAIDescription}
+                      disabled={generatingDescription}
+                      style={{
+                        background: 'rgba(214,255,0,0.1)',
+                        border: '1px solid rgba(214,255,0,0.3)',
+                        borderRadius: '4px',
+                        padding: '0.25rem 0.6rem',
+                        fontSize: '0.75rem',
+                        fontWeight: 700,
+                        color: '#D6FF00',
+                        cursor: 'pointer',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '0.3rem',
+                        transition: 'all 0.15s'
+                      }}
+                      onMouseOver={e => e.currentTarget.style.background = 'rgba(214,255,0,0.2)'}
+                      onMouseOut={e => e.currentTarget.style.background = 'rgba(214,255,0,0.1)'}
+                    >
+                      ✨ {generatingDescription ? 'Gerando...' : 'Gerar por IA'}
+                    </button>
+                  </div>
                   <textarea style={{ ...S.input, minHeight: '90px', resize: 'vertical' }} value={form.description} onChange={e => setForm({...form, description: e.target.value})} placeholder="Descrição do produto..." />
                 </div>
               </div>

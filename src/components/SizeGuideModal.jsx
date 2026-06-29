@@ -4,6 +4,7 @@ import { useLanguage } from '../context/LanguageContext';
 
 const SizeGuideModal = ({ isOpen, onClose, isShoes, isNba, isStreetwear, isRebrand }) => {
   const { t, language } = useLanguage();
+  const lang = isRebrand ? 'en' : language;
   const [activeTab, setActiveTab] = useState('fan');
 
   React.useEffect(() => {
@@ -36,24 +37,24 @@ const SizeGuideModal = ({ isOpen, onClose, isShoes, isNba, isStreetwear, isRebra
   if (!isOpen) return null;
 
   const tabs = [
-    { id: 'fan', label: language === 'pt' ? 'Torcedor' : 'Fan Edition' },
-    { id: 'player', label: language === 'pt' ? 'Jogador' : 'Player Edition' },
-    { id: 'women', label: language === 'pt' ? 'Feminina' : 'Women' },
-    { id: 'kids', label: language === 'pt' ? 'Infantil' : 'Kids' },
-    { id: 'baby', label: language === 'pt' ? 'Bebê' : 'Baby Body' },
-    { id: 'special', label: language === 'pt' ? 'Especiais' : 'Plus Size' },
-    { id: 'shoes', label: language === 'pt' ? 'Tênis' : 'Shoes' },
+    { id: 'fan', label: lang === 'pt' ? 'Torcedor' : 'Fan Edition' },
+    { id: 'player', label: lang === 'pt' ? 'Jogador' : 'Player Edition' },
+    { id: 'women', label: lang === 'pt' ? 'Feminina' : 'Women' },
+    { id: 'kids', label: lang === 'pt' ? 'Infantil' : 'Kids' },
+    { id: 'baby', label: lang === 'pt' ? 'Bebê' : 'Baby Body' },
+    { id: 'special', label: lang === 'pt' ? 'Especiais' : 'Plus Size' },
+    { id: 'shoes', label: lang === 'pt' ? 'Tênis' : 'Shoes' },
     { id: 'nba', label: 'NBA' },
     { id: 'streetwear', label: 'Streetwear' },
-    { id: 'accessories', label: language === 'pt' ? 'Outros' : 'Other' }
+    { id: 'accessories', label: lang === 'pt' ? 'Outros' : 'Other' }
   ];
 
   const TableHeader = () => (
     <thead>
       <tr style={{ background: isRebrand ? '#f8f9fa' : 'rgba(204, 255, 0, 0.1)' }}>
-        <th style={{ padding: '1rem', textAlign: 'left', borderBottom: isRebrand ? '2px solid #121416' : '2px solid var(--accent-color)' }}>{language === 'pt' ? 'Tamanho' : 'Size'}</th>
-        <th style={{ padding: '1rem', textAlign: 'center', borderBottom: isRebrand ? '2px solid #121416' : '2px solid var(--accent-color)' }}>{language === 'pt' ? 'Comprimento' : 'Length'}</th>
-        <th style={{ padding: '1rem', textAlign: 'center', borderBottom: isRebrand ? '2px solid #121416' : '2px solid var(--accent-color)' }}>{language === 'pt' ? 'Largura / Busto' : 'Width / Bust'}</th>
+        <th style={{ padding: '1rem', textAlign: 'left', borderBottom: isRebrand ? '2px solid #121416' : '2px solid var(--accent-color)' }}>{lang === 'pt' ? 'Tamanho' : 'Size'}</th>
+        <th style={{ padding: '1rem', textAlign: 'center', borderBottom: isRebrand ? '2px solid #121416' : '2px solid var(--accent-color)' }}>{lang === 'pt' ? 'Comprimento' : 'Length'}</th>
+        <th style={{ padding: '1rem', textAlign: 'center', borderBottom: isRebrand ? '2px solid #121416' : '2px solid var(--accent-color)' }}>{lang === 'pt' ? 'Largura / Busto' : 'Width / Bust'}</th>
       </tr>
     </thead>
   );
@@ -94,7 +95,7 @@ const SizeGuideModal = ({ isOpen, onClose, isShoes, isNba, isStreetwear, isRebra
         }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
             <Ruler className={isRebrand ? "" : "text-neon"} size={24} color={isRebrand ? '#121416' : undefined} />
-            <h2 style={{ fontSize: '1.5rem', fontWeight: 800, margin: 0, color: isRebrand ? '#121416' : undefined }}>{language === 'pt' ? 'Guia de Medidas' : 'Size Guide'}</h2>
+            <h2 style={{ fontSize: '1.5rem', fontWeight: 800, margin: 0, color: isRebrand ? '#121416' : undefined }}>{lang === 'pt' ? 'Guia de Medidas' : 'Size Guide'}</h2>
           </div>
           <button 
             onClick={onClose} 
@@ -170,7 +171,7 @@ const SizeGuideModal = ({ isOpen, onClose, isShoes, isNba, isStreetwear, isRebra
           
           {activeTab === 'fan' && (
             <div className="reveal">
-              <h3 style={{ marginBottom: '1.5rem', fontSize: '1.1rem', color: 'var(--accent-color)', textTransform: 'uppercase' }}>📊 {language === 'pt' ? 'Camisas Versão Torcedor' : 'Fan Edition Jerseys'}</h3>
+              <h3 style={{ marginBottom: '1.5rem', fontSize: '1.1rem', color: 'var(--accent-color)', textTransform: 'uppercase' }}>📊 {lang === 'pt' ? 'Camisas Versão Torcedor' : 'Fan Edition Jerseys'}</h3>
               
               <div className="table-responsive" style={{ marginBottom: '2.5rem' }}>
                 <p style={{ fontWeight: 800, marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
@@ -212,9 +213,9 @@ const SizeGuideModal = ({ isOpen, onClose, isShoes, isNba, isStreetwear, isRebra
 
           {activeTab === 'player' && (
             <div className="reveal">
-              <h3 style={{ marginBottom: '1.5rem', fontSize: '1.1rem', color: 'var(--accent-color)' }}>💎 {language === 'pt' ? 'Camisas Versão Jogador (Ajustada)' : 'Player Edition (Slim Fit)'}</h3>
+              <h3 style={{ marginBottom: '1.5rem', fontSize: '1.1rem', color: 'var(--accent-color)' }}>💎 {lang === 'pt' ? 'Camisas Versão Jogador (Ajustada)' : 'Player Edition (Slim Fit)'}</h3>
               <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginBottom: '1.5rem', fontStyle: 'italic' }}>
-                * {language === 'pt' ? 'Atenção: A versão jogador é mais justa ao corpo. Recomendamos escolher um tamanho acima do habitual.' : 'Warning: Player version is slim fit. We recommend choosing one size up.'}
+                * {lang === 'pt' ? 'Atenção: A versão jogador é mais justa ao corpo. Recomendamos escolher um tamanho acima do habitual.' : 'Warning: Player version is slim fit. We recommend choosing one size up.'}
               </p>
               <table style={{ width: '100%', borderCollapse: 'collapse' }}>
                 <TableHeader />
@@ -233,7 +234,7 @@ const SizeGuideModal = ({ isOpen, onClose, isShoes, isNba, isStreetwear, isRebra
 
           {activeTab === 'women' && (
             <div className="reveal">
-              <h3 style={{ marginBottom: '1.5rem', fontSize: '1.1rem', color: 'var(--accent-color)' }}>🚺 {language === 'pt' ? 'Camisas Femininas' : 'Women Jerseys'}</h3>
+              <h3 style={{ marginBottom: '1.5rem', fontSize: '1.1rem', color: 'var(--accent-color)' }}>🚺 {lang === 'pt' ? 'Camisas Femininas' : 'Women Jerseys'}</h3>
               <table style={{ width: '100%', borderCollapse: 'collapse' }}>
                 <TableHeader />
                 <tbody>
@@ -251,13 +252,13 @@ const SizeGuideModal = ({ isOpen, onClose, isShoes, isNba, isStreetwear, isRebra
 
           {activeTab === 'kids' && (
             <div className="reveal">
-              <h3 style={{ marginBottom: '1.5rem', fontSize: '1.1rem', color: 'var(--accent-color)' }}>👶 {language === 'pt' ? 'Kits Infantis' : 'Kids Kits'}</h3>
+              <h3 style={{ marginBottom: '1.5rem', fontSize: '1.1rem', color: 'var(--accent-color)' }}>👶 {lang === 'pt' ? 'Kits Infantis' : 'Kids Kits'}</h3>
               <table style={{ width: '100%', borderCollapse: 'collapse' }}>
                 <thead>
                   <tr style={{ background: 'rgba(204, 255, 0, 0.1)' }}>
-                    <th style={{ padding: '1rem', textAlign: 'left', borderBottom: '2px solid var(--accent-color)' }}>{language === 'pt' ? 'Tamanho (Idade)' : 'Size (Age)'}</th>
-                    <th style={{ padding: '1rem', textAlign: 'center', borderBottom: '2px solid var(--accent-color)' }}>{language === 'pt' ? 'Comprimento' : 'Length'}</th>
-                    <th style={{ padding: '1rem', textAlign: 'center', borderBottom: '2px solid var(--accent-color)' }}>{language === 'pt' ? 'Largura' : 'Width'}</th>
+                    <th style={{ padding: '1rem', textAlign: 'left', borderBottom: '2px solid var(--accent-color)' }}>{lang === 'pt' ? 'Tamanho (Idade)' : 'Size (Age)'}</th>
+                    <th style={{ padding: '1rem', textAlign: 'center', borderBottom: '2px solid var(--accent-color)' }}>{lang === 'pt' ? 'Comprimento' : 'Length'}</th>
+                    <th style={{ padding: '1rem', textAlign: 'center', borderBottom: '2px solid var(--accent-color)' }}>{lang === 'pt' ? 'Largura' : 'Width'}</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -275,27 +276,27 @@ const SizeGuideModal = ({ isOpen, onClose, isShoes, isNba, isStreetwear, isRebra
 
           {activeTab === 'baby' && (
             <div className="reveal">
-              <h3 style={{ marginBottom: '1.5rem', fontSize: '1.1rem', color: 'var(--accent-color)' }}>🍼 {language === 'pt' ? 'Body de Bebê' : 'Baby Body'}</h3>
+              <h3 style={{ marginBottom: '1.5rem', fontSize: '1.1rem', color: 'var(--accent-color)' }}>🍼 {lang === 'pt' ? 'Body de Bebê' : 'Baby Body'}</h3>
               <div className="table-responsive" style={{ overflowX: 'auto', marginBottom: '1rem' }}>
                 <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: '600px' }}>
                   <thead>
                     <tr style={{ background: 'rgba(204, 255, 0, 0.1)' }}>
-                      <th style={{ padding: '1rem 0.5rem', textAlign: 'left', borderBottom: '2px solid var(--accent-color)', fontSize: '0.85rem' }}>{language === 'pt' ? 'Tamanho' : 'Size'}</th>
-                      <th style={{ padding: '1rem 0.5rem', textAlign: 'center', borderBottom: '2px solid var(--accent-color)', fontSize: '0.85rem' }}>{language === 'pt' ? 'Etiqueta' : 'Tag'}</th>
-                      <th style={{ padding: '1rem 0.5rem', textAlign: 'center', borderBottom: '2px solid var(--accent-color)', fontSize: '0.85rem' }}>{language === 'pt' ? 'Comprimento' : 'Length'}</th>
-                      <th style={{ padding: '1rem 0.5rem', textAlign: 'center', borderBottom: '2px solid var(--accent-color)', fontSize: '0.85rem' }}>{language === 'pt' ? 'Largura (Busto)' : 'Width (Bust)'}</th>
-                      <th style={{ padding: '1rem 0.5rem', textAlign: 'center', borderBottom: '2px solid var(--accent-color)', fontSize: '0.85rem' }}>{language === 'pt' ? 'Ombro' : 'Shoulder'}</th>
-                      <th style={{ padding: '1rem 0.5rem', textAlign: 'center', borderBottom: '2px solid var(--accent-color)', fontSize: '0.85rem' }}>{language === 'pt' ? 'Altura Rec.' : 'Height Rec.'}</th>
-                      <th style={{ padding: '1rem 0.5rem', textAlign: 'center', borderBottom: '2px solid var(--accent-color)', fontSize: '0.85rem' }}>{language === 'pt' ? 'Peso Rec.' : 'Weight Rec.'}</th>
-                      <th style={{ padding: '1rem 0.5rem', textAlign: 'center', borderBottom: '2px solid var(--accent-color)', fontSize: '0.85rem' }}>{language === 'pt' ? 'Idade Rec.' : 'Age Rec.'}</th>
+                      <th style={{ padding: '1rem 0.5rem', textAlign: 'left', borderBottom: '2px solid var(--accent-color)', fontSize: '0.85rem' }}>{lang === 'pt' ? 'Tamanho' : 'Size'}</th>
+                      <th style={{ padding: '1rem 0.5rem', textAlign: 'center', borderBottom: '2px solid var(--accent-color)', fontSize: '0.85rem' }}>{lang === 'pt' ? 'Etiqueta' : 'Tag'}</th>
+                      <th style={{ padding: '1rem 0.5rem', textAlign: 'center', borderBottom: '2px solid var(--accent-color)', fontSize: '0.85rem' }}>{lang === 'pt' ? 'Comprimento' : 'Length'}</th>
+                      <th style={{ padding: '1rem 0.5rem', textAlign: 'center', borderBottom: '2px solid var(--accent-color)', fontSize: '0.85rem' }}>{lang === 'pt' ? 'Largura (Busto)' : 'Width (Bust)'}</th>
+                      <th style={{ padding: '1rem 0.5rem', textAlign: 'center', borderBottom: '2px solid var(--accent-color)', fontSize: '0.85rem' }}>{lang === 'pt' ? 'Ombro' : 'Shoulder'}</th>
+                      <th style={{ padding: '1rem 0.5rem', textAlign: 'center', borderBottom: '2px solid var(--accent-color)', fontSize: '0.85rem' }}>{lang === 'pt' ? 'Altura Rec.' : 'Height Rec.'}</th>
+                      <th style={{ padding: '1rem 0.5rem', textAlign: 'center', borderBottom: '2px solid var(--accent-color)', fontSize: '0.85rem' }}>{lang === 'pt' ? 'Peso Rec.' : 'Weight Rec.'}</th>
+                      <th style={{ padding: '1rem 0.5rem', textAlign: 'center', borderBottom: '2px solid var(--accent-color)', fontSize: '0.85rem' }}>{lang === 'pt' ? 'Idade Rec.' : 'Age Rec.'}</th>
                     </tr>
                   </thead>
                   <tbody>
                     {[
-                      ['3M', '9', '44 cm', '27 cm', '24 cm', '65-75 cm', '7.5-9 kg', language === 'pt' ? '3-12 meses' : '3-12 months'],
-                      ['6M', '9', '44 cm', '27 cm', '24 cm', '65-75 cm', '7.5-9 kg', language === 'pt' ? '3-12 meses' : '3-12 months'],
-                      ['9M', '9', '44 cm', '27 cm', '24 cm', '65-75 cm', '7.5-9 kg', language === 'pt' ? '3-12 meses' : '3-12 months'],
-                      ['12M', '12', '46 cm', '28 cm', '25 cm', '75-85 cm', '9-12 kg', language === 'pt' ? '12-24 meses' : '12-24 months']
+                      ['3M', '9', '44 cm', '27 cm', '24 cm', '65-75 cm', '7.5-9 kg', lang === 'pt' ? '3-12 meses' : '3-12 months'],
+                      ['6M', '9', '44 cm', '27 cm', '24 cm', '65-75 cm', '7.5-9 kg', lang === 'pt' ? '3-12 meses' : '3-12 months'],
+                      ['9M', '9', '44 cm', '27 cm', '24 cm', '65-75 cm', '7.5-9 kg', lang === 'pt' ? '3-12 meses' : '3-12 months'],
+                      ['12M', '12', '46 cm', '28 cm', '25 cm', '75-85 cm', '9-12 kg', lang === 'pt' ? '12-24 meses' : '12-24 months']
                     ].map(([sz, tag, len, wdt, shld, hgt, wgt, age], i) => (
                       <tr key={i} style={{ borderBottom: '1px solid var(--border-color)' }}>
                         <td style={{ padding: '0.8rem 0.5rem', fontWeight: 600 }}>{sz}</td>
@@ -312,7 +313,7 @@ const SizeGuideModal = ({ isOpen, onClose, isShoes, isNba, isStreetwear, isRebra
                 </table>
               </div>
               <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', fontStyle: 'italic', marginTop: '0.5rem' }}>
-                💡 {language === 'pt' 
+                💡 {lang === 'pt' 
                   ? 'Medição manual com variação de 1-2 cm. Para bebês mais cheinhos, recomendamos escolher um tamanho maior.' 
                   : 'Manual measurement with 1-2 cm variation. For chubbier babies, we recommend choosing one size larger.'}
               </p>
@@ -321,7 +322,7 @@ const SizeGuideModal = ({ isOpen, onClose, isShoes, isNba, isStreetwear, isRebra
 
           {activeTab === 'special' && (
             <div className="reveal">
-              <h3 style={{ marginBottom: '1.5rem', fontSize: '1.1rem', color: 'var(--accent-color)' }}>📏 {language === 'pt' ? 'Tamanhos Especiais' : 'Plus Sizes'}</h3>
+              <h3 style={{ marginBottom: '1.5rem', fontSize: '1.1rem', color: 'var(--accent-color)' }}>📏 {lang === 'pt' ? 'Tamanhos Especiais' : 'Plus Sizes'}</h3>
               <table style={{ width: '100%', borderCollapse: 'collapse' }}>
                 <TableHeader />
                 <tbody>
@@ -340,14 +341,14 @@ const SizeGuideModal = ({ isOpen, onClose, isShoes, isNba, isStreetwear, isRebra
           {activeTab === 'shoes' && (
             <div className="reveal">
               <h3 style={{ marginBottom: '1.5rem', fontSize: '1.1rem', color: 'var(--accent-color)' }}>
-                👟 {language === 'pt' ? 'Tabela de Tamanhos de Chuteiras' : 'Cleats Size Chart'}
+                👟 {lang === 'pt' ? 'Tabela de Tamanhos de Chuteiras' : 'Cleats Size Chart'}
               </h3>
               
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '1.5rem', marginBottom: '1.5rem' }}>
                 {/* Masculino */}
                 <div style={{ background: 'rgba(255, 255, 255, 0.02)', padding: '1rem', borderRadius: '8px', border: '1px solid var(--border-color)' }}>
                   <h4 style={{ color: 'var(--text-main)', marginBottom: '0.8rem', borderBottom: '1px solid var(--accent-color)', paddingBottom: '0.4rem', fontSize: '0.95rem', display: 'flex', alignItems: 'center', gap: '0.5rem', fontWeight: 600 }}>
-                    👨 {language === 'pt' ? 'Masculino' : "Men's"}
+                    👨 {lang === 'pt' ? 'Masculino' : "Men's"}
                   </h4>
                   <table style={{ width: '100%', borderCollapse: 'collapse' }}>
                     <thead>
@@ -378,7 +379,7 @@ const SizeGuideModal = ({ isOpen, onClose, isShoes, isNba, isStreetwear, isRebra
                 {/* Feminino */}
                 <div style={{ background: 'rgba(255, 255, 255, 0.02)', padding: '1rem', borderRadius: '8px', border: '1px solid var(--border-color)' }}>
                   <h4 style={{ color: 'var(--text-main)', marginBottom: '0.8rem', borderBottom: '1px solid var(--accent-color)', paddingBottom: '0.4rem', fontSize: '0.95rem', display: 'flex', alignItems: 'center', gap: '0.5rem', fontWeight: 600 }}>
-                    👩 {language === 'pt' ? 'Feminino' : "Women's"}
+                    👩 {lang === 'pt' ? 'Feminino' : "Women's"}
                   </h4>
                   <table style={{ width: '100%', borderCollapse: 'collapse' }}>
                     <thead>
@@ -408,7 +409,7 @@ const SizeGuideModal = ({ isOpen, onClose, isShoes, isNba, isStreetwear, isRebra
                 {/* Juvenil */}
                 <div style={{ background: 'rgba(255, 255, 255, 0.02)', padding: '1rem', borderRadius: '8px', border: '1px solid var(--border-color)' }}>
                   <h4 style={{ color: 'var(--text-main)', marginBottom: '0.8rem', borderBottom: '1px solid var(--accent-color)', paddingBottom: '0.4rem', fontSize: '0.95rem', display: 'flex', alignItems: 'center', gap: '0.5rem', fontWeight: 600 }}>
-                    👶 {language === 'pt' ? 'Juvenil (Filhos)' : 'Youth (Kids)'}
+                    👶 {lang === 'pt' ? 'Juvenil (Filhos)' : 'Youth (Kids)'}
                   </h4>
                   <table style={{ width: '100%', borderCollapse: 'collapse' }}>
                     <thead>
@@ -434,11 +435,11 @@ const SizeGuideModal = ({ isOpen, onClose, isShoes, isNba, isStreetwear, isRebra
               {/* Dicas */}
               <div style={{ background: 'rgba(204, 255, 0, 0.03)', border: '1px dashed var(--accent-color)', borderRadius: '8px', padding: '1rem', marginTop: '1.2rem' }}>
                 <h4 style={{ margin: '0 0 0.6rem 0', color: 'var(--accent-color)', fontSize: '0.9rem', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                  💡 {language === 'pt' ? 'Dicas de Ajuste:' : 'Sizing Tips:'}
+                  💡 {lang === 'pt' ? 'Dicas de Ajuste:' : 'Sizing Tips:'}
                 </h4>
                 <ul style={{ margin: 0, paddingLeft: '1.2rem', color: 'var(--text-muted)', fontSize: '0.85rem', lineHeight: '1.6' }}>
-                  <li>{language === 'pt' ? 'Chuteiras geralmente têm meio número maior.' : 'Cleats generally run half a size larger.'}</li>
-                  <li>{language === 'pt' ? 'Escolha meio número acima se você tiver pés largos ou grossos.' : 'Choose half a size up if you have wide or thick feet.'}</li>
+                  <li>{lang === 'pt' ? 'Chuteiras geralmente têm meio número maior.' : 'Cleats generally run half a size larger.'}</li>
+                  <li>{lang === 'pt' ? 'Escolha meio número acima se você tiver pés largos ou grossos.' : 'Choose half a size up if you have wide or thick feet.'}</li>
                 </ul>
               </div>
             </div>
@@ -446,17 +447,17 @@ const SizeGuideModal = ({ isOpen, onClose, isShoes, isNba, isStreetwear, isRebra
 
           {activeTab === 'nba' && (
             <div className="reveal">
-              <h3 style={{ marginBottom: '1.5rem', fontSize: '1.1rem', color: 'var(--accent-color)', textTransform: 'uppercase' }}>🏀 {language === 'pt' ? 'Regatas NBA (Swingman / Authentic)' : 'NBA Jerseys (Swingman / Authentic)'}</h3>
+              <h3 style={{ marginBottom: '1.5rem', fontSize: '1.1rem', color: 'var(--accent-color)', textTransform: 'uppercase' }}>🏀 {lang === 'pt' ? 'Regatas NBA (Swingman / Authentic)' : 'NBA Jerseys (Swingman / Authentic)'}</h3>
               
               <div className="table-responsive" style={{ marginBottom: '2.5rem' }}>
                 <table style={{ width: '100%', borderCollapse: 'collapse' }}>
                   <thead>
                     <tr style={{ background: 'rgba(204, 255, 0, 0.1)' }}>
-                      <th style={{ padding: '1rem', textAlign: 'left', borderBottom: '2px solid var(--accent-color)' }}>{language === 'pt' ? 'Tamanho' : 'Size'}</th>
-                      <th style={{ padding: '1rem', textAlign: 'center', borderBottom: '2px solid var(--accent-color)' }}>{language === 'pt' ? 'Comprimento' : 'Length'}</th>
-                      <th style={{ padding: '1rem', textAlign: 'center', borderBottom: '2px solid var(--accent-color)' }}>{language === 'pt' ? 'Busto' : 'Bust'}</th>
-                      <th style={{ padding: '1rem', textAlign: 'center', borderBottom: '2px solid var(--accent-color)' }}>{language === 'pt' ? 'Ombro' : 'Shoulder'}</th>
-                      <th style={{ padding: '1rem', textAlign: 'center', borderBottom: '2px solid var(--accent-color)' }}>{language === 'pt' ? 'Altura & Peso Recomendados' : 'Recommended Height & Weight'}</th>
+                      <th style={{ padding: '1rem', textAlign: 'left', borderBottom: '2px solid var(--accent-color)' }}>{lang === 'pt' ? 'Tamanho' : 'Size'}</th>
+                      <th style={{ padding: '1rem', textAlign: 'center', borderBottom: '2px solid var(--accent-color)' }}>{lang === 'pt' ? 'Comprimento' : 'Length'}</th>
+                      <th style={{ padding: '1rem', textAlign: 'center', borderBottom: '2px solid var(--accent-color)' }}>{lang === 'pt' ? 'Busto' : 'Bust'}</th>
+                      <th style={{ padding: '1rem', textAlign: 'center', borderBottom: '2px solid var(--accent-color)' }}>{lang === 'pt' ? 'Ombro' : 'Shoulder'}</th>
+                      <th style={{ padding: '1rem', textAlign: 'center', borderBottom: '2px solid var(--accent-color)' }}>{lang === 'pt' ? 'Altura & Peso Recomendados' : 'Recommended Height & Weight'}</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -482,11 +483,11 @@ const SizeGuideModal = ({ isOpen, onClose, isShoes, isNba, isStreetwear, isRebra
               {/* Dicas */}
               <div style={{ background: 'rgba(204, 255, 0, 0.03)', border: '1px dashed var(--accent-color)', borderRadius: '8px', padding: '1rem' }}>
                 <h4 style={{ margin: '0 0 0.6rem 0', color: 'var(--accent-color)', fontSize: '0.9rem', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                  💡 {language === 'pt' ? 'Dicas de Ajuste para Regatas NBA:' : 'NBA Jersey Sizing Tips:'}
+                  💡 {lang === 'pt' ? 'Dicas de Ajuste para Regatas NBA:' : 'NBA Jersey Sizing Tips:'}
                 </h4>
                 <ul style={{ margin: 0, paddingLeft: '1.2rem', color: 'var(--text-muted)', fontSize: '0.85rem', lineHeight: '1.6' }}>
-                  <li>{language === 'pt' ? 'As regatas de basquete possuem um corte ligeiramente mais longo e folgado em comparação com as camisas de futebol padrão.' : 'Basketball jerseys have a slightly longer and looser fit compared to standard soccer jerseys.'}</li>
-                  <li>{language === 'pt' ? 'Se você planeja usar a regata por cima de um moletom ou camiseta (estilo streetwear), recomendamos comprar o seu tamanho normal ou um tamanho acima.' : 'If you plan to wear the jersey over a hoodie or t-shirt (streetwear style), we recommend buying your regular size or one size up.'}</li>
+                  <li>{lang === 'pt' ? 'As regatas de basquete possuem um corte ligeiramente mais longo e folgado em comparação com as camisas de futebol padrão.' : 'Basketball jerseys have a slightly longer and looser fit compared to standard soccer jerseys.'}</li>
+                  <li>{lang === 'pt' ? 'Se você planeja usar a regata por cima de um moletom ou camiseta (estilo streetwear), recomendamos comprar o seu tamanho normal ou um tamanho acima.' : 'If you plan to wear the jersey over a hoodie or t-shirt (streetwear style), we recommend buying your regular size or one size up.'}</li>
                 </ul>
               </div>
             </div>
@@ -494,18 +495,18 @@ const SizeGuideModal = ({ isOpen, onClose, isShoes, isNba, isStreetwear, isRebra
 
           {activeTab === 'streetwear' && (
             <div className="reveal">
-              <h3 style={{ marginBottom: '1.5rem', fontSize: '1.1rem', color: 'var(--accent-color)', textTransform: 'uppercase' }}>👕 {language === 'pt' ? 'Camisetas Streetwear' : 'Streetwear T-Shirts'}</h3>
+              <h3 style={{ marginBottom: '1.5rem', fontSize: '1.1rem', color: 'var(--accent-color)', textTransform: 'uppercase' }}>👕 {lang === 'pt' ? 'Camisetas Streetwear' : 'Streetwear T-Shirts'}</h3>
               
               <div className="table-responsive" style={{ marginBottom: '2.5rem' }}>
                 <table style={{ width: '100%', borderCollapse: 'collapse' }}>
                   <thead>
                     <tr style={{ background: 'rgba(204, 255, 0, 0.1)' }}>
-                      <th style={{ padding: '1rem', textAlign: 'left', borderBottom: '2px solid var(--accent-color)' }}>{language === 'pt' ? 'Tamanho' : 'Size'}</th>
-                      <th style={{ padding: '1rem', textAlign: 'center', borderBottom: '2px solid var(--accent-color)' }}>{language === 'pt' ? 'Ombro' : 'Shoulder'}</th>
-                      <th style={{ padding: '1rem', textAlign: 'center', borderBottom: '2px solid var(--accent-color)' }}>{language === 'pt' ? 'Comprimento' : 'Length'}</th>
-                      <th style={{ padding: '1rem', textAlign: 'center', borderBottom: '2px solid var(--accent-color)' }}>{language === 'pt' ? 'Peito' : 'Chest'}</th>
-                      <th style={{ padding: '1rem', textAlign: 'center', borderBottom: '2px solid var(--accent-color)' }}>{language === 'pt' ? 'Altura Recomendada' : 'Recommended Height'}</th>
-                      <th style={{ padding: '1rem', textAlign: 'center', borderBottom: '2px solid var(--accent-color)' }}>{language === 'pt' ? 'Peso Recomendado' : 'Recommended Weight'}</th>
+                      <th style={{ padding: '1rem', textAlign: 'left', borderBottom: '2px solid var(--accent-color)' }}>{lang === 'pt' ? 'Tamanho' : 'Size'}</th>
+                      <th style={{ padding: '1rem', textAlign: 'center', borderBottom: '2px solid var(--accent-color)' }}>{lang === 'pt' ? 'Ombro' : 'Shoulder'}</th>
+                      <th style={{ padding: '1rem', textAlign: 'center', borderBottom: '2px solid var(--accent-color)' }}>{lang === 'pt' ? 'Comprimento' : 'Length'}</th>
+                      <th style={{ padding: '1rem', textAlign: 'center', borderBottom: '2px solid var(--accent-color)' }}>{lang === 'pt' ? 'Peito' : 'Chest'}</th>
+                      <th style={{ padding: '1rem', textAlign: 'center', borderBottom: '2px solid var(--accent-color)' }}>{lang === 'pt' ? 'Altura Recomendada' : 'Recommended Height'}</th>
+                      <th style={{ padding: '1rem', textAlign: 'center', borderBottom: '2px solid var(--accent-color)' }}>{lang === 'pt' ? 'Peso Recomendado' : 'Recommended Weight'}</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -533,11 +534,11 @@ const SizeGuideModal = ({ isOpen, onClose, isShoes, isNba, isStreetwear, isRebra
               {/* Dicas */}
               <div style={{ background: 'rgba(204, 255, 0, 0.03)', border: '1px dashed var(--accent-color)', borderRadius: '8px', padding: '1rem' }}>
                 <h4 style={{ margin: '0 0 0.6rem 0', color: 'var(--accent-color)', fontSize: '0.9rem', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                  💡 {language === 'pt' ? 'Dicas de Ajuste para Camisetas Streetwear:' : 'Streetwear T-Shirt Sizing Tips:'}
+                  💡 {lang === 'pt' ? 'Dicas de Ajuste para Camisetas Streetwear:' : 'Streetwear T-Shirt Sizing Tips:'}
                 </h4>
                 <ul style={{ margin: 0, paddingLeft: '1.2rem', color: 'var(--text-muted)', fontSize: '0.85rem', lineHeight: '1.6' }}>
-                  <li>{language === 'pt' ? 'Essas camisetas possuem modelagem boxy/oversized fit, com ombros ligeiramente caídos e caimento mais largo.' : 'These t-shirts feature a boxy/oversized fit with slightly dropped shoulders and a wider drape.'}</li>
-                  <li>{language === 'pt' ? 'Recomendamos comprar o seu tamanho habitual para um caimento moderno e confortável. Se preferir um ajuste mais tradicional/justo, opte por um tamanho menor.' : 'We recommend purchasing your usual size for a modern, comfortable fit. If you prefer a more traditional/tighter fit, consider sizing down.'}</li>
+                  <li>{lang === 'pt' ? 'Essas camisetas possuem modelagem boxy/oversized fit, com ombros ligeiramente caídos e caimento mais largo.' : 'These t-shirts feature a boxy/oversized fit with slightly dropped shoulders and a wider drape.'}</li>
+                  <li>{lang === 'pt' ? 'Recomendamos comprar o seu tamanho habitual para um caimento moderno e confortável. Se preferir um ajuste mais tradicional/justo, opte por um tamanho menor.' : 'We recommend purchasing your usual size for a modern, comfortable fit. If you prefer a more traditional/tighter fit, consider sizing down.'}</li>
                 </ul>
               </div>
             </div>
@@ -546,7 +547,7 @@ const SizeGuideModal = ({ isOpen, onClose, isShoes, isNba, isStreetwear, isRebra
           {activeTab === 'accessories' && (
             <div className="reveal">
               <div className="table-responsive" style={{ marginBottom: '2.5rem' }}>
-                <h3 style={{ marginBottom: '1.5rem', fontSize: '1.1rem', color: 'var(--accent-color)' }}>🧥 {language === 'pt' ? 'Jaqueta Corta-Vento' : 'Windbreakers'}</h3>
+                <h3 style={{ marginBottom: '1.5rem', fontSize: '1.1rem', color: 'var(--accent-color)' }}>🧥 {lang === 'pt' ? 'Jaqueta Corta-Vento' : 'Windbreakers'}</h3>
                 <table style={{ width: '100%', borderCollapse: 'collapse' }}>
                   <TableHeader />
                   <tbody>
@@ -562,7 +563,7 @@ const SizeGuideModal = ({ isOpen, onClose, isShoes, isNba, isStreetwear, isRebra
               </div>
 
               <div className="table-responsive" style={{ marginBottom: '2.5rem' }}>
-                <h3 style={{ marginBottom: '1.5rem', fontSize: '1.1rem', color: 'var(--accent-color)' }}>🏃 {language === 'pt' ? 'Agasalhos' : 'Tracksuits'}</h3>
+                <h3 style={{ marginBottom: '1.5rem', fontSize: '1.1rem', color: 'var(--accent-color)' }}>🏃 {lang === 'pt' ? 'Agasalhos' : 'Tracksuits'}</h3>
                 <table style={{ width: '100%', borderCollapse: 'collapse' }}>
                   <TableHeader />
                   <tbody>
@@ -584,7 +585,7 @@ const SizeGuideModal = ({ isOpen, onClose, isShoes, isNba, isStreetwear, isRebra
         {/* Footer */}
         <div style={{ padding: '1.5rem 2rem', background: 'rgba(0,0,0,0.3)', borderTop: '1px solid var(--border-color)', textAlign: 'center' }}>
           <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', margin: 0 }}>
-            {language === 'pt' ? '* Medidas aproximadas podem variar em 1-2 cm.' : '* Approximate measurements can vary by 1-2 cm.'}
+            {lang === 'pt' ? '* Medidas aproximadas podem variar em 1-2 cm.' : '* Approximate measurements can vary by 1-2 cm.'}
           </p>
         </div>
       </div>
