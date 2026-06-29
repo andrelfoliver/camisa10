@@ -8,7 +8,7 @@ export default async function handler(req, res) {
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
-  const { order, language = 'pt', adminOnly = false, supplierEmail = null, supplierOnly = false } = req.body;
+  const { order, language = 'pt', adminOnly = false, supplierEmail = null, supplierOnly = false, adminEmail = null } = req.body;
 
   if (!order) {
     return res.status(400).json({ error: 'Order data missing' });
@@ -244,8 +244,8 @@ export default async function handler(req, res) {
     if (!supplierOnly) {
       adminRes = await resend.emails.send({
         from: 'iFooty Alerts <vendas@ifooty.ca>',
-        to: ['camisadez085@gmail.com'],
-        replyTo: 'camisadez085@gmail.com',
+        to: [adminEmail || 'camisadez085@gmail.com'],
+        replyTo: adminEmail || 'camisadez085@gmail.com',
         subject: `⚽ NOVO PEDIDO: ${order.customer_name}`,
         html: `
           <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; max-width: 650px; margin: 0 auto; background: #ffffff;">
@@ -327,8 +327,8 @@ export default async function handler(req, res) {
       try {
         paypalPaymentRes = await resend.emails.send({
           from: 'iFooty Alerts <vendas@ifooty.ca>',
-          to: ['camisadez085@gmail.com'],
-          replyTo: 'camisadez085@gmail.com',
+          to: [adminEmail || 'camisadez085@gmail.com'],
+          replyTo: adminEmail || 'camisadez085@gmail.com',
           subject: `💰 PEDIDO PAGO (PayPal): ${order.customer_name}`,
           html: `
             <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; max-width: 600px; margin: 0 auto; border: 1px solid #edf2f7; border-radius: 12px; overflow: hidden; background: #ffffff;">

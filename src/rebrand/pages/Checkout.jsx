@@ -318,7 +318,11 @@ const RebrandCheckout = () => {
     try {
       await fetch('/api/send-order-email', {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ language: 'en', order: { ...orderData, customer_name: data.name, customer_email: user?.email || guestEmail, customer_phone: data.phone } })
+        body: JSON.stringify({ 
+          language: 'en', 
+          adminEmail: 'ifootyc@gmail.com',
+          order: { ...orderData, customer_name: data.name, customer_email: user?.email || guestEmail, customer_phone: data.phone } 
+        })
       });
     } catch {}
     if (data.saveAddress && user) {
@@ -422,20 +426,10 @@ const RebrandCheckout = () => {
         throw new Error(session.error);
       }
 
-      const { loadStripe } = await import('@stripe/stripe-js');
-      const stripePublishableKey = import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY || '';
-      const stripe = await loadStripe(stripePublishableKey);
-      
-      if (!stripe) {
-        throw new Error('Stripe failed to load');
-      }
-
-      const { error } = await stripe.redirectToCheckout({
-        sessionId: session.id
-      });
-
-      if (error) {
-        throw error;
+      if (session.url) {
+        window.location.href = session.url;
+      } else {
+        throw new Error('No checkout URL returned from Stripe');
       }
     } catch (error) {
       console.error('Stripe error:', error);
