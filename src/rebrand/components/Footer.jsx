@@ -28,13 +28,7 @@ const Footer = () => {
             <p style={{ margin: 0, fontSize: '0.8rem', color: '#adb5bd' }}>Officially stitched details & fabrics</p>
           </div>
         </div>
-        <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
-          <RefreshCw size={32} color="var(--rebrand-volt)" />
-          <div>
-            <h5 style={{ margin: 0, textTransform: 'uppercase', fontWeight: 700 }}>Easy Exchange</h5>
-            <p style={{ margin: 0, fontSize: '0.8rem', color: '#adb5bd' }}>Simple and quick exchange program</p>
-          </div>
-        </div>
+
         <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
           <HelpCircle size={32} color="var(--rebrand-volt)" />
           <div>
@@ -86,7 +80,8 @@ const Footer = () => {
         <p style={{ fontSize: '0.8rem', color: '#6c757d', margin: 0 }}>
           © {new Date().getFullYear()} iFooty. Canada's Sports Jersey Store. All rights reserved.
         </p>
-        <div style={{ display: 'flex', gap: '1rem' }}>
+        <div style={{ display: 'flex', gap: '1.2rem', alignItems: 'center' }}>
+          <img src="https://upload.wikimedia.org/wikipedia/commons/b/ba/Stripe_Logo%2C_revised_2016.svg" alt="Stripe" style={{ height: '22px', opacity: 0.7, filter: 'brightness(0) invert(1)' }} />
           <img src="https://upload.wikimedia.org/wikipedia/commons/b/b5/PayPal.svg" alt="PayPal" style={{ height: '20px', opacity: 0.7 }} />
           <img src="https://upload.wikimedia.org/wikipedia/commons/3/31/InteracLogo.svg" alt="Interac" style={{ height: '20px', opacity: 0.7 }} />
         </div>
