@@ -102,7 +102,7 @@ const Navbar = () => {
         <div className="rebrand-promobar">
           <div className="rebrand-promobar-left">
             <span style={{ color: 'var(--rebrand-volt)' }}>🍁</span>
-            <span>Free Shipping on Orders Over $99 CAD</span>
+            <span>Free Shipping Across Canada</span>
           </div>
           <div className="rebrand-promobar-right">
             <a href="https://chat.whatsapp.com/KKKNZoOnr57AanDT33KPrT" target="_blank" rel="noopener noreferrer" style={{ color: 'var(--rebrand-volt)', textDecoration: 'none' }}>
