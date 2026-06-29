@@ -26,6 +26,15 @@ const SPORT_MOCKS = {
   ]
 };
 
+const PLAYERS_BY_SPORT = {
+  soccer: ['Lionel Messi', 'Cristiano Ronaldo', 'Neymar Jr', 'Vinicius Jr', 'Kylian Mbappé', 'Erling Haaland', 'Custom Name/Number'],
+  basketball: ['LeBron James', 'Stephen Curry', 'Giannis Antetokounmpo', 'Luka Dončić', 'Kevin Durant', 'Custom Name/Number'],
+  football: ['Patrick Mahomes', 'Travis Kelce', 'Lamar Jackson', 'Josh Allen', 'Custom Name/Number'],
+  baseball: ['Shohei Ohtani', 'Aaron Judge', 'Ronald Acuña Jr.', 'Mookie Betts', 'Custom Name/Number'],
+  hockey: ['Connor McDavid', 'Sidney Crosby', 'Auston Matthews', 'Nathan MacKinnon', 'Custom Name/Number']
+};
+
+
 // Sub-componente de Card de Produto com seletor de cor fictício
 const ProductCard = ({ product, onAdd, onQuickView }) => {
   const [activeColor, setActiveColor] = useState(product.colors?.[0] || '');
@@ -126,7 +135,8 @@ const CategoryPage = () => {
         try {
           const { data, error } = await supabase
             .from('products')
-            .select('*');
+            .select('*')
+            .order('id', { ascending: false });
             
           if (data) {
             const formatted = data.map((p, idx) => ({
@@ -277,7 +287,7 @@ const CategoryPage = () => {
               </button>
               {sections.players && (
                 <div className="rebrand-filter-accordion-content">
-                  {['Patrick Mahomes', 'Stephen Curry', 'LeBron James', 'Shohei Ohtani', 'Connor McDavid', 'Custom Name/Number'].map(player => (
+                  {(PLAYERS_BY_SPORT[category_id.toLowerCase()] || PLAYERS_BY_SPORT.soccer).map(player => (
                     <label key={player} style={{ display: 'flex', alignItems: 'center', gap: '0.8rem', cursor: 'pointer', fontSize: '0.85rem', fontWeight: 500 }}>
                       <input type="checkbox" style={{ accentColor: '#000000', width: '16px', height: '16px' }} />
                       <span>{player}</span>
