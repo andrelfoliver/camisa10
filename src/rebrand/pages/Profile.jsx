@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate, Navigate } from 'react-router-dom';
+import { useNavigate, Navigate, Link } from 'react-router-dom';
 import { useRebrandAuth } from '../../context/RebrandAuthContext';
+import { useWishlist } from '../../context/WishlistContext';
 import { supabaseRebrand as supabase } from '../../services/supabase';
-import { Package, User, LogOut, ChevronRight, Edit2, Check, X, Truck, Clock, CheckCircle, XCircle, ShoppingBag } from 'lucide-react';
+import { Package, User, LogOut, ChevronRight, Edit2, Check, X, Truck, Clock, CheckCircle, XCircle, ShoppingBag, Heart } from 'lucide-react';
 
 const STATUS_CONFIG = {
   pending:    { label: 'Pending Payment',  color: '#f59e0b', bg: '#fef3c7' },
@@ -20,6 +21,7 @@ const RebrandProfile = () => {
   const [activeTab, setActiveTab] = useState('orders');
   const [orders, setOrders] = useState([]);
   const [loadingOrders, setLoadingOrders] = useState(true);
+  const { wishlistItems, toggleWishlist } = useWishlist();
   const [isEditingName, setIsEditingName] = useState(false);
   const [editName, setEditName] = useState('');
   const [savingName, setSavingName] = useState(false);
@@ -100,6 +102,9 @@ const RebrandProfile = () => {
           <button className={`rp-tab${activeTab === 'orders' ? ' active' : ''}`} onClick={() => setActiveTab('orders')}>
             My Orders
           </button>
+          <button className={`rp-tab${activeTab === 'wishlist' ? ' active' : ''}`} onClick={() => setActiveTab('wishlist')}>
+            Wishlist
+          </button>
           <button className={`rp-tab${activeTab === 'account' ? ' active' : ''}`} onClick={() => setActiveTab('account')}>
             My Account
           </button>
@@ -109,6 +114,75 @@ const RebrandProfile = () => {
             </button>
           )}
         </div>
+
+        {activeTab === 'wishlist' && (
+          <div>
+            {wishlistItems.length === 0 ? (
+              <div style={{ textAlign: 'center', padding: '4rem 1rem', color: '#6b7280' }}>
+                <Heart size={48} style={{ opacity: 0.3, margin: '0 auto 1rem', display: 'block' }} />
+                <p style={{ fontWeight: 600, margin: '0 0 0.25rem' }}>Your wishlist is empty</p>
+                <p style={{ fontSize: '0.85rem', margin: '0 0 1rem' }}>Mark products with a heart on product details page to save them here.</p>
+                <button className="rp-btn-primary" onClick={() => navigate('/rebrand')}>Start Shopping</button>
+              </div>
+            ) : (
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: '1.5rem' }}>
+                {wishlistItems.map(item => (
+                  <div key={item.id} className="rp-card" style={{ display: 'flex', flexDirection: 'column' }}>
+                    <div style={{ position: 'relative', width: '100%', aspectRatio: '1', overflow: 'hidden', background: '#f3f4f6' }}>
+                      <Link to={`/rebrand/produto/${item.id}`}>
+                        <img 
+                          src={item.image} 
+                          alt={item.name} 
+                          style={{ width: '100%', height: '100%', objectFit: 'cover' }} 
+                        />
+                      </Link>
+                      <button 
+                        onClick={() => toggleWishlist(item)}
+                        style={{
+                          position: 'absolute',
+                          top: '0.5rem',
+                          right: '0.5rem',
+                          background: 'rgba(255,255,255,0.9)',
+                          border: 'none',
+                          borderRadius: '50%',
+                          width: '32px',
+                          height: '32px',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          cursor: 'pointer',
+                          boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
+                        }}
+                      >
+                        <Heart size={16} fill="#dc3545" color="#dc3545" />
+                      </button>
+                    </div>
+                    <div style={{ padding: '1rem', display: 'flex', flexDirection: 'column', flex: 1, justifyContent: 'space-between' }}>
+                      <div>
+                        <span style={{ fontSize: '0.7rem', color: '#9ca3af', textTransform: 'uppercase', fontWeight: 700 }}>{item.category}</span>
+                        <h4 style={{ margin: '0.2rem 0 0.5rem 0', fontSize: '0.88rem', fontWeight: 600, color: '#111827', lineHeight: '1.4' }}>
+                          <Link to={`/rebrand/produto/${item.id}`} style={{ color: 'inherit', textDecoration: 'none' }}>
+                            {item.name}
+                          </Link>
+                        </h4>
+                      </div>
+                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: '0.5rem' }}>
+                        <span style={{ fontWeight: 700, color: '#121416', fontSize: '0.95rem' }}>${Number(item.price || 0).toFixed(2)} CAD</span>
+                        <button 
+                          className="rp-btn-primary" 
+                          onClick={() => navigate(`/rebrand/produto/${item.id}`)}
+                          style={{ padding: '0.4rem 0.8rem', fontSize: '0.75rem', borderRadius: '6px' }}
+                        >
+                          View
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
 
         {activeTab === 'orders' && (
           <div>

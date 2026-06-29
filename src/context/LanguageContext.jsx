@@ -152,7 +152,7 @@ export const translations = {
     footer_catalog: 'Catálogo',
     about_title: 'Nossa História ⚽',
     about_text1: 'Nascida em Coquitlam/BC, em 2022, a iFooty surgiu de um desejo simples, mas poderoso: aproximar os brasileiros no Canadá e EUA de suas raízes. Sabemos que uma camisa de futebol não é apenas uma peça de roupa, é uma segunda pele que carrega memórias e pertencimento.',
-    about_text2: 'Após conquistar nossa comunidade na Columbia Britânica, agora chegamos com tudo em Calgary, especializados em entregar mantos oficiais de alta qualidade para que cada grito de "gol" tenha o orgulho do seu time do coração.',
+    about_text2: 'Após conquistar nossa comunidade na Columbia Britânica, agora chegamos com tudo em Calgary, especializados em entregar mantos de alta qualidade para que cada grito de "gol" tenha o orgulho do seu time do coração.',
     success_support_wa_msg: 'Olá! Acabei de fazer um pedido na iFooty e gostaria de tirar algumas dúvidas. 😊',
     checkout_summary_footer_note: 'Você enviará um resumo do pedido para nosso atendimento. O pagamento só será feito após confirmarmos os detalhes do pedido com você. Pagamento via e-Transfer Interac!',
     checkout_summary_footer_note_paypal: 'O pagamento é processado de forma segura pelo PayPal. Seus dados estão protegidos e você receberá uma confirmação imediata após a conclusão.',

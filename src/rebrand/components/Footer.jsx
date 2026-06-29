@@ -69,7 +69,8 @@ const Footer = () => {
         <div>
           <h4 style={{ color: '#fff', fontSize: '1.2rem', marginBottom: '1.5rem' }}>Info & Service</h4>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '0.8rem' }}>
-            <Link to="/perfil" style={{ color: '#adb5bd', textDecoration: 'none', fontSize: '0.9rem' }}>Track Order</Link>
+            <Link to="/rebrand/profile" style={{ color: '#adb5bd', textDecoration: 'none', fontSize: '0.9rem' }}>Track Order</Link>
+            <Link to="/rebrand/about" style={{ color: '#adb5bd', textDecoration: 'none', fontSize: '0.9rem' }}>About Us</Link>
             <Link to="/afiliados" style={{ color: '#adb5bd', textDecoration: 'none', fontSize: '0.9rem' }}>Affiliate Program</Link>
             <a href="https://chat.whatsapp.com/KKKNZoOnr57AanDT33KPrT" target="_blank" rel="noopener noreferrer" style={{ color: '#adb5bd', textDecoration: 'none', fontSize: '0.9rem' }}>Join VIP WhatsApp Group</a>
           </div>

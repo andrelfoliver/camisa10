@@ -110,10 +110,10 @@ const CategoryPage = () => {
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  // Estados dos Accordions de Filtro (Section Toggles)
   const [sections, setSections] = useState({
     department: false,
     league: true,
+    teams: true,
     gender: false,
     players: false,
     size: false,
@@ -129,36 +129,93 @@ const CategoryPage = () => {
   const [selectedPrice, setSelectedPrice] = useState('All');
   const [selectedGender, setSelectedGender] = useState('All');
   const [selectedLeague, setSelectedLeague] = useState('All');
+  const [selectedTeam, setSelectedTeam] = useState('All');
+  const [selectedPlayer, setSelectedPlayer] = useState('All');
+
+  // Reset filters when category changes
+  useEffect(() => {
+    setSelectedSize('All');
+    setSelectedPrice('All');
+    setSelectedGender('All');
+    setSelectedLeague('All');
+    setSelectedTeam('All');
+    setSelectedPlayer('All');
+  }, [category_id]);
 
   useEffect(() => {
     async function loadCategoryProducts() {
       setLoading(true);
       const categoryLower = category_id.toLowerCase();
       
-      if (['soccer', 'sale', 'new-arrivals', 'best-sellers'].includes(categoryLower)) {
+      if (['soccer', 'sale', 'new-arrivals', 'best-sellers', 'basketball', 'nba'].includes(categoryLower)) {
         try {
+          // Fetch sales ranking from store_settings
+          let salesRanking = {};
+          try {
+            const { data: settingsData } = await supabase
+              .from('store_settings')
+              .select('value')
+              .eq('key', 'product_sales_ranking')
+              .single();
+            if (settingsData && settingsData.value) {
+              salesRanking = typeof settingsData.value === 'string' 
+                ? JSON.parse(settingsData.value) 
+                : settingsData.value;
+            }
+          } catch (e) {
+            console.error("Failed to load sales ranking settings:", e);
+          }
+
           const { data, error } = await supabase
             .from('products')
             .select('*')
             .order('id', { ascending: false });
             
           if (data) {
-            const formatted = data.map((p, idx) => ({
-              id: p.id,
-              name: p.name,
-              price: p.price || 89.90,
-              oldPrice: idx % 2 === 0 ? (p.price || 89.90) + 30.00 : null,
-              category: 'Soccer',
-              dbCategory: p.category,
-              version: p.version,
-              is_new: p.is_new,
-              league: p.league || p.category || 'Other',
-              image: p.image || p.images?.[0] || 'https://images.unsplash.com/photo-1508098682722-e99c43a406b2?w=600',
-              rating: p.rating || 4.8,
-              reviews: p.reviews_count || 32,
-              colors: ['#000000', '#ffffff', '#e31837'],
-              badge: idx % 3 === 0 ? 'Almost Gone' : idx % 5 === 0 ? 'Best Seller' : ''
-            }));
+            let formatted = data.map((p, idx) => {
+              const salesCount = salesRanking[p.id] || 0;
+              const isBestseller = p.is_bestseller || salesCount > 0;
+              const isBasketball = p.category === 'NBA' || p.category === 'Basketball';
+              return {
+                id: p.id,
+                name: p.name,
+                price: p.price || 89.90,
+                oldPrice: p.is_sale ? (p.price || 89.90) + 30.00 : null,
+                category: isBasketball ? 'Basketball' : 'Soccer',
+                dbCategory: p.category,
+                version: p.version,
+                is_new: p.is_new,
+                is_bestseller: isBestseller,
+                is_sale: p.is_sale,
+                salesCount: salesCount,
+                league: p.league || p.category || 'Other',
+                team: p.team || '',
+                desc: p.description || '',
+                image: p.image || p.images?.[0] || 'https://images.unsplash.com/photo-1508098682722-e99c43a406b2?w=600',
+                rating: p.rating || 4.8,
+                reviews: p.reviews_count || 32,
+                colors: ['#000000', '#ffffff', '#e31837'],
+                badge: isBestseller ? 'Best Seller' : (p.is_sale ? 'Sale' : (p.is_new ? 'New Arrival' : (idx % 4 === 0 ? 'Almost Gone' : '')))
+              };
+            });
+
+            if (categoryLower === 'best-sellers') {
+              // Filter and sort dynamically by sales count or manually tagged bestsellers, limiting to top 10
+              formatted = formatted
+                .filter(p => p.is_bestseller)
+                .sort((a, b) => (b.salesCount || 0) - (a.salesCount || 0))
+                .slice(0, 10);
+            } else if (categoryLower === 'sale') {
+              formatted = formatted.filter(p => p.is_sale);
+            } else if (categoryLower === 'new-arrivals') {
+              formatted = formatted.filter(p => p.is_new);
+            } else if (categoryLower === 'basketball' || categoryLower === 'nba') {
+              formatted = formatted.filter(p => p.dbCategory === 'NBA' || p.dbCategory === 'Basketball');
+            } else if (categoryLower === 'soccer') {
+              const nonSoccerCats = ['NBA', 'Basketball', 'NFL', 'Football', 'MLB', 'Baseball', 'NHL', 'Hockey', 'Tênis', 'Streetwear'];
+              formatted = formatted.filter(p => !nonSoccerCats.includes(p.dbCategory));
+            }
+
             setProducts(formatted);
           }
         } catch (err) {
@@ -202,6 +259,22 @@ const CategoryPage = () => {
       }
     }
 
+    // Filtro de time
+    if (selectedTeam !== 'All' && p.team !== selectedTeam) return false;
+
+    // Filtro de jogador
+    if (selectedPlayer !== 'All') {
+      const playerNameLower = selectedPlayer.toLowerCase();
+      // Remove "Custom Name/Number" from matches
+      if (playerNameLower !== 'custom name/number') {
+        // Extract last name/significant part to improve match tolerance
+        const lastName = playerNameLower.split(' ').pop();
+        const matchName = (p.name || '').toLowerCase().includes(lastName) || 
+                          (p.desc || '').toLowerCase().includes(lastName);
+        if (!matchName) return false;
+      }
+    }
+
     // Filtro de gênero/categoria
     if (selectedGender !== 'All' && Math.random() > 0.7) return false;
     
@@ -214,6 +287,9 @@ const CategoryPage = () => {
     
     return true;
   });
+
+  // Extract unique teams from filtered/available products list
+  const uniqueTeams = Array.from(new Set(products.map(p => p.team).filter(Boolean))).sort();
 
   return (
     <div style={{ background: '#ffffff', minHeight: '80vh', padding: '3rem 2rem' }} className="rebrand-scope">
@@ -354,6 +430,42 @@ const CategoryPage = () => {
               )}
             </div>
 
+            {/* Accordion: Teams */}
+            {uniqueTeams.length > 0 && (
+              <div className="rebrand-filter-accordion-item">
+                <button className="rebrand-filter-accordion-header" onClick={() => toggleSection('teams')}>
+                  <span>Teams</span>
+                  {sections.teams ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
+                </button>
+                {sections.teams && (
+                  <div className="rebrand-filter-accordion-content" style={{ maxHeight: '250px', overflowY: 'auto' }}>
+                    <label style={{ display: 'flex', alignItems: 'center', gap: '0.8rem', cursor: 'pointer', fontSize: '0.85rem', fontWeight: 500, marginBottom: '0.4rem' }}>
+                      <input 
+                        type="radio" 
+                        name="teamFilter" 
+                        checked={selectedTeam === 'All'}
+                        onChange={() => setSelectedTeam('All')}
+                        style={{ accentColor: '#000000', width: '16px', height: '16px' }} 
+                      />
+                      <span>All Teams</span>
+                    </label>
+                    {uniqueTeams.map(t => (
+                      <label key={t} style={{ display: 'flex', alignItems: 'center', gap: '0.8rem', cursor: 'pointer', fontSize: '0.85rem', fontWeight: 500, marginBottom: '0.4rem' }}>
+                        <input 
+                          type="radio" 
+                          name="teamFilter" 
+                          checked={selectedTeam === t}
+                          onChange={() => setSelectedTeam(t)}
+                          style={{ accentColor: '#000000', width: '16px', height: '16px' }} 
+                        />
+                        <span>{t}</span>
+                      </label>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
+
             {/* Accordion: Player */}
             <div className="rebrand-filter-accordion-item">
               <button className="rebrand-filter-accordion-header" onClick={() => toggleSection('players')}>
@@ -361,10 +473,26 @@ const CategoryPage = () => {
                 {sections.players ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
               </button>
               {sections.players && (
-                <div className="rebrand-filter-accordion-content">
+                <div className="rebrand-filter-accordion-content" style={{ maxHeight: '250px', overflowY: 'auto' }}>
+                  <label style={{ display: 'flex', alignItems: 'center', gap: '0.8rem', cursor: 'pointer', fontSize: '0.85rem', fontWeight: 500, marginBottom: '0.4rem' }}>
+                    <input 
+                      type="radio" 
+                      name="playerFilter" 
+                      checked={selectedPlayer === 'All'}
+                      onChange={() => setSelectedPlayer('All')}
+                      style={{ accentColor: '#000000', width: '16px', height: '16px' }} 
+                    />
+                    <span>All Players</span>
+                  </label>
                   {(PLAYERS_BY_SPORT[category_id.toLowerCase()] || PLAYERS_BY_SPORT.soccer).map(player => (
-                    <label key={player} style={{ display: 'flex', alignItems: 'center', gap: '0.8rem', cursor: 'pointer', fontSize: '0.85rem', fontWeight: 500 }}>
-                      <input type="checkbox" style={{ accentColor: '#000000', width: '16px', height: '16px' }} />
+                    <label key={player} style={{ display: 'flex', alignItems: 'center', gap: '0.8rem', cursor: 'pointer', fontSize: '0.85rem', fontWeight: 500, marginBottom: '0.4rem' }}>
+                      <input 
+                        type="radio" 
+                        name="playerFilter" 
+                        checked={selectedPlayer === player}
+                        onChange={() => setSelectedPlayer(player)}
+                        style={{ accentColor: '#000000', width: '16px', height: '16px' }} 
+                      />
                       <span>{player}</span>
                     </label>
                   ))}

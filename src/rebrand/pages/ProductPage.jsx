@@ -3,6 +3,7 @@ import { useParams, useNavigate, Link } from 'react-router-dom';
 import { supabaseRebrand as supabase } from '../../services/supabase';
 import { Star, ShoppingBag, ArrowLeft, ShieldCheck, Truck, RefreshCw, Calendar, Heart, Share2, Info, ChevronLeft, ChevronRight, Award } from 'lucide-react';
 import { useCart } from '../../context/CartContext';
+import { useWishlist } from '../../context/WishlistContext';
 import { formatProductName } from '../utils/format';
 import SizeGuideModal from '../../components/SizeGuideModal';
 
@@ -38,7 +39,8 @@ const ProductPage = () => {
   const [customNumber, setCustomNumber] = useState('');
 
   // Favorito
-  const [isWishlist, setIsWishlist] = useState(false);
+  const { toggleWishlist, isInWishlist } = useWishlist();
+  const isWishlist = product ? isInWishlist(product.id) : false;
   const [isSizeGuideOpen, setIsSizeGuideOpen] = useState(false);
   const [activeThumb, setActiveThumb] = useState(0);
   const [quantity, setQuantity] = useState(1);
@@ -265,7 +267,7 @@ const ProductPage = () => {
             {/* Wishlist & Share Buttons (Absolute to not take vertical space) */}
             <div style={{ position: 'absolute', top: 0, right: 0, display: 'flex', gap: '0.8rem', zIndex: 10 }}>
               <button 
-                onClick={() => setIsWishlist(!isWishlist)}
+                onClick={() => toggleWishlist(product)}
                 style={{ background: 'transparent', border: 'none', cursor: 'pointer', color: isWishlist ? '#dc3545' : 'var(--rebrand-text-muted)' }}
                 title="Add to Wishlist"
               >

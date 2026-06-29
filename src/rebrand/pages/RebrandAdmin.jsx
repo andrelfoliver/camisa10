@@ -15,6 +15,15 @@ import TrackingModal from '../../components/TrackingModal';
 // ─── Constants ───────────────────────────────────────────────────────────────
 const REBRAND_ADMIN_EMAIL = 'ifootyc@gmail.com';
 
+const NBA_TEAMS = [
+  'Atlanta Hawks', 'Boston Celtics', 'Brooklyn Nets', 'Charlotte Hornets', 'Chicago Bulls',
+  'Cleveland Cavaliers', 'Dallas Mavericks', 'Denver Nuggets', 'Detroit Pistons', 'Golden State Warriors',
+  'Houston Rockets', 'Indiana Pacers', 'LA Clippers', 'Los Angeles Lakers', 'Memphis Grizzlies',
+  'Miami Heat', 'Milwaukee Bucks', 'Minnesota Timberwolves', 'New Orleans Pelicans', 'New York Knicks',
+  'Oklahoma City Thunder', 'Orlando Magic', 'Philadelphia 76ers', 'Phoenix Suns', 'Portland Trail Blazers',
+  'Sacramento Kings', 'San Antonio Spurs', 'Toronto Raptors', 'Utah Jazz', 'Washington Wizards'
+];
+
 const NAV_ITEMS = [
   { id: 'dashboard',   label: 'Dashboard',         icon: LayoutDashboard },
   { id: 'orders',      label: 'Pedidos',            icon: ShoppingBag },
@@ -1518,6 +1527,10 @@ const ProductsSection = ({ showToast }) => {
       league: product.league || '',
       mainCategory: mainCat,
       subCategory: subCat,
+      team: product.team || '',
+      is_new: product.is_new || false,
+      is_bestseller: product.is_bestseller || false,
+      is_sale: product.is_sale || false,
       image: product.image || '',
       gallery: product.gallery || [],
       description: product.description || '',
@@ -1605,7 +1618,10 @@ const ProductsSection = ({ showToast }) => {
       price: parseFloat(form.price),
       category: form.category,
       league: form.league || null,
-      is_new: form.subCategory === 'New Arrivals',
+      team: form.team || null,
+      is_new: form.is_new || form.subCategory === 'New Arrivals',
+      is_bestseller: !!form.is_bestseller,
+      is_sale: !!form.is_sale,
       image: imageUrl,
       gallery: form.gallery || [],
       description: form.description,
@@ -1808,6 +1824,30 @@ const ProductsSection = ({ showToast }) => {
                     <option value="Streetwear">Streetwear</option>
                   </select>
                 </div>
+                {form.mainCategory && (
+                  <div style={{ gridColumn: '1 / -1' }}>
+                    <label style={S.label}>Time / Franquia</label>
+                    {form.mainCategory === 'Basketball' ? (
+                      <select
+                        style={S.input}
+                        value={form.team || ''}
+                        onChange={e => setForm({ ...form, team: e.target.value })}
+                      >
+                        <option value="">Selecionar Time...</option>
+                        {NBA_TEAMS.map(team => (
+                          <option key={team} value={team}>{team}</option>
+                        ))}
+                      </select>
+                    ) : (
+                      <input
+                        style={S.input}
+                        value={form.team || ''}
+                        onChange={e => setForm({ ...form, team: e.target.value })}
+                        placeholder="Ex: Real Madrid, Flamengo..."
+                      />
+                    )}
+                  </div>
+                )}
                  {form.mainCategory === 'Soccer' && (
                   <div style={{ gridColumn: '1 / -1' }}>
                     <label style={S.label}>Subcategoria Soccer (Liga/Coleção)</label>
@@ -1834,6 +1874,37 @@ const ProductsSection = ({ showToast }) => {
                     </select>
                   </div>
                 )}
+                <div style={{ gridColumn: '1 / -1', display: 'flex', gap: '1.5rem', margin: '0.5rem 0', flexWrap: 'wrap' }}>
+                  <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer', fontSize: '0.85rem' }}>
+                    <input 
+                      type="checkbox" 
+                      checked={!!form.is_new} 
+                      onChange={e => setForm({ ...form, is_new: e.target.checked })} 
+                      style={{ cursor: 'pointer' }}
+                    />
+                    🔥 Lançamento (New Arrival)
+                  </label>
+                  
+                  <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer', fontSize: '0.85rem' }}>
+                    <input 
+                      type="checkbox" 
+                      checked={!!form.is_bestseller} 
+                      onChange={e => setForm({ ...form, is_bestseller: e.target.checked })} 
+                      style={{ cursor: 'pointer' }}
+                    />
+                    ⭐ Mais Vendido (Best Seller)
+                  </label>
+
+                  <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer', fontSize: '0.85rem' }}>
+                    <input 
+                      type="checkbox" 
+                      checked={!!form.is_sale} 
+                      onChange={e => setForm({ ...form, is_sale: e.target.checked })} 
+                      style={{ cursor: 'pointer' }}
+                    />
+                    🏷️ Promoção (On Sale)
+                  </label>
+                </div>
                 <div style={{ gridColumn: '1 / -1' }}>
                   <label style={S.label}>Imagem do Produto</label>
                   {imagePreview && (

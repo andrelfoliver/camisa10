@@ -31,6 +31,7 @@ import RebrandAdmin from './rebrand/pages/RebrandAdmin';
 import RebrandCheckout from './rebrand/pages/Checkout';
 import RebrandAuth from './rebrand/pages/Auth';
 import RebrandProfile from './rebrand/pages/Profile';
+import RebrandAboutPage from './rebrand/pages/About';
 import { RebrandAuthProvider } from './context/RebrandAuthContext';
 
 import { initAnalytics, trackEvent } from './services/analytics';
@@ -120,6 +121,7 @@ const AppLayout = () => {
                   <Route path="checkout" element={<RebrandCheckout />} />
                   <Route path="auth" element={<RebrandAuth />} />
                   <Route path="profile" element={<RebrandProfile />} />
+                  <Route path="about" element={<RebrandAboutPage />} />
                   <Route path="sucesso" element={<Success />} />
                 </Route>
               </Routes>
@@ -164,16 +166,19 @@ const AppLayout = () => {
 };
 
 import { LanguageProvider } from './context/LanguageContext';
+import { WishlistProvider } from './context/WishlistContext';
 
 function App() {
   return (
     <LanguageProvider>
       <AuthProvider>
         <CartProvider>
-          <BrowserRouter>
-            <ScrollToTop />
-            <AppLayout />
-          </BrowserRouter>
+          <WishlistProvider>
+            <BrowserRouter>
+              <ScrollToTop />
+              <AppLayout />
+            </BrowserRouter>
+          </WishlistProvider>
         </CartProvider>
       </AuthProvider>
     </LanguageProvider>
