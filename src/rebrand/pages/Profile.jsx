@@ -14,7 +14,7 @@ const STATUS_CONFIG = {
 };
 
 const RebrandProfile = () => {
-  const { user, signOut, loading: authLoading } = useRebrandAuth();
+  const { user, signOut, loading: authLoading, isAdmin } = useRebrandAuth();
   const navigate = useNavigate();
 
   const [activeTab, setActiveTab] = useState('orders');
@@ -96,13 +96,18 @@ const RebrandProfile = () => {
           <p style={{ color: '#6b7280', margin: '0.25rem 0 0', fontSize: '0.9rem' }}>{user.email}</p>
         </div>
 
-        <div style={{ display: 'flex', borderBottom: '1px solid #e5e7eb', marginBottom: '1.5rem', overflowX: 'auto' }}>
+        <div style={{ display: 'flex', borderBottom: '1px solid #e5e7eb', marginBottom: '1.5rem', overflowX: 'auto', gap: '0.5rem' }}>
           <button className={`rp-tab${activeTab === 'orders' ? ' active' : ''}`} onClick={() => setActiveTab('orders')}>
             My Orders
           </button>
           <button className={`rp-tab${activeTab === 'account' ? ' active' : ''}`} onClick={() => setActiveTab('account')}>
             My Account
           </button>
+          {isAdmin && (
+            <button className="rp-tab" onClick={() => navigate('/rebrand/admin')} style={{ color: '#FB923C' }}>
+              ⚙️ Admin Panel
+            </button>
+          )}
         </div>
 
         {activeTab === 'orders' && (

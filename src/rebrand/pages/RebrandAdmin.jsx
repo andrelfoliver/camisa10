@@ -1447,14 +1447,62 @@ const ProductsSection = ({ showToast }) => {
     const defaultInventory = { S: 0, M: 0, L: 0, XL: 0, '2XL': 0, '3XL': 0, '4XL': 0 };
     const currentInventory = product.inventory ? { ...defaultInventory, ...product.inventory } : defaultInventory;
 
+    const mainCat = product.id === 'NEW' ? '' : getProductSport(product);
+    const subCat = (product.id === 'NEW' || mainCat !== 'Soccer') ? '' : getSoccerSubdivision(product);
+
     setForm({
       name: product.name || '',
       price: product.price || '',
       category: product.category || '',
+      mainCategory: mainCat,
+      subCategory: subCat,
       image: product.image || '',
+      gallery: product.gallery || [],
       description: product.description || '',
       inventory: currentInventory
     });
+  };
+
+  const handleMainCategoryChange = (val) => {
+    let cat = val;
+    if (val === 'Basketball') cat = 'NBA';
+    else if (val === 'Soccer') cat = ''; // Define upon subcategory selection
+    
+    setForm(prev => ({
+      ...prev,
+      mainCategory: val,
+      subCategory: val === 'Soccer' ? '' : prev.subCategory,
+      category: cat
+    }));
+  };
+
+  const handleSubCategoryChange = (val) => {
+    setForm(prev => ({
+      ...prev,
+      subCategory: val,
+      category: val
+    }));
+  };
+
+  const handleGalleryUpload = async (e) => {
+    const files = Array.from(e.target.files || []);
+    if (files.length === 0) return;
+    
+    try {
+      showToast('Enviando imagens para a galeria...', 'success');
+      const uploadedUrls = [];
+      for (const file of files) {
+        const url = await uploadImageToSupabase(file);
+        uploadedUrls.push(url);
+      }
+      setForm(prev => ({
+        ...prev,
+        gallery: [...(prev.gallery || []), ...uploadedUrls]
+      }));
+      showToast('Galeria atualizada!', 'success');
+    } catch (err) {
+      showToast('Erro no upload das imagens: ' + err.message, 'error');
+    }
   };
 
   const handleImageSelect = (e) => {
@@ -1493,6 +1541,7 @@ const ProductsSection = ({ showToast }) => {
       price: parseFloat(form.price),
       category: form.category,
       image: imageUrl,
+      gallery: form.gallery || [],
       description: form.description,
       inventory: form.inventory
     };
@@ -1661,12 +1710,41 @@ const ProductsSection = ({ showToast }) => {
                   <input style={S.input} type="number" step="0.01" required value={form.price} onChange={e => setForm({...form, price: e.target.value})} placeholder="Ex: 49.90" />
                 </div>
                 <div>
-                  <label style={S.label}>Categoria</label>
-                  <select style={S.input} value={form.category} onChange={e => setForm({...form, category: e.target.value})}>
+                  <label style={S.label}>Categoria Principal</label>
+                  <select 
+                    style={S.input} 
+                    required 
+                    value={form.mainCategory || ''} 
+                    onChange={e => handleMainCategoryChange(e.target.value)}
+                  >
                     <option value="">Selecionar...</option>
-                    {PRODUCT_CATEGORIES.map(c => <option key={c} value={c}>{c}</option>)}
+                    <option value="Soccer">Soccer (Futebol)</option>
+                    <option value="Basketball">Basketball (NBA)</option>
+                    <option value="Football">Football (NFL)</option>
+                    <option value="Baseball">Baseball (MLB)</option>
+                    <option value="Hockey">Hockey (NHL)</option>
+                    <option value="Tênis">Tênis</option>
+                    <option value="Lançamentos">Lançamentos</option>
+                    <option value="Streetwear">Streetwear</option>
                   </select>
                 </div>
+                {form.mainCategory === 'Soccer' && (
+                  <div style={{ gridColumn: '1 / -1' }}>
+                    <label style={S.label}>Subcategoria Soccer</label>
+                    <select 
+                      style={S.input} 
+                      required 
+                      value={form.subCategory || ''} 
+                      onChange={e => handleSubCategoryChange(e.target.value)}
+                    >
+                      <option value="">Selecionar...</option>
+                      <option value="Brasileirão">Brasileirão</option>
+                      <option value="Seleções">Seleções</option>
+                      <option value="Internacionais">Internacionais</option>
+                      <option value="Retrô">Retrô</option>
+                    </select>
+                  </div>
+                )}
                 <div style={{ gridColumn: '1 / -1' }}>
                   <label style={S.label}>Imagem do Produto</label>
                   {imagePreview && (
@@ -1681,6 +1759,71 @@ const ProductsSection = ({ showToast }) => {
                   </label>
                   <div style={{ textAlign: 'center', color: 'rgba(255,255,255,0.2)', fontSize: '0.75rem', margin: '0.4rem 0' }}>— ou —</div>
                   <input style={S.input} value={form.image} onChange={e => { setForm({...form, image: e.target.value}); if (e.target.value) setImagePreview(e.target.value); }} placeholder="Cole uma URL direta: https://..." />
+                </div>
+
+                <div style={{ gridColumn: '1 / -1', borderTop: '1px solid rgba(255,255,255,0.06)', paddingTop: '1rem', marginTop: '0.5rem' }}>
+                  <label style={S.label}>Outras Imagens (Galeria)</label>
+                  {form.gallery && form.gallery.length > 0 && (
+                    <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap', marginBottom: '0.75rem' }}>
+                      {form.gallery.map((img, idx) => (
+                        <div key={idx} style={{ position: 'relative', width: '70px', height: '70px', borderRadius: '6px', overflow: 'hidden', border: '1px solid #2A2D30', background: '#0B0C0E' }}>
+                          <ProductMedia src={img} alt={`Gallery ${idx}`} style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
+                          <button 
+                            type="button" 
+                            onClick={() => {
+                              const newGallery = [...form.gallery];
+                              newGallery.splice(idx, 1);
+                              setForm({ ...form, gallery: newGallery });
+                            }} 
+                            style={{ 
+                              position: 'absolute', top: '2px', right: '2px', 
+                              background: 'rgba(0,0,0,0.8)', border: 'none', color: '#F87171', 
+                              borderRadius: '50%', width: '18px', height: '18px', cursor: 'pointer', 
+                              display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.75rem' 
+                            }}
+                          >
+                            <X size={10} />
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                    <label style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', padding: '0.75rem 1rem', background: '#0B0C0E', border: '1px dashed #2A2D30', borderRadius: '6px', cursor: 'pointer', fontSize: '0.8rem', color: 'rgba(255,255,255,0.6)' }}>
+                      <input type="file" multiple accept="image/*" style={{ display: 'none' }} onChange={handleGalleryUpload} />
+                      📸 Clique para enviar fotos para a galeria
+                    </label>
+                    <div style={{ display: 'flex', gap: '0.5rem' }}>
+                      <input 
+                        id="new-gallery-url"
+                        style={{ ...S.input, flex: 1, padding: '0.6rem 0.8rem', fontSize: '0.85rem' }} 
+                        placeholder="Adicionar por URL direta..." 
+                        onKeyDown={e => {
+                          if (e.key === 'Enter') {
+                            e.preventDefault();
+                            const val = e.currentTarget.value.trim();
+                            if (val) {
+                              setForm(prev => ({ ...prev, gallery: [...(prev.gallery || []), val] }));
+                              e.currentTarget.value = '';
+                            }
+                          }
+                        }}
+                      />
+                      <button 
+                        type="button" 
+                        style={{ ...S.btnPrimary, padding: '0.6rem 1rem' }}
+                        onClick={() => {
+                          const input = document.getElementById('new-gallery-url');
+                          if (input && input.value.trim()) {
+                            setForm(prev => ({ ...prev, gallery: [...(prev.gallery || []), input.value.trim()] }));
+                            input.value = '';
+                          }
+                        }}
+                      >
+                        Adicionar
+                      </button>
+                    </div>
+                  </div>
                 </div>
                 
                 {/* Inventory / Stock Section */}

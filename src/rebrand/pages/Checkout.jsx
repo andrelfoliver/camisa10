@@ -281,7 +281,7 @@ const RebrandCheckout = () => {
       })),
       total_price: finalTotal,
       status: paymentDetails ? 'paid' : 'pending',
-      payment_method: paymentDetails ? 'paypal' : 'whatsapp',
+      payment_method: paymentDetails ? 'paypal' : paymentMethod,
       payment_id: paymentDetails?.id || null,
       paid_at: paymentDetails ? new Date().toISOString() : null,
       referrer: attribution.referrer || localStorage.getItem('ifooty_referrer') || null,
@@ -387,6 +387,62 @@ const RebrandCheckout = () => {
       navigate('/sucesso', { state: { paid: true } });
     } catch { showPopup('Error saving order. Please contact us on WhatsApp.'); }
     finally { setIsSubmitting(false); }
+  };
+
+  const handleStripeCheckout = async () => {
+    if (!validateForm()) return;
+    setIsSubmitting(true);
+    try {
+      const savedOrder = await saveOrderToDatabase();
+      const orderId = savedOrder?.id || `purchase_${Date.now()}`;
+      
+      const res = await fetch('/api/create-stripe-session', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          orderId,
+          items: cartItems.map(item => ({
+            name: item.name,
+            size: item.size,
+            quantity: item.quantity,
+            price: convertPrice(item.price),
+            image: item.image
+          })),
+          currency: currency === 'USD' ? 'USD' : 'CAD',
+          shippingCost: convertPrice(currentShipping),
+          discountPercent: appliedCoupon ? appliedCoupon.discount_percent : 0,
+          flatDiscount: convertPrice(discount),
+          successUrl: `${window.location.origin}/sucesso`,
+          cancelUrl: window.location.href
+        })
+      });
+
+      const session = await res.json();
+      if (session.error) {
+        throw new Error(session.error);
+      }
+
+      const { loadStripe } = await import('@stripe/stripe-js');
+      const stripePublishableKey = import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY || '';
+      const stripe = await loadStripe(stripePublishableKey);
+      
+      if (!stripe) {
+        throw new Error('Stripe failed to load');
+      }
+
+      const { error } = await stripe.redirectToCheckout({
+        sessionId: session.id
+      });
+
+      if (error) {
+        throw error;
+      }
+    } catch (error) {
+      console.error('Stripe error:', error);
+      showPopup(`Payment Error: ${error.message}`);
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   // Input style helper
@@ -762,16 +818,21 @@ const RebrandCheckout = () => {
 
               {/* Payment Method */}
               <p style={{ fontSize: '0.75rem', fontWeight: 600, color: '#6c757d', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '0.75rem' }}>Payment Method</p>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.7rem', marginBottom: '1.2rem' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '0.5rem', marginBottom: '1.2rem' }}>
                 <button onClick={() => setPaymentMethod('whatsapp')}
-                  style={{ padding: '0.9rem', borderRadius: '10px', border: `2px solid ${paymentMethod === 'whatsapp' ? '#25D366' : '#dee2e6'}`, background: paymentMethod === 'whatsapp' ? '#f0fdf4' : '#fff', cursor: 'pointer', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.4rem', transition: 'all 0.15s' }}>
+                  style={{ padding: '0.9rem 0.4rem', borderRadius: '10px', border: `2px solid ${paymentMethod === 'whatsapp' ? '#25D366' : '#dee2e6'}`, background: paymentMethod === 'whatsapp' ? '#f0fdf4' : '#fff', cursor: 'pointer', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.4rem', transition: 'all 0.15s' }}>
                   <MessageSquare size={20} color={paymentMethod === 'whatsapp' ? '#25D366' : '#adb5bd'} />
-                  <span style={{ fontSize: '0.8rem', fontWeight: 700, color: paymentMethod === 'whatsapp' ? '#121416' : '#6c757d' }}>WhatsApp</span>
+                  <span style={{ fontSize: '0.75rem', fontWeight: 700, color: paymentMethod === 'whatsapp' ? '#121416' : '#6c757d' }}>WhatsApp</span>
                 </button>
                 <button onClick={() => setPaymentMethod('paypal')}
-                  style={{ padding: '0.9rem', borderRadius: '10px', border: `2px solid ${paymentMethod === 'paypal' ? '#0070BA' : '#dee2e6'}`, background: paymentMethod === 'paypal' ? '#eff6ff' : '#fff', cursor: 'pointer', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.4rem', transition: 'all 0.15s' }}>
+                  style={{ padding: '0.9rem 0.4rem', borderRadius: '10px', border: `2px solid ${paymentMethod === 'paypal' ? '#0070BA' : '#dee2e6'}`, background: paymentMethod === 'paypal' ? '#eff6ff' : '#fff', cursor: 'pointer', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.4rem', transition: 'all 0.15s' }}>
                   <CreditCard size={20} color={paymentMethod === 'paypal' ? '#0070BA' : '#adb5bd'} />
-                  <span style={{ fontSize: '0.8rem', fontWeight: 700, color: paymentMethod === 'paypal' ? '#121416' : '#6c757d' }}>PayPal / Card</span>
+                  <span style={{ fontSize: '0.75rem', fontWeight: 700, color: paymentMethod === 'paypal' ? '#121416' : '#6c757d' }}>PayPal</span>
+                </button>
+                <button onClick={() => setPaymentMethod('stripe')}
+                  style={{ padding: '0.9rem 0.4rem', borderRadius: '10px', border: `2px solid ${paymentMethod === 'stripe' ? '#635BFF' : '#dee2e6'}`, background: paymentMethod === 'stripe' ? '#f8f8ff' : '#fff', cursor: 'pointer', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.4rem', transition: 'all 0.15s' }}>
+                  <CreditCard size={20} color={paymentMethod === 'stripe' ? '#635BFF' : '#adb5bd'} />
+                  <span style={{ fontSize: '0.75rem', fontWeight: 700, color: paymentMethod === 'stripe' ? '#121416' : '#6c757d' }}>Card (Stripe)</span>
                 </button>
               </div>
 
@@ -784,6 +845,15 @@ const RebrandCheckout = () => {
                 >
                   <WhatsAppIcon size={20} />
                   {isSubmitting ? 'Processing...' : 'Place Order via WhatsApp'}
+                </button>
+              ) : paymentMethod === 'stripe' ? (
+                <button
+                  onClick={handleStripeCheckout}
+                  disabled={isSubmitting}
+                  style={{ width: '100%', padding: '1rem', background: isSubmitting ? '#adb5bd' : '#635BFF', color: '#fff', border: 'none', borderRadius: '100px', fontWeight: 800, fontSize: '1rem', cursor: isSubmitting ? 'not-allowed' : 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem', transition: 'background 0.2s' }}
+                >
+                  <CreditCard size={20} />
+                  {isSubmitting ? 'Redirecting...' : `Pay ${formatPrice(displayFinalTotal)} with Card`}
                 </button>
               ) : (
                 <div style={{ position: 'relative', zIndex: 1 }}>

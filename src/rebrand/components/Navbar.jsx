@@ -19,7 +19,8 @@ const Navbar = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { totalItems, setIsCartOpen } = useCart();
-  const { user, signOut } = useRebrandAuth();
+  const { user, signOut, isAdmin } = useRebrandAuth();
+  const userAvatar = user?.user_metadata?.avatar_url || user?.user_metadata?.picture;
 
   const [displayName, setDisplayName] = useState('Hello, Sign In');
   const [accountStatus, setAccountStatus] = useState('My Account');
@@ -169,7 +170,16 @@ const Navbar = () => {
             {/* Account with Dropdown */}
             <div className="rebrand-account-menu-container" style={{ position: 'relative' }}>
               <Link to={accountLink} style={{ color: '#ffffff', textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                <User size={22} color="rgba(255,255,255,0.8)" />
+                {userAvatar ? (
+                  <img 
+                    src={userAvatar} 
+                    alt="" 
+                    referrerPolicy="no-referrer"
+                    style={{ width: '24px', height: '24px', borderRadius: '50%', objectFit: 'cover', border: '1px solid rgba(255,255,255,0.2)' }} 
+                  />
+                ) : (
+                  <User size={22} color="rgba(255,255,255,0.8)" />
+                )}
                 <div style={{ textAlign: 'left' }} className="hide-tablet">
                   <span style={{ display: 'block', fontSize: '0.65rem', color: 'rgba(255,255,255,0.5)' }}>{displayName}</span>
                   <span style={{ fontSize: '0.8rem', fontWeight: 700, color: '#ffffff' }}>{accountStatus}</span>
@@ -177,6 +187,11 @@ const Navbar = () => {
               </Link>
               {(user || sessionStorage.getItem('ifooty_guest_email')) && (
                 <div className="rebrand-account-dropdown">
+                  {isAdmin && (
+                    <Link to="/rebrand/admin" style={{ borderBottom: '1px solid #f1f3f5', color: '#121416', fontWeight: 'bold' }}>
+                      ⚙️ Admin Panel
+                    </Link>
+                  )}
                   <Link to={user ? '/rebrand/profile' : '/rebrand/checkout'} style={{ borderBottom: '1px solid #f1f3f5' }}>
                     {user ? 'My Profile' : 'Guest Checkout'}
                   </Link>

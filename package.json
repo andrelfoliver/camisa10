@@ -12,6 +12,7 @@
   },
   "dependencies": {
     "@paypal/react-paypal-js": "^9.1.1",
+    "@stripe/stripe-js": "^9.8.0",
     "@supabase/supabase-js": "^2.103.0",
     "axios": "^1.15.0",
     "dotenv": "^17.4.2",
@@ -22,6 +23,7 @@
     "react-hot-toast": "^2.5.1",
     "react-router-dom": "^7.14.0",
     "resend": "^3.5.0",
+    "stripe": "^22.3.0",
     "tesseract.js": "^7.0.0"
   },
   "engines": {
