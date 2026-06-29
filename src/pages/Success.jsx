@@ -18,6 +18,8 @@ const Success = () => {
   const [verificationError, setVerificationError] = React.useState('');
   const [stripePaid, setStripePaid] = React.useState(false);
 
+  const verifiedRef = React.useRef(false);
+
   // Limpa o carrinho definitivamente ao chegar na página de sucesso se não for Stripe (Stripe limpa após confirmação)
   React.useEffect(() => {
     if (!stripeSessionId) {
@@ -27,6 +29,8 @@ const Success = () => {
 
   React.useEffect(() => {
     if (!stripeSessionId) return;
+    if (verifiedRef.current) return;
+    verifiedRef.current = true;
     
     async function verifyPayment() {
       try {
