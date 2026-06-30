@@ -890,7 +890,7 @@ const RebrandCheckout = () => {
             <ShieldCheck size={20} color="#16a34a" />
             <div>
               <p style={{ margin: 0, fontWeight: 700, fontSize: '0.9rem', color: '#15803d' }}>✓ Ready To Ship</p>
-              <p style={{ margin: 0, fontSize: '0.8rem', color: '#166534' }}>This item leaves our warehouse in 1–2 business days. Eligible for free Canada-wide shipping on orders over $99 CAD.</p>
+              <p style={{ margin: 0, fontSize: '0.8rem', color: '#166534' }}>This item leaves our warehouse in 1–4 business days. Eligible for free Canada-wide shipping.</p>
             </div>
           </div>
         </div>
