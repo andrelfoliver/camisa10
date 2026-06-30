@@ -117,7 +117,8 @@ const SalesPopup = () => {
     return str.replace('há ', '').replace(' minutos', 'm ago').replace(' minuto', 'm ago').replace(' hora', 'h ago').replace('agora mesmo', 'just now');
   };
 
-  if (!currentSale || location.pathname !== '/checkout') return null;
+  const isCheckoutPage = location.pathname === '/checkout' || location.pathname === '/rebrand/checkout';
+  if (!currentSale || !isCheckoutPage) return null;
 
   return (
     <div style={{
