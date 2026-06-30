@@ -1033,33 +1033,48 @@ h3.rebrand-sport-name {
     background-position: 64% center !important;
   }
   .rebrand-hero-overlay {
-    background: linear-gradient(to top, rgba(11,12,14,0.8) 0%, rgba(11,12,14,0.3) 60%, rgba(11,12,14,0.1) 100%) !important;
+    background: 
+      linear-gradient(to right, rgba(0,0,0,0.85) 0%, rgba(0,0,0,0.4) 65%, transparent 100%),
+      linear-gradient(to top, rgba(0,0,0,0.7) 0%, transparent 50%) !important;
+  }
+  .rebrand-hero-title,
+  .rebrand-hero-title-team {
+    text-shadow: 0 2px 8px rgba(0,0,0,0.65) !important;
   }
   .rebrand-hero-content {
     max-width: 100%;
     padding: 0;
     display: flex !important;
     flex-direction: column !important;
-    justify-content: space-between !important;
+    justify-content: center !important;
+    gap: 1rem !important;
     align-self: stretch !important;
     flex-grow: 1 !important;
     height: 100% !important;
   }
   .rebrand-hero-top-group {
     text-align: left;
-    margin-top: 0.5rem;
+    margin-top: 0;
   }
   .rebrand-hero-bottom-group {
     text-align: left;
-    margin-top: 0 !important;
+    margin-top: 0.5rem !important;
+  }
+  .rebrand-hero-buttons {
+    display: block;
   }
   .rebrand-hero-title {
-    font-size: 2.5rem;
-    letter-spacing: -1px;
+    font-family: 'Barlow Condensed', 'Arial Narrow', sans-serif !important;
+    font-size: clamp(3.0rem, 9.5vw, 4.2rem) !important;
+    font-weight: 800 !important;
+    font-style: italic !important;
+    line-height: 0.92 !important;
     margin-bottom: 0.8rem;
-    line-height: 1.15;
-    font-family: 'Outfit', sans-serif;
+    letter-spacing: -0.01em !important;
     text-transform: uppercase;
+    transform: skewX(-4deg) !important;
+    transform-origin: left bottom !important;
+    display: block;
   }
   .rebrand-hero-subline {
     font-size: 0.95rem;
