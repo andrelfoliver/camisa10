@@ -167,7 +167,7 @@
 .rebrand-hero-bg {
   position: absolute;
   top: 0; left: 0; right: 0; bottom: 0;
-  background-position: 58% center;
+  background-position: 50% center;
   background-repeat: no-repeat;
   background-size: cover;
   filter: brightness(1.05); /* Clareado imagem ~5% para destacar Mahomes/James/Matthews */
@@ -1027,10 +1027,10 @@ h3.rebrand-sport-name {
     padding: 6rem 1.5rem 2.5rem 1.5rem !important;
     display: flex;
     align-items: stretch !important;
-    background-position: 70% center !important;
+    background-position: 62% center !important;
   }
   .rebrand-hero-bg {
-    background-position: 64% center !important;
+    background-position: 56% center !important;
   }
   .rebrand-hero-overlay {
     background: 

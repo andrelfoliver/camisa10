@@ -358,7 +358,6 @@ const Home = () => {
           <div className="rebrand-hero-top-group">
             {/* Tagline com barra verde */}
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', marginBottom: '1rem' }}>
-              <span style={{ width: '16px', height: '1.5px', background: '#D8FF00', display: 'inline-block' }}></span>
               <span style={{ fontSize: '0.65rem', color: '#ffffff', fontWeight: 300, letterSpacing: '5px', textTransform: 'uppercase' }}>
                 EVERY SPORT. EVERY FAN.
               </span>
