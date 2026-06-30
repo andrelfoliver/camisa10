@@ -451,10 +451,17 @@ h3.rebrand-sport-name {
   transform: translateY(0);
 }
 
+/* Category Page Layout */
+.rebrand-category-layout {
+  display: grid;
+  grid-template-columns: 220px 1fr;
+  gap: 2.5rem;
+}
+
 /* Product Cards */
 .rebrand-products-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  grid-template-columns: repeat(3, 1fr);
   gap: 2rem;
 }
 
@@ -974,6 +981,15 @@ h3.rebrand-sport-name {
   .rebrand-promobar-right { display: none; }
 
   .rebrand-search-bar-desktop { max-width: 420px; margin: 0 1rem; }
+
+  .rebrand-category-layout {
+    grid-template-columns: 200px 1fr !important;
+    gap: 1.5rem !important;
+  }
+  .rebrand-products-grid {
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 1.5rem !important;
+  }
 }
 
 /* ============================================================
@@ -1142,9 +1158,13 @@ h3.rebrand-sport-name {
   .rebrand-spotlight-img-col { display: none !important; }
 
   /* Product grid: 2 columns */
+  .rebrand-category-layout {
+    grid-template-columns: 1fr !important;
+    gap: 2rem !important;
+  }
   .rebrand-products-grid {
-    grid-template-columns: repeat(2, 1fr);
-    gap: 0.75rem;
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 0.75rem !important;
   }
   .rebrand-product-info { padding: 0.75rem; }
   .rebrand-product-price { font-size: 1.1rem; }

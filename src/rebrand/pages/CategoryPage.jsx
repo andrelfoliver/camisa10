@@ -315,11 +315,11 @@ const CategoryPage = () => {
           justifyContent: 'space-between'
         }}>
           <div>
-            <h1 style={{ fontSize: '4.5rem', lineHeight: '0.85', margin: '0 0 0.5rem 0', color: '#121416' }}>
+            <h1 style={{ fontSize: '2.5rem', fontWeight: 800, lineHeight: '1.1', margin: '0 0 0.5rem 0', color: '#121416', textTransform: 'capitalize' }}>
               {category_id} Jerseys
             </h1>
             <span style={{ fontSize: '0.85rem', color: 'var(--rebrand-text-muted)', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '2px' }}>
-              🍁 Stitched Collection | Official Fan Shop
+              🍁 Official Fan Shop
             </span>
           </div>
           <div style={{ textAlign: 'right' }}>
@@ -333,7 +333,7 @@ const CategoryPage = () => {
         </div>
 
         {/* Grid Principal: Barra Lateral de Filtros Accordion + Catalogo */}
-        <div style={{ display: 'grid', gridTemplateColumns: '280px 1fr', gap: '4rem' }}>
+        <div className="rebrand-category-layout">
           
           {/* BARRA LATERAL ESTILO FANATICS (Accordions) */}
           <div>
