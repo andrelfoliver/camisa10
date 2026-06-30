@@ -1783,19 +1783,36 @@ h3.rebrand-sport-name {
 /* Responsividade da Galeria */
 @media (max-width: 768px) {
   .rebrand-product-gallery {
-    flex-direction: column-reverse;
+    flex-direction: column-reverse !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    overflow: hidden !important;
+    gap: 1rem !important;
   }
   
   .rebrand-product-thumbnails {
-    flex-direction: row;
-    width: 100%;
-    overflow-x: auto;
-    padding-bottom: 0.4rem;
+    flex-direction: row !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    overflow-x: auto !important;
+    flex-wrap: nowrap !important;
+    padding-bottom: 0.5rem !important;
+    -webkit-overflow-scrolling: touch !important;
+    scrollbar-width: thin !important;
+    gap: 0.6rem !important;
   }
   
   .rebrand-product-thumbnail-btn {
-    width: 65px;
-    height: 65px;
+    width: 60px !important;
+    height: 60px !important;
+    flex-shrink: 0 !important;
+  }
+
+  .rebrand-product-main-image-container {
+    width: 100% !important;
+    max-width: 100% !important;
+    flex: none !important;
+    aspect-ratio: 1 !important;
   }
 }
 
