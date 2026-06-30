@@ -1780,17 +1780,22 @@ h3.rebrand-sport-name {
   color: #ffffff;
 }
 
-/* Responsividade da Galeria */
 @media (max-width: 768px) {
+  .rebrand-product-grid > div {
+    min-width: 0 !important;
+  }
+
   .rebrand-product-gallery {
     flex-direction: column-reverse !important;
     width: 100% !important;
     max-width: 100% !important;
     overflow: hidden !important;
     gap: 1rem !important;
+    min-width: 0 !important;
   }
   
   .rebrand-product-thumbnails {
+    display: flex !important;
     flex-direction: row !important;
     width: 100% !important;
     max-width: 100% !important;
@@ -1800,6 +1805,7 @@ h3.rebrand-sport-name {
     -webkit-overflow-scrolling: touch !important;
     scrollbar-width: thin !important;
     gap: 0.6rem !important;
+    min-width: 0 !important;
   }
   
   .rebrand-product-thumbnail-btn {
@@ -1813,6 +1819,7 @@ h3.rebrand-sport-name {
     max-width: 100% !important;
     flex: none !important;
     aspect-ratio: 1 !important;
+    min-width: 0 !important;
   }
 }
 
