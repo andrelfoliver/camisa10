@@ -5,7 +5,7 @@ import { useNavigate } from 'react-router-dom';
 import {
   LayoutDashboard, ShoppingBag, Package, Compass, Tag, Settings,
   LogOut, ExternalLink, ChevronUp, ChevronDown, Edit2, Trash2,
-  Plus, Save, X, Check, AlertCircle, TrendingUp, Users, DollarSign,
+  Plus, Save, X, Check, AlertCircle, TrendingUp, Users, DollarSign, Upload,
   Clock, Search, RefreshCw, Eye, EyeOff, UserCircle, Award, MessageSquare, Star,
   Shirt, CreditCard, Globe, Activity, Truck, CheckCircle2, XCircle, Menu
 } from 'lucide-react';
@@ -28,7 +28,7 @@ const NAV_ITEMS = [
   { id: 'dashboard',   label: 'Dashboard',         icon: LayoutDashboard },
   { id: 'orders',      label: 'Pedidos',            icon: ShoppingBag },
   { id: 'products',    label: 'Produtos',           icon: Package },
-  { id: 'spotlight',   label: 'Season Spotlight',   icon: Compass },
+  { id: 'visual',      label: 'Visual',             icon: Compass },
   { id: 'coupons',     label: 'Cupons',             icon: Tag },
   { id: 'clientes',    label: 'Clientes',           icon: UserCircle },
   { id: 'afiliados',   label: 'Afiliados',          icon: Award },
@@ -2083,6 +2083,7 @@ const SpotlightSection = ({ showToast }) => {
   const [editingIdx, setEditingIdx] = useState(null);
   const [form, setForm] = useState({});
   const [loading, setLoading] = useState(false);
+  const [uploadingImg, setUploadingImg] = useState(false);
 
   useEffect(() => {
     async function load() {
@@ -2104,6 +2105,21 @@ const SpotlightSection = ({ showToast }) => {
   const openEdit = (index) => {
     setEditingIdx(index);
     setForm(index === -1 ? { sport:'', badge:'', title:'', price:'', btnText:'', link:'', img:'', featuredProducts:'' } : { ...slides[index] });
+  };
+
+  const handleImageChange = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    setUploadingImg(true);
+    try {
+      const url = await uploadImageToSupabase(file);
+      setForm(prev => ({ ...prev, img: url }));
+      showToast('Imagem carregada com sucesso!', 'success');
+    } catch (err) {
+      showToast('Erro no upload: ' + err.message, 'error');
+    } finally {
+      setUploadingImg(false);
+    }
   };
 
   const saveForm = (e) => {
@@ -2174,23 +2190,308 @@ const SpotlightSection = ({ showToast }) => {
                   { key: 'price', label: 'Preço', placeholder: '$49.90 CAD', full: false },
                   { key: 'btnText', label: 'Texto do Botão', placeholder: 'Shop MLB', full: false },
                   { key: 'link', label: 'Link do Botão', placeholder: '/rebrand/colecao/baseball', full: true },
-                  { key: 'img', label: 'URL da Imagem', placeholder: '/assets/rebrand/blue_jays.jpg', full: true },
+                  { key: 'img', label: 'Imagem do Slide', placeholder: '/assets/rebrand/blue_jays.jpg', full: true },
                   { key: 'featuredProducts', label: 'IDs de Produtos Destacados', placeholder: 'mock-3, mock-4', full: true },
-                ].map(f => (
-                  <div key={f.key} style={{ gridColumn: f.full ? '1 / -1' : 'auto' }}>
-                    <label style={S.label}>{f.label}</label>
-                    <input style={inputStyle} value={form[f.key] || ''} onChange={e => setForm({...form, [f.key]: e.target.value})} placeholder={f.placeholder} required={f.key !== 'featuredProducts'} />
-                  </div>
-                ))}
+                ].map(f => {
+                  if (f.key === 'img') {
+                    return (
+                      <div key={f.key} style={{ gridColumn: '1 / -1' }}>
+                        <label style={S.label}>{f.label}</label>
+                        <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'center', marginBottom: '0.5rem' }}>
+                          <input style={inputStyle} value={form.img || ''} onChange={e => setForm({...form, img: e.target.value})} placeholder={f.placeholder} required />
+                          <label style={{ ...S.btnSecondary, cursor: 'pointer', whiteSpace: 'nowrap', display: 'flex', alignItems: 'center', gap: '0.3rem' }}>
+                            <Upload size={14} />
+                            {uploadingImg ? 'Enviando...' : 'Fazer Upload'}
+                            <input type="file" accept="image/*" onChange={handleImageChange} style={{ display: 'none' }} disabled={uploadingImg} />
+                          </label>
+                        </div>
+                        {form.img && (
+                          <div style={{ marginTop: '0.5rem', borderRadius: '6px', overflow: 'hidden', height: '100px', border: '1px solid #2A2D30', background: '#0B0C0E', display: 'inline-block' }}>
+                            <img src={form.img} alt="Preview" style={{ height: '100%', objectFit: 'contain' }} />
+                          </div>
+                        )}
+                      </div>
+                    );
+                  }
+                  return (
+                    <div key={f.key} style={{ gridColumn: f.full ? '1 / -1' : 'auto' }}>
+                      <label style={S.label}>{f.label}</label>
+                      <input style={inputStyle} value={form[f.key] || ''} onChange={e => setForm({...form, [f.key]: e.target.value})} placeholder={f.placeholder} required={f.key !== 'featuredProducts'} />
+                    </div>
+                  );
+                })}
               </div>
               <div style={{ display: 'flex', gap: '0.75rem', justifyContent: 'flex-end' }}>
                 <button type="button" style={S.btnSecondary} onClick={() => setEditingIdx(null)}>Cancelar</button>
-                <button type="submit" style={S.btnPrimary}><Check size={14} /> Confirmar</button>
+                <button type="submit" style={S.btnPrimary} disabled={uploadingImg}><Check size={14} /> Confirmar</button>
               </div>
             </form>
           </div>
         </div>
       )}
+    </div>
+  );
+};
+
+// ─── Visual Section (Hero & Season Spotlight) ───────────────────────────────
+const VisualSection = ({ showToast }) => {
+  const [presets, setPresets] = useState([
+    {
+      id: 'preset-1',
+      title: 'WEAR YOUR TEAM.',
+      subtitle: 'THE HOME OF SPORTS JERSEYS.',
+      img: '/assets/rebrand/locker_room_hero.jpg',
+      active: true
+    },
+    {
+      id: 'preset-2',
+      title: 'SUMMER SEASON OFFERS',
+      subtitle: 'Get free shipping storewide across Canada.',
+      img: 'https://images.unsplash.com/photo-1508098682722-e99c43a406b2?w=1200',
+      active: false
+    },
+    {
+      id: 'preset-3',
+      title: 'NEW ARRIVALS IN HOCKEY',
+      subtitle: 'Explore the maple leafs collection now.',
+      img: 'https://images.unsplash.com/photo-1515523110800-9415d13b84a8?w=1200',
+      active: false
+    },
+    {
+      id: 'preset-4',
+      title: 'NFL GAMEDAY COLLECTION',
+      subtitle: 'Premium stitched NFL jerseys with priority shipping.',
+      img: 'https://images.unsplash.com/photo-1566577739112-5180d4bf9390?w=1200',
+      active: false
+    }
+  ]);
+  const [selectedId, setSelectedId] = useState('preset-1');
+  const [uploadingHero, setUploadingHero] = useState(false);
+  const [savingHero, setSavingHero] = useState(false);
+
+  useEffect(() => {
+    async function loadHeroPresets() {
+      try {
+        const { data } = await supabase.from('store_settings').select('value').eq('key', 'rebrand_hero_presets').single();
+        if (data?.value) {
+          const parsed = JSON.parse(data.value);
+          if (Array.isArray(parsed) && parsed.length > 0) {
+            setPresets(parsed);
+            const activePreset = parsed.find(p => p.active);
+            if (activePreset) setSelectedId(activePreset.id);
+          }
+        }
+      } catch (err) {
+        console.warn("Could not load hero presets:", err);
+      }
+    }
+    loadHeroPresets();
+  }, []);
+
+  const currentPreset = presets.find(p => p.id === selectedId) || presets[0];
+
+  const updateCurrentPreset = (fields) => {
+    setPresets(prev => prev.map(p => p.id === selectedId ? { ...p, ...fields } : p));
+  };
+
+  const handleHeroImageUpload = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    setUploadingHero(true);
+    try {
+      const url = await uploadImageToSupabase(file);
+      updateCurrentPreset({ img: url });
+      showToast('Imagem do preset carregada! Clique em Salvar e Publicar.', 'success');
+    } catch (err) {
+      showToast('Erro no upload: ' + err.message, 'error');
+    } finally {
+      setUploadingHero(false);
+    }
+  };
+
+  const handlePublishPreset = (id) => {
+    setPresets(prev => prev.map(p => ({ ...p, active: p.id === id })));
+    showToast('Layout definido para publicação! Clique em Salvar e Publicar para confirmar.', 'success');
+  };
+
+  const handleSaveHero = async () => {
+    setSavingHero(true);
+    try {
+      const activePreset = presets.find(p => p.active) || presets[0];
+      
+      await supabase.from('store_settings').upsert({ key: 'rebrand_hero_presets', value: JSON.stringify(presets) }, { onConflict: 'key' });
+      
+      await supabase.from('store_settings').upsert({ key: 'rebrand_hero_image', value: activePreset.img }, { onConflict: 'key' });
+      await supabase.from('store_settings').upsert({ key: 'rebrand_hero_title', value: activePreset.title }, { onConflict: 'key' });
+      await supabase.from('store_settings').upsert({ key: 'rebrand_hero_subtitle', value: activePreset.subtitle }, { onConflict: 'key' });
+      
+      showToast('Biblioteca de banners salva e publicada com sucesso!', 'success');
+    } catch (err) {
+      showToast('Erro ao salvar biblioteca do Hero: ' + err.message, 'error');
+    } finally {
+      setSavingHero(false);
+    }
+  };
+
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '2.5rem' }}>
+      {/* Bloco 1: Hero Banner Presets */}
+      <div style={{ ...S.card, padding: '2rem' }}>
+        <h3 style={{ margin: '0 0 0.5rem 0', fontWeight: 700, fontSize: '1.2rem', color: '#fff' }}>Hero Banner Principal</h3>
+        <p style={{ color: 'rgba(255,255,255,0.45)', fontSize: '0.85rem', margin: '0 0 1.5rem 0' }}>
+          Gerencie e selecione entre 4 layouts pré-configurados para o banner principal da Home
+        </p>
+
+        {/* Grade de 2x2 para os 4 Presets */}
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginBottom: '2rem' }}>
+          {presets.map((p, idx) => {
+            const isSelected = p.id === selectedId;
+            return (
+              <div 
+                key={p.id} 
+                onClick={() => setSelectedId(p.id)}
+                style={{ 
+                  flex: 1, 
+                  background: '#16191C', 
+                  border: isSelected ? '2px solid var(--rebrand-volt)' : '1px solid #2A2D30', 
+                  borderRadius: '8px', 
+                  padding: '1rem', 
+                  cursor: 'pointer',
+                  position: 'relative',
+                  display: 'flex',
+                  gap: '0.75rem',
+                  alignItems: 'center',
+                  transition: 'all 0.2s',
+                  boxShadow: isSelected ? '0 0 12px rgba(214,255,0,0.1)' : 'none'
+                }}
+              >
+                <div style={{ width: '60px', height: '45px', borderRadius: '4px', overflow: 'hidden', background: '#0B0C0E', flexShrink: 0 }}>
+                  <img src={p.img} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} onError={e => e.target.style.display='none'} />
+                </div>
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ fontWeight: 700, fontSize: '0.8rem', color: '#fff', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                    Layout {idx + 1}: {p.title || 'Sem título'}
+                  </div>
+                  <div style={{ fontSize: '0.7rem', color: 'rgba(255,255,255,0.4)', marginTop: '0.2rem' }}>
+                    {p.active ? '🟢 Ativo no Site' : '⚪ Rascunho'}
+                  </div>
+                </div>
+
+                {!p.active && (
+                  <button 
+                    onClick={(e) => { e.stopPropagation(); handlePublishPreset(p.id); }}
+                    style={{
+                      background: 'rgba(255,255,255,0.05)',
+                      border: '1px solid rgba(255,255,255,0.1)',
+                      borderRadius: '4px',
+                      color: '#fff',
+                      fontSize: '0.65rem',
+                      padding: '0.25rem 0.5rem',
+                      cursor: 'pointer',
+                      fontWeight: 600
+                    }}
+                  >
+                    Publicar
+                  </button>
+                )}
+                {p.active && (
+                  <span style={{
+                    background: 'rgba(214,255,0,0.15)',
+                    color: '#D6FF00',
+                    fontSize: '0.6rem',
+                    fontWeight: 800,
+                    padding: '0.2rem 0.4rem',
+                    borderRadius: '4px',
+                    textTransform: 'uppercase'
+                  }}>
+                    No Ar
+                  </span>
+                )}
+              </div>
+            );
+          })}
+        </div>
+
+        {/* Editor do Preset Selecionado */}
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem', marginBottom: '1.5rem', borderTop: '1px dashed #2A2D30', paddingTop: '1.5rem' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+            <h4 style={{ color: '#fff', margin: 0, fontWeight: 700, fontSize: '0.95rem' }}>
+              Editando Layout {presets.findIndex(p => p.id === selectedId) + 1}
+            </h4>
+            <div>
+              <label style={S.label}>Título do Hero</label>
+              <input style={S.input} value={currentPreset.title} onChange={e => updateCurrentPreset({ title: e.target.value })} placeholder="WEAR YOUR TEAM." />
+            </div>
+            <div>
+              <label style={S.label}>Subtítulo/Descrição</label>
+              <input style={S.input} value={currentPreset.subtitle} onChange={e => updateCurrentPreset({ subtitle: e.target.value })} placeholder="THE HOME OF SPORTS JERSEYS." />
+            </div>
+            <div>
+              <label style={S.label}>Imagem de Fundo (Locker Room)</label>
+              <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'center' }}>
+                <input style={S.input} value={currentPreset.img} onChange={e => updateCurrentPreset({ img: e.target.value })} placeholder="URL da imagem" />
+                <label style={{ ...S.btnSecondary, cursor: 'pointer', whiteSpace: 'nowrap', display: 'flex', alignItems: 'center', gap: '0.3rem' }}>
+                  <Upload size={14} />
+                  {uploadingHero ? 'Enviando...' : 'Fazer Upload'}
+                  <input type="file" accept="image/*" onChange={handleHeroImageUpload} style={{ display: 'none' }} disabled={uploadingHero} />
+                </label>
+              </div>
+            </div>
+          </div>
+
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+            <label style={S.label}>Visualização do Banner</label>
+            <div style={{ 
+              position: 'relative', 
+              width: '100%', 
+              height: '180px', 
+              borderRadius: '8px', 
+              overflow: 'hidden', 
+              background: '#0B0C0E',
+              border: '1px solid #2A2D30'
+            }}>
+              <div style={{ 
+                position: 'absolute', 
+                top: 0, left: 0, right: 0, bottom: 0, 
+                backgroundImage: `url(${currentPreset.img})`, 
+                backgroundSize: 'cover', 
+                backgroundPosition: 'center',
+                filter: 'brightness(0.65)' 
+              }} />
+              <div style={{ position: 'relative', zIndex: 2, padding: '1.25rem', display: 'flex', flexDirection: 'column', justifyContent: 'center', height: '100%' }}>
+                <h4 style={{ color: '#fff', margin: '0 0 0.25rem 0', fontSize: '1.1rem', fontWeight: 800 }}>
+                  {currentPreset.title}
+                </h4>
+                <p style={{ color: 'rgba(255,255,255,0.7)', margin: '0 0 0.75rem 0', fontSize: '0.75rem' }}>
+                  {currentPreset.subtitle}
+                </p>
+                <button style={{ alignSelf: 'flex-start', background: '#D6FF00', color: '#000', border: 'none', padding: '0.3rem 0.75rem', borderRadius: '4px', fontSize: '0.65rem', fontWeight: 700 }}>
+                  SHOP JERSEYS
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.75rem' }}>
+          {!currentPreset.active && (
+            <button 
+              type="button" 
+              style={{ ...S.btnSecondary }}
+              onClick={() => handlePublishPreset(currentPreset.id)}
+            >
+              Definir como Ativo
+            </button>
+          )}
+          <button style={S.btnPrimary} onClick={handleSaveHero} disabled={savingHero || uploadingHero}>
+            <Save size={14} />
+            {savingHero ? 'Salvando...' : 'Salvar e Publicar no Site'}
+          </button>
+        </div>
+      </div>
+
+      {/* Bloco 2: Season Spotlight */}
+      <SpotlightSection showToast={showToast} />
     </div>
   );
 };
@@ -3780,7 +4081,7 @@ const RebrandAdmin = () => {
     dashboard:   <DashboardSection showValues={showValues} setShowValues={setShowValues} />,
     orders:      <OrdersSection showToast={showToast} onOpenTracking={(code) => { setTrackingCodeToView(code); setIsTrackModalOpen(true); }} />,
     products:    <ProductsSection showToast={showToast} />,
-    spotlight:   <SpotlightSection showToast={showToast} />,
+    visual:      <VisualSection showToast={showToast} />,
     coupons:     <CouponsSection showToast={showToast} />,
     clientes:    <ClientesSection showToast={showToast} />,
     afiliados:   <AfiliadosSection showToast={showToast} />,

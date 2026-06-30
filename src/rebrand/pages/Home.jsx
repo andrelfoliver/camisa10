@@ -127,6 +127,9 @@ const Home = () => {
   const [activeTab, setActiveTab] = useState('all');
   const [activeSlide, setActiveSlide] = useState(0);
   const [carouselSlides, setCarouselSlides] = useState(CAROUSEL_SLIDES);
+  const [heroImage, setHeroImage] = useState('/assets/rebrand/locker_room_hero.jpg');
+  const [heroTitle, setHeroTitle] = useState('WEAR YOUR TEAM.');
+  const [heroSubtitle, setHeroSubtitle] = useState('THE HOME OF SPORTS JERSEYS.');
 
   const toggleTranslation = (id) => {
     setShowEnglish(prev => ({ ...prev, [id]: !prev[id] }));
@@ -213,7 +216,22 @@ const Home = () => {
         console.warn("Could not load season_spotlight settings:", err);
       }
     }
+    async function loadHeroSettings() {
+      try {
+        const { data: imgData } = await supabase.from('store_settings').select('value').eq('key', 'rebrand_hero_image').single();
+        if (imgData?.value) setHeroImage(imgData.value);
+
+        const { data: titleData } = await supabase.from('store_settings').select('value').eq('key', 'rebrand_hero_title').single();
+        if (titleData?.value) setHeroTitle(titleData.value);
+
+        const { data: subData } = await supabase.from('store_settings').select('value').eq('key', 'rebrand_hero_subtitle').single();
+        if (subData?.value) setHeroSubtitle(subData.value);
+      } catch (err) {
+        console.warn("Could not load hero settings:", err);
+      }
+    }
     loadSpotlight();
+    loadHeroSettings();
   }, []);
 
   useEffect(() => {
@@ -333,15 +351,22 @@ const Home = () => {
 
       {/* 1. HERO BANNER - PREMIUM LOCKER ROOM WIDE BANNER */}
       <section className="rebrand-hero">
+        <div className="rebrand-hero-bg" style={{ backgroundImage: `url(${heroImage})` }}></div>
         <div className="rebrand-hero-overlay"></div>
 
         <div className="rebrand-hero-content">
           <div className="rebrand-hero-top-group">
             <h1 className="rebrand-hero-title">
-              WEAR YOUR <span>TEAM.</span>
+              {heroTitle.includes('TEAM.') ? (
+                <>
+                  {heroTitle.replace('TEAM.', '')}<span>TEAM.</span>
+                </>
+              ) : (
+                heroTitle
+              )}
             </h1>
             <p className="rebrand-hero-subline">
-              THE HOME OF SPORTS JERSEYS.
+              {heroSubtitle}
             </p>
           </div>
 

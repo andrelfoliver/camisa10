@@ -163,11 +163,11 @@
   background: #0B0C0E;
 }
 
-.rebrand-hero::before {
-  content: '';
+.rebrand-hero-bg {
   position: absolute;
   top: 0; left: 0; right: 0; bottom: 0;
-  background: url('/assets/rebrand/locker_room_hero.jpg') no-repeat center center;
+  background-position: center center;
+  background-repeat: no-repeat;
   background-size: cover;
   filter: brightness(1.05); /* Clareado imagem ~5% para destacar Mahomes/James/Matthews */
   z-index: 1;
