@@ -4,6 +4,7 @@ import { supabaseRebrand as supabase } from '../../services/supabase';
 import { Star, ShoppingBag, Eye, SlidersHorizontal, ArrowLeft, ChevronDown, ChevronUp } from 'lucide-react';
 import { useCart } from '../../context/CartContext';
 import { formatProductName } from '../utils/format';
+import ProductCard from '../components/ProductCard';
 
 // Mocks por esporte com variações de cores e preços promocionais
 const SPORT_MOCKS = {
@@ -35,73 +36,6 @@ const PLAYERS_BY_SPORT = {
 };
 
 
-// Sub-componente de Card de Produto com seletor de cor fictício
-const ProductCard = ({ product, onAdd, onQuickView }) => {
-  const [activeColor, setActiveColor] = useState(product.colors?.[0] || '');
-
-  return (
-    <div className="rebrand-product-card">
-      <div className="rebrand-product-img-wrapper">
-        {product.badge && (
-          <span className={product.badge.toLowerCase().includes('almost') ? "rebrand-product-badge-red" : "rebrand-product-badge"}>
-            {product.badge}
-          </span>
-        )}
-        <Link to={`/rebrand/produto/${product.id}`}>
-          <img src={product.image} alt={product.name} className="rebrand-product-img" />
-        </Link>
-        
-        {/* Hover Actions */}
-        <div className="rebrand-product-actions">
-          <button onClick={() => onAdd(product)} className="rebrand-product-btn-quick">
-            <ShoppingBag size={14} style={{ marginRight: '0.4rem' }} /> Add to Cart
-          </button>
-          <button 
-            onClick={() => onQuickView(product.id)}
-            style={{
-              background: 'rgba(255,255,255,0.9)',
-              border: 'none',
-              padding: '0.7rem',
-              cursor: 'pointer',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              color: 'var(--rebrand-text-main)'
-            }}
-          >
-            <Eye size={16} />
-          </button>
-        </div>
-      </div>
-
-      <div className="rebrand-product-info">
-        <span className="rebrand-product-category">{product.category}</span>
-
-        <Link to={`/rebrand/produto/${product.id}`} style={{ textDecoration: 'none' }}>
-          <h4 className="rebrand-product-title">{formatProductName(product.name)}</h4>
-        </Link>
-
-        <div className="rebrand-product-price-row">
-          <div className="rebrand-price-container">
-            <span className="rebrand-product-price ${product.oldPrice ? 'rebrand-price-sale' : ''}">
-              ${product.price.toFixed(2)} CAD
-            </span>
-            {product.oldPrice && (
-              <span className="rebrand-price-old">${product.oldPrice.toFixed(2)}</span>
-            )}
-          </div>
-          <span className="rebrand-product-rating">
-            <Star size={13} fill="#FFB100" color="#FFB100" /> {product.rating}
-          </span>
-        </div>
-        
-        <span style={{ fontSize: '0.65rem', color: '#2b8a3e', fontWeight: 800, marginTop: '0.4rem', display: 'block', textTransform: 'uppercase' }}>
-          ✓ Free Shipping Eligible
-        </span>
-      </div>
-    </div>
-  );
-};
 
 const CategoryPage = () => {
   const { category_id } = useParams();
@@ -110,10 +44,12 @@ const CategoryPage = () => {
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
 
+  const isMobile = typeof window !== 'undefined' ? window.innerWidth <= 768 : false;
+
   const [sections, setSections] = useState({
     department: false,
-    league: true,
-    teams: true,
+    league: !isMobile,
+    teams: !isMobile,
     gender: false,
     players: false,
     size: false,
@@ -131,6 +67,10 @@ const CategoryPage = () => {
   const [selectedLeague, setSelectedLeague] = useState('All');
   const [selectedTeam, setSelectedTeam] = useState('All');
   const [selectedPlayer, setSelectedPlayer] = useState('All');
+  
+  // Pagination State
+  const [currentPage, setCurrentPage] = useState(1);
+  const ITEMS_PER_PAGE = 24;
 
   // Reset filters when category changes
   useEffect(() => {
@@ -140,7 +80,13 @@ const CategoryPage = () => {
     setSelectedLeague('All');
     setSelectedTeam('All');
     setSelectedPlayer('All');
+    setCurrentPage(1);
   }, [category_id]);
+
+  // Reset page when individual filters change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [selectedSize, selectedPrice, selectedGender, selectedLeague, selectedTeam, selectedPlayer]);
 
   useEffect(() => {
     async function loadCategoryProducts() {
@@ -288,8 +234,13 @@ const CategoryPage = () => {
     return true;
   });
 
-  // Extract unique teams from filtered/available products list
   const uniqueTeams = Array.from(new Set(products.map(p => p.team).filter(Boolean))).sort();
+  const totalPages = Math.ceil(filteredProducts.length / ITEMS_PER_PAGE);
+  const displayedProducts = filteredProducts.slice((currentPage - 1) * ITEMS_PER_PAGE, currentPage * ITEMS_PER_PAGE);
+
+  const scrollToTop = () => {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
 
   return (
     <div style={{ background: '#ffffff', minHeight: '80vh', padding: '3rem 2rem' }} className="rebrand-scope">
@@ -562,7 +513,7 @@ const CategoryPage = () => {
           </div>
 
           {/* CATALOGO DE PRODUTOS */}
-          <div>
+          <div id="catalog-start">
             {loading ? (
               <div style={{ textAlign: 'center', padding: '6rem 0' }}>
                 <p style={{ color: 'var(--rebrand-text-muted)', fontSize: '1.1rem', fontWeight: 600 }}>Loading official jerseys...</p>
@@ -573,23 +524,73 @@ const CategoryPage = () => {
                 <p style={{ color: 'var(--rebrand-text-muted)', fontSize: '0.85rem' }}>Try clearing size or price filters to view other collections.</p>
               </div>
             ) : (
-              <div className="rebrand-products-grid">
-                {filteredProducts.map((product) => (
-                  <ProductCard 
-                    key={product.id} 
-                    product={product} 
-                    onAdd={(p) => {
-                      addToCart({
-                        id: p.id,
-                        name: p.name,
-                        price: p.price,
-                        image: p.image
-                      }, 'M');
-                    }}
-                    onQuickView={(pId) => navigate(`/rebrand/produto/${pId}`)}
-                  />
-                ))}
-              </div>
+              <>
+                <div className="rebrand-products-grid">
+                  {displayedProducts.map((product) => (
+                    <ProductCard 
+                      key={product.id} 
+                      product={product} 
+                      onAdd={(p) => {
+                        addToCart({
+                          id: p.id,
+                          name: p.name,
+                          price: p.price,
+                          image: p.image
+                        }, 'M');
+                      }}
+                      onQuickView={(pId) => navigate(`/rebrand/produto/${pId}`)}
+                    />
+                  ))}
+                </div>
+
+                {/* COMPONENTE DE PAGINAÇÃO PREMIUM */}
+                {totalPages > 1 && (
+                  <div className="rebrand-pagination" style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '0.4rem', marginTop: '3.5rem', padding: '1rem 0' }}>
+                    <button 
+                      disabled={currentPage === 1}
+                      onClick={() => {
+                        setCurrentPage(prev => Math.max(prev - 1, 1));
+                        scrollToTop();
+                      }}
+                      className="rebrand-pagination-btn"
+                    >
+                      Prev
+                    </button>
+                    {Array.from({ length: totalPages }, (_, i) => i + 1)
+                      .filter(page => {
+                        // Janela de paginação: sempre mostra primeira, última, e o entorno da página atual
+                        return page === 1 || page === totalPages || Math.abs(page - currentPage) <= 2;
+                      })
+                      .map((page, index, array) => {
+                        const showEllipsis = index > 0 && page - array[index - 1] > 1;
+                        return (
+                          <React.Fragment key={page}>
+                            {showEllipsis && <span style={{ color: 'var(--rebrand-text-muted)', padding: '0 0.3rem', fontWeight: 'bold' }}>...</span>}
+                            <button
+                              onClick={() => {
+                                setCurrentPage(page);
+                                scrollToTop();
+                              }}
+                              className={`rebrand-pagination-page ${currentPage === page ? 'active' : ''}`}
+                            >
+                              {page}
+                            </button>
+                          </React.Fragment>
+                        );
+                      })}
+                    <button 
+                      disabled={currentPage === totalPages}
+                      onClick={() => {
+                        setCurrentPage(prev => Math.min(prev + 1, totalPages));
+                        scrollToTop();
+                      }}
+                      className="rebrand-pagination-btn"
+                    >
+                      Next
+                    </button>
+                  </div>
+                )}
+              </>
             )}
           </div>
 

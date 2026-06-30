@@ -4,7 +4,7 @@ import { ShieldCheck, Truck, HelpCircle, RefreshCw } from 'lucide-react';
 
 const Footer = () => {
   return (
-    <footer style={{ background: '#121416', color: '#ffffff', padding: '5rem 2rem 2rem 2rem', borderTop: '1px solid rgba(255,255,255,0.05)' }}>
+    <footer className="rebrand-footer">
       {/* Guarantees */}
       <div style={{
         display: 'grid',
@@ -38,7 +38,7 @@ const Footer = () => {
         </div>
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: '1.5fr 1fr 1fr', gap: '4rem', marginBottom: '4rem' }}>
+      <div className="rebrand-footer-grid">
         {/* Brand Column */}
         <div>
           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start' }}>

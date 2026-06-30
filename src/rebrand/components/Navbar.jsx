@@ -3,6 +3,7 @@ import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { Search, ShoppingBag, User, MapPin, X, Menu } from 'lucide-react';
 import { useCart } from '../../context/CartContext';
 import { useRebrandAuth } from '../../context/RebrandAuthContext';
+import { supabaseRebrand as supabase } from '../../services/supabase';
 
 const NAV_LINKS = [
   { to: '/rebrand/colecao/soccer',       label: 'Soccer',       special: null },
@@ -71,6 +72,49 @@ const Navbar = () => {
   const [menuOpen, setMenuOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
+  
+  // Autocomplete Suggestions State
+  const [allProducts, setAllProducts] = useState([]);
+  const [searchResults, setSearchResults] = useState([]);
+  const [showSuggestions, setShowSuggestions] = useState(false);
+
+  // Fetch products once on mount for instant client-side autocomplete filtering
+  useEffect(() => {
+    async function fetchProductsForSearch() {
+      try {
+        const { data } = await supabase
+          .from('products')
+          .select('id, name, price, image, category')
+          .order('id', { ascending: false });
+        if (data) {
+          // Format image path as done on product pages
+          const formatted = data.map(p => ({
+            ...p,
+            image: p.image || p.images?.[0] || 'https://images.unsplash.com/photo-1508098682722-e99c43a406b2?w=600',
+            price: p.price || 89.90
+          }));
+          setAllProducts(formatted);
+        }
+      } catch (err) {
+        console.error("Failed to load search autocomplete pool:", err);
+      }
+    }
+    fetchProductsForSearch();
+  }, []);
+
+  // Filter products instantly as the user types
+  useEffect(() => {
+    if (!searchQuery.trim()) {
+      setSearchResults([]);
+      return;
+    }
+    const queryLower = searchQuery.toLowerCase();
+    const filtered = allProducts.filter(p => 
+      (p.name || '').toLowerCase().includes(queryLower) ||
+      (p.category || '').toLowerCase().includes(queryLower)
+    ).slice(0, 5); // Limit to top 5 hits
+    setSearchResults(filtered);
+  }, [searchQuery, allProducts]);
 
   // Close menu on route change
   useEffect(() => { setMenuOpen(false); setSearchOpen(false); }, [location.pathname]);
@@ -83,9 +127,17 @@ const Navbar = () => {
 
   const handleSearch = (e) => {
     if (e.key === 'Enter' && searchQuery.trim()) {
-      navigate(`/busca?q=${encodeURIComponent(searchQuery)}`);
+      navigate(`/rebrand/busca?q=${encodeURIComponent(searchQuery)}`);
       setSearchOpen(false);
+      setShowSuggestions(false);
     }
+  };
+
+  const handleBlur = () => {
+    // Delay to let click events navigate before hiding suggestions
+    setTimeout(() => {
+      setShowSuggestions(false);
+    }, 200);
   };
 
   const getLinkColor = (special) => {
@@ -141,18 +193,43 @@ const Navbar = () => {
           </div>
 
           {/* Search Bar — hidden on mobile */}
-          <div className="rebrand-search-bar-desktop search-bar-container">
+          <div className="rebrand-search-bar-desktop search-bar-container" style={{ position: 'relative' }}>
             <Search size={18} color="rgba(255,255,255,0.5)" style={{ marginRight: '0.6rem', flexShrink: 0 }} />
             <input
               type="text"
               placeholder="Find your favorite team..."
-              onKeyDown={(e) => {
-                if (e.key === 'Enter' && e.target.value.trim()) {
-                  navigate(`/busca?q=${encodeURIComponent(e.target.value)}`);
-                }
+              value={searchQuery}
+              onChange={(e) => {
+                setSearchQuery(e.target.value);
+                setShowSuggestions(true);
               }}
+              onFocus={() => setShowSuggestions(true)}
+              onBlur={handleBlur}
+              onKeyDown={handleSearch}
               style={{ border: 'none', outline: 'none', background: 'transparent', fontSize: '0.9rem', color: '#ffffff', width: '100%', fontWeight: 500 }}
             />
+            {/* Desktop Autocomplete Suggestions */}
+            {showSuggestions && searchResults.length > 0 && (
+              <div className="rebrand-search-suggestions">
+                {searchResults.map(p => (
+                  <div 
+                    key={p.id} 
+                    className="rebrand-suggestion-item"
+                    onClick={() => {
+                      navigate(`/rebrand/produto/${p.id}`);
+                      setSearchQuery('');
+                      setShowSuggestions(false);
+                    }}
+                  >
+                    <img src={p.image} alt={p.name} className="rebrand-suggestion-img" />
+                    <div className="rebrand-suggestion-info">
+                      <span className="rebrand-suggestion-name">{p.name}</span>
+                      <span className="rebrand-suggestion-meta">{p.category} | ${p.price.toFixed(2)} CAD</span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
 
           {/* Right actions */}
@@ -234,20 +311,48 @@ const Navbar = () => {
 
         {/* Mobile Search Bar — slides down */}
         {searchOpen && (
-          <div className="rebrand-mobile-search">
+          <div className="rebrand-mobile-search" style={{ position: 'relative' }}>
             <Search size={18} color="rgba(255,255,255,0.5)" style={{ flexShrink: 0 }} />
             <input
               autoFocus
               type="text"
               placeholder="Find your favorite team..."
               value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
+              onChange={(e) => {
+                setSearchQuery(e.target.value);
+                setShowSuggestions(true);
+              }}
+              onFocus={() => setShowSuggestions(true)}
+              onBlur={handleBlur}
               onKeyDown={handleSearch}
               style={{ border: 'none', outline: 'none', background: 'transparent', fontSize: '1rem', color: '#ffffff', width: '100%' }}
             />
             <button onClick={() => setSearchOpen(false)} style={{ background: 'none', border: 'none', cursor: 'pointer' }}>
               <X size={18} color="rgba(255,255,255,0.6)" />
             </button>
+            {/* Mobile Autocomplete Suggestions */}
+            {showSuggestions && searchResults.length > 0 && (
+              <div className="rebrand-search-suggestions mobile">
+                {searchResults.map(p => (
+                  <div 
+                    key={p.id} 
+                    className="rebrand-suggestion-item"
+                    onClick={() => {
+                      navigate(`/rebrand/produto/${p.id}`);
+                      setSearchQuery('');
+                      setShowSuggestions(false);
+                      setSearchOpen(false);
+                    }}
+                  >
+                    <img src={p.image} alt={p.name} className="rebrand-suggestion-img" />
+                    <div className="rebrand-suggestion-info">
+                      <span className="rebrand-suggestion-name">{p.name}</span>
+                      <span className="rebrand-suggestion-meta">{p.category} | ${p.price.toFixed(2)} CAD</span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
         )}
 
