@@ -1,5 +1,6 @@
 /* Folha de Estilos Exclusiva do Rebranding iFooty - Canada's Sports Jersey Store */
-/* Fontes carregadas via index.html para evitar FOUT: Outfit (logo), Inter (corpo), Barlow Condensed (títulos) */
+@import url('https://fonts.googleapis.com/css2?family=Barlow+Condensed:ital,wght@0,700;0,800;1,800;1,900&display=swap');
+/* Fontes carregadas via index.html para evitar FOUT */
 
 :root {
   --rebrand-font-logo: 'Outfit', sans-serif;   /* Exclusivo para a logo — NÃO alterar */
@@ -153,20 +154,20 @@
 /* Hero Section */
 .rebrand-hero {
   position: relative;
-  height: 58vh;
-  min-height: 380px;
+  height: 68vh;
+  min-height: 550px;
   overflow: hidden;
   display: flex;
   align-items: center;
   justify-content: flex-start;
-  padding-left: 8%;
+  padding-left: 12%;
   background: #0B0C0E;
 }
 
 .rebrand-hero-bg {
   position: absolute;
   top: 0; left: 0; right: 0; bottom: 0;
-  background-position: center center;
+  background-position: 58% center;
   background-repeat: no-repeat;
   background-size: cover;
   filter: brightness(1.05); /* Clareado imagem ~5% para destacar Mahomes/James/Matthews */
@@ -176,9 +177,7 @@
 .rebrand-hero-overlay {
   position: absolute;
   top: 0; left: 0; right: 0; bottom: 0;
-  background:
-    linear-gradient(to top, rgba(11,12,14,0.88) 0%, rgba(11,12,14,0.60) 40%, rgba(11,12,14,0.08) 100%),
-    linear-gradient(to right, rgba(11,12,14,0.70) 0%, rgba(11,12,14,0.10) 60%, transparent 100%);
+  background: linear-gradient(to right, rgba(11,12,14,0.95) 0%, rgba(11,12,14,0.85) 32%, rgba(11,12,14,0.5) 55%, rgba(11,12,14,0.15) 78%, transparent 100%) !important;
   z-index: 2;
 }
 
@@ -194,28 +193,35 @@
   position: relative;
   z-index: 3;
   text-align: left;
-  max-width: 580px;
+  max-width: 520px; /* Mais espaço para evitar quebras de linhas indesejadas */
   color: #FFFFFF;
-  margin-top: -35px; /* Sobe o bloco inteiro em ~35px */
+  margin-top: 15px; /* Deslocado 50px para baixo (era -35px) */
 }
 
 .rebrand-hero-title {
-  font-family: 'Outfit', sans-serif;
-  font-size: clamp(2.4rem, 5.2vw, 3.75rem); /* Reduzido levemente */
-  font-weight: 900;
-  line-height: 1.05;
-  margin: 0 0 0.9rem 0; /* Subiu o subtítulo em ~10px */
+  font-family: 'Barlow Condensed', 'Arial Narrow', sans-serif !important;
+  font-size: clamp(3.0rem, 7.0vw, 4.8rem) !important;
+  font-weight: 800 !important;
+  font-style: italic !important;
+  line-height: 0.92 !important;
+  margin: 0 0 1.2rem 0;
   color: #FFFFFF;
   text-transform: uppercase;
-  letter-spacing: -1px;
+  letter-spacing: -0.01em;
+  transform: skewX(-4deg); /* Leve inclinação adicional para dinamismo sem deformar */
+  transform-origin: left bottom;
+  display: block;
 }
 
-.rebrand-hero-title span {
-  color: var(--rebrand-volt);
-  font-style: italic;
-  display: block; /* Garante a quebra de linha: WEAR YOUR \n TEAM. */
-  margin-top: 0.25rem;
-  font-size: 1.15em; /* TEAM. domina visualmente (~100% vs ~90%) */
+.rebrand-hero-title-team {
+  font-family: 'Barlow Condensed', 'Arial Narrow', sans-serif !important;
+  font-size: 1.35em !important;
+  font-weight: 900 !important;
+  font-style: italic !important;
+  color: #D8FF00 !important;
+  display: block;
+  margin-top: 0.05rem;
+  letter-spacing: -0.01em;
 }
 
 .rebrand-hero-subline {
@@ -272,25 +278,26 @@
 }
 
 .rebrand-trustbar {
-  background: #F8F9FA;
-  border-bottom: 1px solid var(--rebrand-border);
-  padding: 1.2rem 2rem;
+  background: #000000;
+  border-top: 1px solid rgba(255,255,255,0.1);
+  border-bottom: 1px solid rgba(255,255,255,0.1);
+  padding: 0.85rem 2rem;
   display: flex;
   justify-content: center;
   gap: 4.5rem;
   flex-wrap: wrap;
-  box-shadow: inset 0 1px 3px rgba(0,0,0,0.02);
+  box-shadow: none;
 }
 
 .rebrand-trustbar-item {
   display: flex;
   align-items: center;
   gap: 0.6rem;
-  font-size: 0.85rem;
-  font-weight: 600;
-  color: var(--rebrand-text-main);
-  text-transform: none;
-  letter-spacing: 0;
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: #ffffff;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
 }
 
 .rebrand-btn-primary {
@@ -1015,12 +1022,15 @@ h3.rebrand-sport-name {
 
   /* Hero split layout on mobile */
   .rebrand-hero {
-    height: 60vh !important;
-    min-height: 450px;
-    padding: 5rem 1.5rem 2.5rem 1.5rem !important;
+    height: 65vh !important;
+    min-height: 480px !important;
+    padding: 6rem 1.5rem 2.5rem 1.5rem !important;
     display: flex;
     align-items: stretch !important;
     background-position: 70% center !important;
+  }
+  .rebrand-hero-bg {
+    background-position: 64% center !important;
   }
   .rebrand-hero-overlay {
     background: linear-gradient(to top, rgba(11,12,14,0.8) 0%, rgba(11,12,14,0.3) 60%, rgba(11,12,14,0.1) 100%) !important;

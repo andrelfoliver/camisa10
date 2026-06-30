@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { supabaseRebrand as supabase } from '../../services/supabase';
-import { ArrowRight, Star, ShoppingBag, Eye, ShieldCheck, Truck, RefreshCw, BadgeAlert, Check, ChevronLeft, ChevronRight } from 'lucide-react';
+import { ArrowRight, Star, ShoppingBag, Eye, ShieldCheck, Truck, RefreshCw, BadgeAlert, Check, ChevronLeft, ChevronRight, Shirt } from 'lucide-react';
 import { useCart } from '../../context/CartContext';
 import { formatProductName } from '../utils/format';
 
@@ -127,7 +127,7 @@ const Home = () => {
   const [activeTab, setActiveTab] = useState('all');
   const [activeSlide, setActiveSlide] = useState(0);
   const [carouselSlides, setCarouselSlides] = useState(CAROUSEL_SLIDES);
-  const [heroImage, setHeroImage] = useState('/assets/rebrand/locker_room_hero.jpg');
+  const [heroImage, setHeroImage] = useState('');
   const [heroTitle, setHeroTitle] = useState('WEAR YOUR TEAM.');
   const [heroSubtitle, setHeroSubtitle] = useState('THE HOME OF SPORTS JERSEYS.');
 
@@ -356,24 +356,56 @@ const Home = () => {
 
         <div className="rebrand-hero-content">
           <div className="rebrand-hero-top-group">
+            {/* Tagline com barra verde */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', marginBottom: '1rem' }}>
+              <span style={{ width: '16px', height: '1.5px', background: '#D8FF00', display: 'inline-block' }}></span>
+              <span style={{ fontSize: '0.65rem', color: '#ffffff', fontWeight: 300, letterSpacing: '5px', textTransform: 'uppercase' }}>
+                EVERY SPORT. EVERY FAN.
+              </span>
+            </div>
+
             <h1 className="rebrand-hero-title">
-              {heroTitle.includes('TEAM.') ? (
+              {heroTitle.toLowerCase().includes('team') ? (
                 <>
-                  {heroTitle.replace('TEAM.', '')}<span>TEAM.</span>
+                  <span style={{ display: 'block', whiteSpace: 'nowrap' }}>
+                    {heroTitle.replace(/team\.?/i, '').trim()}
+                  </span>
+                  <span className="rebrand-hero-title-team">
+                    {heroTitle.match(/team\.?/i)?.[0] || 'TEAM.'}
+                  </span>
                 </>
               ) : (
                 heroTitle
               )}
             </h1>
-            <p className="rebrand-hero-subline">
-              {heroSubtitle}
-            </p>
+
+            {/* Subtítulo abaixo do título */}
+            <div style={{ fontSize: '0.75rem', color: 'rgba(255,255,255,0.8)', fontWeight: 600, letterSpacing: '3px', margin: '0.8rem 0 2rem 0', textTransform: 'uppercase' }}>
+              {heroSubtitle === 'SOCCER - NBA - NFL - MLB - NHL' ? 'THE HOME OF SPORTS JERSEYS.' : (heroSubtitle || 'THE HOME OF SPORTS JERSEYS.')}
+            </div>
           </div>
 
           <div className="rebrand-hero-bottom-group">
             <div className="rebrand-hero-buttons">
-              <button onClick={() => navigate('/rebrand/colecao/soccer')} className="rebrand-btn rebrand-btn-primary" style={{ background: 'var(--rebrand-volt)', color: '#000', borderColor: 'var(--rebrand-volt)' }}>
-                SHOP JERSEYS
+              <button 
+                onClick={() => navigate('/rebrand/colecao/soccer')} 
+                className="rebrand-btn rebrand-btn-primary" 
+                style={{ 
+                  background: '#D8FF00', 
+                  color: '#000000', 
+                  borderColor: '#D8FF00',
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '0.6rem',
+                  fontWeight: '800',
+                  textTransform: 'uppercase',
+                  letterSpacing: '0.05em',
+                  padding: '0.9rem 2.2rem',
+                  borderRadius: '8px',
+                  fontSize: '0.85rem'
+                }}
+              >
+                Shop Now <ArrowRight size={16} style={{ strokeWidth: 3 }} />
               </button>
             </div>
           </div>
@@ -381,18 +413,18 @@ const Home = () => {
       </section>
 
       {/* FAIXA DE DIFERENCIAIS / TRUST ELEMENT (Otimizado abaixo do Hero) */}
-      <div className="rebrand-trustbar">
+      <div className="rebrand-trustbar" style={{ background: '#000000', borderTop: '1px solid rgba(255,255,255,0.1)', borderBottom: '1px solid rgba(255,255,255,0.1)' }}>
         <div className="rebrand-trustbar-item">
-          <Check size={16} color="#2b8a3e" style={{ strokeWidth: 3 }} /> Premium Stitched Jerseys
+          <Shirt size={16} color="var(--rebrand-volt)" /> Premium Quality
         </div>
         <div className="rebrand-trustbar-item">
-          <Truck size={18} color="#2b8a3e" /> Fast Shipping Across Canada
+          <Truck size={18} color="var(--rebrand-volt)" /> Fast Shipping Across Canada
         </div>
         <div className="rebrand-trustbar-item">
-          <Star size={16} fill="#FFB100" color="#FFB100" /> Trusted by Sports Fans
+          <Star size={16} color="var(--rebrand-volt)" fill="var(--rebrand-volt)" /> 5-Star Customer Experience
         </div>
         <div className="rebrand-trustbar-item">
-          <span style={{ fontSize: '1.1rem' }}>🍁</span> Proudly Canadian Owned
+          <span style={{ color: 'var(--rebrand-volt)', fontSize: '1rem', display: 'flex', alignItems: 'center' }}>🍁</span> Canadian Store
         </div>
       </div>
 

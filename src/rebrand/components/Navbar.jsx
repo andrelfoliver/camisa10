@@ -145,7 +145,7 @@ const Navbar = () => {
             <Search size={18} color="rgba(255,255,255,0.5)" style={{ marginRight: '0.6rem', flexShrink: 0 }} />
             <input
               type="text"
-              placeholder="Search jerseys by sport, league, team or player..."
+              placeholder="Find your favorite team..."
               onKeyDown={(e) => {
                 if (e.key === 'Enter' && e.target.value.trim()) {
                   navigate(`/busca?q=${encodeURIComponent(e.target.value)}`);
@@ -239,7 +239,7 @@ const Navbar = () => {
             <input
               autoFocus
               type="text"
-              placeholder="Search jerseys, teams, players..."
+              placeholder="Find your favorite team..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               onKeyDown={handleSearch}
@@ -293,7 +293,7 @@ const Navbar = () => {
           <Search size={16} color="rgba(255,255,255,0.5)" />
           <input
             type="text"
-            placeholder="Search jerseys..."
+            placeholder="Find your favorite team..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             onKeyDown={handleSearch}
