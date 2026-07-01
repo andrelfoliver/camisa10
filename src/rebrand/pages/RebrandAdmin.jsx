@@ -2539,6 +2539,7 @@ const CouponsSection = ({ showToast }) => {
   const [saving, setSaving] = useState(false);
   const [showForm, setShowForm] = useState(false);
   const [editingCoupon, setEditingCoupon] = useState(null);
+  const [confirmDelete, setConfirmDelete] = useState(null);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -2591,10 +2592,18 @@ const CouponsSection = ({ showToast }) => {
     setShowForm(true);
   };
 
-  const handleDelete = async (id) => {
-    if (!window.confirm('Deletar este cupom?')) return;
-    const { error } = await supabase.from('coupons').delete().eq('id', id);
-    if (error) { showToast('Erro ao deletar.', 'error'); } else { showToast('Cupom removido!', 'success'); load(); }
+  const handleDelete = async () => {
+    if (!confirmDelete) return;
+    const { data, error } = await supabase.from('coupons').delete().eq('id', confirmDelete).select();
+    setConfirmDelete(null);
+    if (error) { 
+      showToast('Erro ao deletar: ' + error.message, 'error'); 
+    } else if (!data || data.length === 0) {
+      showToast('Erro RLS: Você não tem permissão para excluir este cupom.', 'error');
+    } else { 
+      showToast('Cupom removido!', 'success'); 
+      load(); 
+    }
   };
 
   return (
@@ -2649,7 +2658,7 @@ const CouponsSection = ({ showToast }) => {
                   <td style={S.td}>
                     <div style={{ display: 'flex', gap: '0.5rem' }}>
                       <button style={S.btnEdit} onClick={() => handleEditClick(c)}><Edit2 size={14} /></button>
-                      <button style={S.btnDanger} onClick={() => handleDelete(c.id)}><Trash2 size={14} /></button>
+                      <button style={S.btnDanger} onClick={() => setConfirmDelete(c.id)}><Trash2 size={14} /></button>
                     </div>
                   </td>
                 </tr>
@@ -2659,6 +2668,22 @@ const CouponsSection = ({ showToast }) => {
           </table>
         )}
       </div>
+
+      {confirmDelete && (
+        <div style={S.modal} onClick={e => e.target === e.currentTarget && setConfirmDelete(null)}>
+          <div style={{ ...S.modalBox, maxWidth: '380px', textAlign: 'center' }}>
+            <div style={{ fontSize: '2.5rem', marginBottom: '1rem' }}>🗑️</div>
+            <h3 style={{ margin: '0 0 0.75rem', fontWeight: 700 }}>Confirmar Exclusão</h3>
+            <p style={{ color: 'rgba(255,255,255,0.5)', margin: '0 0 2rem', fontSize: '0.9rem' }}>
+              Esta ação é irreversível. O cupom será removido permanentemente.
+            </p>
+            <div style={{ display: 'flex', gap: '0.75rem', justifyContent: 'center' }}>
+              <button style={S.btnSecondary} onClick={() => setConfirmDelete(null)}>Cancelar</button>
+              <button style={{ ...S.btnPrimary, background: '#F87171', color: '#fff' }} onClick={handleDelete}>Sim, Deletar</button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
@@ -3467,6 +3492,7 @@ const AfiliadosSection = ({ showToast }) => {
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
   const [editing, setEditing] = useState(null);
+  const [confirmDelete, setConfirmDelete] = useState(null);
   const [form, setForm] = useState({ name: '', email: '', agent_id: '', commission_percent: '10' });
   const [saving, setSaving] = useState(false);
 
@@ -3521,11 +3547,18 @@ const AfiliadosSection = ({ showToast }) => {
     load();
   };
 
-  const handleDelete = async (id) => {
-    if (!window.confirm('Remover afiliado?')) return;
-    await supabase.from('coupons').delete().eq('id', id);
-    showToast('Afiliado removido.', 'success');
-    load();
+  const handleDelete = async () => {
+    if (!confirmDelete) return;
+    const { data, error } = await supabase.from('coupons').delete().eq('id', confirmDelete).select();
+    setConfirmDelete(null);
+    if (error) {
+      showToast('Erro ao deletar: ' + error.message, 'error');
+    } else if (!data || data.length === 0) {
+      showToast('Erro RLS: Sem permissão para remover afiliado no banco.', 'error');
+    } else {
+      showToast('Afiliado removido.', 'success');
+      load();
+    }
   };
 
   const openEdit = (a) => {
@@ -3622,7 +3655,7 @@ const AfiliadosSection = ({ showToast }) => {
                     <td style={S.td}>
                       <div style={{ display: 'flex', gap: '0.5rem' }}>
                         <button style={S.btnEdit} onClick={() => openEdit(a)}><Edit2 size={14} /></button>
-                        <button style={S.btnDanger} onClick={() => handleDelete(a.id)}><Trash2 size={14} /></button>
+                        <button style={S.btnDanger} onClick={() => setConfirmDelete(a.id)}><Trash2 size={14} /></button>
                       </div>
                     </td>
                   </tr>
@@ -3632,6 +3665,22 @@ const AfiliadosSection = ({ showToast }) => {
                 )}
               </tbody>
             </table>
+          </div>
+        </div>
+      )}
+
+      {confirmDelete && (
+        <div style={S.modal} onClick={e => e.target === e.currentTarget && setConfirmDelete(null)}>
+          <div style={{ ...S.modalBox, maxWidth: '380px', textAlign: 'center' }}>
+            <div style={{ fontSize: '2.5rem', marginBottom: '1rem' }}>🗑️</div>
+            <h3 style={{ margin: '0 0 0.75rem', fontWeight: 700 }}>Remover Afiliado</h3>
+            <p style={{ color: 'rgba(255,255,255,0.5)', margin: '0 0 2rem', fontSize: '0.9rem' }}>
+              Esta ação é irreversível. O afiliado será removido permanentemente.
+            </p>
+            <div style={{ display: 'flex', gap: '0.75rem', justifyContent: 'center' }}>
+              <button style={S.btnSecondary} onClick={() => setConfirmDelete(null)}>Cancelar</button>
+              <button style={{ ...S.btnPrimary, background: '#F87171', color: '#fff' }} onClick={handleDelete}>Sim, Remover</button>
+            </div>
           </div>
         </div>
       )}
