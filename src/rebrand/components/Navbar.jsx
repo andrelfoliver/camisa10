@@ -183,19 +183,38 @@ const Navbar = () => {
           </div>
 
           <div className="rebrand-promobar-mobile">
-            <div className="rebrand-promobar-mobile-left" key={activePromoIndex}>
-              {promos[activePromoIndex].url ? (
-                <a 
-                  href={promos[activePromoIndex].url} 
-                  target="_blank" 
-                  rel="noopener noreferrer" 
-                  style={{ color: 'var(--rebrand-volt)', textDecoration: 'none', fontWeight: 700 }}
-                >
-                  {promos[activePromoIndex].text}
-                </a>
-              ) : (
-                <span style={{ fontWeight: 700 }}>{promos[activePromoIndex].text}</span>
-              )}
+            <div className="rebrand-promobar-mobile-left" style={{ position: 'relative', height: '18px', minWidth: '180px', display: 'flex', alignItems: 'center' }}>
+              <span 
+                style={{ 
+                  fontWeight: 700, 
+                  position: 'absolute', 
+                  left: 0, 
+                  opacity: activePromoIndex === 0 ? 1 : 0, 
+                  pointerEvents: activePromoIndex === 0 ? 'auto' : 'none',
+                  transition: 'opacity 0.5s ease-in-out',
+                  whiteSpace: 'nowrap'
+                }}
+              >
+                🍁 Free Shipping Across Canada
+              </span>
+              <a 
+                href="https://chat.whatsapp.com/KKKNZoOnr57AanDT33KPrT"
+                target="_blank" 
+                rel="noopener noreferrer" 
+                style={{ 
+                  color: 'var(--rebrand-volt)', 
+                  textDecoration: 'none', 
+                  fontWeight: 700,
+                  position: 'absolute', 
+                  left: 0, 
+                  opacity: activePromoIndex === 1 ? 1 : 0, 
+                  pointerEvents: activePromoIndex === 1 ? 'auto' : 'none',
+                  transition: 'opacity 0.5s ease-in-out',
+                  whiteSpace: 'nowrap'
+                }}
+              >
+                ⚡ VIP WhatsApp Group
+              </a>
             </div>
             <div className="rebrand-promobar-mobile-right">
               <Link to="/rebrand/profile" style={{ color: '#ffffff', textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '0.3rem', fontWeight: 700 }}>

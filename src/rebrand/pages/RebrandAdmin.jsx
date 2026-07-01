@@ -979,7 +979,7 @@ const DashboardSection = ({ showValues, setShowValues }) => {
 
 // ─── Orders Section ───────────────────────────────────────────────────────────
 // ─── Order Detail Modal ───────────────────────────────────────────────────────
-const OrderDetailModal = ({ order, onClose, onStatusChange, onTrackingChange, showToast, onOpenTracking }) => {
+const OrderDetailModal = ({ order, onClose, onStatusChange, onTrackingChange, showToast, onOpenTracking, onDeleteOrder }) => {
   const [tracking, setTracking] = useState(order.tracking_number || '');
   const [savingTracking, setSavingTracking] = useState(false);
   const items = Array.isArray(order.items) ? order.items : (typeof order.items === 'string' ? (() => { try { return JSON.parse(order.items); } catch { return []; } })() : []);
@@ -1011,6 +1011,27 @@ const OrderDetailModal = ({ order, onClose, onStatusChange, onTrackingChange, sh
             <h3 style={{ margin: 0, fontWeight: 700, fontFamily: 'monospace', fontSize: '1.1rem' }}>#{order.id}</h3>
           </div>
           <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'center' }}>
+            {onDeleteOrder && (
+              <button 
+                onClick={() => onDeleteOrder(order.id)} 
+                style={{
+                  background: 'rgba(239, 68, 68, 0.1)',
+                  border: '1px solid #ef4444',
+                  color: '#ef4444',
+                  padding: '0.4rem 0.8rem',
+                  borderRadius: '6px',
+                  fontSize: '0.75rem',
+                  fontWeight: 700,
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '0.35rem',
+                  marginRight: '0.5rem'
+                }}
+              >
+                <Trash2 size={12} /> Excluir Pedido
+              </button>
+            )}
             <span style={S.badge(order.status)}>{STATUS_COLORS[order.status]?.label || order.status}</span>
             <button style={{ background: 'none', border: 'none', color: 'rgba(255,255,255,0.5)', cursor: 'pointer' }} onClick={onClose}><X size={20} /></button>
           </div>
@@ -1170,6 +1191,19 @@ const OrdersSection = ({ showToast, onOpenTracking }) => {
     setOrders(data || []);
     setLoading(false);
   }, []);
+
+  const handleDeleteOrder = async (orderId) => {
+    if (!window.confirm("Tem certeza que deseja excluir permanentemente este pedido? Esta ação não poderá ser desfeita.")) return;
+    
+    const { error } = await supabase.from('orders').delete().eq('id', orderId);
+    if (error) {
+      showToast('Erro ao excluir pedido.', 'error');
+      return;
+    }
+    showToast('Pedido excluído com sucesso!', 'success');
+    setOrders(prev => prev.filter(o => o.id !== orderId));
+    setSelectedOrder(null);
+  };
 
   useEffect(() => { load(); }, [load]);
 
@@ -1335,6 +1369,7 @@ const OrdersSection = ({ showToast, onOpenTracking }) => {
           onTrackingChange={(id, track) => setOrders(prev => prev.map(o => o.id === id ? { ...o, tracking_number: track } : o))}
           showToast={showToast}
           onOpenTracking={onOpenTracking}
+          onDeleteOrder={handleDeleteOrder}
         />
       )}
     </div>
