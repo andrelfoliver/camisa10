@@ -27,6 +27,21 @@ const Navbar = () => {
   const [accountStatus, setAccountStatus] = useState('My Account');
   const [accountLink, setAccountLink] = useState('/rebrand/auth');
 
+  // Alternating promos for mobile/tablet top bar
+  const [activePromoIndex, setActivePromoIndex] = useState(0);
+  const promos = [
+    { text: '🍁 Free Shipping Across Canada', url: null },
+    { text: '⚡ VIP WhatsApp Group', url: 'https://chat.whatsapp.com/KKKNZoOnr57AanDT33KPrT', isExternal: true, isVolt: true },
+    { text: '📍 Track Order', url: '/rebrand/profile', isExternal: false }
+  ];
+
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setActivePromoIndex((prev) => (prev + 1) % promos.length);
+    }, 3500);
+    return () => clearInterval(timer);
+  }, []);
+
   useEffect(() => {
     const updateAccountStatus = () => {
       if (user) {
@@ -152,18 +167,44 @@ const Navbar = () => {
 
         {/* NÍVEL 1: Promo Bar */}
         <div className="rebrand-promobar">
-          <div className="rebrand-promobar-left">
-            <span style={{ color: 'var(--rebrand-volt)' }}>🍁</span>
-            <span>Free Shipping Across Canada</span>
+          <div className="rebrand-promobar-desktop">
+            <div className="rebrand-promobar-left">
+              <span style={{ color: 'var(--rebrand-volt)' }}>🍁</span>
+              <span>Free Shipping Across Canada</span>
+            </div>
+            <div className="rebrand-promobar-right">
+              <a href="https://chat.whatsapp.com/KKKNZoOnr57AanDT33KPrT" target="_blank" rel="noopener noreferrer" style={{ color: 'var(--rebrand-volt)', textDecoration: 'none' }}>
+                ⚡ VIP WhatsApp Group
+              </a>
+              <span style={{ color: 'rgba(255,255,255,0.2)' }}>|</span>
+              <Link to="/rebrand/profile" style={{ color: '#ffffff', textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '0.3rem' }}>
+                <MapPin size={12} /> Track Order
+              </Link>
+            </div>
           </div>
-          <div className="rebrand-promobar-right">
-            <a href="https://chat.whatsapp.com/KKKNZoOnr57AanDT33KPrT" target="_blank" rel="noopener noreferrer" style={{ color: 'var(--rebrand-volt)', textDecoration: 'none' }}>
-              ⚡ VIP WhatsApp Group
-            </a>
-            <span style={{ color: 'rgba(255,255,255,0.2)' }}>|</span>
-            <Link to="/rebrand/profile" style={{ color: '#ffffff', textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '0.3rem' }}>
-              <MapPin size={12} /> Track Order
-            </Link>
+
+          <div className="rebrand-promobar-mobile" key={activePromoIndex}>
+            {promos[activePromoIndex].url ? (
+              promos[activePromoIndex].isExternal ? (
+                <a 
+                  href={promos[activePromoIndex].url} 
+                  target="_blank" 
+                  rel="noopener noreferrer" 
+                  style={{ color: promos[activePromoIndex].isVolt ? 'var(--rebrand-volt)' : '#ffffff', textDecoration: 'none', fontWeight: 700 }}
+                >
+                  {promos[activePromoIndex].text}
+                </a>
+              ) : (
+                <Link 
+                  to={promos[activePromoIndex].url} 
+                  style={{ color: '#ffffff', textDecoration: 'none', fontWeight: 700 }}
+                >
+                  {promos[activePromoIndex].text}
+                </Link>
+              )
+            ) : (
+              <span style={{ fontWeight: 700 }}>{promos[activePromoIndex].text}</span>
+            )}
           </div>
         </div>
 

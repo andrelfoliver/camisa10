@@ -652,6 +652,8 @@ h3.rebrand-sport-name {
 }
 .rebrand-promobar-left  { display: flex; align-items: center; gap: 0.5rem; }
 .rebrand-promobar-right { display: flex; gap: 1.2rem; align-items: center; }
+.rebrand-promobar-desktop { display: flex; width: 100%; justify-content: space-between; align-items: center; }
+.rebrand-promobar-mobile { display: none; width: 100%; justify-content: center; align-items: center; text-align: center; }
 
 /* Header row */
 .rebrand-header-main {
@@ -1001,21 +1003,14 @@ h3.rebrand-sport-name {
   .rebrand-promobar {
     padding: 0.5rem 1rem;
     font-size: 0.7rem;
-    justify-content: flex-start;
-    overflow-x: auto;
-    white-space: nowrap;
-    -webkit-overflow-scrolling: touch;
-    scrollbar-width: none;
-    gap: 1.5rem;
+    justify-content: center;
   }
-  .rebrand-promobar::-webkit-scrollbar {
-    display: none;
+  .rebrand-promobar-desktop {
+    display: none !important;
   }
-  .rebrand-promobar-left,
-  .rebrand-promobar-right {
+  .rebrand-promobar-mobile {
     display: flex !important;
-    align-items: center;
-    flex-shrink: 0;
+    animation: fadePromo 0.5s ease-in-out;
   }
 
   .rebrand-search-bar-desktop { max-width: 420px; margin: 0 1rem; }
@@ -1034,26 +1029,16 @@ h3.rebrand-sport-name {
    MOBILE BREAKPOINT — ≤ 768px
    ============================================================ */
 @media (max-width: 768px) {
-  /* Promobar: horizontal scroll to show all items */
   .rebrand-promobar {
     padding: 0.5rem 1rem;
     font-size: 0.65rem;
-    justify-content: flex-start;
+    justify-content: center;
     letter-spacing: 0.8px;
-    overflow-x: auto;
-    white-space: nowrap;
-    -webkit-overflow-scrolling: touch;
-    scrollbar-width: none;
-    gap: 1rem;
   }
-  .rebrand-promobar::-webkit-scrollbar {
-    display: none;
-  }
-  .rebrand-promobar-left,
-  .rebrand-promobar-right {
-    display: flex !important;
-    align-items: center;
-    flex-shrink: 0;
+
+  @keyframes fadePromo {
+    from { opacity: 0; transform: translateY(2px); }
+    to { opacity: 1; transform: translateY(0); }
   }
 
   /* Header — logo centered between hamburger and icons (Fanatics pattern) */
