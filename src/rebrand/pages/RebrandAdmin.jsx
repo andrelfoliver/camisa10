@@ -3192,6 +3192,7 @@ const CidadesSection = ({ showToast }) => {
   const [syncing, setSyncing] = useState(false);
   const [syncProgress, setSyncProgress] = useState(0);
   const [syncTotal, setSyncTotal] = useState(0);
+  const [activeTooltip, setActiveTooltip] = useState(null);
 
   useEffect(() => {
     async function load() {
@@ -3495,11 +3496,110 @@ const CidadesSection = ({ showToast }) => {
     <div>
       <SectionHeader title="Onde suas camisas estão?" sub="Mapeamento e distribuição de pedidos por cidades atendidas" />
 
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '1.25rem', marginBottom: '2rem' }}>
-        <KpiCard label="Cidades Atendidas" value={totalCities} icon={MapPin} color="#D6FF00" />
-        <KpiCard label="Províncias Atendidas" value={`${totalProvinces} / 10`} icon={Globe} color="#60A5FA" sub="Províncias canadenses ativas" />
-        <KpiCard label="Total de Camisas" value={totalShirtsCA} icon={Shirt} color="#4ADE80" />
-        <KpiCard label="Prazo Médio Global" value={globalAvgDays !== null ? `${globalAvgDays.toFixed(1)} dias` : 'N/A'} icon={Truck} color="#FB923C" />
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '1.25rem', marginBottom: '1.25rem' }}>
+        <div style={{ ...S.card, borderLeft: '4px solid #D6FF00', padding: '1.5rem', display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+            <span style={{ fontSize: '0.75rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em', color: 'rgba(255,255,255,0.45)' }}>Cidades Atendidas</span>
+            <div style={{ width: '34px', height: '34px', borderRadius: '8px', background: 'rgba(214,255,0,0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <MapPin size={16} color="#D6FF00" />
+            </div>
+          </div>
+          <div style={{ fontSize: '1.75rem', fontWeight: 800, color: '#fff' }}>{totalCities}</div>
+        </div>
+
+        <div style={{ ...S.card, borderLeft: '4px solid #4ADE80', padding: '1.5rem', display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+            <span style={{ fontSize: '0.75rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em', color: 'rgba(255,255,255,0.45)' }}>Total Camisas</span>
+            <div style={{ width: '34px', height: '34px', borderRadius: '8px', background: 'rgba(74,222,128,0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <Shirt size={16} color="#4ADE80" />
+            </div>
+          </div>
+          <div style={{ fontSize: '1.75rem', fontWeight: 800, color: '#fff' }}>{totalShirtsCA}</div>
+        </div>
+
+        <div style={{ ...S.card, borderLeft: '4px solid #A855F7', padding: '1.5rem', display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+            <span style={{ fontSize: '0.75rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em', color: 'rgba(255,255,255,0.45)' }}>Prazo Médio Global</span>
+            <div style={{ width: '34px', height: '34px', borderRadius: '8px', background: 'rgba(168,85,247,0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <Truck size={16} color="#A855F7" />
+            </div>
+          </div>
+          <div style={{ fontSize: '1.75rem', fontWeight: 800, color: '#fff' }}>{globalAvgDays !== null ? `${globalAvgDays.toFixed(1)} dias` : 'N/A'}</div>
+        </div>
+      </div>
+
+      <div style={{ ...S.card, borderLeft: '4px solid #3B82F6', padding: '1.5rem', marginBottom: '2rem', display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+          <span style={{ fontSize: '0.75rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em', color: 'rgba(255,255,255,0.45)' }}>Províncias Atendidas</span>
+          <div style={{ width: '34px', height: '34px', borderRadius: '8px', background: 'rgba(59,130,246,0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <Globe size={16} color="#3B82F6" />
+          </div>
+        </div>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem' }}>
+          <div style={{ fontSize: '1.75rem', fontWeight: 800, color: '#fff' }}>{totalProvinces} / 10</div>
+          
+          <div style={{ display: 'flex', gap: '0.4rem', flexWrap: 'wrap' }}>
+            {['AB', 'BC', 'MB', 'NB', 'NL', 'NS', 'ON', 'PE', 'QC', 'SK'].map(prov => {
+              const isActive = uniqueProvinces.has(prov);
+              const fullName = canadaProvincesMap[prov] || prov;
+              const count = provCounts[prov] || 0;
+              return (
+                <div 
+                  key={prov} 
+                  onMouseEnter={() => setActiveTooltip({ prov, name: fullName, count })}
+                  onMouseLeave={() => setActiveTooltip(null)}
+                  style={{ position: 'relative' }}
+                >
+                  <div 
+                    style={{
+                      padding: '0.35rem 0.65rem',
+                      borderRadius: '6px',
+                      fontSize: '0.75rem',
+                      fontWeight: 700,
+                      background: isActive ? 'rgba(74, 222, 128, 0.1)' : 'rgba(255, 255, 255, 0.03)',
+                      color: isActive ? '#4ADE80' : 'rgba(255, 255, 255, 0.25)',
+                      border: `1px solid ${isActive ? 'rgba(74, 222, 128, 0.3)' : 'rgba(255, 255, 255, 0.06)'}`,
+                      transition: 'all 0.2s',
+                      cursor: 'default'
+                    }}
+                  >
+                    {prov}
+                  </div>
+                  {activeTooltip && activeTooltip.prov === prov && (
+                    <div
+                      style={{
+                        position: 'absolute',
+                        left: '50%',
+                        bottom: '100%',
+                        transform: 'translateX(-50%)',
+                        marginBottom: '8px',
+                        background: '#0a0a0a',
+                        border: '2px solid #D6FF00',
+                        borderRadius: '8px',
+                        padding: '8px 16px',
+                        pointerEvents: 'none',
+                        whiteSpace: 'nowrap',
+                        zIndex: 999,
+                        boxShadow: '0 8px 16px rgba(0,0,0,0.6)',
+                        display: 'flex',
+                        flexDirection: 'column',
+                        alignItems: 'center',
+                        justifyContent: 'center'
+                      }}
+                    >
+                      <span style={{ fontSize: '13px', fontWeight: 900, color: '#D6FF00', letterSpacing: '0.5px', fontFamily: 'Inter, sans-serif' }}>
+                        {activeTooltip.name}
+                      </span>
+                      <span style={{ fontSize: '11px', fontWeight: 600, color: '#fff', marginTop: '2px', fontFamily: 'Inter, sans-serif' }}>
+                        {activeTooltip.count} {activeTooltip.count === 1 ? 'camisa' : 'camisas'}
+                      </span>
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        </div>
       </div>
 
       {missingCachesCount > 0 && (
