@@ -34,6 +34,7 @@ const NAV_ITEMS = [
   { id: 'clientes',    label: 'Clientes',           icon: UserCircle },
   { id: 'afiliados',   label: 'Afiliados',          icon: Award },
   { id: 'conversas',   label: 'Conversas IA',       icon: MessageSquare },
+  { id: 'pricing',     label: 'Tabela de Preços',   icon: DollarSign },
   { id: 'depoimentos', label: 'Depoimentos',        icon: Star },
   { id: 'financeiro',  label: 'Financeiro',         icon: TrendingUp },
   { id: 'cidades',     label: 'Cidades Atendidas',  icon: MapPin },
@@ -566,7 +567,7 @@ const DashboardSection = ({ showValues, setShowValues }) => {
   const maxRevenue = Math.max(...chartData.map(d => d.revenue), 100);
   const chartHeight = 150;
   const chartWidth = 500;
-  const padding = 30;
+  const padding = 45;
 
   const points = chartData.map((d, i) => {
     const x = padding + (i * (chartWidth - padding * 2)) / (chartData.length - 1);
@@ -789,11 +790,28 @@ const DashboardSection = ({ showValues, setShowValues }) => {
                 const val = (maxRevenue * (1 - r)).toFixed(0);
                 return (
                   <g key={idx}>
-                    <line x1={padding} y1={y} x2={chartWidth - padding} y2={y} stroke="rgba(255,255,255,0.06)" strokeDasharray="3" />
-                    <text x={padding - 5} y={y + 4} fill="rgba(255,255,255,0.3)" fontSize="8" textAnchor="end">{showValues ? `$${val}` : '****'}</text>
+                    <line x1={padding} y1={y} x2={chartWidth - padding} y2={y} stroke="rgba(255,255,255,0.18)" strokeDasharray="3" />
+                    <text x={padding - 12} y={y + 4} fill="#E2E8F0" fontSize="13.5" fontWeight="700" textAnchor="end">{showValues ? `$${val}` : '****'}</text>
                   </g>
                 );
               })}
+              
+              {/* Axis lines */}
+              <line x1={padding} y1={chartHeight - padding} x2={chartWidth - padding} y2={chartHeight - padding} stroke="rgba(255,255,255,0.25)" strokeWidth="1" />
+              <line x1={padding} y1={padding} x2={padding} y2={chartHeight - padding} stroke="rgba(255,255,255,0.25)" strokeWidth="1" />
+
+              {/* X Axis Labels */}
+              {chartData.map((d, idx) => {
+                const x = padding + (idx * (chartWidth - padding * 2)) / (chartData.length - 1);
+                const labelInterval = Math.ceil(chartData.length / 8);
+                const showLabel = idx % labelInterval === 0 || idx === chartData.length - 1;
+                return showLabel ? (
+                  <text key={idx} x={x} y={chartHeight - 4} fill="#E2E8F0" fontSize="13.5" fontWeight="700" textAnchor="middle">
+                    {d.date.split(' ')[0]}
+                  </text>
+                ) : null;
+              })}
+
               {/* Area Under Line */}
               {areaD && <path d={areaD} fill="url(#gradient)" />}
               {/* Line path */}
@@ -871,11 +889,16 @@ const DashboardSection = ({ showValues, setShowValues }) => {
                 const val = Math.round(maxCount * (1 - r));
                 return (
                   <g key={idx}>
-                    <line x1={padding} y1={y} x2={chartWidth - padding} y2={y} stroke="rgba(255,255,255,0.06)" strokeDasharray="3" />
-                    <text x={padding - 5} y={y + 4} fill="rgba(255,255,255,0.3)" fontSize="8" textAnchor="end">{val}</text>
+                    <line x1={padding} y1={y} x2={chartWidth - padding} y2={y} stroke="rgba(255,255,255,0.18)" strokeDasharray="3" />
+                    <text x={padding - 12} y={y + 4} fill="#E2E8F0" fontSize="13.5" fontWeight="700" textAnchor="end">{val}</text>
                   </g>
                 );
               })}
+
+              {/* Axis lines */}
+              <line x1={padding} y1={chartHeight - padding} x2={chartWidth - padding} y2={chartHeight - padding} stroke="rgba(255,255,255,0.25)" strokeWidth="1" />
+              <line x1={padding} y1={padding} x2={padding} y2={chartHeight - padding} stroke="rgba(255,255,255,0.25)" strokeWidth="1" />
+
               {/* Bars */}
               {chartData.map((d, idx) => {
                 const barWidth = (chartWidth - padding * 2) / chartData.length;
@@ -911,7 +934,7 @@ const DashboardSection = ({ showValues, setShowValues }) => {
                     />
                     {/* X Axis Label */}
                     {showLabel && (
-                      <text x={x + barWidth / 2} y={chartHeight - 5} fill="rgba(255,255,255,0.4)" fontSize="8" textAnchor="middle">
+                      <text x={x + barWidth / 2} y={chartHeight - 4} fill="#E2E8F0" fontSize="13.5" fontWeight="700" textAnchor="middle">
                         {d.date.split(' ')[0]}
                       </text>
                     )}
@@ -2754,18 +2777,17 @@ const CouponsSection = ({ showToast }) => {
 
 // ─── Settings Section ─────────────────────────────────────────────────────────
 const SettingsSection = ({ showToast }) => {
-  const [settings, setSettings] = useState({ whatsapp: '', supplier_email: '', pricing: { cost: '', markup: '' } });
+  const [settings, setSettings] = useState({ whatsapp: '', supplier_email: '' });
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
     async function load() {
       setLoading(true);
-      const { data } = await supabase.from('store_settings').select('*').in('key', ['whatsapp_number', 'supplier_email', 'pricing']);
+      const { data } = await supabase.from('store_settings').select('*').in('key', ['whatsapp_number', 'supplier_email']);
       const map = {};
       (data || []).forEach(r => { map[r.key] = r.value; });
-      const pricing = map.pricing ? (() => { try { return JSON.parse(map.pricing); } catch { return {}; } })() : {};
-      setSettings({ whatsapp: map.whatsapp_number || '', supplier_email: map.supplier_email || '', pricing: { cost: pricing.cost || '', markup: pricing.markup || '' } });
+      setSettings({ whatsapp: map.whatsapp_number || '', supplier_email: map.supplier_email || '' });
       setLoading(false);
     }
     load();
@@ -2776,7 +2798,6 @@ const SettingsSection = ({ showToast }) => {
     const rows = [
       { key: 'whatsapp_number', value: settings.whatsapp.trim() },
       { key: 'supplier_email', value: settings.supplier_email.trim() },
-      { key: 'pricing', value: JSON.stringify(settings.pricing) },
     ];
     const { error } = await supabase.from('store_settings').upsert(rows, { onConflict: 'key' });
     setSaving(false);
@@ -2802,21 +2823,6 @@ const SettingsSection = ({ showToast }) => {
           <label style={S.label}>Email</label>
           <input style={S.input} type="email" value={settings.supplier_email} onChange={e => setSettings({...settings, supplier_email: e.target.value})} placeholder="supplier@example.com" />
           <p style={{ fontSize: '0.75rem', color: 'rgba(255,255,255,0.35)', marginTop: '0.5rem' }}>Email que recebe notificações de pedidos.</p>
-        </div>
-
-        <div style={{ ...S.card, gridColumn: '1 / -1' }}>
-          <h3 style={{ margin: '0 0 1.25rem', fontWeight: 700, fontSize: '1rem' }}>💰 Precificação</h3>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
-            <div>
-              <label style={S.label}>Custo Base ($)</label>
-              <input style={S.input} type="number" step="0.01" value={settings.pricing.cost} onChange={e => setSettings({...settings, pricing: {...settings.pricing, cost: e.target.value}})} placeholder="Ex: 25.00" />
-            </div>
-            <div>
-              <label style={S.label}>Markup (%)</label>
-              <input style={S.input} type="number" step="0.01" value={settings.pricing.markup} onChange={e => setSettings({...settings, pricing: {...settings.pricing, markup: e.target.value}})} placeholder="Ex: 80" />
-            </div>
-          </div>
-          <p style={{ fontSize: '0.75rem', color: 'rgba(255,255,255,0.35)', marginTop: '0.75rem' }}>Estes valores são usados para calcular margens no painel de produção.</p>
         </div>
       </div>
     </div>
@@ -5221,6 +5227,556 @@ const DepoimentosSection = ({ showToast }) => {
   );
 };
 
+// ─── Tabela de Preços (Precificação) Section ──────────────────────────────────
+const PrecificacaoSection = ({ showToast }) => {
+  const [pricing, setPricing] = useState({
+    nameNumber: 12,
+    patch: 5,
+    size2XL3XL: 7,
+    size4XL: 10,
+    discounts: [
+      { qty: 2, percent: 4 },
+      { qty: 3, percent: 7 },
+      { qty: 5, percent: 10 },
+      { qty: 10, percent: 15 }
+    ],
+    shippingCost: 0,
+    freeShippingThreshold: 0,
+    promoBasePrice: 47.90,
+    exchangeRateFallback: 1.38,
+    costFan: 9.00,
+    costPlayer: 15.00,
+    costRetro: 15.00,
+    costLongSleeve: 12.00,
+    costKids: 11.00,
+    costBaby: 8.00,
+    costTraining: 17.00,
+    costShorts: 8.00,
+    costNBA: 17.00,
+    costNFL: 23.00,
+    costAdd2XL: 1.00,
+    costAdd3XL4XL: 2.00,
+    costAddPatch: 1.00,
+    costAddCustom: 3.00,
+    surcharge1Item: 5.00,
+    surcharge2Items: 4.00,
+    surcharge3Items: 3.00
+  });
+
+  const [supplierEmail, setSupplierEmail] = useState('');
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [readjustType, setReadjustType] = useState('fixed');
+  const [readjustValue, setReadjustValue] = useState('5');
+  const [confirmReadjust, setConfirmReadjust] = useState(null);
+  const [migrating, setMigrating] = useState(false);
+
+  useEffect(() => {
+    async function load() {
+      setLoading(true);
+      try {
+        const { data } = await supabase.from('store_settings').select('*').in('key', ['pricing', 'supplier_email']);
+        const map = {};
+        (data || []).forEach(r => { map[r.key] = r.value; });
+        if (map.pricing) {
+          try {
+            const parsed = JSON.parse(map.pricing);
+            setPricing(prev => ({
+              ...prev,
+              ...parsed,
+              discounts: Array.isArray(parsed.discounts) && parsed.discounts.length > 0
+                ? parsed.discounts
+                : prev.discounts
+            }));
+          } catch (e) {
+            console.error("Erro ao fazer parse da precificação:", e);
+          }
+        }
+        if (map.supplier_email) {
+          setSupplierEmail(map.supplier_email);
+        }
+      } catch (e) {
+        console.error("Erro ao carregar precificação:", e);
+      } finally {
+        setLoading(false);
+      }
+    }
+    load();
+  }, []);
+
+  const handleSaveAll = async () => {
+    setSaving(true);
+    try {
+      const rows = [
+        { key: 'pricing', value: JSON.stringify(pricing) },
+        { key: 'supplier_email', value: supplierEmail.trim() }
+      ];
+      const { error } = await supabase.from('store_settings').upsert(rows, { onConflict: 'key' });
+      if (error) throw error;
+      showToast('Configurações de preço salvas com sucesso!', 'success');
+    } catch (e) {
+      showToast('Erro ao salvar precificação: ' + e.message, 'error');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleBulkPriceUpdate = async () => {
+    if (!confirmReadjust) return;
+    const { multiplier } = confirmReadjust;
+    setConfirmReadjust(null);
+    setMigrating(true);
+    try {
+      const { data: allProducts, error: fetchError } = await supabase.from('products').select('id, price');
+      if (fetchError) throw fetchError;
+
+      const val = Number(readjustValue) * multiplier;
+      let successCount = 0;
+
+      for (const p of allProducts) {
+        let newPrice;
+        const currentPrice = Number(p.price) || 0;
+        if (readjustType === 'fixed') {
+          newPrice = currentPrice + val;
+        } else {
+          newPrice = currentPrice * (1 + (val / 100));
+        }
+        newPrice = Number(newPrice.toFixed(2));
+
+        const { error: updateError } = await supabase
+          .from('products')
+          .update({ price: newPrice })
+          .eq('id', p.id);
+
+        if (updateError) throw updateError;
+        successCount++;
+      }
+
+      showToast(`${successCount} produtos foram reajustados com sucesso!`, 'success');
+    } catch (err) {
+      showToast('Erro no reajuste: ' + err.message, 'error');
+    } finally {
+      setMigrating(false);
+    }
+  };
+
+  if (loading) return <Loader />;
+
+  return (
+    <div>
+      <SectionHeader title="Tabela de Preços Globais" sub="Painel Central de Gerenciamento iFooty." />
+
+      {migrating && (
+        <div style={{
+          position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
+          background: 'rgba(0,0,0,0.8)', display: 'flex', flexDirection: 'column',
+          alignItems: 'center', justifyContent: 'center', zIndex: 99999, backdropFilter: 'blur(4px)'
+        }}>
+          <Loader />
+          <p style={{ color: '#fff', fontWeight: 700, marginTop: '1rem', fontFamily: 'Inter, sans-serif' }}>
+            Processando reajuste em massa...
+          </p>
+        </div>
+      )}
+
+      {/* ─── 1. REAJUSTE GLOBAL DE CATÁLOGO ─── */}
+      <div style={{ ...S.card, borderLeft: '4px solid #EAB308', marginBottom: '2rem', padding: '2rem' }}>
+        <h3 style={{ margin: '0 0 1rem', display: 'flex', alignItems: 'center', gap: '0.5rem', fontWeight: 800, fontSize: '1.2rem', color: '#EAB308' }}>
+          <TrendingUp size={20} /> Reajuste Global de Catálogo
+        </h3>
+        <p style={{ color: 'rgba(255,255,255,0.6)', fontSize: '0.9rem', lineHeight: 1.6, marginBottom: '1.5rem' }}>
+          Use esta ferramenta para aumentar ou diminuir o preço de <strong>todos os produtos</strong> da loja simultaneamente. Útil para repassar aumentos do fornecedor.
+        </p>
+        <div style={{ display: 'flex', alignItems: 'flex-end', flexWrap: 'wrap', gap: '1.25rem' }}>
+          <div style={{ flex: 1, minWidth: '200px' }}>
+            <label style={S.label}>Tipo de Reajuste</label>
+            <select
+              style={S.input}
+              value={readjustType}
+              onChange={e => setReadjustType(e.target.value)}
+            >
+              <option value="fixed">Valor Fixo ($ CAD)</option>
+              <option value="percent">Percentual (%)</option>
+            </select>
+          </div>
+          <div style={{ flex: 1, minWidth: '150px' }}>
+            <label style={S.label}>Valor do Ajuste</label>
+            <input
+              style={S.input}
+              type="number"
+              step="0.01"
+              value={readjustValue}
+              onChange={e => setReadjustValue(e.target.value)}
+              placeholder="Ex: 5"
+            />
+          </div>
+          <div style={{ display: 'flex', gap: '0.75rem' }}>
+            <button
+              onClick={() => setConfirmReadjust({ multiplier: -1, label: 'Reduzir' })}
+              style={{
+                padding: '0.75rem 1.5rem',
+                borderRadius: '10px',
+                background: 'transparent',
+                border: '1px solid #EF4444',
+                color: '#EF4444',
+                fontWeight: 700,
+                fontSize: '0.9rem',
+                cursor: 'pointer',
+                transition: 'all 0.2s'
+              }}
+            >
+              Reduzir
+            </button>
+            <button
+              onClick={() => setConfirmReadjust({ multiplier: 1, label: 'Aumentar Tudo' })}
+              style={{
+                padding: '0.75rem 1.5rem',
+                borderRadius: '10px',
+                background: '#EAB308',
+                border: 'none',
+                color: '#000',
+                fontWeight: 800,
+                fontSize: '0.9rem',
+                cursor: 'pointer',
+                boxShadow: '0 4px 12px rgba(234, 179, 8, 0.2)',
+                transition: 'all 0.2s'
+              }}
+            >
+              Aumentar Tudo
+            </button>
+          </div>
+        </div>
+      </div>
+
+      {/* ─── 2. GESTÃO DE CUSTOS (USD FORNECEDOR) ─── */}
+      <div style={{ ...S.card, borderLeft: '4px solid #3B82F6', marginBottom: '2rem', padding: '2rem' }}>
+        <h3 style={{ margin: '0 0 1.5rem', display: 'flex', alignItems: 'center', gap: '0.5rem', fontWeight: 800, fontSize: '1.2rem', color: '#60A5FA' }}>
+          <DollarSign size={20} /> Gestão de Custos (USD Fornecedor)
+        </h3>
+
+        <div style={{ background: '#0e1012', border: '1px solid #1c1f22', borderRadius: '12px', padding: '1.5rem', marginBottom: '1.5rem' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 2fr', gap: '1.5rem', marginBottom: '1.5rem', borderBottom: '1px solid #23272b', paddingBottom: '1.5rem' }}>
+            <div>
+              <label style={{ ...S.label, color: '#60A5FA', fontWeight: 800 }}>🇨🇦 Câmbio Fallback (USD/CAD)</label>
+              <input
+                style={{ ...S.input, borderColor: '#3B82F6', background: 'rgba(59, 130, 246, 0.05)' }}
+                type="number"
+                step="0.01"
+                value={pricing.exchangeRateFallback}
+                onChange={e => setPricing({ ...pricing, exchangeRateFallback: parseFloat(e.target.value) || 0 })}
+              />
+            </div>
+            <div>
+              <label style={S.label}>🇺🇸 Sobretaxas de Frete (USD)</label>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '0.75rem' }}>
+                <div>
+                  <span style={{ display: 'block', fontSize: '0.7rem', color: 'rgba(255,255,255,0.45)', marginBottom: '0.25rem' }}>1 un.</span>
+                  <input
+                    style={S.input}
+                    type="number"
+                    step="0.1"
+                    value={pricing.surcharge1Item || 0}
+                    onChange={e => setPricing({ ...pricing, surcharge1Item: parseFloat(e.target.value) || 0 })}
+                  />
+                </div>
+                <div>
+                  <span style={{ display: 'block', fontSize: '0.7rem', color: 'rgba(255,255,255,0.45)', marginBottom: '0.25rem' }}>2 un.</span>
+                  <input
+                    style={S.input}
+                    type="number"
+                    step="0.1"
+                    value={pricing.surcharge2Items || 0}
+                    onChange={e => setPricing({ ...pricing, surcharge2Items: parseFloat(e.target.value) || 0 })}
+                  />
+                </div>
+                <div>
+                  <span style={{ display: 'block', fontSize: '0.7rem', color: 'rgba(255,255,255,0.45)', marginBottom: '0.25rem' }}>3 un.</span>
+                  <input
+                    style={S.input}
+                    type="number"
+                    step="0.1"
+                    value={pricing.surcharge3Items || 0}
+                    onChange={e => setPricing({ ...pricing, surcharge3Items: parseFloat(e.target.value) || 0 })}
+                  />
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: '1rem', marginBottom: '1.5rem' }}>
+            {[
+              { label: 'Fan Lisa ($)', key: 'costFan' },
+              { label: 'Player ($)', key: 'costPlayer' },
+              { label: 'Retro ($)', key: 'costRetro' },
+              { label: 'Manga Longa ($)', key: 'costLongSleeve' },
+              { label: 'Kids ($)', key: 'costKids' },
+              { label: 'Baby Body ($)', key: 'costBaby' },
+              { label: 'NBA ($)', key: 'costNBA' },
+              { label: 'NFL ($)', key: 'costNFL' },
+              { label: 'Treino ($)', key: 'costTraining' },
+              { label: 'Shorts ($)', key: 'costShorts' }
+            ].map(item => (
+              <div key={item.key}>
+                <label style={{ ...S.label, fontSize: '0.75rem' }}>{item.label}</label>
+                <input
+                  style={S.input}
+                  type="number"
+                  step="0.1"
+                  value={pricing[item.key] || 0}
+                  onChange={e => setPricing({ ...pricing, [item.key]: parseFloat(e.target.value) || 0 })}
+                />
+              </div>
+            ))}
+          </div>
+
+          {/* Adicionais de Custo */}
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(130px, 1fr))', gap: '1rem', padding: '1rem', background: '#07080a', borderRadius: '8px', border: '1px solid #14171a' }}>
+            <div style={{ textAlign: 'center' }}>
+              <span style={{ display: 'block', marginBottom: '0.4rem', color: 'rgba(255,255,255,0.45)', fontSize: '0.7rem' }}>+ 2XL ($)</span>
+              <input type="number" step="0.1" value={pricing.costAdd2XL || 0} onChange={e => setPricing({ ...pricing, costAdd2XL: parseFloat(e.target.value) || 0 })} style={{ width: '70px', padding: '0.35rem', textAlign: 'center', background: 'rgba(255,255,255,0.02)', border: '1px solid #23272b', borderRadius: '4px', color: '#fff' }} />
+            </div>
+            <div style={{ textAlign: 'center' }}>
+              <span style={{ display: 'block', marginBottom: '0.4rem', color: 'rgba(255,255,255,0.45)', fontSize: '0.7rem' }}>+ 3/4XL ($)</span>
+              <input type="number" step="0.1" value={pricing.costAdd3XL4XL || 0} onChange={e => setPricing({ ...pricing, costAdd3XL4XL: parseFloat(e.target.value) || 0 })} style={{ width: '70px', padding: '0.35rem', textAlign: 'center', background: 'rgba(255,255,255,0.02)', border: '1px solid #23272b', borderRadius: '4px', color: '#fff' }} />
+            </div>
+            <div style={{ textAlign: 'center' }}>
+              <span style={{ display: 'block', marginBottom: '0.4rem', color: 'rgba(255,255,255,0.45)', fontSize: '0.7rem' }}>+ Patch ($)</span>
+              <input type="number" step="0.1" value={pricing.costAddPatch || 0} onChange={e => setPricing({ ...pricing, costAddPatch: parseFloat(e.target.value) || 0 })} style={{ width: '70px', padding: '0.35rem', textAlign: 'center', background: 'rgba(255,255,255,0.02)', border: '1px solid #23272b', borderRadius: '4px', color: '#fff' }} />
+            </div>
+            <div style={{ textAlign: 'center' }}>
+              <span style={{ display: 'block', marginBottom: '0.4rem', color: 'rgba(255,255,255,0.45)', fontSize: '0.7rem' }}>+ Custom ($)</span>
+              <input type="number" step="0.1" value={pricing.costAddCustom || 0} onChange={e => setPricing({ ...pricing, costAddCustom: parseFloat(e.target.value) || 0 })} style={{ width: '70px', padding: '0.35rem', textAlign: 'center', background: 'rgba(255,255,255,0.02)', border: '1px solid #23272b', borderRadius: '4px', color: '#fff' }} />
+            </div>
+          </div>
+        </div>
+
+        <button onClick={handleSaveAll} style={{ ...S.btnPrimary, background: '#3B82F6', width: '100%', padding: '1rem', fontSize: '0.95rem' }} disabled={saving}>
+          <Save size={15} /> {saving ? 'Salvando...' : 'Salvar Todas as Configurações de Preço'}
+        </button>
+      </div>
+
+      {/* ─── 3. VALORES ADICIONAIS FIXOS (VENDA EM CAD) ─── */}
+      <div style={{ ...S.card, borderLeft: '4px solid #EAB308', marginBottom: '2rem', padding: '2rem' }}>
+        <h3 style={{ margin: '0 0 1.5rem', display: 'flex', alignItems: 'center', gap: '0.5rem', fontWeight: 800, fontSize: '1.2rem', color: '#EAB308' }}>
+          <DollarSign size={20} /> Valores Adicionais Fixos (Venda em CAD)
+        </h3>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.25rem', marginBottom: '1.25rem' }}>
+          <div>
+            <label style={S.label}>Nome + Número Personalizado</label>
+            <input
+              style={S.input}
+              type="number"
+              step="0.01"
+              value={pricing.nameNumber || 0}
+              onChange={e => setPricing({ ...pricing, nameNumber: parseFloat(e.target.value) || 0 })}
+            />
+          </div>
+          <div>
+            <label style={S.label}>Custo do Patch</label>
+            <input
+              style={S.input}
+              type="number"
+              step="0.01"
+              value={pricing.patch || 0}
+              onChange={e => setPricing({ ...pricing, patch: parseFloat(e.target.value) || 0 })}
+            />
+          </div>
+        </div>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.25rem', marginBottom: '1.5rem' }}>
+          <div>
+            <label style={S.label}>Tamanho Plussize (2XL - 3XL)</label>
+            <input
+              style={S.input}
+              type="number"
+              step="0.01"
+              value={pricing.size2XL3XL || 0}
+              onChange={e => setPricing({ ...pricing, size2XL3XL: parseFloat(e.target.value) || 0 })}
+            />
+          </div>
+          <div>
+            <label style={S.label}>Tamanho Máximo (4XL)</label>
+            <input
+              style={S.input}
+              type="number"
+              step="0.01"
+              value={pricing.size4XL || 0}
+              onChange={e => setPricing({ ...pricing, size4XL: parseFloat(e.target.value) || 0 })}
+            />
+          </div>
+        </div>
+
+        {/* ─── 4. GESTÃO DE ENTREGA (FRETE) ─── */}
+        <div style={{ background: '#0e1012', border: '1px solid #1c1f22', borderRadius: '12px', padding: '1.5rem', marginBottom: '1.5rem' }}>
+          <h4 style={{ margin: '0 0 1rem', display: 'flex', alignItems: 'center', gap: '0.4rem', fontSize: '0.95rem', color: '#60A5FA', fontWeight: 700 }}>
+            <Truck size={16} /> Gestão de Entrega (Frete)
+          </h4>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '1rem' }}>
+            <div>
+              <label style={S.label}>Custo de Frete Padrão ($)</label>
+              <input
+                style={S.input}
+                type="number"
+                step="0.01"
+                value={pricing.shippingCost || 0}
+                onChange={e => setPricing({ ...pricing, shippingCost: parseFloat(e.target.value) || 0 })}
+              />
+            </div>
+            <div>
+              <label style={S.label}>Frete Grátis Acima de ($)</label>
+              <input
+                style={S.input}
+                type="number"
+                step="0.01"
+                value={pricing.freeShippingThreshold || 0}
+                onChange={e => setPricing({ ...pricing, freeShippingThreshold: parseFloat(e.target.value) || 0 })}
+              />
+            </div>
+            <div>
+              <label style={{ ...S.label, color: '#D6FF00' }}>Preço Base Combo Oferta ($)</label>
+              <input
+                style={{ ...S.input, borderColor: '#D6FF00', background: 'rgba(214,255,0,0.03)' }}
+                type="number"
+                step="0.01"
+                value={pricing.promoBasePrice || 0}
+                onChange={e => setPricing({ ...pricing, promoBasePrice: parseFloat(e.target.value) || 0 })}
+              />
+            </div>
+          </div>
+        </div>
+
+        {/* ─── 5. E-MAIL DO FORNECEDOR ─── */}
+        <div style={{ background: '#0e1012', border: '1px solid #1c1f22', borderRadius: '12px', padding: '1.5rem' }}>
+          <h4 style={{ margin: '0 0 0.5rem', display: 'flex', alignItems: 'center', gap: '0.4rem', fontSize: '0.95rem', color: '#EAB308', fontWeight: 700 }}>
+            ✉️ E-mail do Fornecedor
+          </h4>
+          <p style={{ color: 'rgba(255,255,255,0.45)', fontSize: '0.75rem', lineHeight: 1.5, marginBottom: '1rem' }}>
+            Configure o e-mail do seu fornecedor para usar o botão "Mandar para Fornecedor" em cada pedido.
+          </p>
+          <input
+            style={{ ...S.input, borderColor: 'rgba(234, 179, 8, 0.3)' }}
+            type="email"
+            value={supplierEmail}
+            onChange={e => setSupplierEmail(e.target.value)}
+            onBlur={async (e) => {
+              const val = e.target.value.trim();
+              if (!val) return;
+              await supabase.from('store_settings').upsert({ key: 'supplier_email', value: val }, { onConflict: 'key' });
+              showToast(`E-mail do fornecedor salvo: ${val}`, 'success');
+            }}
+            placeholder="fornecedor@exemplo.com"
+          />
+          {supplierEmail && (
+            <p style={{ fontSize: '0.75rem', color: '#4ADE80', marginTop: '0.5rem', margin: '0.5rem 0 0' }}>
+              Configurado: {supplierEmail} — salvo automaticamente ao sair do campo
+            </p>
+          )}
+        </div>
+      </div>
+
+      {/* ─── 6. DESCONTO PROGRESSIVO (VALOR TOTAL) ─── */}
+      <div style={{ ...S.card, borderLeft: '4px solid #10B981', marginBottom: '2rem', padding: '2rem' }}>
+        <h3 style={{ margin: '0 0 1rem', display: 'flex', alignItems: 'center', gap: '0.5rem', fontWeight: 800, fontSize: '1.2rem', color: '#10B981' }}>
+          <Package size={20} /> Desconto Progressivo (Valor Total)
+        </h3>
+        <p style={{ color: 'rgba(255,255,255,0.6)', fontSize: '0.9rem', lineHeight: 1.6, marginBottom: '1.5rem' }}>
+          Os valores abaixo configuram o <strong>percentual (%)</strong> que será subtraído do <strong>valor total do carrinho</strong> dependendo do volume de peças.
+        </p>
+
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem 1.5rem', marginBottom: '1.5rem' }}>
+          {pricing.discounts.map((discount, index) => (
+            <React.Fragment key={index}>
+              <div>
+                <label style={S.label}>Quantidade Mínima</label>
+                <input
+                  style={S.input}
+                  type="number"
+                  value={discount.qty}
+                  onChange={(e) => {
+                    const newDiscounts = [...pricing.discounts];
+                    newDiscounts[index].qty = parseInt(e.target.value) || 0;
+                    setPricing({ ...pricing, discounts: newDiscounts });
+                  }}
+                />
+              </div>
+              <div>
+                <label style={S.label}>Desconto Total (% OFF)</label>
+                <input
+                  style={S.input}
+                  type="number"
+                  step="0.01"
+                  value={discount.percent || discount.amount || 0}
+                  onChange={(e) => {
+                    const newDiscounts = [...pricing.discounts];
+                    newDiscounts[index].percent = parseFloat(e.target.value) || 0;
+                    setPricing({ ...pricing, discounts: newDiscounts });
+                  }}
+                />
+              </div>
+            </React.Fragment>
+          ))}
+        </div>
+
+        <button onClick={handleSaveAll} style={{ ...S.btnPrimary, background: '#3B82F6', width: '100%', padding: '1rem', fontSize: '0.95rem' }} disabled={saving}>
+          <Save size={15} /> {saving ? 'Salvando...' : 'Salvar Todas as Configurações de Preço'}
+        </button>
+      </div>
+
+      {/* CONFIRMATION MODAL FOR MASS READJUSTMENT */}
+      {confirmReadjust && (
+        <div style={{
+          position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
+          background: 'rgba(0, 0, 0, 0.75)', display: 'flex', alignItems: 'center',
+          justifyContent: 'center', zIndex: 99999, backdropFilter: 'blur(4px)'
+        }}>
+          <div style={{
+            background: '#121416', border: '1px solid #1A1D20', borderRadius: '16px',
+            padding: '2rem', maxWidth: '380px', width: '90%', textAlign: 'center',
+            boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.5), 0 10px 10px -5px rgba(0, 0, 0, 0.4)'
+          }}>
+            <div style={{
+              width: '56px', height: '56px', borderRadius: '50%',
+              background: 'rgba(239, 68, 68, 0.1)', display: 'flex',
+              alignItems: 'center', justifyContent: 'center', margin: '0 auto 1.25rem'
+            }}>
+              <AlertCircle size={28} color="#EF4444" />
+            </div>
+            <h3 style={{ margin: '0 0 0.5rem', fontSize: '1.25rem', fontWeight: 800, color: '#fff', fontFamily: "'Inter', sans-serif" }}>
+              Reajuste em Massa
+            </h3>
+            <p style={{ margin: '0 0 1.75rem', fontSize: '0.875rem', color: 'rgba(255,255,255,0.6)', lineHeight: 1.5, fontFamily: "'Inter', sans-serif" }}>
+              Deseja realmente {confirmReadjust.label.toLowerCase() === 'reduzir' ? 'diminuir' : 'aumentar'} o preço de TODOS os produtos do catálogo em {readjustType === 'fixed' ? '$' : ''}{readjustValue}{readjustType === 'percent' ? '%' : ''}? Esta ação é irreversível.
+            </p>
+            <div style={{ display: 'flex', gap: '0.75rem' }}>
+              <button
+                onClick={() => setConfirmReadjust(null)}
+                style={{
+                  flex: 1, padding: '0.75rem', borderRadius: '10px',
+                  background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.08)',
+                  color: 'rgba(255,255,255,0.8)', fontWeight: 700, fontSize: '0.875rem',
+                  cursor: 'pointer', transition: 'all 0.2s'
+                }}
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={handleBulkPriceUpdate}
+                style={{
+                  flex: 1, padding: '0.75rem', borderRadius: '10px',
+                  background: '#EF4444', border: 'none', color: '#fff',
+                  fontWeight: 700, fontSize: '0.875rem', cursor: 'pointer',
+                  transition: 'all 0.2s'
+                }}
+              >
+                Confirmar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
+
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 const Loader = () => (
   <div style={{ display: 'flex', justifyContent: 'center', padding: '4rem' }}>
@@ -5297,6 +5853,7 @@ const RebrandAdmin = () => {
     clientes:    <ClientesSection showToast={showToast} />,
     afiliados:   <AfiliadosSection showToast={showToast} />,
     conversas:   <ConversasSection />,
+    pricing:     <PrecificacaoSection showToast={showToast} />,
     depoimentos: <DepoimentosSection showToast={showToast} />,
     financeiro:  <FinanceiroSection showToast={showToast} />,
     cidades:     <CidadesSection showToast={showToast} />,
