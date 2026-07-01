@@ -1003,14 +1003,24 @@ h3.rebrand-sport-name {
   .rebrand-promobar {
     padding: 0.5rem 1rem;
     font-size: 0.7rem;
-    justify-content: center;
   }
   .rebrand-promobar-desktop {
     display: none !important;
   }
   .rebrand-promobar-mobile {
     display: flex !important;
+    width: 100%;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .rebrand-promobar-mobile-left {
+    display: flex;
+    align-items: center;
     animation: fadePromo 0.5s ease-in-out;
+  }
+  .rebrand-promobar-mobile-right {
+    display: flex;
+    align-items: center;
   }
 
   .rebrand-search-bar-desktop { max-width: 420px; margin: 0 1rem; }
@@ -1032,8 +1042,7 @@ h3.rebrand-sport-name {
   .rebrand-promobar {
     padding: 0.5rem 1rem;
     font-size: 0.65rem;
-    justify-content: center;
-    letter-spacing: 0.8px;
+    letter-spacing: 0.2px;
   }
 
   @keyframes fadePromo {

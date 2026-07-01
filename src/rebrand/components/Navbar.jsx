@@ -31,8 +31,7 @@ const Navbar = () => {
   const [activePromoIndex, setActivePromoIndex] = useState(0);
   const promos = [
     { text: '🍁 Free Shipping Across Canada', url: null },
-    { text: '⚡ VIP WhatsApp Group', url: 'https://chat.whatsapp.com/KKKNZoOnr57AanDT33KPrT', isExternal: true, isVolt: true },
-    { text: '📍 Track Order', url: '/rebrand/profile', isExternal: false }
+    { text: '⚡ VIP WhatsApp Group', url: 'https://chat.whatsapp.com/KKKNZoOnr57AanDT33KPrT', isExternal: true, isVolt: true }
   ];
 
   useEffect(() => {
@@ -183,28 +182,26 @@ const Navbar = () => {
             </div>
           </div>
 
-          <div className="rebrand-promobar-mobile" key={activePromoIndex}>
-            {promos[activePromoIndex].url ? (
-              promos[activePromoIndex].isExternal ? (
+          <div className="rebrand-promobar-mobile">
+            <div className="rebrand-promobar-mobile-left" key={activePromoIndex}>
+              {promos[activePromoIndex].url ? (
                 <a 
                   href={promos[activePromoIndex].url} 
                   target="_blank" 
                   rel="noopener noreferrer" 
-                  style={{ color: promos[activePromoIndex].isVolt ? 'var(--rebrand-volt)' : '#ffffff', textDecoration: 'none', fontWeight: 700 }}
+                  style={{ color: 'var(--rebrand-volt)', textDecoration: 'none', fontWeight: 700 }}
                 >
                   {promos[activePromoIndex].text}
                 </a>
               ) : (
-                <Link 
-                  to={promos[activePromoIndex].url} 
-                  style={{ color: '#ffffff', textDecoration: 'none', fontWeight: 700 }}
-                >
-                  {promos[activePromoIndex].text}
-                </Link>
-              )
-            ) : (
-              <span style={{ fontWeight: 700 }}>{promos[activePromoIndex].text}</span>
-            )}
+                <span style={{ fontWeight: 700 }}>{promos[activePromoIndex].text}</span>
+              )}
+            </div>
+            <div className="rebrand-promobar-mobile-right">
+              <Link to="/rebrand/profile" style={{ color: '#ffffff', textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '0.3rem', fontWeight: 700 }}>
+                <MapPin size={12} /> Track Order
+              </Link>
+            </div>
           </div>
         </div>
 
