@@ -441,6 +441,10 @@ const Navbar = () => {
           <a href="https://chat.whatsapp.com/KKKNZoOnr57AanDT33KPrT" target="_blank" rel="noopener noreferrer" style={{ color: 'var(--rebrand-volt)', textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '0.75rem', padding: '1rem 0', borderTop: '1px solid #2C3034', fontWeight: 700 }}>
             ⚡ VIP WhatsApp Group
           </a>
+          <Link to="/rebrand/profile" style={{ color: '#ffffff', textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '0.75rem', padding: '1rem 0', borderTop: '1px solid #2C3034', fontWeight: 700 }} onClick={() => setMenuOpen(false)}>
+            <MapPin size={20} />
+            <span>Track Order</span>
+          </Link>
         </div>
       </div>
 

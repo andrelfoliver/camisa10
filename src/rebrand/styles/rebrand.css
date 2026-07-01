@@ -998,7 +998,25 @@ h3.rebrand-sport-name {
     gap: 1rem;
   }
 
-  .rebrand-promobar-right { display: none; }
+  .rebrand-promobar {
+    padding: 0.5rem 1rem;
+    font-size: 0.7rem;
+    justify-content: flex-start;
+    overflow-x: auto;
+    white-space: nowrap;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+    gap: 1.5rem;
+  }
+  .rebrand-promobar::-webkit-scrollbar {
+    display: none;
+  }
+  .rebrand-promobar-left,
+  .rebrand-promobar-right {
+    display: flex !important;
+    align-items: center;
+    flex-shrink: 0;
+  }
 
   .rebrand-search-bar-desktop { max-width: 420px; margin: 0 1rem; }
 
@@ -1016,14 +1034,27 @@ h3.rebrand-sport-name {
    MOBILE BREAKPOINT — ≤ 768px
    ============================================================ */
 @media (max-width: 768px) {
-  /* Promobar: center single message */
+  /* Promobar: horizontal scroll to show all items */
   .rebrand-promobar {
     padding: 0.5rem 1rem;
     font-size: 0.65rem;
-    justify-content: center;
+    justify-content: flex-start;
     letter-spacing: 0.8px;
+    overflow-x: auto;
+    white-space: nowrap;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+    gap: 1rem;
   }
-  .rebrand-promobar-right { display: none; }
+  .rebrand-promobar::-webkit-scrollbar {
+    display: none;
+  }
+  .rebrand-promobar-left,
+  .rebrand-promobar-right {
+    display: flex !important;
+    align-items: center;
+    flex-shrink: 0;
+  }
 
   /* Header — logo centered between hamburger and icons (Fanatics pattern) */
   .rebrand-header-main {
