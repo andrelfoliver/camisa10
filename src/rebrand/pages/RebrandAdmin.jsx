@@ -4909,16 +4909,26 @@ const DepoimentosSection = ({ showToast }) => {
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
   const [editing, setEditing] = useState(null);
-  const [form, setForm] = useState({ name: '', content: '', rating: '5', location: '', avatar_url: '' });
+  const [form, setForm] = useState({ name: '', content: '', rating: '5', location: '', avatar_url: '', sort_order: '0' });
   const [saving, setSaving] = useState(false);
+  const [confirmDeleteId, setConfirmDeleteId] = useState(null);
 
   const load = useCallback(async () => {
     setLoading(true);
     const { data } = await supabase
       .from('testimonials')
-      .select('*')
-      .order('created_at', { ascending: false });
-    setDepoimentos(data || []);
+      .select('*');
+    if (data) {
+      const sorted = [...data].sort((a, b) => {
+        const orderA = a.sort_order ? Number(a.sort_order) : 99999;
+        const orderB = b.sort_order ? Number(b.sort_order) : 99999;
+        if (orderA !== orderB) return orderA - orderB;
+        return new Date(b.created_at) - new Date(a.created_at);
+      });
+      setDepoimentos(sorted);
+    } else {
+      setDepoimentos([]);
+    }
     setLoading(false);
   }, []);
 
@@ -4937,6 +4947,7 @@ const DepoimentosSection = ({ showToast }) => {
       rating: parseInt(form.rating) || 5,
       location: form.location.trim() || null,
       avatar_url: form.avatar_url.trim() || null,
+      sort_order: parseInt(form.sort_order) || 0,
     };
     const { error } = editing
       ? await supabase.from('testimonials').update(payload).eq('id', editing.id)
@@ -4945,20 +4956,29 @@ const DepoimentosSection = ({ showToast }) => {
     if (error) { showToast('Erro: ' + error.message, 'error'); return; }
     showToast(editing ? 'Depoimento atualizado!' : 'Depoimento criado!', 'success');
     setShowForm(false); setEditing(null);
-    setForm({ name: '', content: '', rating: '5', location: '', avatar_url: '' });
+    setForm({ name: '', content: '', rating: '5', location: '', avatar_url: '', sort_order: '0' });
     load();
   };
 
   const handleDelete = async (id) => {
-    if (!window.confirm('Remover depoimento?')) return;
-    await supabase.from('testimonials').delete().eq('id', id);
-    showToast('Depoimento removido.', 'success');
-    load();
+    setConfirmDeleteId(id);
+  };
+
+  const handleConfirmDelete = async () => {
+    if (!confirmDeleteId) return;
+    const { error } = await supabase.from('testimonials').delete().eq('id', confirmDeleteId);
+    if (error) {
+      showToast('Erro ao remover: ' + error.message, 'error');
+    } else {
+      showToast('Depoimento removido.', 'success');
+      load();
+    }
+    setConfirmDeleteId(null);
   };
 
   const openEdit = (d) => {
     setEditing(d);
-    setForm({ name: d.name || '', content: d.content || '', rating: String(d.rating || 5), location: d.location || '', avatar_url: d.avatar_url || '' });
+    setForm({ name: d.name || '', content: d.content || '', rating: String(d.rating || 5), location: d.location || '', avatar_url: d.avatar_url || '', sort_order: String(d.sort_order || 0) });
     setShowForm(true);
   };
 
@@ -4979,7 +4999,7 @@ const DepoimentosSection = ({ showToast }) => {
         title="Depoimentos"
         sub="Gerencie avaliações e testemunhos exibidos no site"
         action={
-          <button style={S.btnPrimary} onClick={() => { setEditing(null); setForm({ name: '', content: '', rating: '5', location: '', avatar_url: '' }); setShowForm(true); }}>
+          <button style={S.btnPrimary} onClick={() => { setEditing(null); setForm({ name: '', content: '', rating: '5', location: '', avatar_url: '', sort_order: '0' }); setShowForm(true); }}>
             <Plus size={15} /> Novo Depoimento
           </button>
         }
@@ -5010,6 +5030,10 @@ const DepoimentosSection = ({ showToast }) => {
               <div>
                 <label style={S.label}>URL do Avatar (opcional)</label>
                 <input style={S.input} placeholder="https://..." value={form.avatar_url} onChange={e => setForm({...form, avatar_url: e.target.value})} />
+              </div>
+              <div>
+                <label style={S.label}>Ordem de Exibição (Comece no 1. Deixe 0 para o final)</label>
+                <input style={S.input} type="number" placeholder="Ex: 1" value={form.sort_order} onChange={e => setForm({...form, sort_order: e.target.value})} />
               </div>
             </div>
             <div style={{ marginBottom: '1rem' }}>
@@ -5062,8 +5086,8 @@ const DepoimentosSection = ({ showToast }) => {
                     <span style={{ fontSize: '1.1rem', fontWeight: 700, color: '#D6FF00' }}>{(d.name || '?')[0].toUpperCase()}</span>
                   </div>
                 )}
-                <div>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                <div style={{ paddingRight: '6.5rem' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap' }}>
                     <span style={{ fontWeight: 700, fontSize: '0.875rem' }}>{d.name}</span>
                     <span style={{
                       fontSize: '0.625rem',
@@ -5072,11 +5096,24 @@ const DepoimentosSection = ({ showToast }) => {
                       padding: '0.15rem 0.4rem',
                       borderRadius: '4px',
                       background: d.status === 'approved' ? 'rgba(34, 197, 94, 0.15)' : 'rgba(255,255,255,0.06)',
-                      color: d.status === 'approved' ? '#4ADE80' : 'rgba(255,255,255,0.4)',
+                      color: d.status === 'approved' ? '#4ADE80' : 'rgba(255, 255, 255, 0.4)',
                       border: d.status === 'approved' ? '1px solid rgba(34, 197, 94, 0.3)' : '1px solid rgba(255,255,255,0.1)'
                     }}>
                       {d.status === 'approved' ? 'Publicado' : 'Oculto'}
                     </span>
+                    {d.sort_order !== undefined && d.sort_order !== null && (
+                      <span style={{
+                        fontSize: '0.625rem',
+                        fontWeight: 700,
+                        padding: '0.15rem 0.4rem',
+                        borderRadius: '4px',
+                        background: 'rgba(59, 130, 246, 0.15)',
+                        color: '#60A5FA',
+                        border: '1px solid rgba(59, 130, 246, 0.3)'
+                      }}>
+                        Ordem: {d.sort_order}
+                      </span>
+                    )}
                   </div>
                   {d.location && <div style={{ fontSize: '0.75rem', color: 'rgba(255,255,255,0.4)' }}>{d.location}</div>}
                 </div>
@@ -5096,6 +5133,88 @@ const DepoimentosSection = ({ showToast }) => {
               <div style={{ fontSize: '0.85rem' }}>Crie depoimentos para exibir na página inicial do site.</div>
             </div>
           )}
+        </div>
+      )}
+
+      {confirmDeleteId && (
+        <div style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          background: 'rgba(0, 0, 0, 0.75)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          zIndex: 99999,
+          backdropFilter: 'blur(4px)'
+        }}>
+          <div style={{
+            background: '#121416',
+            border: '1px solid #1A1D20',
+            borderRadius: '16px',
+            padding: '2rem',
+            maxWidth: '380px',
+            width: '90%',
+            textAlign: 'center',
+            boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.5), 0 10px 10px -5px rgba(0, 0, 0, 0.4)'
+          }}>
+            <div style={{
+              width: '56px',
+              height: '56px',
+              borderRadius: '50%',
+              background: 'rgba(239, 68, 68, 0.1)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              margin: '0 auto 1.25rem'
+            }}>
+              <AlertCircle size={28} color="#EF4444" />
+            </div>
+            <h3 style={{ margin: '0 0 0.5rem', fontSize: '1.25rem', fontWeight: 800, color: '#fff', fontFamily: "'Inter', sans-serif" }}>
+              Excluir Depoimento
+            </h3>
+            <p style={{ margin: '0 0 1.75rem', fontSize: '0.875rem', color: 'rgba(255,255,255,0.6)', lineHeight: 1.5, fontFamily: "'Inter', sans-serif" }}>
+              Tem certeza de que deseja remover este depoimento? Esta ação não poderá ser desfeita.
+            </p>
+            <div style={{ display: 'flex', gap: '0.75rem' }}>
+              <button
+                onClick={() => setConfirmDeleteId(null)}
+                style={{
+                  flex: 1,
+                  padding: '0.75rem',
+                  borderRadius: '10px',
+                  background: 'rgba(255,255,255,0.05)',
+                  border: '1px solid rgba(255,255,255,0.08)',
+                  color: 'rgba(255,255,255,0.8)',
+                  fontWeight: 700,
+                  fontSize: '0.875rem',
+                  cursor: 'pointer',
+                  transition: 'all 0.2s'
+                }}
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={handleConfirmDelete}
+                style={{
+                  flex: 1,
+                  padding: '0.75rem',
+                  borderRadius: '10px',
+                  background: '#EF4444',
+                  border: 'none',
+                  color: '#fff',
+                  fontWeight: 700,
+                  fontSize: '0.875rem',
+                  cursor: 'pointer',
+                  transition: 'all 0.2s'
+                }}
+              >
+                Excluir
+              </button>
+            </div>
+          </div>
         </div>
       )}
     </div>

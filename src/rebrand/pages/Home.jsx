@@ -179,10 +179,17 @@ const Home = () => {
         const { data } = await supabase
           .from('testimonials')
           .select('*')
-          .eq('status', 'approved')
-          .order('id', { ascending: false });
+          .eq('status', 'approved');
         if (data) {
-          setTestimonials(data);
+          const sorted = [...data].sort((a, b) => {
+            const orderA = a.sort_order ? Number(a.sort_order) : 99999;
+            const orderB = b.sort_order ? Number(b.sort_order) : 99999;
+            if (orderA !== orderB) return orderA - orderB;
+            const dateA = a.date || '';
+            const dateB = b.date || '';
+            return dateB.localeCompare(dateA);
+          });
+          setTestimonials(sorted);
         }
       } catch (err) {
         console.error("Error loading testimonials:", err);
