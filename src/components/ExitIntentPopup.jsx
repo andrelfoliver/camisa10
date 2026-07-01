@@ -2,9 +2,32 @@ import React, { useState, useEffect } from 'react';
 import { toast } from 'react-hot-toast';
 import { X, MessageSquare, Send } from 'lucide-react';
 import { useLanguage } from '../context/LanguageContext';
+import { useLocation } from 'react-router-dom';
 
 const ExitIntentPopup = () => {
     const { t } = useLanguage();
+    const location = useLocation();
+    const isRebrand = location.pathname.includes('/rebrand');
+
+    const EN_STRINGS = {
+        exit_title: 'Before you go...',
+        exit_subtitle: 'We are sorry that you did not find what you were looking for.',
+        exit_label: 'Tell us: which product would you like to see here at iFooty?',
+        exit_placeholder: 'e.g. Retro Brazil 1970 jersey, Real Madrid tracksuit...',
+        exit_btn_submit: 'Submit Suggestion',
+        exit_submitting: 'Sending...',
+        exit_footer: 'We promise to try to bring this update to you! ⚽',
+        exit_success: 'Thank you for your feedback! We will check it out. ⚽',
+        exit_error: 'An error occurred while sending. Please try again later.'
+    };
+
+    const getTranslation = (key) => {
+        if (isRebrand) {
+            return EN_STRINGS[key] || key;
+        }
+        return t(key);
+    };
+
     const [isVisible, setIsVisible] = useState(false);
     const [feedback, setFeedback] = useState('');
     const [isSubmitting, setIsSubmitting] = useState(false);
@@ -51,8 +74,14 @@ const ExitIntentPopup = () => {
             });
 
             if (response.ok) {
-                toast.success(t('exit_success'), {
-                    style: {
+                toast.success(getTranslation('exit_success'), {
+                    style: isRebrand ? {
+                        background: '#FFFFFF',
+                        color: '#121416',
+                        border: '1px solid #E9ECEF',
+                        fontFamily: 'Inter, sans-serif',
+                        fontWeight: '600'
+                    } : {
                         background: '#1a1a1a',
                         color: '#ccff00',
                         border: '1px solid #ccff00'
@@ -63,7 +92,7 @@ const ExitIntentPopup = () => {
                 throw new Error('Erro ao enviar');
             }
         } catch {
-            toast.error(t('exit_error'));
+            toast.error(getTranslation('exit_error'));
         } finally {
             setIsSubmitting(false);
         }
@@ -72,8 +101,8 @@ const ExitIntentPopup = () => {
     if (!isVisible) return null;
 
     return (
-        <div className="exit-intent-overlay">
-            <div className="exit-intent-content">
+        <div className={`exit-intent-overlay ${isRebrand ? 'rebrand-exit-overlay' : ''}`}>
+            <div className={`exit-intent-content ${isRebrand ? 'rebrand-exit-content' : ''}`}>
                 <button 
                     className="close-btn"
                     onClick={() => setIsVisible(false)}
@@ -85,14 +114,14 @@ const ExitIntentPopup = () => {
                     <div className="icon-badge">
                         <MessageSquare size={24} className="text-neon" />
                     </div>
-                    <h2>{t('exit_title')}</h2>
-                    <p>{t('exit_subtitle')}</p>
+                    <h2>{getTranslation('exit_title')}</h2>
+                    <p>{getTranslation('exit_subtitle')}</p>
                 </div>
 
                 <form onSubmit={handleSubmit} className="feedback-form">
-                    <label>{t('exit_label')}</label>
+                    <label>{getTranslation('exit_label')}</label>
                     <textarea
-                        placeholder={t('exit_placeholder')}
+                        placeholder={getTranslation('exit_placeholder')}
                         value={feedback}
                         onChange={(e) => setFeedback(e.target.value)}
                         required
@@ -103,10 +132,10 @@ const ExitIntentPopup = () => {
                         className="submit-btn"
                     >
                         {isSubmitting ? (
-                            <span className="loader">{t('exit_submitting')}</span>
+                            <span className="loader">{getTranslation('exit_submitting')}</span>
                         ) : (
                             <>
-                                <span>{t('exit_btn_submit')}</span>
+                                <span>{getTranslation('exit_btn_submit')}</span>
                                 <Send size={18} />
                             </>
                         )}
@@ -114,7 +143,7 @@ const ExitIntentPopup = () => {
                 </form>
 
                 <div className="popup-footer">
-                    <p>{t('exit_footer')}</p>
+                    <p>{getTranslation('exit_footer')}</p>
                 </div>
             </div>
 
@@ -283,6 +312,88 @@ const ExitIntentPopup = () => {
                 @keyframes slideUp {
                     from { transform: translateY(30px); opacity: 0; }
                     to { transform: translateY(0); opacity: 1; }
+                }
+
+                /* Rebrand specific style overrides */
+                .rebrand-exit-overlay {
+                    background: rgba(18, 20, 22, 0.4);
+                    backdrop-filter: blur(12px);
+                }
+
+                .rebrand-exit-content {
+                    background: #ffffff;
+                    border: 1px solid #E9ECEF;
+                    border-radius: 8px;
+                    box-shadow: 0 16px 48px rgba(0,0,0,0.1);
+                    font-family: 'Inter', sans-serif;
+                }
+
+                .rebrand-exit-content .close-btn {
+                    background: #F8F9FA;
+                    color: #6C757D;
+                }
+
+                .rebrand-exit-content .close-btn:hover {
+                    background: #E9ECEF;
+                    color: #121416;
+                }
+
+                .rebrand-exit-content .icon-badge {
+                    background: #CCFF00;
+                }
+
+                .rebrand-exit-content .text-neon {
+                    color: #121416;
+                }
+
+                .rebrand-exit-content h2 {
+                    color: #121416;
+                    font-weight: 800;
+                }
+
+                .rebrand-exit-content p {
+                    color: #6C757D;
+                }
+
+                .rebrand-exit-content label {
+                    color: #121416;
+                    font-weight: 600;
+                }
+
+                .rebrand-exit-content textarea {
+                    background: #F8F9FA;
+                    border: 1px solid #E9ECEF;
+                    color: #121416;
+                    border-radius: 8px;
+                }
+
+                .rebrand-exit-content textarea:focus {
+                    border-color: #121416;
+                    box-shadow: 0 0 0 2px rgba(18, 20, 22, 0.05);
+                }
+
+                .rebrand-exit-content .submit-btn {
+                    background: #121416;
+                    color: #FFFFFF;
+                    border-radius: 8px;
+                    font-weight: 600;
+                    text-transform: uppercase;
+                    letter-spacing: 0.5px;
+                }
+
+                .rebrand-exit-content .submit-btn:hover:not(:disabled) {
+                    background: #CCFF00;
+                    color: #121416;
+                    transform: translateY(-2px);
+                    box-shadow: 0 8px 24px rgba(204, 255, 0, 0.15);
+                }
+
+                .rebrand-exit-content .popup-footer {
+                    border-top: 1px solid #E9ECEF;
+                }
+
+                .rebrand-exit-content .popup-footer p {
+                    color: #6C757D;
                 }
             `}</style>
         </div>

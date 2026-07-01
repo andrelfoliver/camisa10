@@ -4,7 +4,7 @@ import { supabaseRebrand as supabase } from '../../services/supabase';
 import ProductCard from '../components/ProductCard';
 import { useCart } from '../../context/CartContext';
 import { Search, ChevronRight, X, AlertCircle } from 'lucide-react';
-import { formatProductName } from '../utils/format';
+import { formatProductName, getProductRating, getProductReviewsCount } from '../utils/format';
 
 const SearchPage = () => {
   const [searchParams] = useSearchParams();
@@ -47,8 +47,8 @@ const SearchPage = () => {
               team: p.team || '',
               desc: p.description || '',
               image: p.image || p.images?.[0] || 'https://images.unsplash.com/photo-1508098682722-e99c43a406b2?w=600',
-              rating: p.rating || 4.8,
-              reviews: p.reviews_count || 32,
+              rating: p.rating || getProductRating(p.id),
+              reviews: p.reviews_count || getProductReviewsCount(p.id),
               colors: ['#000000', '#ffffff', '#e31837'],
               badge: p.is_bestseller ? 'Best Seller' : (p.is_sale ? 'Sale' : (p.is_new ? 'New Arrival' : (idx % 4 === 0 ? 'Almost Gone' : '')))
             };

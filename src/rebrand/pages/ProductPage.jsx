@@ -4,7 +4,7 @@ import { supabaseRebrand as supabase } from '../../services/supabase';
 import { Star, ShoppingBag, ArrowLeft, ShieldCheck, Truck, RefreshCw, Calendar, Heart, Share2, Info, ChevronLeft, ChevronRight, Award } from 'lucide-react';
 import { useCart } from '../../context/CartContext';
 import { useWishlist } from '../../context/WishlistContext';
-import { formatProductName } from '../utils/format';
+import { formatProductName, getProductRating, getProductReviewsCount } from '../utils/format';
 import SizeGuideModal from '../../components/SizeGuideModal';
 
 // Todos os mocks para busca rápida com suporte a cores de time, preços riscados e informações extras
@@ -72,8 +72,8 @@ const ProductPage = () => {
               category: 'Soccer',
               image: data.image || data.images?.[0] || 'https://images.unsplash.com/photo-1508098682722-e99c43a406b2?w=800',
               gallery: data.gallery || [],
-              rating: data.rating || 4.8,
-              reviews: data.reviews_count || 32,
+              rating: data.rating || getProductRating(data.id),
+              reviews: data.reviews_count || getProductReviewsCount(data.id),
               colors: ['#000000', '#ffffff', '#e31837'],
               desc: data.description || 'Premium stitched sports jersey. Features authentic player details, breathable mesh elements, and lightweight tailored design for maximum performance and look.'
             });

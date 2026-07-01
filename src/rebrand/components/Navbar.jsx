@@ -158,7 +158,7 @@ const Navbar = () => {
           </div>
           <div className="rebrand-promobar-right">
             <a href="https://chat.whatsapp.com/KKKNZoOnr57AanDT33KPrT" target="_blank" rel="noopener noreferrer" style={{ color: 'var(--rebrand-volt)', textDecoration: 'none' }}>
-              ⚡ VIP WhatsApp — 10% Off
+              ⚡ VIP WhatsApp Group
             </a>
             <span style={{ color: 'rgba(255,255,255,0.2)' }}>|</span>
             <Link to="/rebrand/profile" style={{ color: '#ffffff', textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '0.3rem' }}>
@@ -439,7 +439,7 @@ const Navbar = () => {
             </button>
           )}
           <a href="https://chat.whatsapp.com/KKKNZoOnr57AanDT33KPrT" target="_blank" rel="noopener noreferrer" style={{ color: 'var(--rebrand-volt)', textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '0.75rem', padding: '1rem 0', borderTop: '1px solid #2C3034', fontWeight: 700 }}>
-            ⚡ VIP WhatsApp — 10% Off
+            ⚡ VIP WhatsApp Group
           </a>
         </div>
       </div>
