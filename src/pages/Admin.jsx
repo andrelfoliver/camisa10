@@ -3133,6 +3133,9 @@ const Admin = () => {
               if (city.toUpperCase() === 'N') {
                 return 'Winnipeg';
               }
+              if (city.toLowerCase().includes('calgary')) {
+                return 'Calgary';
+              }
               if (city.toLowerCase().includes('charlottetown')) {
                 return 'Charlottetown';
               }

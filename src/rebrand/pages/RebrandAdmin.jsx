@@ -7,10 +7,11 @@ import {
   LogOut, ExternalLink, ChevronUp, ChevronDown, Edit2, Trash2,
   Plus, Save, X, Check, AlertCircle, TrendingUp, Users, DollarSign, Upload,
   Clock, Search, RefreshCw, Eye, EyeOff, UserCircle, Award, MessageSquare, Star,
-  Shirt, CreditCard, Globe, Activity, Truck, CheckCircle2, XCircle, Menu
+  Shirt, CreditCard, Globe, Activity, Truck, CheckCircle2, XCircle, Menu, MapPin
 } from 'lucide-react';
 import ProductMedia from '../../components/ProductMedia';
 import TrackingModal from '../../components/TrackingModal';
+import CanadaMap, { normalizeProvince } from '../../components/CanadaMap';
 
 // ─── Constants ───────────────────────────────────────────────────────────────
 const REBRAND_ADMIN_EMAIL = 'ifootyc@gmail.com';
@@ -34,6 +35,8 @@ const NAV_ITEMS = [
   { id: 'afiliados',   label: 'Afiliados',          icon: Award },
   { id: 'conversas',   label: 'Conversas IA',       icon: MessageSquare },
   { id: 'depoimentos', label: 'Depoimentos',        icon: Star },
+  { id: 'financeiro',  label: 'Financeiro',         icon: TrendingUp },
+  { id: 'cidades',     label: 'Cidades Atendidas',  icon: MapPin },
   { id: 'settings',    label: 'Configurações',      icon: Settings },
 ];
 
@@ -1184,6 +1187,12 @@ const OrdersSection = ({ showToast, onOpenTracking }) => {
   const [filter, setFilter] = useState('all');
   const [search, setSearch] = useState('');
   const [selectedOrder, setSelectedOrder] = useState(null);
+  const [currentPage, setCurrentPage] = useState(1);
+  const ORDERS_PER_PAGE = 15;
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [filter, search]);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -1293,6 +1302,12 @@ const OrdersSection = ({ showToast, onOpenTracking }) => {
     return matchFilter && matchSearch;
   });
 
+  const totalPages = Math.ceil(filtered.length / ORDERS_PER_PAGE);
+  const paginatedOrders = filtered.slice(
+    (currentPage - 1) * ORDERS_PER_PAGE,
+    currentPage * ORDERS_PER_PAGE
+  );
+
   return (
     <div>
       <SectionHeader 
@@ -1324,40 +1339,89 @@ const OrdersSection = ({ showToast, onOpenTracking }) => {
       </div>
       <div style={S.card}>
         {loading ? <Loader /> : (
-          <div className="table-responsive">
-            <table style={S.table}>
-              <thead>
-                <tr>{['ID', 'Cliente', 'Data', 'Total', 'Status', 'Ações'].map(h => <th key={h} style={S.th}>{h}</th>)}</tr>
-              </thead>
-              <tbody>
-                {filtered.map(o => (
-                  <tr key={o.id} style={{ cursor: 'pointer' }} onClick={() => setSelectedOrder(o)}>
-                    <td style={{ ...S.td, color: 'rgba(255,255,255,0.5)', fontSize: '0.78rem', fontFamily: 'monospace' }}>#{String(o.id).slice(-8)}</td>
-                    <td style={S.td}>
-                      <div style={{ fontWeight: 600, color: getStatusNameColor(o.status) }}>{o.customer_name || '—'}</div>
-                      <div style={{ fontSize: '0.75rem', color: 'rgba(255,255,255,0.4)' }}>{o.customer_email || ''}</div>
-                    </td>
-                    <td style={{ ...S.td, color: 'rgba(255,255,255,0.5)', fontSize: '0.82rem', whiteSpace: 'nowrap' }}>{new Date(o.created_at).toLocaleDateString('pt-BR')}</td>
-                    <td style={{ ...S.td, fontWeight: 700, color: '#D6FF00', whiteSpace: 'nowrap' }}>${parseFloat(o.total || o.total_price || 0).toFixed(2)}</td>
-                    <td style={S.td}><span style={S.badge(o.status)}>{STATUS_COLORS[o.status]?.label || o.status}</span></td>
-                    <td style={{ ...S.td }} onClick={e => e.stopPropagation()}>
-                      <div style={{ display: 'flex', gap: '0.5rem' }}>
-                        <button style={S.btnEdit} onClick={() => setSelectedOrder(o)}><Eye size={14} /></button>
-                        <select
-                          value={o.status}
-                          onChange={e => { e.stopPropagation(); handleStatusChange(o.id, e.target.value); }}
-                          style={{ ...S.input, width: 'auto', padding: '0.4rem 0.75rem', fontSize: '0.8rem' }}
-                        >
-                          {Object.entries(STATUS_COLORS).map(([k, v]) => <option key={k} value={k}>{v.label}</option>)}
-                        </select>
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-                {filtered.length === 0 && <tr><td colSpan={6} style={{ ...S.td, textAlign: 'center', color: 'rgba(255,255,255,0.3)', padding: '3rem' }}>Nenhum pedido encontrado.</td></tr>}
-              </tbody>
-            </table>
-          </div>
+          <>
+            <div className="table-responsive">
+              <table style={S.table}>
+                <thead>
+                  <tr>{['ID', 'Cliente', 'Data', 'Total', 'Status', 'Ações'].map(h => <th key={h} style={S.th}>{h}</th>)}</tr>
+                </thead>
+                <tbody>
+                  {paginatedOrders.map(o => (
+                    <tr key={o.id} style={{ cursor: 'pointer' }} onClick={() => setSelectedOrder(o)}>
+                      <td style={{ ...S.td, color: 'rgba(255,255,255,0.5)', fontSize: '0.78rem', fontFamily: 'monospace' }}>#{String(o.id).slice(-8)}</td>
+                      <td style={S.td}>
+                        <div style={{ fontWeight: 600, color: getStatusNameColor(o.status) }}>{o.customer_name || '—'}</div>
+                        <div style={{ fontSize: '0.75rem', color: 'rgba(255,255,255,0.4)' }}>{o.customer_email || ''}</div>
+                      </td>
+                      <td style={{ ...S.td, color: 'rgba(255,255,255,0.5)', fontSize: '0.82rem', whiteSpace: 'nowrap' }}>{new Date(o.created_at).toLocaleDateString('pt-BR')}</td>
+                      <td style={{ ...S.td, fontWeight: 700, color: '#D6FF00', whiteSpace: 'nowrap' }}>${parseFloat(o.total || o.total_price || 0).toFixed(2)}</td>
+                      <td style={S.td}><span style={S.badge(o.status)}>{STATUS_COLORS[o.status]?.label || o.status}</span></td>
+                      <td style={{ ...S.td }} onClick={e => e.stopPropagation()}>
+                        <div style={{ display: 'flex', gap: '0.5rem' }}>
+                          <button style={S.btnEdit} onClick={() => setSelectedOrder(o)}><Eye size={14} /></button>
+                          <select
+                            value={o.status}
+                            onChange={e => { e.stopPropagation(); handleStatusChange(o.id, e.target.value); }}
+                            style={{ ...S.input, width: 'auto', padding: '0.4rem 0.75rem', fontSize: '0.8rem' }}
+                          >
+                            {Object.entries(STATUS_COLORS).map(([k, v]) => <option key={k} value={k}>{v.label}</option>)}
+                          </select>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                  {filtered.length === 0 && <tr><td colSpan={6} style={{ ...S.td, textAlign: 'center', color: 'rgba(255,255,255,0.3)', padding: '3rem' }}>Nenhum pedido encontrado.</td></tr>}
+                </tbody>
+              </table>
+            </div>
+
+            {totalPages > 1 && (
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '1.5rem', padding: '0.5rem 1rem 0 1rem', borderTop: '1px solid rgba(255,255,255,0.06)' }}>
+                <span style={{ fontSize: '0.8rem', color: 'rgba(255,255,255,0.45)' }}>
+                  Mostrando {((currentPage - 1) * ORDERS_PER_PAGE) + 1} a {Math.min(currentPage * ORDERS_PER_PAGE, filtered.length)} de {filtered.length} pedidos
+                </span>
+                <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+                  <button 
+                    onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+                    disabled={currentPage === 1}
+                    style={{
+                      padding: '0.4rem 0.8rem',
+                      borderRadius: '6px',
+                      border: '1px solid rgba(255,255,255,0.1)',
+                      background: currentPage === 1 ? 'rgba(255,255,255,0.02)' : 'rgba(255,255,255,0.05)',
+                      color: currentPage === 1 ? 'rgba(255,255,255,0.2)' : '#fff',
+                      cursor: currentPage === 1 ? 'not-allowed' : 'pointer',
+                      fontSize: '0.8rem',
+                      fontWeight: 700,
+                      transition: 'all 0.2s'
+                    }}
+                  >
+                    Anterior
+                  </button>
+                  <span style={{ fontSize: '0.85rem', color: '#fff', fontWeight: 600, padding: '0 0.5rem' }}>
+                    Página {currentPage} de {totalPages}
+                  </span>
+                  <button 
+                    onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
+                    disabled={currentPage === totalPages}
+                    style={{
+                      padding: '0.4rem 0.8rem',
+                      borderRadius: '6px',
+                      border: '1px solid rgba(255,255,255,0.1)',
+                      background: currentPage === totalPages ? 'rgba(255,255,255,0.02)' : 'rgba(255,255,255,0.05)',
+                      color: currentPage === totalPages ? 'rgba(255,255,255,0.2)' : '#fff',
+                      cursor: currentPage === totalPages ? 'not-allowed' : 'pointer',
+                      fontSize: '0.8rem',
+                      fontWeight: 700,
+                      transition: 'all 0.2s'
+                    }}
+                  >
+                    Próxima
+                  </button>
+                </div>
+              </div>
+            )}
+          </>
         )}
       </div>
 
@@ -2753,6 +2817,850 @@ const SettingsSection = ({ showToast }) => {
             </div>
           </div>
           <p style={{ fontSize: '0.75rem', color: 'rgba(255,255,255,0.35)', marginTop: '0.75rem' }}>Estes valores são usados para calcular margens no painel de produção.</p>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// ─── Financeiro Section ──────────────────────────────────────────────────────
+const FinanceiroSection = ({ showToast }) => {
+  const [orders, setOrders] = useState([]);
+  const [pricing, setPricing] = useState({});
+  const [coupons, setCoupons] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [showValues, setShowValues] = useState(true);
+
+  useEffect(() => {
+    async function load() {
+      setLoading(true);
+      try {
+        const [{ data: dbOrders }, { data: settings }, { data: dbCoupons }] = await Promise.all([
+          supabase.from('orders').select('*').order('created_at', { ascending: false }),
+          supabase.from('store_settings').select('*'),
+          supabase.from('coupons').select('*')
+        ]);
+        setOrders(dbOrders || []);
+        setCoupons(dbCoupons || []);
+
+        const defaultPricing = {
+          exchangeRateFallback: 1.38,
+          costFan: 9.00,
+          costPlayer: 15.00,
+          costRetro: 15.00,
+          costLongSleeve: 12.00,
+          costKids: 11.00,
+          costBaby: 8.00,
+          costTraining: 17.00,
+          costShorts: 8.00,
+          costNBA: 17.00,
+          costNFL: 23.00,
+          costAdd2XL: 1.00,
+          costAdd3XL4XL: 2.00,
+          costAddPatch: 1.00,
+          costAddCustom: 3.00,
+          surcharge1Item: 5.00,
+          surcharge2Items: 4.00,
+          surcharge3Items: 3.00
+        };
+
+        let pricingData = defaultPricing;
+        if (settings) {
+          const pricingRecord = settings.find(s => s.key === 'pricing');
+          if (pricingRecord) {
+            try {
+              pricingData = JSON.parse(pricingRecord.value);
+            } catch (e) {
+              console.error(e);
+            }
+          }
+        }
+        setPricing(pricingData);
+      } catch (e) {
+        console.error(e);
+        showToast('Erro ao carregar dados financeiros.', 'error');
+      } finally {
+        setLoading(false);
+      }
+    }
+    load();
+  }, [showToast]);
+
+  const calculateItemBaseCostUSD = (item) => {
+    const name = (item.name || '').toLowerCase();
+    const c = pricing;
+    if (name.includes('nba')) return c.costNBA || 17;
+    if (name.includes('nfl')) return c.costNFL || 23;
+    if (name.includes('jogador') || name.includes('player')) return c.costPlayer || 15;
+    if (name.includes('retrô') || name.includes('retro')) return c.costRetro || 15;
+    if (name.includes('manga longa') || name.includes('long sleeve')) return c.costLongSleeve || 12;
+    if (name.includes('kit infantil') || name.includes('kids')) return c.costKids || 11;
+    if (name.includes('baby') || name.includes('body')) return c.costBaby || 8;
+    if (name.includes('treino') || name.includes('training')) return c.costTraining || 17;
+    if (name.includes('short') || name.includes('bermuda')) return c.costShorts || 8;
+    return c.costFan || 9;
+  };
+
+  const getValidRevenue = (order) => {
+    if (order?.payment_method === 'parceria') return 0;
+    const gross = Number(order?.total_price || order?.total || 0);
+    if (order?.payment_method === 'paypal') {
+      return gross - (gross * 0.029) - 0.30;
+    }
+    return gross;
+  };
+
+  const getCalgaryDateStr = (dateInput) => {
+    if (!dateInput) return '';
+    try {
+      const d = new Date(dateInput);
+      return new Intl.DateTimeFormat('pt-BR', {
+        timeZone: 'America/Edmonton',
+        day: '2-digit', month: '2-digit', year: 'numeric',
+        hour: '2-digit', minute: '2-digit'
+      }).format(d).replace(',', ' às');
+    } catch (e) {
+      return '';
+    }
+  };
+
+  const getOrderCommissionBreakdown = (order) => {
+    if (!order || !order.referrer || order.payment_method === 'parceria') return null;
+    const rawRef = order.referrer || 'Sem Indicação';
+    const coupon = coupons.find(c => c.code === rawRef.toUpperCase());
+    const agentName = coupon ? (coupon.agent_id || rawRef) : rawRef;
+    if (!agentName || agentName === 'Sem Indicação') return null;
+
+    const agentOrders = orders.filter(o => {
+      const oRef = o.referrer || 'Sem Indicação';
+      const oCoupon = coupons.find(c => c.code === oRef.toUpperCase());
+      const oAgent = oCoupon ? (oCoupon.agent_id || oRef) : oRef;
+      return oAgent === agentName;
+    });
+
+    const agentOrdersCount = agentOrders.length;
+    let rate = 0.08;
+    if (agentOrdersCount >= 51) rate = 0.15;
+    else if (agentOrdersCount >= 26) rate = 0.12;
+    else if (agentOrdersCount >= 11) rate = 0.10;
+
+    const base = getValidRevenue(order) * rate;
+    const orderDateStr = order.created_at ? getCalgaryDateStr(order.created_at) : '';
+    const isCopaPeriod = orderDateStr >= '2026-06-11' && orderDateStr <= '2026-07-19';
+    const seasonal = isCopaPeriod ? getValidRevenue(order) * 0.05 : 0;
+
+    const sortedAgentOrders = [...agentOrders].sort((a, b) => new Date(a.created_at) - new Date(b.created_at));
+    const orderRank = sortedAgentOrders.findIndex(o => o.id === order.id) + 1;
+
+    let performance = 0;
+    if (orderRank === 1) performance = 5;
+    if (orderRank === 5) performance = 10;
+    if (orderRank === 10) performance = 15;
+
+    return {
+      agentName,
+      base,
+      seasonal,
+      performance,
+      total: base + seasonal + performance,
+      rank: orderRank
+    };
+  };
+
+  const calculateOrderCommission = (order) => {
+    const breakdown = getOrderCommissionBreakdown(order);
+    return breakdown ? breakdown.total : 0;
+  };
+
+  const calculateOrderCost = (order) => {
+    if (!order) return 0;
+    const parsedItems = Array.isArray(order.items) ? order.items : (typeof order.items === 'string' ? (() => { try { return JSON.parse(order.items); } catch { return []; } })() : []);
+    const rate = order.usd_cad_rate || pricing.exchangeRateFallback || 1.38;
+    
+    const itemsCostUSD = parsedItems.reduce((acc, item) => {
+      const baseUSD = calculateItemBaseCostUSD(item);
+      let addonsUSD = 0;
+      const size = item.size || 'M';
+      if (size === '2XL') addonsUSD += (pricing.costAdd2XL || 1);
+      if (['3XL', '4XL'].includes(size)) addonsUSD += (pricing.costAdd3XL4XL || 2);
+      if (item.extras?.nameNumber) addonsUSD += (pricing.costAddCustom || 3);
+      if (item.extras?.patch) addonsUSD += (pricing.costAddPatch || 1);
+      return acc + ((baseUSD + addonsUSD) * (item.quantity || 1));
+    }, 0);
+
+    const totalItems = parsedItems.reduce((sum, item) => sum + (item.quantity || 1), 0);
+    let surchargeUSD = 0;
+    if (totalItems === 1) surchargeUSD = pricing.surcharge1Item || 5;
+    else if (totalItems === 2) surchargeUSD = pricing.surcharge2Items || 4;
+    else if (totalItems === 3) surchargeUSD = pricing.surcharge3Items || 3;
+    
+    const baseCostCAD = (itemsCostUSD + surchargeUSD) * rate;
+    const commissionCAD = calculateOrderCommission(order);
+    return baseCostCAD + commissionCAD;
+  };
+
+  if (loading) return <Loader />;
+
+  const monthlyStats = orders.reduce((acc, order) => {
+    const dateStr = order.created_at;
+    if (!dateStr) return acc;
+    const date = new Date(dateStr);
+    if (isNaN(date.getTime())) return acc;
+    
+    const calgaryDateStr = date.toLocaleDateString('en-CA', { timeZone: 'America/Edmonton' });
+    const [cYear, cMonth] = calgaryDateStr.split('-').map(Number);
+    const key = `${cMonth}-${cYear}`;
+    const monthLabel = date.toLocaleDateString('pt-BR', { month: 'long', year: 'numeric', timeZone: 'America/Edmonton' });
+    const capitalizedLabel = monthLabel.charAt(0).toUpperCase() + monthLabel.slice(1);
+    
+    if (!acc[key]) {
+      acc[key] = {
+        key,
+        label: capitalizedLabel,
+        orderCount: 0,
+        shirtCount: 0,
+        revenue: 0,
+        cost: 0,
+        profit: 0,
+        paypalVolume: 0,
+        transferVolume: 0,
+        partnerVolume: 0,
+        year: cYear
+      };
+    }
+    
+    const isCancelled = order.status === 'cancelled';
+    if (!isCancelled) {
+      acc[key].orderCount++;
+      const parsedItems = Array.isArray(order.items) ? order.items : (typeof order.items === 'string' ? (() => { try { return JSON.parse(order.items); } catch { return []; } })() : []);
+      const itemsCount = parsedItems.reduce((s, i) => s + (i.quantity || 1), 0) || 0;
+      acc[key].shirtCount += itemsCount;
+
+      const revenue = getValidRevenue(order);
+      const cost = calculateOrderCost(order);
+      const profit = revenue - cost;
+      
+      acc[key].revenue += revenue;
+      acc[key].cost += cost;
+      acc[key].profit += profit;
+      
+      if (order.payment_method === 'paypal') {
+        acc[key].paypalVolume += revenue;
+      } else if (order.payment_method === 'parceria') {
+        acc[key].partnerVolume += revenue;
+      } else {
+        acc[key].transferVolume += revenue;
+      }
+    }
+    
+    return acc;
+  }, {});
+
+  const sortedMonths = Object.values(monthlyStats).sort((a, b) => {
+    const [aMonth, aYear] = a.key.split('-').map(Number);
+    const [bMonth, bYear] = b.key.split('-').map(Number);
+    if (aYear !== bYear) return bYear - aYear;
+    return bMonth - aMonth;
+  });
+
+  const totals = sortedMonths.reduce((t, m) => {
+    t.revenue += m.revenue;
+    t.cost += m.cost;
+    t.profit += m.profit;
+    t.shirtCount += m.shirtCount;
+    t.orderCount += m.orderCount;
+    t.paypalVolume += m.paypalVolume;
+    t.transferVolume += m.transferVolume;
+    return t;
+  }, { revenue: 0, cost: 0, profit: 0, shirtCount: 0, orderCount: 0, paypalVolume: 0, transferVolume: 0 });
+
+  const averageMargin = totals.revenue > 0 ? (totals.profit / totals.revenue) * 100 : 0;
+  const averageTicket = totals.orderCount > 0 ? totals.revenue / totals.orderCount : 0;
+
+  const currentDate = new Date();
+  const currentMonthKey = `${currentDate.getMonth() + 1}-${currentDate.getFullYear()}`;
+  const fallbackLabelRaw = currentDate.toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' });
+  const fallbackLabel = fallbackLabelRaw.charAt(0).toUpperCase() + fallbackLabelRaw.slice(1);
+  const currentMonthData = monthlyStats[currentMonthKey] || { shirtCount: 0, label: fallbackLabel };
+  const currentMonthShirts = currentMonthData.shirtCount;
+  const targetGoal = 90;
+  const realPercent = (currentMonthShirts / targetGoal) * 100;
+  const goalPercent = Math.min(100, realPercent);
+
+  return (
+    <div>
+      <SectionHeader 
+        title="DRE & Faturamento Executivo" 
+        sub="Visão geral de faturamento, custos e margem líquida" 
+        action={
+          <button style={S.btnSecondary} onClick={() => setShowValues(!showValues)}>
+            {showValues ? <EyeOff size={14} /> : <Eye size={14} />} {showValues ? 'Ocultar Valores' : 'Mostrar Valores'}
+          </button>
+        } 
+      />
+
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '1.25rem', marginBottom: '2rem' }}>
+        <KpiCard label="Receita Bruta" value={showValues ? `$${totals.revenue.toFixed(2)}` : '****'} icon={DollarSign} color="#D6FF00" sub="Receita líquida após taxas PayPal" />
+        <KpiCard label="Custo Operacional" value={showValues ? `$${totals.cost.toFixed(2)}` : '****'} icon={Package} color="#F87171" sub="Custos de fabricação + frete" />
+        <KpiCard label="Lucro Líquido Real" value={showValues ? `$${totals.profit.toFixed(2)}` : '****'} icon={TrendingUp} color="#4ADE80" sub={showValues ? `${averageMargin.toFixed(1)}% de margem média` : '****'} />
+        <KpiCard 
+          label={`Meta Mensal (${currentMonthData.label})`} 
+          value={`${currentMonthShirts} / ${targetGoal} camisas`} 
+          icon={Shirt} 
+          color="#FB923C" 
+          sub={
+            <div style={{ width: '100%' }}>
+              <div style={{ width: '100%', height: '4px', background: 'rgba(255,255,255,0.06)', borderRadius: '2px', marginTop: '0.4rem', overflow: 'hidden' }}>
+                <div style={{ width: `${goalPercent}%`, height: '100%', background: '#FB923C', borderRadius: '2px' }} />
+              </div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.65rem', marginTop: '0.2rem', color: 'rgba(255,255,255,0.45)' }}>
+                <span>Progresso: {realPercent.toFixed(0)}%</span>
+                <span>{currentMonthShirts >= targetGoal ? 'Meta batida! 🎉' : `Faltam ${targetGoal - currentMonthShirts}`}</span>
+              </div>
+            </div>
+          } 
+        />
+      </div>
+
+      <div style={{ ...S.card, marginBottom: '2rem' }}>
+        <h3 style={{ margin: '0 0 1.25rem 0', fontWeight: 700, fontSize: '1rem', color: '#D6FF00' }}>Histórico Mensal Consolidado</h3>
+        <div className="table-responsive">
+          <table style={S.table}>
+            <thead>
+              <tr>
+                {['Mês / Ano', 'Pedidos', 'Camisas', 'Faturamento', 'Custos', 'Lucro Líquido', 'Margem'].map(h => <th key={h} style={S.th}>{h}</th>)}
+              </tr>
+            </thead>
+            <tbody>
+              {sortedMonths.map(m => {
+                const margin = m.revenue > 0 ? (m.profit / m.revenue) * 100 : 0;
+                return (
+                  <tr key={m.key}>
+                    <td style={{ ...S.td, fontWeight: 700 }}>{m.label}</td>
+                    <td style={S.td}>{m.orderCount}</td>
+                    <td style={S.td}>{m.shirtCount}</td>
+                    <td style={{ ...S.td, fontWeight: 700, color: '#D6FF00' }}>{showValues ? `$${m.revenue.toFixed(2)}` : '****'}</td>
+                    <td style={S.td}>{showValues ? `$${m.cost.toFixed(2)}` : '****'}</td>
+                    <td style={{ ...S.td, color: '#4ADE80', fontWeight: 700 }}>{showValues ? `$${m.profit.toFixed(2)}` : '****'}</td>
+                    <td style={{ ...S.td, color: '#4ADE80', fontWeight: 700 }}>{showValues ? `${margin.toFixed(1)}%` : '****'}</td>
+                  </tr>
+                );
+              })}
+              {sortedMonths.length === 0 && (
+                <tr><td colSpan={7} style={{ ...S.td, textAlign: 'center', color: 'rgba(255,255,255,0.3)', padding: '3rem' }}>Nenhum faturamento registrado.</td></tr>
+              )}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '1.5rem' }}>
+        <div style={S.card}>
+          <h3 style={{ margin: '0 0 1.25rem 0', fontWeight: 700, fontSize: '1rem', color: '#D6FF00' }}>Meios de Pagamento</h3>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
+            <div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.4rem', fontSize: '0.85rem' }}>
+                <span style={{ color: 'rgba(255,255,255,0.55)' }}>Interac e-Transfer</span>
+                <span style={{ fontWeight: 700 }}>{showValues ? `$${totals.transferVolume.toFixed(2)}` : '****'} ({totals.revenue > 0 ? ((totals.transferVolume / totals.revenue) * 100).toFixed(0) : 0}%)</span>
+              </div>
+              <div style={{ width: '100%', height: '6px', background: 'rgba(255,255,255,0.06)', borderRadius: '3px', overflow: 'hidden' }}>
+                <div style={{ height: '100%', background: '#D6FF00', width: `${totals.revenue > 0 ? (totals.transferVolume / totals.revenue) * 100 : 0}%` }} />
+              </div>
+            </div>
+            <div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.4rem', fontSize: '0.85rem' }}>
+                <span style={{ color: 'rgba(255,255,255,0.55)' }}>PayPal</span>
+                <span style={{ fontWeight: 700 }}>{showValues ? `$${totals.paypalVolume.toFixed(2)}` : '****'} ({totals.revenue > 0 ? ((totals.paypalVolume / totals.revenue) * 100).toFixed(0) : 0}%)</span>
+              </div>
+              <div style={{ width: '100%', height: '6px', background: 'rgba(255,255,255,0.06)', borderRadius: '3px', overflow: 'hidden' }}>
+                <div style={{ height: '100%', background: '#60A5FA', width: `${totals.revenue > 0 ? (totals.paypalVolume / totals.revenue) * 100 : 0}%` }} />
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// ─── Cidades Atendidas Section ───────────────────────────────────────────────
+const CidadesSection = ({ showToast }) => {
+  const [orders, setOrders] = useState([]);
+  const [trackingCaches, setTrackingCaches] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [expandedProvinces, setExpandedProvinces] = useState({});
+  const [syncing, setSyncing] = useState(false);
+  const [syncProgress, setSyncProgress] = useState(0);
+  const [syncTotal, setSyncTotal] = useState(0);
+
+  useEffect(() => {
+    async function load() {
+      setLoading(true);
+      try {
+        const [{ data: dbOrders }, { data: dbCaches }] = await Promise.all([
+          supabase.from('orders').select('*').order('created_at', { ascending: false }),
+          supabase.from('tracking_cache').select('*')
+        ]);
+        setOrders(dbOrders || []);
+        setTrackingCaches(dbCaches || []);
+      } catch (e) {
+        console.error(e);
+        showToast('Erro ao carregar dados geográficos.', 'error');
+      } finally {
+        setLoading(false);
+      }
+    }
+    load();
+  }, [showToast]);
+
+  const normalizeCity = (c) => {
+    let city = (c || 'N/A').split('(')[0].split('/')[0].trim();
+    if (city.toUpperCase() === 'N') return 'Winnipeg';
+    if (city.toLowerCase().includes('calgary')) return 'Calgary';
+    if (city.toLowerCase().includes('charlottetown')) return 'Charlottetown';
+    if (city.toLowerCase() === 'mont-royal' || city.toLowerCase() === 'mont royal' || city.toLowerCase() === 'montreal' || city.toLowerCase() === 'montréal') {
+      return 'Montréal';
+    }
+    return city;
+  };
+
+  const ALL_REGION_ALIASES = {
+    'AB': 'AB', 'ALBERTA': 'AB',
+    'BC': 'BC', 'BRITISH COLUMBIA': 'BC',
+    'MB': 'MB', 'MANITOBA': 'MB',
+    'NB': 'NB', 'NEW BRUNSWICK': 'NB',
+    'NL': 'NL', 'NEWFOUNDLAND': 'NL', 'NEWFOUNDLAND AND LABRADOR': 'NL', 'NEWFOUNDLAND & LABRADOR': 'NL',
+    'NS': 'NS', 'NOVA SCOTIA': 'NS',
+    'NT': 'NT', 'NORTHWEST TERRITORIES': 'NT',
+    'NU': 'NU', 'NUNAVUT': 'NU',
+    'ON': 'ON', 'ONTARIO': 'ON',
+    'PE': 'PE', 'PRINCE EDWARD ISLAND': 'PE', 'PEI': 'PE',
+    'QC': 'QC', 'QUEBEC': 'QC', 'QUÉBEC': 'QC',
+    'SK': 'SK', 'SASKATCHEWAN': 'SK',
+    'YT': 'YT', 'YUKON': 'YT'
+  };
+
+  const normalizeProvinceOrState = (p) => {
+    if (!p) return '';
+    const upper = p.trim().toUpperCase();
+    return ALL_REGION_ALIASES[upper] || p.trim();
+  };
+
+  const getDaysDiff = (startStr, endStr) => {
+    if (!startStr || !endStr) return null;
+    const parseDatePart = (str) => {
+      if (!str) return null;
+      return str.includes(' às ') ? str.split(' às ')[0] : str.split(' ')[0];
+    };
+    const startPart = parseDatePart(startStr);
+    const endPart = parseDatePart(endStr);
+    if (!startPart || !endPart) return null;
+    const startParts = startPart.split('-');
+    const endParts = endPart.split('-');
+    if (startParts.length !== 3 || endParts.length !== 3) return null;
+    const dStart = new Date(parseInt(startParts[0], 10), parseInt(startParts[1], 10) - 1, parseInt(startParts[2], 10));
+    const dEnd = new Date(parseInt(endParts[0], 10), parseInt(endParts[1], 10) - 1, parseInt(endParts[2], 10));
+    if (isNaN(dStart.getTime()) || isNaN(dEnd.getTime())) return null;
+    const diffTime = dEnd - dStart;
+    const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+    return diffDays >= 0 ? diffDays : 0;
+  };
+
+  const activeTrackingCodes = React.useMemo(() => {
+    const codes = new Set();
+    orders.forEach(o => {
+      if (o.tracking_number && o.status !== 'cancelled') {
+        o.tracking_number.split(/[,;\s]+/).map(t => t.trim()).filter(Boolean).forEach(c => {
+          codes.add(c.toUpperCase());
+        });
+      }
+    });
+    return Array.from(codes);
+  }, [orders]);
+
+  const missingCachesCount = React.useMemo(() => {
+    const cachedSet = new Set(trackingCaches.map(tc => tc.tracking_number?.trim().toUpperCase()).filter(Boolean));
+    return activeTrackingCodes.filter(c => !cachedSet.has(c)).length;
+  }, [activeTrackingCodes, trackingCaches]);
+
+  const handleSyncTracking = async () => {
+    if (syncing) return;
+    setSyncing(true);
+    const cachedSet = new Set(trackingCaches.map(tc => tc.tracking_number?.trim().toUpperCase()).filter(Boolean));
+    const toSync = activeTrackingCodes.filter(c => !cachedSet.has(c));
+    setSyncTotal(toSync.length);
+    setSyncProgress(0);
+
+    let newCaches = [...trackingCaches];
+
+    for (let i = 0; i < toSync.length; i++) {
+      const code = toSync[i];
+      try {
+        const { data, error } = await supabase.functions.invoke('track-package', {
+          body: { trackingNumber: code, forceRefresh: false }
+        });
+        
+        if (!error && data) {
+          const newCacheEntry = {
+            tracking_number: code,
+            status_data: data,
+            last_updated: new Date().toISOString()
+          };
+          newCaches = [newCacheEntry, ...newCaches];
+          setTrackingCaches(newCaches);
+        }
+      } catch (err) {
+        console.warn(`Erro ao sincronizar código ${code}:`, err);
+      }
+      setSyncProgress(i + 1);
+      await new Promise(resolve => setTimeout(resolve, 800));
+    }
+
+    setSyncing(false);
+    showToast('Sincronização concluída com sucesso!', 'success');
+  };
+
+  if (loading) return <Loader />;
+
+  const cityStats = orders.reduce((acc, order) => {
+    if (order.status === 'cancelled') return acc;
+    const rawCity = order.shipping_address?.city || 'N/A';
+    const city = normalizeCity(rawCity);
+    let province = normalizeProvinceOrState(order.shipping_address?.province || '');
+    if (province.toUpperCase() === 'N/A') province = '';
+    
+    if (city === 'Winnipeg' && (!province || province.trim() === '')) {
+      province = 'MB';
+    }
+    if (city === 'Charlottetown' && (!province || province.trim() === '' || province.trim() === 'N/A')) {
+      province = 'PE';
+    }
+    if (city === 'Montréal' && (!province || province.trim() === '' || province.trim() === 'N/A')) {
+      province = 'QC';
+    }
+    const key = `${city}${province ? `, ${province}` : ''}`;
+    if (!acc[key]) acc[key] = { count: 0, revenue: 0, deliveryTimes: [], shirts: 0, customerEmails: new Set(), customers: [] };
+    acc[key].count++;
+    acc[key].revenue += Number(order.total_price || order.total || 0);
+    const itemCount = Array.isArray(order.items) 
+      ? order.items.reduce((sum, item) => sum + (Number(item.quantity) || 1), 0)
+      : (typeof order.items === 'string' ? (() => { try { return JSON.parse(order.items).reduce((sum, item) => sum + (Number(item.quantity) || 1), 0); } catch { return 1; } })() : 1);
+    acc[key].shirts += itemCount;
+    
+    if (order.customer_email) {
+      acc[key].customerEmails.add(order.customer_email.trim().toLowerCase());
+    } else if (order.customer_name) {
+      acc[key].customerEmails.add(order.customer_name.trim().toLowerCase());
+    } else {
+      acc[key].customerEmails.add(order.id);
+    }
+
+    const customerName = order.customer_name ? order.customer_name.trim() : (order.customer_email ? order.customer_email.trim() : 'N/A');
+    if (!acc[key].customers.includes(customerName)) {
+      acc[key].customers.push(customerName);
+    }
+
+    if (order.tracking_number) {
+      const codes = order.tracking_number.split(/[,;\s]+/).map(t => t.trim()).filter(Boolean);
+      codes.forEach(code => {
+        const cache = trackingCaches.find(tc => tc.tracking_number?.trim().toUpperCase() === code.toUpperCase());
+        if (cache && cache.status_data) {
+          const statusData = cache.status_data;
+          const history = statusData.history || [];
+          const trackingData = statusData.trackingData;
+
+          let deliveredEvent = history.find(item => {
+            const status = (item.status || '').toLowerCase();
+            return status.includes('entregue') || status.includes('assinado') || status.includes('delivered');
+          });
+
+          if (!deliveredEvent && order.status === 'completed' && history.length > 0) {
+            deliveredEvent = history[0];
+          }
+
+          if (deliveredEvent) {
+            const startDate = trackingData?.date || (history.length > 0 ? (history[history.length - 1].date || history[history.length - 1].rawDate) : null);
+            const endDate = deliveredEvent.date || deliveredEvent.rawDate;
+            if (startDate && endDate) {
+              const days = getDaysDiff(startDate, endDate);
+              if (days !== null) {
+                acc[key].deliveryTimes.push(days);
+              }
+            }
+          }
+        }
+      });
+    }
+
+    return acc;
+  }, {});
+
+  const sortedCities = Object.entries(cityStats).sort((a, b) => b[1].count - a[1].count);
+
+  const allTimes = [];
+  Object.values(cityStats).forEach(data => {
+    if (data.deliveryTimes) {
+      allTimes.push(...data.deliveryTimes);
+    }
+  });
+  const globalAvgDays = allTimes.length > 0
+    ? allTimes.reduce((sum, t) => sum + t, 0) / allTimes.length
+    : null;
+
+  const canadianProvinces = ['AB', 'BC', 'MB', 'NB', 'NL', 'NS', 'ON', 'PE', 'QC', 'SK'];
+  const uniqueProvinces = new Set(
+    Object.keys(cityStats)
+      .map(k => k.split(',')[1]?.trim()?.toUpperCase())
+      .filter(p => p && canadianProvinces.includes(p))
+  );
+  const totalCities = Object.keys(cityStats).length;
+  const totalProvinces = uniqueProvinces.size;
+  const totalShirtsCA = Object.values(cityStats).reduce((sum, d) => sum + d.shirts, 0);
+
+  const canadaProvincesMap = {
+    'AB': 'Alberta', 'BC': 'British Columbia', 'MB': 'Manitoba', 'NB': 'New Brunswick',
+    'NL': 'Newfoundland and Labrador', 'NS': 'Nova Scotia', 'ON': 'Ontario',
+    'PE': 'Prince Edward Island', 'QC': 'Quebec', 'SK': 'Saskatchewan',
+    'YT': 'Yukon', 'NT': 'Northwest Territories', 'NU': 'Nunavut'
+  };
+
+  const usStatesMap = {
+    'AL': 'Alabama', 'AK': 'Alaska', 'AZ': 'Arizona', 'AR': 'Arkansas', 'CA': 'California',
+    'CO': 'Colorado', 'CT': 'Connecticut', 'DE': 'Delaware', 'FL': 'Florida', 'GA': 'Georgia',
+    'HI': 'Hawaii', 'ID': 'Idaho', 'IL': 'Illinois', 'IN': 'Indiana', 'IA': 'Iowa',
+    'KS': 'Kansas', 'KY': 'Kentucky', 'LA': 'Louisiana', 'ME': 'Maine', 'MD': 'Maryland',
+    'MA': 'Massachusetts', 'MI': 'Michigan', 'MN': 'Minnesota', 'MS': 'Mississippi', 'MO': 'Missouri',
+    'MT': 'Montana', 'NE': 'Nebraska', 'NV': 'Nevada', 'NH': 'New Hampshire', 'NJ': 'New Jersey',
+    'NM': 'New Mexico', 'NY': 'New York', 'NC': 'North Carolina', 'ND': 'North Dakota', 'OH': 'Ohio',
+    'OK': 'Oklahoma', 'OR': 'Oregon', 'PA': 'Pennsylvania', 'RI': 'Rhode Island', 'SC': 'South Carolina',
+    'SD': 'South Dakota', 'TN': 'Tennessee', 'TX': 'Texas', 'UT': 'Utah', 'VT': 'Vermont',
+    'VA': 'Virginia', 'WA': 'Washington', 'WV': 'West Virginia', 'WI': 'Wisconsin', 'WY': 'Wyoming',
+    'US': 'United States'
+  };
+
+  const grouped = { canada: {}, usa: {}, other: {} };
+  sortedCities.forEach(([key, data]) => {
+    const parts = key.split(', ');
+    const cityName = parts[0];
+    const provinceAbbr = parts[1] ? parts[1].trim().toUpperCase() : 'N/A';
+    const cityInfo = { cityName, provinceAbbr, key, ...data };
+    if (canadaProvincesMap[provinceAbbr]) {
+      if (!grouped.canada[provinceAbbr]) {
+        grouped.canada[provinceAbbr] = { name: canadaProvincesMap[provinceAbbr], cities: [], totalShirts: 0, customerEmails: new Set() };
+      }
+      grouped.canada[provinceAbbr].cities.push(cityInfo);
+      grouped.canada[provinceAbbr].totalShirts += data.shirts;
+      if (data.customerEmails) {
+        data.customerEmails.forEach(email => grouped.canada[provinceAbbr].customerEmails.add(email));
+      }
+    } else if (usStatesMap[provinceAbbr] || provinceAbbr === 'US') {
+      const stateName = usStatesMap[provinceAbbr] || 'United States';
+      if (!grouped.usa[provinceAbbr]) {
+        grouped.usa[provinceAbbr] = { name: stateName, cities: [], totalShirts: 0, customerEmails: new Set() };
+      }
+      grouped.usa[provinceAbbr].cities.push(cityInfo);
+      grouped.usa[provinceAbbr].totalShirts += data.shirts;
+      if (data.customerEmails) {
+        data.customerEmails.forEach(email => grouped.usa[provinceAbbr].customerEmails.add(email));
+      }
+    } else {
+      if (!grouped.other[provinceAbbr]) {
+        grouped.other[provinceAbbr] = { name: provinceAbbr === 'N/A' ? 'Outros / Sem Província' : provinceAbbr, cities: [], totalShirts: 0, customerEmails: new Set() };
+      }
+      grouped.other[provinceAbbr].cities.push(cityInfo);
+      grouped.other[provinceAbbr].totalShirts += data.shirts;
+      if (data.customerEmails) {
+        data.customerEmails.forEach(email => grouped.other[provinceAbbr].customerEmails.add(email));
+      }
+    }
+  });
+
+  const sortedCanada = Object.entries(grouped.canada).sort((a, b) => b[1].totalShirts - a[1].totalShirts);
+  const sortedUsa = Object.entries(grouped.usa).sort((a, b) => b[1].totalShirts - a[1].totalShirts);
+  const sortedOther = Object.entries(grouped.other).sort((a, b) => b[1].totalShirts - a[1].totalShirts);
+
+  const provCounts = {};
+  orders.forEach(o => {
+    if (o.status === 'cancelled') return;
+    const prov = normalizeProvince(o.shipping_address?.province);
+    if (prov) {
+      const itemCount = Array.isArray(o.items) 
+        ? o.items.reduce((sum, item) => sum + (Number(item.quantity) || 1), 0)
+        : (typeof o.items === 'string' ? (() => { try { return JSON.parse(o.items).reduce((sum, item) => sum + (Number(item.quantity) || 1), 0); } catch { return 1; } })() : 1);
+      provCounts[prov] = (provCounts[prov] || 0) + itemCount;
+    }
+  });
+
+  return (
+    <div>
+      <SectionHeader title="Onde suas camisas estão?" sub="Mapeamento e distribuição de pedidos por cidades atendidas" />
+
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '1.25rem', marginBottom: '2rem' }}>
+        <KpiCard label="Cidades Atendidas" value={totalCities} icon={MapPin} color="#D6FF00" />
+        <KpiCard label="Províncias Atendidas" value={`${totalProvinces} / 10`} icon={Globe} color="#60A5FA" sub="Províncias canadenses ativas" />
+        <KpiCard label="Total de Camisas" value={totalShirtsCA} icon={Shirt} color="#4ADE80" />
+        <KpiCard label="Prazo Médio Global" value={globalAvgDays !== null ? `${globalAvgDays.toFixed(1)} dias` : 'N/A'} icon={Truck} color="#FB923C" />
+      </div>
+
+      {missingCachesCount > 0 && (
+        <div style={{
+          background: 'rgba(214, 255, 0, 0.04)',
+          border: '1px solid rgba(214, 255, 0, 0.15)',
+          borderRadius: '12px',
+          padding: '1.25rem 1.5rem',
+          marginBottom: '2rem',
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          flexWrap: 'wrap',
+          gap: '1rem'
+        }}>
+          <div>
+            <h4 style={{ margin: '0 0 0.25rem 0', fontWeight: 700, fontSize: '0.95rem', color: '#D6FF00' }}>
+              ℹ️ Códigos de rastreio pendentes
+            </h4>
+            <p style={{ margin: 0, fontSize: '0.8rem', color: 'rgba(255,255,255,0.65)' }}>
+              Existem {missingCachesCount} códigos de rastreio de pedidos ativos que ainda não foram consultados pelo sistema. Sincronize-os para obter a média de dias de entrega de todas as cidades.
+            </p>
+          </div>
+          <button 
+            style={syncing ? S.btnSecondary : S.btnPrimary} 
+            onClick={handleSyncTracking} 
+            disabled={syncing}
+          >
+            {syncing ? `Sincronizando (${syncProgress}/${syncTotal})` : 'Sincronizar Rastreios'}
+          </button>
+        </div>
+      )}
+
+      <div style={{ display: 'grid', gridTemplateColumns: '1.8fr 1.2fr', gap: '1.5rem', marginBottom: '2.5rem' }} className="admin-grid-2">
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
+          {sortedCanada.length > 0 && (
+            <div>
+              <h4 style={{ color: '#D6FF00', fontSize: '1.1rem', margin: '0 0 1rem 0', display: 'flex', alignItems: 'center', gap: '0.5rem', borderBottom: '1px solid #1A1D20', paddingBottom: '0.5rem' }}>
+                🇨🇦 Canadá
+              </h4>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+                {sortedCanada.map(([provCode, data]) => {
+                  const isExpanded = !!expandedProvinces[provCode];
+                  return (
+                    <div key={provCode} style={{ background: '#121416', border: '1px solid #1A1D20', borderRadius: '12px', overflow: 'hidden' }}>
+                      <button 
+                        onClick={() => setExpandedProvinces(prev => ({ ...prev, [provCode]: !prev[provCode] }))}
+                        style={{ width: '100%', background: 'transparent', border: 'none', padding: '1.25rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center', color: '#fff', cursor: 'pointer', textAlign: 'left', fontWeight: 700 }}
+                      >
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
+                          <span style={{ fontSize: '1rem', color: '#fff' }}>{data.name} ({provCode})</span>
+                          <span style={{ fontSize: '0.8rem', color: 'rgba(255,255,255,0.4)', fontWeight: 'normal' }}>
+                            • {data.cities.length} {data.cities.length === 1 ? 'cidade' : 'cidades'} • {data.customerEmails.size} {data.customerEmails.size === 1 ? 'cliente' : 'clientes'} ({data.totalShirts} {data.totalShirts === 1 ? 'camisa' : 'camisas'})
+                          </span>
+                        </div>
+                        <span style={{ color: '#D6FF00', transition: 'transform 0.2s', transform: isExpanded ? 'rotate(180deg)' : 'rotate(0deg)', display: 'inline-block' }}>▼</span>
+                      </button>
+                      {isExpanded && (
+                        <div style={{ padding: '1.25rem', background: '#0F1012', borderTop: '1px solid #1A1D20', display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(240px, 1fr))', gap: '0.75rem' }}>
+                          {data.cities.map(cityInfo => {
+                            const avgDeliveryTime = cityInfo.deliveryTimes && cityInfo.deliveryTimes.length > 0
+                              ? cityInfo.deliveryTimes.reduce((sum, t) => sum + t, 0) / cityInfo.deliveryTimes.length
+                              : null;
+                            return (
+                              <div key={cityInfo.key} style={{ background: '#121416', padding: '0.85rem', borderRadius: '8px', border: '1px solid #1A1D20', display: 'flex', flexDirection: 'column', gap: '0.2rem' }}>
+                                <h4 style={{ margin: 0, color: '#fff', fontSize: '0.9rem' }}>{cityInfo.cityName}</h4>
+                                <p style={{ margin: 0, fontSize: '0.75rem', color: 'rgba(255,255,255,0.45)' }}>
+                                  {cityInfo.customerEmails.size} {cityInfo.customerEmails.size === 1 ? 'cliente' : 'clientes'} • {cityInfo.shirts} {cityInfo.shirts === 1 ? 'camisa' : 'camisas'}
+                                </p>
+                                {cityInfo.customers && cityInfo.customers.length > 0 && (
+                                  <p style={{ margin: 0, fontSize: '0.7rem', color: 'rgba(255,255,255,0.3)', wordBreak: 'break-word' }}>
+                                    <strong>Clientes:</strong> {cityInfo.customers.join(', ')}
+                                  </p>
+                                )}
+                                {avgDeliveryTime !== null ? (
+                                  <p style={{ margin: '0.2rem 0 0 0', fontSize: '0.75rem', color: '#4ADE80', display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
+                                    <Truck size={12} /> Média de entrega: {avgDeliveryTime.toFixed(1)} dias
+                                  </p>
+                                ) : (
+                                  <p style={{ margin: '0.2rem 0 0 0', fontSize: '0.75rem', color: 'rgba(255,255,255,0.35)', display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
+                                    <Truck size={12} /> Sem dados de entrega
+                                  </p>
+                                )}
+                              </div>
+                            );
+                          })}
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+
+          {sortedUsa.length > 0 && (
+            <div>
+              <h4 style={{ color: '#60A5FA', fontSize: '1.1rem', margin: '1.5rem 0 1rem 0', display: 'flex', alignItems: 'center', gap: '0.5rem', borderBottom: '1px solid #1A1D20', paddingBottom: '0.5rem' }}>
+                🇺🇸 Estados Unidos
+              </h4>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+                {sortedUsa.map(([provCode, data]) => {
+                  const isExpanded = !!expandedProvinces[provCode];
+                  return (
+                    <div key={provCode} style={{ background: '#121416', border: '1px solid #1A1D20', borderRadius: '12px', overflow: 'hidden' }}>
+                      <button 
+                        onClick={() => setExpandedProvinces(prev => ({ ...prev, [provCode]: !prev[provCode] }))}
+                        style={{ width: '100%', background: 'transparent', border: 'none', padding: '1.25rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center', color: '#fff', cursor: 'pointer', textAlign: 'left', fontWeight: 700 }}
+                      >
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
+                          <span style={{ fontSize: '1rem', color: '#fff' }}>{data.name} ({provCode})</span>
+                          <span style={{ fontSize: '0.8rem', color: 'rgba(255,255,255,0.4)', fontWeight: 'normal' }}>
+                            • {data.cities.length} {data.cities.length === 1 ? 'cidade' : 'cidades'} • {data.customerEmails.size} {data.customerEmails.size === 1 ? 'cliente' : 'clientes'} ({data.totalShirts} {data.totalShirts === 1 ? 'camisa' : 'camisas'})
+                          </span>
+                        </div>
+                        <span style={{ color: '#D6FF00', transition: 'transform 0.2s', transform: isExpanded ? 'rotate(180deg)' : 'rotate(0deg)', display: 'inline-block' }}>▼</span>
+                      </button>
+                      {isExpanded && (
+                        <div style={{ padding: '1.25rem', background: '#0F1012', borderTop: '1px solid #1A1D20', display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(240px, 1fr))', gap: '0.75rem' }}>
+                          {data.cities.map(cityInfo => {
+                            const avgDeliveryTime = cityInfo.deliveryTimes && cityInfo.deliveryTimes.length > 0
+                              ? cityInfo.deliveryTimes.reduce((sum, t) => sum + t, 0) / cityInfo.deliveryTimes.length
+                              : null;
+                            return (
+                              <div key={cityInfo.key} style={{ background: '#121416', padding: '0.85rem', borderRadius: '8px', border: '1px solid #1A1D20', display: 'flex', flexDirection: 'column', gap: '0.2rem' }}>
+                                <h4 style={{ margin: 0, color: '#fff', fontSize: '0.9rem' }}>{cityInfo.cityName}</h4>
+                                <p style={{ margin: 0, fontSize: '0.75rem', color: 'rgba(255,255,255,0.45)' }}>
+                                  {cityInfo.customerEmails.size} {cityInfo.customerEmails.size === 1 ? 'cliente' : 'clientes'} • {cityInfo.shirts} {cityInfo.shirts === 1 ? 'camisa' : 'camisas'}
+                                </p>
+                                {cityInfo.customers && cityInfo.customers.length > 0 && (
+                                  <p style={{ margin: 0, fontSize: '0.7rem', color: 'rgba(255,255,255,0.3)', wordBreak: 'break-word' }}>
+                                    <strong>Clientes:</strong> {cityInfo.customers.join(', ')}
+                                  </p>
+                                )}
+                                {avgDeliveryTime !== null ? (
+                                  <p style={{ margin: '0.2rem 0 0 0', fontSize: '0.75rem', color: '#4ADE80', display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
+                                    <Truck size={12} /> Média de entrega: {avgDeliveryTime.toFixed(1)} dias
+                                  </p>
+                                ) : (
+                                  <p style={{ margin: '0.2rem 0 0 0', fontSize: '0.75rem', color: 'rgba(255,255,255,0.35)', display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
+                                    <Truck size={12} /> Sem dados de entrega
+                                  </p>
+                                )}
+                              </div>
+                            );
+                          })}
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+        </div>
+
+        <div style={S.card}>
+          <h3 style={{ margin: '0 0 1.25rem 0', fontWeight: 700, fontSize: '1rem', color: '#D6FF00', textAlign: 'center' }}>Distribuição Geográfica</h3>
+          <div style={{ width: '100%', maxWidth: '280px', margin: '0 auto' }}>
+            <CanadaMap provinceCounts={provCounts} />
+          </div>
         </div>
       </div>
     </div>
@@ -4171,6 +5079,8 @@ const RebrandAdmin = () => {
     afiliados:   <AfiliadosSection showToast={showToast} />,
     conversas:   <ConversasSection />,
     depoimentos: <DepoimentosSection showToast={showToast} />,
+    financeiro:  <FinanceiroSection showToast={showToast} />,
+    cidades:     <CidadesSection showToast={showToast} />,
     settings:    <SettingsSection showToast={showToast} />,
   };
 
