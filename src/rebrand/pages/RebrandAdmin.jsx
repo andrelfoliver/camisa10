@@ -1284,6 +1284,7 @@ const OrdersSection = ({ showToast, onOpenTracking }) => {
   const [search, setSearch] = useState('');
   const [selectedOrder, setSelectedOrder] = useState(null);
   const [currentPage, setCurrentPage] = useState(1);
+  const [deleteConfirmId, setDeleteConfirmId] = useState(null);
   const ORDERS_PER_PAGE = 15;
 
   useEffect(() => {
@@ -1297,17 +1298,22 @@ const OrdersSection = ({ showToast, onOpenTracking }) => {
     setLoading(false);
   }, []);
 
-  const handleDeleteOrder = async (orderId) => {
-    if (!window.confirm("Tem certeza que deseja excluir permanentemente este pedido? Esta ação não poderá ser desfeita.")) return;
-    
-    const { error } = await supabase.from('orders').delete().eq('id', orderId);
+  const handleDeleteOrder = (orderId) => {
+    setDeleteConfirmId(orderId);
+  };
+
+  const confirmDeleteOrder = async () => {
+    if (!deleteConfirmId) return;
+    const { error } = await supabase.from('orders').delete().eq('id', deleteConfirmId);
     if (error) {
       showToast('Erro ao excluir pedido.', 'error');
+      setDeleteConfirmId(null);
       return;
     }
     showToast('Pedido excluído com sucesso!', 'success');
-    setOrders(prev => prev.filter(o => o.id !== orderId));
+    setOrders(prev => prev.filter(o => o.id !== deleteConfirmId));
     setSelectedOrder(null);
+    setDeleteConfirmId(null);
   };
 
   useEffect(() => { load(); }, [load]);
@@ -1531,6 +1537,35 @@ const OrdersSection = ({ showToast, onOpenTracking }) => {
           onOpenTracking={onOpenTracking}
           onDeleteOrder={handleDeleteOrder}
         />
+      )}
+
+      {/* Delete Confirmation Modal */}
+      {deleteConfirmId && (
+        <div style={S.modal} onClick={() => setDeleteConfirmId(null)}>
+          <div style={{ ...S.modalBox, maxWidth: '420px', textAlign: 'center' }} onClick={e => e.stopPropagation()}>
+            <div style={{ width: 56, height: 56, borderRadius: '50%', background: 'rgba(239,68,68,0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 1.25rem' }}>
+              <Trash2 size={26} color="#ef4444" />
+            </div>
+            <h3 style={{ margin: '0 0 0.5rem', fontSize: '1.15rem', fontWeight: 700, color: '#fff' }}>Excluir Pedido</h3>
+            <p style={{ color: 'rgba(255,255,255,0.55)', fontSize: '0.88rem', lineHeight: 1.5, margin: '0 0 1.5rem' }}>
+              Tem certeza que deseja excluir permanentemente este pedido?<br />Esta ação <strong style={{ color: '#ef4444' }}>não poderá ser desfeita</strong>.
+            </p>
+            <div style={{ display: 'flex', gap: '0.75rem', justifyContent: 'center' }}>
+              <button
+                onClick={() => setDeleteConfirmId(null)}
+                style={{ padding: '0.65rem 1.5rem', borderRadius: '8px', border: '1px solid #2A2D30', background: 'transparent', color: 'rgba(255,255,255,0.7)', fontWeight: 600, fontSize: '0.85rem', cursor: 'pointer' }}
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={confirmDeleteOrder}
+                style={{ padding: '0.65rem 1.5rem', borderRadius: '8px', border: 'none', background: '#ef4444', color: '#fff', fontWeight: 700, fontSize: '0.85rem', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.4rem' }}
+              >
+                <Trash2 size={14} /> Excluir
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );
