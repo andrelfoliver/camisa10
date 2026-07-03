@@ -27,12 +27,95 @@ const SPORT_MOCKS = {
   ]
 };
 
-const PLAYERS_BY_SPORT = {
-  soccer: ['Lionel Messi', 'Cristiano Ronaldo', 'Neymar Jr', 'Vinicius Jr', 'Kylian Mbappé', 'Erling Haaland', 'Custom Name/Number'],
-  basketball: ['LeBron James', 'Stephen Curry', 'Giannis Antetokounmpo', 'Luka Dončić', 'Kevin Durant', 'Custom Name/Number'],
-  football: ['Patrick Mahomes', 'Travis Kelce', 'Lamar Jackson', 'Josh Allen', 'Custom Name/Number'],
-  baseball: ['Shohei Ohtani', 'Aaron Judge', 'Ronald Acuña Jr.', 'Mookie Betts', 'Custom Name/Number'],
-  hockey: ['Connor McDavid', 'Sidney Crosby', 'Auston Matthews', 'Nathan MacKinnon', 'Custom Name/Number']
+const TEAM_TRANSLATIONS = {
+  'Brasil': 'Brazil',
+  'Bélgica': 'Belgium',
+  'Canadá': 'Canada',
+  'Colômbia': 'Colombia',
+  'Japão': 'Japan',
+  'Alemanha': 'Germany',
+  'França': 'France',
+  'Itália': 'Italy',
+  'Espanha': 'Spain',
+  'Inglaterra': 'England',
+  'Holanda': 'Netherlands',
+  'Suécia': 'Sweden',
+  'Suíça': 'Switzerland',
+  'Marrocos': 'Morocco',
+  'Croácia': 'Croatia',
+  'Uruguai': 'Uruguay',
+  'México': 'Mexico',
+  'Estados Unidos': 'USA',
+  'EUA': 'USA',
+  'Coreia do Sul': 'South Korea',
+  'Senegal': 'Senegal',
+  'Camarões': 'Cameroon',
+  'Gana': 'Ghana',
+  'Equador': 'Ecuador',
+  'Argentina': 'Argentina'
+};
+
+const extractPlayerName = (productName, teamName, teamWordsSet = new Set()) => {
+  if (!productName) return null;
+  
+  // Remove everything after a dash (-) if present (e.g. "- Black", "- Burnt Orange")
+  let clean = productName.split(' - ')[0].split(' – ')[0];
+  
+  // Remove team name if present
+  if (teamName) {
+    const escapedTeam = teamName.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&');
+    clean = clean.replace(new RegExp(escapedTeam, 'gi'), '');
+  }
+  
+  // Remove common keywords
+  const keywords = [
+    'home', 'away', 'third', 'alternate', 'jersey', 'replica', 'stitched', 'icon', 'statement', 
+    'association', 'city', 'classic', 'edition', 'primegreen', 'cool base', 'game', 
+    'limited', 'elite', 'legend', 'men\'s', 'women\'s', 'youth', 'kids', 't-shirt', 'hoodie',
+    'camisa', 'camiseta', 'torcedor', 'jogador', 'masculina', 'feminina', 'infantil',
+    'nike', 'adidas', 'puma', 'jordan', 'fanatics', 'team',
+    'retro', 'retrô', 'version', 'versão', 'special', 'especial', 'goleiro', 'goalkeeper',
+    'pre-match', 'prematch', 'treino', 'training', 'pre', 'match', 'cl',
+    // Club terms & common nouns
+    'kit', 'kits', 'club', 'clube', 'fc', 'sc', 'cf', 'ac', 'united', 'city', 'real', 'atlético', 'atletico', 'sport', 'deportivo',
+    // Countries (English & Portuguese)
+    'brazil', 'brasil', 'canada', 'canadá', 'colombia', 'colômbia', 'japan', 'japão', 'argentina', 'portugal', 
+    'france', 'frança', 'italy', 'itália', 'spain', 'espanha', 'germany', 'alemanha', 'mexico', 'méxico',
+    'england', 'inglaterra', 'belgium', 'bélgica', 'croatia', 'croácia', 'morocco', 'marrocos', 'uruguay', 'uruguai',
+    'senegal', 'usa', 'eua', 'netherlands', 'holanda', 'holland', 'sweden', 'suécia', 'switzerland', 'suíça',
+    'noruega', 'norway', 'south', 'korea', 'coreia', 'chile', 'paraguay', 'paraguai', 'peru', 'ecuador', 'equador',
+    // Sponsors & Regional terms
+    'lubrax', 'pirelli', 'parmalat', 'bmg', 'crefisa', 'mrv', 'mineiro', 'paulista', 'carioca', 'gaúcho', 'gaucho',
+    // Leagues
+    'la', 'liga', 'serie', 'bundesliga', 'premier', 'league', 'mls', 'nba', 'nfl', 'nhl', 'mlb'
+  ];
+  
+  let words = clean.split(/\s+/);
+  words = words.filter(word => {
+    const lw = word.toLowerCase().replace(/[^a-zA-Z0-9áéíóúâêîôûãõç]/g, '');
+    
+    // Ignore keywords
+    if (!lw || keywords.includes(lw)) return false;
+    
+    // Ignore words that are in the set of all team names
+    if (teamWordsSet.has(lw)) return false;
+    
+    // Ignore words containing digits or symbols like / or \
+    if (/\d/.test(word) || word.includes('/') || word.includes('\\')) return false;
+    
+    // Ignore very short words like "de", "do", "da" (unless they are part of a name)
+    if (lw.length <= 2) return false;
+    
+    return true;
+  });
+  
+  // If we have 1 to 3 words left, it's likely a player's name!
+  if (words.length >= 1 && words.length <= 3) {
+    // Format nicely
+    return words.map(w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()).join(' ');
+  }
+  
+  return null;
 };
 
 
@@ -258,7 +341,28 @@ const CategoryPage = () => {
     return true;
   });
 
-  const uniqueTeams = Array.from(new Set(products.map(p => p.team).filter(Boolean))).sort();
+  const uniqueTeams = Array.from(new Set(products.map(p => p.team).filter(Boolean)))
+    .sort((a, b) => {
+      const nameA = TEAM_TRANSLATIONS[a] || a;
+      const nameB = TEAM_TRANSLATIONS[b] || b;
+      return nameA.localeCompare(nameB);
+    });
+  
+  // Extract all individual words from all team names to filter them out of player names
+  const teamWordsSet = new Set();
+  products.forEach(p => {
+    if (p.team) {
+      p.team.toLowerCase().split(/\s+/).forEach(w => {
+        const cw = w.replace(/[^a-zA-Z0-9áéíóúâêîôûãõç]/g, '');
+        if (cw) teamWordsSet.add(cw);
+      });
+    }
+  });
+
+  const uniquePlayers = [
+    ...Array.from(new Set(products.map(p => extractPlayerName(p.name, p.team, teamWordsSet)).filter(Boolean))).sort(),
+    'Custom Name/Number'
+  ];
   const totalPages = Math.ceil(filteredProducts.length / ITEMS_PER_PAGE);
   const displayedProducts = filteredProducts.slice((currentPage - 1) * ITEMS_PER_PAGE, currentPage * ITEMS_PER_PAGE);
 
@@ -433,7 +537,7 @@ const CategoryPage = () => {
                           onChange={() => setSelectedTeam(t)}
                           style={{ accentColor: '#000000', width: '16px', height: '16px' }} 
                         />
-                        <span>{t}</span>
+                        <span>{TEAM_TRANSLATIONS[t] || t}</span>
                       </label>
                     ))}
                   </div>
@@ -459,7 +563,7 @@ const CategoryPage = () => {
                     />
                     <span>All Players</span>
                   </label>
-                  {(PLAYERS_BY_SPORT[category_id.toLowerCase()] || PLAYERS_BY_SPORT.soccer).map(player => (
+                  {uniquePlayers.map(player => (
                     <label key={player} style={{ display: 'flex', alignItems: 'center', gap: '0.8rem', cursor: 'pointer', fontSize: '0.85rem', fontWeight: 500, marginBottom: '0.4rem' }}>
                       <input 
                         type="radio" 
