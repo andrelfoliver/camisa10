@@ -93,7 +93,7 @@ const CategoryPage = () => {
       setLoading(true);
       const categoryLower = category_id.toLowerCase();
       
-      if (['soccer', 'sale', 'new-arrivals', 'best-sellers', 'basketball', 'nba'].includes(categoryLower)) {
+      if (['soccer', 'sale', 'new-arrivals', 'best-sellers', 'basketball', 'nba', 'hockey', 'nhl', 'baseball', 'mlb', 'football', 'nfl', 'tênis', 'streetwear'].includes(categoryLower)) {
         try {
           // Fetch sales ranking from store_settings
           let salesRanking = {};
@@ -122,12 +122,26 @@ const CategoryPage = () => {
               const salesCount = salesRanking[p.id] || 0;
               const isBestseller = p.is_bestseller || salesCount > 0;
               const isBasketball = p.category === 'NBA' || p.category === 'Basketball';
+              const isHockey = p.category === 'NHL' || p.category === 'Hockey';
+              const isBaseball = p.category === 'MLB' || p.category === 'Baseball';
+              const isFootball = p.category === 'NFL' || p.category === 'Football';
+              const isTenis = p.category === 'Tênis';
+              const isStreetwear = p.category === 'Streetwear';
+              
+              let displayCategory = 'Soccer';
+              if (isBasketball) displayCategory = 'Basketball';
+              else if (isFootball) displayCategory = 'Football';
+              else if (isBaseball) displayCategory = 'Baseball';
+              else if (isHockey) displayCategory = 'Hockey';
+              else if (isTenis) displayCategory = 'Tênis';
+              else if (isStreetwear) displayCategory = 'Streetwear';
+
               return {
                 id: p.id,
                 name: p.name,
                 price: p.price || 89.90,
                 oldPrice: p.is_sale ? (p.price || 89.90) + 30.00 : null,
-                category: isBasketball ? 'Basketball' : 'Soccer',
+                category: displayCategory,
                 dbCategory: p.category,
                 version: p.version,
                 is_new: p.is_new,
@@ -157,6 +171,16 @@ const CategoryPage = () => {
               formatted = formatted.filter(p => p.is_new);
             } else if (categoryLower === 'basketball' || categoryLower === 'nba') {
               formatted = formatted.filter(p => p.dbCategory === 'NBA' || p.dbCategory === 'Basketball');
+            } else if (categoryLower === 'hockey' || categoryLower === 'nhl') {
+              formatted = formatted.filter(p => p.dbCategory === 'NHL' || p.dbCategory === 'Hockey');
+            } else if (categoryLower === 'baseball' || categoryLower === 'mlb') {
+              formatted = formatted.filter(p => p.dbCategory === 'MLB' || p.dbCategory === 'Baseball');
+            } else if (categoryLower === 'football' || categoryLower === 'nfl') {
+              formatted = formatted.filter(p => p.dbCategory === 'NFL' || p.dbCategory === 'Football');
+            } else if (categoryLower === 'tênis') {
+              formatted = formatted.filter(p => p.dbCategory === 'Tênis');
+            } else if (categoryLower === 'streetwear') {
+              formatted = formatted.filter(p => p.dbCategory === 'Streetwear');
             } else if (categoryLower === 'soccer') {
               const nonSoccerCats = ['NBA', 'Basketball', 'NFL', 'Football', 'MLB', 'Baseball', 'NHL', 'Hockey', 'Tênis', 'Streetwear'];
               formatted = formatted.filter(p => !nonSoccerCats.includes(p.dbCategory));

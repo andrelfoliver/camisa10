@@ -64,12 +64,27 @@ const ProductPage = () => {
             .eq('id', id)
             .single();
           if (data) {
+            const isBasketball = data.category === 'NBA' || data.category === 'Basketball';
+            const isHockey = data.category === 'NHL' || data.category === 'Hockey';
+            const isBaseball = data.category === 'MLB' || data.category === 'Baseball';
+            const isFootball = data.category === 'NFL' || data.category === 'Football';
+            const isTenis = data.category === 'Tênis';
+            const isStreetwear = data.category === 'Streetwear';
+            
+            let displayCategory = 'Soccer';
+            if (isBasketball) displayCategory = 'Basketball';
+            else if (isFootball) displayCategory = 'Football';
+            else if (isBaseball) displayCategory = 'Baseball';
+            else if (isHockey) displayCategory = 'Hockey';
+            else if (isTenis) displayCategory = 'Tênis';
+            else if (isStreetwear) displayCategory = 'Streetwear';
+
             setProduct({
               id: data.id,
               name: data.name,
               price: data.price || 89.90,
               oldPrice: (data.price || 89.90) + 20.00,
-              category: 'Soccer',
+              category: displayCategory,
               image: data.image || data.images?.[0] || 'https://images.unsplash.com/photo-1508098682722-e99c43a406b2?w=800',
               gallery: data.gallery || [],
               rating: data.rating || getProductRating(data.id),
