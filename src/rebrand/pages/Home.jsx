@@ -80,7 +80,7 @@ const CAROUSEL_SLIDES = [
     sport: 'Hockey',
     badge: '🏒 NHL Collection',
     title: 'MAPLE LEAFS JERSEYS',
-    price: '$97.90 CAD',
+    price: '$137.80 CAD',
     btnText: 'Shop NHL',
     link: '/colecao/hockey',
     img: '/assets/rebrand/maple_leafs.jpg'

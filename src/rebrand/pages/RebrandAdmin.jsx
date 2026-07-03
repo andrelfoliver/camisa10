@@ -62,7 +62,7 @@ const detectTeamAndCategory = (name) => {
     const parts = team.split(' ');
     const nickname = parts.slice(1).join(' ').toLowerCase();
     if (n.includes(team.toLowerCase()) || (nickname && n.includes(nickname))) {
-      return { team, mainCategory: 'Hockey', category: 'Hockey', price: '97.90' };
+      return { team, mainCategory: 'Hockey', category: 'Hockey', price: '137.80' };
     }
   }
 
@@ -131,7 +131,7 @@ const getStatusNameColor = (status) => {
 const DEFAULT_SPOTLIGHT = [
   { sport: 'Baseball',   badge: '⚾ Summer Collection', title: 'BLUE JAYS JERSEYS',    price: '$97.90 CAD', btnText: 'Shop MLB',    link: '/colecao/baseball',    img: '/assets/rebrand/blue_jays.jpg',    featuredProducts: '' },
   { sport: 'Football',   badge: '🏈 NFL Collection',    title: 'CHIEFS JERSEYS',       price: '$97.90 CAD', btnText: 'Shop NFL',    link: '/colecao/football',    img: '/assets/rebrand/chiefs.jpg',       featuredProducts: '' },
-  { sport: 'Hockey',     badge: '🏒 NHL Collection',    title: 'MAPLE LEAFS JERSEYS',  price: '$97.90 CAD', btnText: 'Shop NHL',    link: '/colecao/hockey',      img: '/assets/rebrand/maple_leafs.jpg',  featuredProducts: '' },
+  { sport: 'Hockey',     badge: '🏒 NHL Collection',    title: 'MAPLE LEAFS JERSEYS',  price: '$137.80 CAD', btnText: 'Shop NHL',    link: '/colecao/hockey',      img: '/assets/rebrand/maple_leafs.jpg',  featuredProducts: '' },
   { sport: 'Soccer',     badge: '⚽ Club Collection',   title: 'REAL MADRID JERSEYS',  price: '$47.90 CAD', btnText: 'Shop Soccer', link: '/colecao/soccer',      img: '/assets/rebrand/real_madrid.jpg',  featuredProducts: '' },
   { sport: 'Basketball', badge: '🏀 NBA Collection',    title: 'RAPTORS JERSEYS',      price: '$79.90 CAD', btnText: 'Shop NBA',    link: '/colecao/basketball',  img: '/assets/rebrand/raptors.jpg',      featuredProducts: '' },
 ];
