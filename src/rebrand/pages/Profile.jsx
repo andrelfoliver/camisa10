@@ -4,6 +4,7 @@ import { useRebrandAuth } from '../../context/RebrandAuthContext';
 import { useWishlist } from '../../context/WishlistContext';
 import { supabaseRebrand as supabase } from '../../services/supabase';
 import { Package, User, LogOut, ChevronRight, Edit2, Check, X, Truck, Clock, CheckCircle, XCircle, ShoppingBag, Heart } from 'lucide-react';
+import TrackingModal from '../../components/TrackingModal';
 
 const STATUS_CONFIG = {
   pending:    { label: 'Pending Payment',  color: '#f59e0b', bg: '#fef3c7' },
@@ -26,6 +27,7 @@ const RebrandProfile = () => {
   const [editName, setEditName] = useState('');
   const [savingName, setSavingName] = useState(false);
   const [expandedOrder, setExpandedOrder] = useState(null);
+  const [trackingModalCode, setTrackingModalCode] = useState('');
 
   useEffect(() => {
     if (user) {
@@ -70,6 +72,7 @@ const RebrandProfile = () => {
   const firstName = (user.user_metadata?.full_name || user.email || '').split(' ')[0];
 
   return (
+    <>
     <div style={{ fontFamily: "'Inter', sans-serif", paddingBottom: '4rem' }}>
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
@@ -268,27 +271,27 @@ const RebrandProfile = () => {
                                  <div style={{ fontSize: '0.75rem', color: '#9ca3af', fontWeight: 600, textTransform: 'uppercase', marginBottom: '0.5rem' }}>Tracking Info</div>
                                  <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
                                    {trackingCodes.map((code, idx) => (
-                                     <a
+                                     <button
                                        key={code}
-                                       href={`https://www.17track.net/en/track?nums=${code}`}
-                                       target="_blank"
-                                       rel="noopener noreferrer"
+                                       onClick={() => setTrackingModalCode(code)}
                                        className="rp-btn-outline"
                                        style={{ 
                                          display: 'inline-flex', 
                                          alignItems: 'center', 
                                          justifyContent: 'center', 
                                          gap: '0.5rem', 
-                                         textDecoration: 'none',
                                          padding: '0.6rem 1.2rem',
                                          fontSize: '0.85rem',
                                          width: '100%',
                                          boxSizing: 'border-box',
-                                         textAlign: 'center'
+                                         textAlign: 'center',
+                                         cursor: 'pointer',
+                                         border: 'none',
+                                         background: 'none'
                                        }}
                                      >
                                        <Truck size={16} /> Track Package {trackingCodes.length > 1 ? `#${idx + 1}` : ''} ({code})
-                                     </a>
+                                     </button>
                                    ))}
                                  </div>
                                </div>
@@ -348,6 +351,13 @@ const RebrandProfile = () => {
 
       </div>
     </div>
+
+    <TrackingModal
+      isOpen={!!trackingModalCode}
+      onClose={() => setTrackingModalCode('')}
+      initialTrackingNumber={trackingModalCode}
+    />
+    </>
   );
 };
 
