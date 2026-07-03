@@ -105,6 +105,7 @@ const NAV_ITEMS = [
   { id: 'coupons',     label: 'Cupons',             icon: Tag },
   { id: 'clientes',    label: 'Clientes',           icon: UserCircle },
   { id: 'afiliados',   label: 'Afiliados',          icon: Award },
+  { id: 'analytics',   label: 'Jornada do Cliente', icon: Activity },
   { id: 'conversas',   label: 'Conversas IA',       icon: MessageSquare },
   { id: 'pricing',     label: 'Tabela de Preços',   icon: DollarSign },
   { id: 'depoimentos', label: 'Depoimentos',        icon: Star },
@@ -5937,6 +5938,240 @@ const SectionHeader = ({ title, sub, action }) => (
   </div>
 );
 
+// ─── Analytics Section ──────────────────────────────────────────────────────
+const AnalyticsSection = () => {
+  const [period, setPeriod] = useState('7');
+  const [loading, setLoading] = useState(true);
+  const [funnel, setFunnel] = useState({ pageview: 0, viewcontent: 0, addtocart: 0, initiatecheckout: 0, purchase: 0 });
+  const [topPages, setTopPages] = useState([]);
+  const [topProducts, setTopProducts] = useState([]);
+  const [recentSessions, setRecentSessions] = useState([]);
+  const [selectedSession, setSelectedSession] = useState(null);
+  const [sessionEvents, setSessionEvents] = useState([]);
+
+  useEffect(() => { loadData(); }, [period]);
+
+  const loadData = async () => {
+    setLoading(true);
+    const since = new Date();
+    since.setDate(since.getDate() - parseInt(period));
+    const sinceStr = since.toISOString();
+
+    // Funil: contagem por event_name
+    const { data: evts } = await supabase
+      .from('analytics_events')
+      .select('event_name, session_id, page, metadata')
+      .gte('created_at', sinceStr);
+
+    if (evts) {
+      const counts = { pageview: 0, viewcontent: 0, addtocart: 0, initiatecheckout: 0, purchase: 0 };
+      const pageMap = {};
+      const productMap = {};
+      const sessionSet = {};
+
+      evts.forEach(e => {
+        const name = (e.event_name || '').toLowerCase();
+        if (name === 'pageview') counts.pageview++;
+        if (name === 'viewcontent') counts.viewcontent++;
+        if (name === 'addtocart') counts.addtocart++;
+        if (name === 'initiatecheckout') counts.initiatecheckout++;
+        if (name === 'purchase') counts.purchase++;
+
+        // Top páginas
+        const pg = e.page || e.metadata?.path || '';
+        if (pg) pageMap[pg] = (pageMap[pg] || 0) + 1;
+
+        // Top produtos
+        if (name === 'viewcontent') {
+          const pname = e.metadata?.content_name || e.metadata?.name || '';
+          if (pname) productMap[pname] = (productMap[pname] || 0) + 1;
+        }
+
+        // Sessões recentes
+        if (e.session_id && !sessionSet[e.session_id]) {
+          sessionSet[e.session_id] = { session_id: e.session_id, count: 0, lastPage: pg };
+        }
+        if (e.session_id) {
+          sessionSet[e.session_id].count++;
+          sessionSet[e.session_id].lastPage = pg || sessionSet[e.session_id].lastPage;
+        }
+      });
+
+      setFunnel(counts);
+      setTopPages(Object.entries(pageMap).sort((a,b) => b[1]-a[1]).slice(0, 8).map(([page, views]) => ({ page, views })));
+      setTopProducts(Object.entries(productMap).sort((a,b) => b[1]-a[1]).slice(0, 8).map(([name, views]) => ({ name, views })));
+      setRecentSessions(Object.values(sessionSet).sort((a,b) => b.count - a.count).slice(0, 15));
+    }
+    setLoading(false);
+  };
+
+  const loadSession = async (sessionId) => {
+    setSelectedSession(sessionId);
+    const { data } = await supabase
+      .from('analytics_events')
+      .select('event_name, page, metadata, created_at')
+      .eq('session_id', sessionId)
+      .order('created_at', { ascending: true })
+      .limit(50);
+    setSessionEvents(data || []);
+  };
+
+  const pct = (a, b) => b === 0 ? '—' : `${Math.round((a/b)*100)}%`;
+  const fmtPage = (p) => p.replace(/^\//, '').replace(/\/produto\//,'produto: ').replace(/\/colecao\//,'cat: ') || 'Home';
+
+  const funnelSteps = [
+    { key: 'pageview',        label: 'Visitas',            count: funnel.pageview,        icon: '👁️',  color: '#60A5FA' },
+    { key: 'viewcontent',     label: 'Produto Visto',      count: funnel.viewcontent,     icon: '👕',  color: '#A78BFA' },
+    { key: 'addtocart',       label: 'Add ao Carrinho',    count: funnel.addtocart,       icon: '🛒',  color: '#FBBF24' },
+    { key: 'initiatecheckout',label: 'Iniciou Checkout',   count: funnel.initiatecheckout,icon: '💳',  color: '#FB923C' },
+    { key: 'purchase',        label: 'Comprou',            count: funnel.purchase,        icon: '✅',  color: '#4ADE80' },
+  ];
+
+  const S2 = {
+    card:   { background: '#1A1D20', border: '1px solid #2A2D31', borderRadius: '12px', padding: '1.5rem' },
+    title:  { color: '#fff', fontWeight: 700, fontSize: '1rem', marginBottom: '1rem' },
+    label:  { color: '#9CA3AF', fontSize: '0.78rem' },
+    val:    { color: '#fff', fontWeight: 700, fontSize: '1.5rem' },
+    row:    { display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '0.45rem 0', borderBottom: '1px solid #2A2D31' },
+    pill:   { background: '#2A2D31', color: '#9CA3AF', borderRadius: '20px', padding: '0.25rem 0.75rem', fontSize: '0.75rem', cursor: 'pointer', border: 'none' },
+    pillActive: { background: '#CCFF00', color: '#000', borderRadius: '20px', padding: '0.25rem 0.75rem', fontSize: '0.75rem', cursor: 'pointer', border: 'none', fontWeight: 700 },
+  };
+
+  return (
+    <div style={{ padding: '1.5rem', maxWidth: '1200px' }}>
+      {/* Header */}
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
+        <div>
+          <h2 style={{ color: '#fff', fontSize: '1.4rem', fontWeight: 800, margin: 0 }}>Jornada do Cliente</h2>
+          <p style={{ color: '#6B7280', fontSize: '0.85rem', margin: '0.25rem 0 0' }}>Onde os clientes clicam e onde abandonam</p>
+        </div>
+        <div style={{ display: 'flex', gap: '0.5rem' }}>
+          {[['1','Hoje'],['7','7 dias'],['30','30 dias']].map(([val, lbl]) => (
+            <button key={val} style={period === val ? S2.pillActive : S2.pill} onClick={() => setPeriod(val)}>{lbl}</button>
+          ))}
+        </div>
+      </div>
+
+      {loading ? (
+        <div style={{ textAlign: 'center', padding: '4rem', color: '#6B7280' }}>Carregando dados...</div>
+      ) : (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+          {/* Funil de conversão */}
+          <div style={S2.card}>
+            <div style={S2.title}>⚡ Funil de Conversão</div>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: '1rem' }}>
+              {funnelSteps.map((step, i) => (
+                <div key={step.key} style={{ textAlign: 'center' }}>
+                  <div style={{ fontSize: '1.8rem', marginBottom: '0.25rem' }}>{step.icon}</div>
+                  <div style={{ color: step.color, fontWeight: 800, fontSize: '1.6rem' }}>{step.count.toLocaleString()}</div>
+                  <div style={{ color: '#9CA3AF', fontSize: '0.72rem', marginTop: '0.25rem' }}>{step.label}</div>
+                  {i > 0 && (
+                    <div style={{ color: '#FBBF24', fontSize: '0.7rem', marginTop: '0.2rem' }}>
+                      {pct(step.count, funnelSteps[i-1].count)} do anterior
+                    </div>
+                  )}
+                  {/* Barra de progresso */}
+                  <div style={{ marginTop: '0.5rem', height: '4px', background: '#2A2D31', borderRadius: '4px', overflow: 'hidden' }}>
+                    <div style={{ height: '100%', background: step.color, borderRadius: '4px',
+                      width: funnelSteps[0].count > 0 ? `${Math.round((step.count/funnelSteps[0].count)*100)}%` : '0%' }} />
+                  </div>
+                </div>
+              ))}
+            </div>
+            {/* Taxa de abandono de carrinho */}
+            {funnel.addtocart > 0 && (
+              <div style={{ marginTop: '1.25rem', padding: '0.75rem', background: '#0F1012', borderRadius: '8px', display: 'flex', gap: '2rem', flexWrap: 'wrap' }}>
+                <span style={{ color: '#9CA3AF', fontSize: '0.82rem' }}>🛒 Abandono de carrinho: <strong style={{ color: '#FB923C' }}>{pct(funnel.addtocart - funnel.purchase, funnel.addtocart)}</strong></span>
+                <span style={{ color: '#9CA3AF', fontSize: '0.82rem' }}>💳 Abandono de checkout: <strong style={{ color: '#FBBF24' }}>{pct(funnel.initiatecheckout - funnel.purchase, funnel.initiatecheckout)}</strong></span>
+                <span style={{ color: '#9CA3AF', fontSize: '0.82rem' }}>✅ Taxa de conversão geral: <strong style={{ color: '#4ADE80' }}>{pct(funnel.purchase, funnel.pageview)}</strong></span>
+              </div>
+            )}
+          </div>
+
+          {/* Top Páginas + Top Produtos */}
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem' }}>
+            <div style={S2.card}>
+              <div style={S2.title}>📄 Páginas Mais Visitadas</div>
+              {topPages.length === 0 ? <div style={{ color: '#6B7280', fontSize: '0.85rem' }}>Sem dados ainda.</div> : topPages.map((p, i) => (
+                <div key={i} style={S2.row}>
+                  <span style={{ color: '#D1D5DB', fontSize: '0.85rem', maxWidth: '70%', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                    {i+1}. {fmtPage(p.page)}
+                  </span>
+                  <span style={{ color: '#60A5FA', fontWeight: 700, fontSize: '0.85rem' }}>{p.views} visitas</span>
+                </div>
+              ))}
+            </div>
+            <div style={S2.card}>
+              <div style={S2.title}>👕 Produtos Mais Vistos</div>
+              {topProducts.length === 0 ? <div style={{ color: '#6B7280', fontSize: '0.85rem' }}>Sem dados ainda.</div> : topProducts.map((p, i) => (
+                <div key={i} style={S2.row}>
+                  <span style={{ color: '#D1D5DB', fontSize: '0.85rem', maxWidth: '70%', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                    {i+1}. {p.name}
+                  </span>
+                  <span style={{ color: '#A78BFA', fontWeight: 700, fontSize: '0.85rem' }}>{p.views}x</span>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Sessões recentes + timeline */}
+          <div style={{ display: 'grid', gridTemplateColumns: selectedSession ? '1fr 1fr' : '1fr', gap: '1.5rem' }}>
+            <div style={S2.card}>
+              <div style={S2.title}>🔍 Sessões Recentes</div>
+              <div style={{ color: '#6B7280', fontSize: '0.75rem', marginBottom: '0.75rem' }}>Clique numa sessão para ver a jornada completa</div>
+              {recentSessions.length === 0 ? <div style={{ color: '#6B7280', fontSize: '0.85rem' }}>Sem dados ainda.</div> : recentSessions.map((s, i) => (
+                <div key={s.session_id}
+                  onClick={() => selectedSession === s.session_id ? (setSelectedSession(null), setSessionEvents([])) : loadSession(s.session_id)}
+                  style={{ ...S2.row, cursor: 'pointer', background: selectedSession === s.session_id ? '#2A2D31' : 'transparent',
+                    borderRadius: '6px', padding: '0.5rem 0.4rem', marginBottom: '0.1rem' }}>
+                  <div>
+                    <div style={{ color: '#D1D5DB', fontSize: '0.82rem', fontFamily: 'monospace' }}>{s.session_id.slice(0, 16)}…</div>
+                    <div style={{ color: '#6B7280', fontSize: '0.72rem' }}>Última página: {fmtPage(s.lastPage)}</div>
+                  </div>
+                  <span style={{ color: '#FBBF24', fontWeight: 700, fontSize: '0.82rem', flexShrink: 0 }}>{s.count} eventos</span>
+                </div>
+              ))}
+            </div>
+
+            {selectedSession && (
+              <div style={S2.card}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+                  <div style={S2.title}>📍 Jornada da Sessão</div>
+                  <button style={{ background: 'none', border: 'none', color: '#6B7280', cursor: 'pointer', fontSize: '1.1rem' }}
+                    onClick={() => { setSelectedSession(null); setSessionEvents([]); }}>✕</button>
+                </div>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', maxHeight: '400px', overflowY: 'auto' }}>
+                  {sessionEvents.map((e, i) => {
+                    const eventColor = {
+                      PageView: '#60A5FA', ViewContent: '#A78BFA', AddToCart: '#FBBF24',
+                      InitiateCheckout: '#FB923C', Purchase: '#4ADE80', CheckoutAbandon: '#F87171',
+                    }[e.event_name] || '#9CA3AF';
+                    return (
+                      <div key={i} style={{ display: 'flex', gap: '0.75rem', alignItems: 'flex-start' }}>
+                        <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: eventColor, marginTop: '5px', flexShrink: 0 }} />
+                        <div style={{ flex: 1 }}>
+                          <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                            <span style={{ color: eventColor, fontSize: '0.78rem', fontWeight: 700 }}>{e.event_name}</span>
+                            <span style={{ color: '#4B5563', fontSize: '0.7rem' }}>
+                              {new Date(e.created_at).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
+                            </span>
+                          </div>
+                          <div style={{ color: '#6B7280', fontSize: '0.72rem' }}>{fmtPage(e.page || e.metadata?.path || '')}</div>
+                          {e.metadata?.content_name && <div style={{ color: '#9CA3AF', fontSize: '0.7rem' }}>👕 {e.metadata.content_name}</div>}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
+
 // ─── Main Component ───────────────────────────────────────────────────────────
 const RebrandAdmin = () => {
   const { user, isAdmin, loading: authLoading, signOut } = useRebrandAuth();
@@ -6000,6 +6235,7 @@ const RebrandAdmin = () => {
     depoimentos: <DepoimentosSection showToast={showToast} />,
     financeiro:  <FinanceiroSection showToast={showToast} />,
     cidades:     <CidadesSection showToast={showToast} />,
+    analytics:   <AnalyticsSection />,
     settings:    <SettingsSection showToast={showToast} />,
   };
 
