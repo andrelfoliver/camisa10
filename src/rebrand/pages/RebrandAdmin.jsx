@@ -129,10 +129,11 @@ const getStatusNameColor = (status) => {
 };
 
 const DEFAULT_SPOTLIGHT = [
-  { sport: 'Baseball', badge: '⚾ Summer Collection', title: 'BLUE JAYS JERSEYS', price: '$49.90 CAD', btnText: 'Shop MLB', link: '/rebrand/colecao/baseball', img: '/assets/rebrand/blue_jays.jpg', featuredProducts: '' },
-  { sport: 'Football', badge: '🏈 NFL Collection',    title: 'CHIEFS JERSEYS',    price: '$59.90 CAD', btnText: 'Shop NFL', link: '/rebrand/colecao/football', img: '/assets/rebrand/chiefs.jpg',    featuredProducts: '' },
-  { sport: 'Hockey',   badge: '🏒 NHL Collection',    title: 'MAPLE LEAFS JERSEYS',price: '$59.90 CAD', btnText: 'Shop NHL', link: '/rebrand/colecao/hockey',   img: '/assets/rebrand/maple_leafs.jpg',featuredProducts: '' },
-  { sport: 'Soccer',   badge: '⚽ Club Collection',   title: 'REAL MADRID JERSEYS',price: '$49.90 CAD', btnText: 'Shop Soccer',link: '/rebrand/colecao/soccer', img: '/assets/rebrand/real_madrid.jpg',featuredProducts: '' },
+  { sport: 'Baseball',   badge: '⚾ Summer Collection', title: 'BLUE JAYS JERSEYS',    price: '$97.90 CAD', btnText: 'Shop MLB',    link: '/rebrand/colecao/baseball',    img: '/assets/rebrand/blue_jays.jpg',    featuredProducts: '' },
+  { sport: 'Football',   badge: '🏈 NFL Collection',    title: 'CHIEFS JERSEYS',       price: '$97.90 CAD', btnText: 'Shop NFL',    link: '/rebrand/colecao/football',    img: '/assets/rebrand/chiefs.jpg',       featuredProducts: '' },
+  { sport: 'Hockey',     badge: '🏒 NHL Collection',    title: 'MAPLE LEAFS JERSEYS',  price: '$97.90 CAD', btnText: 'Shop NHL',    link: '/rebrand/colecao/hockey',      img: '/assets/rebrand/maple_leafs.jpg',  featuredProducts: '' },
+  { sport: 'Soccer',     badge: '⚽ Club Collection',   title: 'REAL MADRID JERSEYS',  price: '$47.90 CAD', btnText: 'Shop Soccer', link: '/rebrand/colecao/soccer',      img: '/assets/rebrand/real_madrid.jpg',  featuredProducts: '' },
+  { sport: 'Basketball', badge: '🏀 NBA Collection',    title: 'RAPTORS JERSEYS',      price: '$79.90 CAD', btnText: 'Shop NBA',    link: '/rebrand/colecao/basketball',  img: '/assets/rebrand/raptors.jpg',      featuredProducts: '' },
 ];
 
 // ─── Styles ──────────────────────────────────────────────────────────────────

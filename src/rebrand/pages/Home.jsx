@@ -62,7 +62,7 @@ const CAROUSEL_SLIDES = [
     sport: 'Baseball',
     badge: '⚾ Summer Collection',
     title: 'BLUE JAYS JERSEYS',
-    price: '$49.90 CAD',
+    price: '$97.90 CAD',
     btnText: 'Shop MLB',
     link: '/rebrand/colecao/baseball',
     img: '/assets/rebrand/blue_jays.jpg'
@@ -71,7 +71,7 @@ const CAROUSEL_SLIDES = [
     sport: 'Football',
     badge: '🏈 NFL Collection',
     title: 'CHIEFS JERSEYS',
-    price: '$59.90 CAD',
+    price: '$97.90 CAD',
     btnText: 'Shop NFL',
     link: '/rebrand/colecao/football',
     img: '/assets/rebrand/chiefs.jpg'
@@ -80,7 +80,7 @@ const CAROUSEL_SLIDES = [
     sport: 'Hockey',
     badge: '🏒 NHL Collection',
     title: 'MAPLE LEAFS JERSEYS',
-    price: '$59.90 CAD',
+    price: '$97.90 CAD',
     btnText: 'Shop NHL',
     link: '/rebrand/colecao/hockey',
     img: '/assets/rebrand/maple_leafs.jpg'
@@ -89,10 +89,19 @@ const CAROUSEL_SLIDES = [
     sport: 'Soccer',
     badge: '⚽ Club Collection',
     title: 'REAL MADRID JERSEYS',
-    price: '$49.90 CAD',
+    price: '$47.90 CAD',
     btnText: 'Shop Soccer',
     link: '/rebrand/colecao/soccer',
     img: '/assets/rebrand/real_madrid.jpg'
+  },
+  {
+    sport: 'Basketball',
+    badge: '🏀 NBA Collection',
+    title: 'RAPTORS JERSEYS',
+    price: '$79.90 CAD',
+    btnText: 'Shop NBA',
+    link: '/rebrand/colecao/basketball',
+    img: '/assets/rebrand/raptors.jpg'
   }
 ];
 
