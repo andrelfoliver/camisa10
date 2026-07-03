@@ -119,6 +119,7 @@ const STATUS_COLORS = {
   processing: { bg: 'rgba(249,115,22,0.15)',  color: '#FB923C', label: 'Preparando' },
   shipped:    { bg: 'rgba(59,130,246,0.15)',  color: '#60A5FA', label: 'Enviado' },
   delivered:  { bg: 'rgba(168,85,247,0.15)', color: '#C084FC', label: 'Entregue' },
+  completed:  { bg: 'rgba(168,85,247,0.15)', color: '#C084FC', label: 'Entregue' },
   cancelled:  { bg: 'rgba(239,68,68,0.15)',  color: '#F87171', label: 'Cancelado' },
 };
 
@@ -1232,7 +1233,7 @@ const OrderDetailModal = ({ order, onClose, onStatusChange, onTrackingChange, sh
             <div style={{ fontSize: '0.75rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em', color: '#D6FF00', marginBottom: '0.75rem' }}>⚙️ Mudar Status</div>
             <div style={{ display: 'flex', gap: '0.5rem' }}>
               <select style={S.input} value={order.status} onChange={e => onStatusChange(order.id, e.target.value)}>
-                {Object.entries(STATUS_COLORS).map(([k, v]) => <option key={k} value={k}>{v.label}</option>)}
+                {Object.entries(STATUS_COLORS).filter(([k]) => k !== 'delivered').map(([k, v]) => <option key={k} value={k}>{v.label}</option>)}
               </select>
               <button 
                 onClick={() => {
@@ -1398,7 +1399,7 @@ const OrdersSection = ({ showToast, onOpenTracking }) => {
   };
 
   const filtered = orders.filter(o => {
-    const matchFilter = filter === 'all' || o.status === filter;
+    const matchFilter = filter === 'all' || o.status === filter || (filter === 'delivered' && o.status === 'completed');
     const q = search.toLowerCase();
     const matchSearch = !q || (o.customer_name || '').toLowerCase().includes(q) || (o.customer_email || '').toLowerCase().includes(q) || String(o.id).includes(q);
     return matchFilter && matchSearch;
@@ -1466,7 +1467,7 @@ const OrdersSection = ({ showToast, onOpenTracking }) => {
                             onChange={e => { e.stopPropagation(); handleStatusChange(o.id, e.target.value); }}
                             style={{ ...S.input, width: 'auto', padding: '0.4rem 0.75rem', fontSize: '0.8rem' }}
                           >
-                            {Object.entries(STATUS_COLORS).map(([k, v]) => <option key={k} value={k}>{v.label}</option>)}
+                            {Object.entries(STATUS_COLORS).filter(([k]) => k !== 'delivered').map(([k, v]) => <option key={k} value={k}>{v.label}</option>)}
                           </select>
                         </div>
                       </td>
