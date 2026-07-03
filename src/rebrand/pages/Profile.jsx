@@ -109,7 +109,7 @@ const RebrandProfile = () => {
             My Account
           </button>
           {isAdmin && (
-            <button className="rp-tab" onClick={() => navigate('/rebrand/admin')} style={{ color: '#FB923C' }}>
+            <button className="rp-tab" onClick={() => navigate('/admin')} style={{ color: '#FB923C' }}>
               ⚙️ Admin Panel
             </button>
           )}

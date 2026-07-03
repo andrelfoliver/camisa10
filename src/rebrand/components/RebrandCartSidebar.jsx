@@ -255,7 +255,7 @@ const RebrandCartSidebar = () => {
               }}
               onMouseOver={e => e.currentTarget.style.background = '#2d2d2d'}
               onMouseOut={e => e.currentTarget.style.background = '#121416'}
-              onClick={() => { setIsCartOpen(false); navigate('/rebrand/checkout'); }}
+              onClick={() => { setIsCartOpen(false); navigate('/checkout'); }}
             >
               Checkout <ArrowRight size={18} />
             </button>

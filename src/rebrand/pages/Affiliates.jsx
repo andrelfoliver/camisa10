@@ -325,8 +325,8 @@ const RebrandAffiliatesPage = () => {
                 </p>
                 <button 
                   onClick={() => {
-                    sessionStorage.setItem('ifooty_redirect_after_login', '/rebrand/affiliates#apply');
-                    navigate('/rebrand/auth');
+                    sessionStorage.setItem('ifooty_redirect_after_login', '/affiliates#apply');
+                    navigate('/auth');
                   }} 
                   style={{ 
                     padding: '0.9rem 2.5rem', 

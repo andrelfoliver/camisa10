@@ -158,7 +158,7 @@ const RebrandAuth = () => {
     const isRebrandAdmin = user.email?.toLowerCase().trim() === REBRAND_ADMIN_EMAIL;
     const savedRedirect = sessionStorage.getItem('ifooty_redirect_after_login');
     sessionStorage.removeItem('ifooty_redirect_after_login');
-    const redirectTo = isRebrandAdmin ? '/rebrand/admin' : (savedRedirect || '/rebrand');
+    const redirectTo = isRebrandAdmin ? '/admin' : (savedRedirect || '/');
     return <Navigate to={redirectTo} replace />;
   }
 
@@ -184,7 +184,7 @@ const RebrandAuth = () => {
       }}>
         
         <button 
-          onClick={() => navigate('/rebrand')}
+          onClick={() => navigate('/')}
           style={{ display: 'inline-flex', alignItems: 'center', gap: '0.4rem', color: '#6c757d', background: 'transparent', border: 'none', cursor: 'pointer', fontSize: '0.85rem', marginBottom: '1.5rem', fontWeight: 600 }}
         >
           <ArrowLeft size={14} /> Back to Shop

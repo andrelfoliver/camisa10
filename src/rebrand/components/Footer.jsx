@@ -57,11 +57,11 @@ const Footer = () => {
         <div>
           <h4 style={{ color: '#fff', fontSize: '1.2rem', marginBottom: '1.5rem' }}>Shop By Sport</h4>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '0.8rem' }}>
-            <Link to="/rebrand/colecao/soccer" style={{ color: '#adb5bd', textDecoration: 'none', fontSize: '0.9rem' }}>⚽ Soccer Jerseys</Link>
-            <Link to="/rebrand/colecao/basketball" style={{ color: '#adb5bd', textDecoration: 'none', fontSize: '0.9rem' }}>🏀 Basketball Jerseys</Link>
-            <Link to="/rebrand/colecao/football" style={{ color: '#adb5bd', textDecoration: 'none', fontSize: '0.9rem' }}>🏈 Football Jerseys</Link>
-            <Link to="/rebrand/colecao/baseball" style={{ color: '#adb5bd', textDecoration: 'none', fontSize: '0.9rem' }}>⚾ Baseball Jerseys</Link>
-            <Link to="/rebrand/colecao/hockey" style={{ color: '#adb5bd', textDecoration: 'none', fontSize: '0.9rem' }}>🏒 Hockey Jerseys</Link>
+            <Link to="/colecao/soccer" style={{ color: '#adb5bd', textDecoration: 'none', fontSize: '0.9rem' }}>⚽ Soccer Jerseys</Link>
+            <Link to="/colecao/basketball" style={{ color: '#adb5bd', textDecoration: 'none', fontSize: '0.9rem' }}>🏀 Basketball Jerseys</Link>
+            <Link to="/colecao/football" style={{ color: '#adb5bd', textDecoration: 'none', fontSize: '0.9rem' }}>🏈 Football Jerseys</Link>
+            <Link to="/colecao/baseball" style={{ color: '#adb5bd', textDecoration: 'none', fontSize: '0.9rem' }}>⚾ Baseball Jerseys</Link>
+            <Link to="/colecao/hockey" style={{ color: '#adb5bd', textDecoration: 'none', fontSize: '0.9rem' }}>🏒 Hockey Jerseys</Link>
           </div>
         </div>
 
@@ -69,9 +69,9 @@ const Footer = () => {
         <div>
           <h4 style={{ color: '#fff', fontSize: '1.2rem', marginBottom: '1.5rem' }}>Info & Service</h4>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '0.8rem' }}>
-            <Link to="/rebrand/profile" style={{ color: '#adb5bd', textDecoration: 'none', fontSize: '0.9rem' }}>Track Order</Link>
-            <Link to="/rebrand/about" style={{ color: '#adb5bd', textDecoration: 'none', fontSize: '0.9rem' }}>About Us</Link>
-            <Link to="/rebrand/affiliates" style={{ color: '#adb5bd', textDecoration: 'none', fontSize: '0.9rem' }}>Affiliate Program</Link>
+            <Link to='/profile' style={{ color: '#adb5bd', textDecoration: 'none', fontSize: '0.9rem' }}>Track Order</Link>
+            <Link to='/about' style={{ color: '#adb5bd', textDecoration: 'none', fontSize: '0.9rem' }}>About Us</Link>
+            <Link to='/affiliates' style={{ color: '#adb5bd', textDecoration: 'none', fontSize: '0.9rem' }}>Affiliate Program</Link>
             <a href="https://wa.me/17788061419" target="_blank" rel="noopener noreferrer" style={{ color: '#adb5bd', textDecoration: 'none', fontSize: '0.9rem' }}>Contact Us: +1 (778) 806-1419</a>
             <a href="https://chat.whatsapp.com/BRxOBGKn84E8n3kiaqh7Jv?s=cl&p=i&mlu=2" target="_blank" rel="noopener noreferrer" style={{ color: '#adb5bd', textDecoration: 'none', fontSize: '0.9rem' }}>Join VIP WhatsApp Group</a>
           </div>

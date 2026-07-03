@@ -149,7 +149,7 @@ const SearchPage = () => {
                       image: p.image
                     }, 'M');
                   }}
-                  onQuickView={(pId) => navigate(`/rebrand/produto/${pId}`)}
+                  onQuickView={(pId) => navigate(`/produto/${pId}`)}
                 />
               ))}
             </div>

@@ -354,7 +354,7 @@ const RebrandCheckout = () => {
       await clearCart();
       const encodedMessage = encodeURIComponent(message);
       window.open(`https://wa.me/${String(waNumber).replace(/\D/g, '')}?text=${encodedMessage}`, '_blank');
-      navigate('/rebrand/sucesso', { state: { orderMessage: message, waNumber } });
+      navigate('/sucesso', { state: { orderMessage: message, waNumber } });
     } catch (error) {
       showPopup(`Error: ${error.message}`);
     } finally { setIsSubmitting(false); }
@@ -397,7 +397,7 @@ const RebrandCheckout = () => {
     try {
       await saveOrderToDatabase(details);
       await clearCart();
-      navigate('/rebrand/sucesso', { state: { paid: true } });
+      navigate('/sucesso', { state: { paid: true } });
     } catch { showPopup('Error saving order. Please contact us on WhatsApp.'); }
     finally { setIsSubmitting(false); }
   };
@@ -426,7 +426,7 @@ const RebrandCheckout = () => {
           discountPercent: appliedCoupon ? appliedCoupon.discount_percent : 0,
           flatDiscount: convertPrice(discount),
           stripeFee: convertPrice(stripeFee),
-          successUrl: `${window.location.origin}/rebrand/sucesso`,
+          successUrl: `${window.location.origin}/sucesso`,
           cancelUrl: window.location.href
         })
       });
@@ -537,8 +537,8 @@ const RebrandCheckout = () => {
             </p>
             <button
               onClick={() => {
-                sessionStorage.setItem('ifooty_redirect_after_login', '/rebrand/checkout');
-                navigate('/rebrand/auth');
+                sessionStorage.setItem('ifooty_redirect_after_login', '/checkout');
+                navigate('/auth');
               }}
               style={{
                 width: '100%', padding: '0.85rem', background: 'transparent', color: '#121416',
@@ -559,7 +559,7 @@ const RebrandCheckout = () => {
       <div style={{ minHeight: '100vh', background: '#f8f9fa', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '2rem', fontFamily: 'Inter, system-ui, sans-serif' }}>
         <div style={{ textAlign: 'center' }}>
           <h2 style={{ fontSize: '1.5rem', fontWeight: 800, color: '#121416', marginBottom: '1rem' }}>Your bag is empty</h2>
-          <button onClick={() => navigate('/rebrand')} style={{ padding: '0.8rem 2rem', background: '#121416', color: '#fff', border: 'none', borderRadius: '100px', fontWeight: 700, cursor: 'pointer', fontSize: '0.95rem' }}>
+          <button onClick={() => navigate('/')} style={{ padding: '0.8rem 2rem', background: '#121416', color: '#fff', border: 'none', borderRadius: '100px', fontWeight: 700, cursor: 'pointer', fontSize: '0.95rem' }}>
             Continue Shopping
           </button>
         </div>
@@ -590,7 +590,7 @@ const RebrandCheckout = () => {
 
         {/* Top Bar */}
         <div style={{ background: '#fff', borderBottom: '1px solid #e9ecef', padding: '1rem 2rem', display: 'flex', alignItems: 'center', gap: '1rem' }}>
-          <button onClick={() => navigate('/rebrand')} style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', background: 'none', border: 'none', cursor: 'pointer', color: '#6c757d', fontWeight: 600, fontSize: '0.9rem' }}>
+          <button onClick={() => navigate('/')} style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', background: 'none', border: 'none', cursor: 'pointer', color: '#6c757d', fontWeight: 600, fontSize: '0.9rem' }}>
             <ArrowLeft size={16} /> Continue Shopping
           </button>
           <span style={{ color: '#dee2e6' }}>|</span>

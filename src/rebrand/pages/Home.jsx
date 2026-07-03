@@ -64,7 +64,7 @@ const CAROUSEL_SLIDES = [
     title: 'BLUE JAYS JERSEYS',
     price: '$97.90 CAD',
     btnText: 'Shop MLB',
-    link: '/rebrand/colecao/baseball',
+    link: '/colecao/baseball',
     img: '/assets/rebrand/blue_jays.jpg'
   },
   {
@@ -73,7 +73,7 @@ const CAROUSEL_SLIDES = [
     title: 'CHIEFS JERSEYS',
     price: '$97.90 CAD',
     btnText: 'Shop NFL',
-    link: '/rebrand/colecao/football',
+    link: '/colecao/football',
     img: '/assets/rebrand/chiefs.jpg'
   },
   {
@@ -82,7 +82,7 @@ const CAROUSEL_SLIDES = [
     title: 'MAPLE LEAFS JERSEYS',
     price: '$97.90 CAD',
     btnText: 'Shop NHL',
-    link: '/rebrand/colecao/hockey',
+    link: '/colecao/hockey',
     img: '/assets/rebrand/maple_leafs.jpg'
   },
   {
@@ -91,7 +91,7 @@ const CAROUSEL_SLIDES = [
     title: 'REAL MADRID JERSEYS',
     price: '$47.90 CAD',
     btnText: 'Shop Soccer',
-    link: '/rebrand/colecao/soccer',
+    link: '/colecao/soccer',
     img: '/assets/rebrand/real_madrid.jpg'
   },
   {
@@ -100,7 +100,7 @@ const CAROUSEL_SLIDES = [
     title: 'RAPTORS JERSEYS',
     price: '$79.90 CAD',
     btnText: 'Shop NBA',
-    link: '/rebrand/colecao/basketball',
+    link: '/colecao/basketball',
     img: '/assets/rebrand/raptors.jpg'
   }
 ];
@@ -403,7 +403,7 @@ const Home = () => {
           <div className="rebrand-hero-bottom-group">
             <div className="rebrand-hero-buttons">
               <button 
-                onClick={() => navigate('/rebrand/colecao/soccer')} 
+                onClick={() => navigate('/colecao/soccer')} 
                 className="rebrand-btn rebrand-btn-primary" 
                 style={{ 
                   background: '#D8FF00', 
@@ -454,7 +454,7 @@ const Home = () => {
             <div 
               key={sport.name} 
               className="rebrand-sport-card"
-              onClick={() => navigate(`/rebrand/colecao/${sport.link}`)}
+              onClick={() => navigate(`/colecao/${sport.link}`)}
             >
               <div className="rebrand-sport-card-bg" style={{ backgroundImage: `url('${sport.img}')`, backgroundSize: sport.bgSize || 'cover', backgroundPosition: sport.bgPos || 'center top' }}></div>
               <div className="rebrand-sport-card-overlay"></div>
@@ -483,7 +483,7 @@ const Home = () => {
             {leagueList.map((league) => (
               <div 
                 key={league.name}
-                onClick={() => navigate(`/rebrand/colecao/${league.link}`)}
+                onClick={() => navigate(`/colecao/${league.link}`)}
                 style={{
                   display: 'flex',
                   flexDirection: 'column',
@@ -578,7 +578,7 @@ const Home = () => {
                           src={product.image} 
                           alt={product.name} 
                           className="rebrand-product-img" 
-                          onClick={() => navigate(`/rebrand/produto/${product.id}`)}
+                          onClick={() => navigate(`/produto/${product.id}`)}
                           style={{ cursor: 'pointer' }}
                         />
                         
@@ -597,7 +597,7 @@ const Home = () => {
                             <ShoppingBag size={14} style={{ marginRight: '0.4rem' }} /> Add to Cart
                           </button>
                           <button 
-                            onClick={() => navigate(`/rebrand/produto/${product.id}`)} 
+                            onClick={() => navigate(`/produto/${product.id}`)} 
                             className="rebrand-product-btn-view"
                           >
                             <Eye size={14} />
@@ -606,7 +606,7 @@ const Home = () => {
                       </div>
 
                       <div className="rebrand-product-info">
-                        <h4 className="rebrand-product-title" onClick={() => navigate(`/rebrand/produto/${product.id}`)}>
+                        <h4 className="rebrand-product-title" onClick={() => navigate(`/produto/${product.id}`)}>
                           {formatProductName(product.name)}
                         </h4>
                         <div className="rebrand-product-rating">
@@ -800,7 +800,7 @@ const Home = () => {
                       src={product.image} 
                       alt={product.name} 
                       className="rebrand-product-img" 
-                      onClick={() => navigate(`/rebrand/produto/${product.id}`)}
+                      onClick={() => navigate(`/produto/${product.id}`)}
                       style={{ cursor: 'pointer' }}
                     />
                     
@@ -820,7 +820,7 @@ const Home = () => {
                         <ShoppingBag size={14} style={{ marginRight: '0.4rem' }} /> Add to Cart
                       </button>
                       <button 
-                        onClick={() => navigate(`/rebrand/produto/${product.id}`)}
+                        onClick={() => navigate(`/produto/${product.id}`)}
                         style={{
                           background: 'rgba(255,255,255,0.9)',
                           border: 'none',
@@ -840,7 +840,7 @@ const Home = () => {
                   <div className="rebrand-product-info">
                     <span className="rebrand-product-category">{product.category}</span>
                     
-                    <Link to={`/rebrand/produto/${product.id}`} style={{ textDecoration: 'none' }}>
+                    <Link to={`/produto/${product.id}`} style={{ textDecoration: 'none' }}>
                       <h4 className="rebrand-product-title">{formatProductName(product.name)}</h4>
                     </Link>
 

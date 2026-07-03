@@ -14,7 +14,7 @@ const ProductCard = ({ product, onAdd, onQuickView }) => {
             {product.badge}
           </span>
         )}
-        <Link to={`/rebrand/produto/${product.id}`}>
+        <Link to={`/produto/${product.id}`}>
           <img src={product.image} alt={product.name} className="rebrand-product-img" />
         </Link>
         
@@ -44,7 +44,7 @@ const ProductCard = ({ product, onAdd, onQuickView }) => {
       <div className="rebrand-product-info">
         <span className="rebrand-product-category">{product.category}</span>
 
-        <Link to={`/rebrand/produto/${product.id}`} style={{ textDecoration: 'none' }}>
+        <Link to={`/produto/${product.id}`} style={{ textDecoration: 'none' }}>
           <h4 className="rebrand-product-title">{formatProductName(product.name)}</h4>
         </Link>
 

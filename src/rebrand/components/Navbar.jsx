@@ -6,14 +6,14 @@ import { useRebrandAuth } from '../../context/RebrandAuthContext';
 import { supabaseRebrand as supabase } from '../../services/supabase';
 
 const NAV_LINKS = [
-  { to: '/rebrand/colecao/soccer',       label: 'Soccer',       special: null },
-  { to: '/rebrand/colecao/basketball',   label: 'Basketball',   special: null },
-  { to: '/rebrand/colecao/football',     label: 'Football',     special: null },
-  { to: '/rebrand/colecao/baseball',     label: 'Baseball',     special: null },
-  { to: '/rebrand/colecao/hockey',       label: 'Hockey',       special: null },
-  { to: '/rebrand/colecao/new-arrivals', label: 'New Arrivals', special: 'volt' },
-  { to: '/rebrand/colecao/best-sellers', label: 'Best Sellers', special: null },
-  { to: '/rebrand/colecao/sale',         label: 'Sale Items',   special: 'red' },
+  { to: '/colecao/soccer',       label: 'Soccer',       special: null },
+  { to: '/colecao/basketball',   label: 'Basketball',   special: null },
+  { to: '/colecao/football',     label: 'Football',     special: null },
+  { to: '/colecao/baseball',     label: 'Baseball',     special: null },
+  { to: '/colecao/hockey',       label: 'Hockey',       special: null },
+  { to: '/colecao/new-arrivals', label: 'New Arrivals', special: 'volt' },
+  { to: '/colecao/best-sellers', label: 'Best Sellers', special: null },
+  { to: '/colecao/sale',         label: 'Sale Items',   special: 'red' },
 ];
 
 const Navbar = () => {
@@ -25,7 +25,7 @@ const Navbar = () => {
 
   const [displayName, setDisplayName] = useState('Hello, Sign In');
   const [accountStatus, setAccountStatus] = useState('My Account');
-  const [accountLink, setAccountLink] = useState('/rebrand/auth');
+  const [accountLink, setAccountLink] = useState('/auth');
 
   // Alternating promos for mobile/tablet top bar
   const [activePromoIndex, setActivePromoIndex] = useState(0);
@@ -48,7 +48,7 @@ const Navbar = () => {
         const first = name.split(' ')[0] || 'User';
         setDisplayName(`Hello, ${first}`);
         setAccountStatus('My Account');
-        setAccountLink('/rebrand/profile');
+        setAccountLink('/profile');
       } else {
         const guestEmail = sessionStorage.getItem('ifooty_guest_email');
         const guestName = sessionStorage.getItem('ifooty_guest_name');
@@ -56,11 +56,11 @@ const Navbar = () => {
           const first = guestName ? guestName.split(' ')[0] : guestEmail.split('@')[0];
           setDisplayName(`Hello, ${first}`);
           setAccountStatus('Guest');
-          setAccountLink('/rebrand/checkout');
+          setAccountLink('/checkout');
         } else {
           setDisplayName('Hello, Sign In');
           setAccountStatus('My Account');
-          setAccountLink('/rebrand/auth');
+          setAccountLink('/auth');
         }
       }
     };
@@ -80,7 +80,7 @@ const Navbar = () => {
       sessionStorage.removeItem('ifooty_guest_name');
       window.dispatchEvent(new Event('storage'));
     }
-    navigate('/rebrand');
+    navigate('/');
   };
 
   const [menuOpen, setMenuOpen] = useState(false);
@@ -176,7 +176,7 @@ const Navbar = () => {
                 ⚡ VIP WhatsApp Group
               </a>
               <span style={{ color: 'rgba(255,255,255,0.2)' }}>|</span>
-              <Link to="/rebrand/profile" style={{ color: '#ffffff', textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '0.3rem' }}>
+              <Link to='/profile' style={{ color: '#ffffff', textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '0.3rem' }}>
                 <MapPin size={12} /> Track Order
               </Link>
             </div>
@@ -217,7 +217,7 @@ const Navbar = () => {
               </a>
             </div>
             <div className="rebrand-promobar-mobile-right">
-              <Link to="/rebrand/profile" style={{ color: '#ffffff', textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '0.3rem', fontWeight: 700 }}>
+              <Link to='/profile' style={{ color: '#ffffff', textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '0.3rem', fontWeight: 700 }}>
                 <MapPin size={12} /> Track Order
               </Link>
             </div>
@@ -273,7 +273,7 @@ const Navbar = () => {
                     key={p.id} 
                     className="rebrand-suggestion-item"
                     onClick={() => {
-                      navigate(`/rebrand/produto/${p.id}`);
+                      navigate(`/produto/${p.id}`);
                       setSearchQuery('');
                       setShowSuggestions(false);
                     }}
@@ -326,7 +326,7 @@ const Navbar = () => {
                       ⚙️ Admin Panel
                     </Link>
                   )}
-                  <Link to={user ? '/rebrand/profile' : '/rebrand/checkout'} style={{ borderBottom: '1px solid #f1f3f5' }}>
+                  <Link to={user ? '/profile' : '/checkout'} style={{ borderBottom: '1px solid #f1f3f5' }}>
                     {user ? 'My Profile' : 'Guest Checkout'}
                   </Link>
                   <button onClick={handleSignOut} style={{ color: '#dc3545' }}>
@@ -395,7 +395,7 @@ const Navbar = () => {
                     key={p.id} 
                     className="rebrand-suggestion-item"
                     onClick={() => {
-                      navigate(`/rebrand/produto/${p.id}`);
+                      navigate(`/produto/${p.id}`);
                       setSearchQuery('');
                       setShowSuggestions(false);
                       setSearchOpen(false);
@@ -498,7 +498,7 @@ const Navbar = () => {
           <a href="https://chat.whatsapp.com/BRxOBGKn84E8n3kiaqh7Jv?s=cl&p=i&mlu=2" target="_blank" rel="noopener noreferrer" style={{ color: 'var(--rebrand-volt)', textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '0.75rem', padding: '1rem 0', borderTop: '1px solid #2C3034', fontWeight: 700 }}>
             ⚡ VIP WhatsApp Group
           </a>
-          <Link to="/rebrand/profile" style={{ color: '#ffffff', textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '0.75rem', padding: '1rem 0', borderTop: '1px solid #2C3034', fontWeight: 700 }} onClick={() => setMenuOpen(false)}>
+          <Link to='/profile' style={{ color: '#ffffff', textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '0.75rem', padding: '1rem 0', borderTop: '1px solid #2C3034', fontWeight: 700 }} onClick={() => setMenuOpen(false)}>
             <MapPin size={20} />
             <span>Track Order</span>
           </Link>
