@@ -1956,11 +1956,6 @@
     <priority>0.9</priority>
   </url>
   <url>
-    <loc>https://ifooty.ca/produto/1501</loc>
-    <changefreq>daily</changefreq>
-    <priority>0.9</priority>
-  </url>
-  <url>
     <loc>https://ifooty.ca/produto/1516</loc>
     <changefreq>daily</changefreq>
     <priority>0.9</priority>
@@ -2497,6 +2492,11 @@
   </url>
   <url>
     <loc>https://ifooty.ca/produto/1613</loc>
+    <changefreq>daily</changefreq>
+    <priority>0.9</priority>
+  </url>
+  <url>
+    <loc>https://ifooty.ca/produto/1501</loc>
     <changefreq>daily</changefreq>
     <priority>0.9</priority>
   </url>

@@ -260,12 +260,45 @@ const RebrandProfile = () => {
                               </div>
                             </div>
                           )}
-                          {order.tracking_number && (
-                            <div style={{ marginTop: '0.75rem' }}>
-                              <div style={{ fontSize: '0.75rem', color: '#9ca3af', fontWeight: 600, textTransform: 'uppercase', marginBottom: '0.25rem' }}>Tracking</div>
-                              <div style={{ fontSize: '0.85rem', color: '#0ea5e9', fontWeight: 600 }}>{order.tracking_number}</div>
-                            </div>
-                          )}
+                           {order.tracking_number ? (() => {
+                             const trackingCodes = order.tracking_number.split(/[,;\s]+/).map(s => s.trim()).filter(Boolean);
+                             if (trackingCodes.length === 0) return null;
+                             return (
+                               <div style={{ marginTop: '1rem', paddingTop: '1rem', borderTop: '1px solid #e5e7eb' }}>
+                                 <div style={{ fontSize: '0.75rem', color: '#9ca3af', fontWeight: 600, textTransform: 'uppercase', marginBottom: '0.5rem' }}>Tracking Info</div>
+                                 <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                                   {trackingCodes.map((code, idx) => (
+                                     <a
+                                       key={code}
+                                       href={`https://www.17track.net/en/track?nums=${code}`}
+                                       target="_blank"
+                                       rel="noopener noreferrer"
+                                       className="rp-btn-outline"
+                                       style={{ 
+                                         display: 'inline-flex', 
+                                         alignItems: 'center', 
+                                         justifyContent: 'center', 
+                                         gap: '0.5rem', 
+                                         textDecoration: 'none',
+                                         padding: '0.6rem 1.2rem',
+                                         fontSize: '0.85rem',
+                                         width: '100%',
+                                         boxSizing: 'border-box',
+                                         textAlign: 'center'
+                                       }}
+                                     >
+                                       <Truck size={16} /> Track Package {trackingCodes.length > 1 ? `#${idx + 1}` : ''} ({code})
+                                     </a>
+                                   ))}
+                                 </div>
+                               </div>
+                             );
+                           })() : (
+                             <div style={{ marginTop: '1rem', paddingTop: '1rem', borderTop: '1px solid #e5e7eb', display: 'flex', alignItems: 'center', gap: '0.5rem', color: '#6b7280', fontSize: '0.82rem' }}>
+                               <Clock size={14} style={{ flexShrink: 0 }} />
+                               <span>Tracking links will appear here as soon as the order is shipped.</span>
+                             </div>
+                           )}
                         </div>
                       )}
                     </div>
