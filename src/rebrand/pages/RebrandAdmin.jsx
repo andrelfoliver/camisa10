@@ -25,6 +25,78 @@ const NBA_TEAMS = [
   'Sacramento Kings', 'San Antonio Spurs', 'Toronto Raptors', 'Utah Jazz', 'Washington Wizards'
 ];
 
+const NHL_TEAMS = [
+  'Anaheim Ducks', 'Arizona Coyotes', 'Boston Bruins', 'Buffalo Sabres', 'Calgary Flames',
+  'Carolina Hurricanes', 'Chicago Blackhawks', 'Colorado Avalanche', 'Columbus Blue Jackets',
+  'Dallas Stars', 'Detroit Red Wings', 'Edmonton Oilers', 'Florida Panthers', 'Los Angeles Kings',
+  'Minnesota Wild', 'Montreal Canadiens', 'Nashville Predators', 'New Jersey Devils', 'New York Islanders',
+  'New York Rangers', 'Ottawa Senators', 'Philadelphia Flyers', 'Pittsburgh Penguins', 'San Jose Sharks',
+  'Seattle Kraken', 'St. Louis Blues', 'Tampa Bay Lightning', 'Toronto Maple Leafs', 'Vancouver Canucks',
+  'Vegas Golden Knights', 'Washington Capitals', 'Winnipeg Jets'
+];
+
+const NFL_TEAMS = [
+  'Arizona Cardinals', 'Atlanta Falcons', 'Baltimore Ravens', 'Buffalo Bills', 'Carolina Panthers',
+  'Chicago Bears', 'Cincinnati Bengals', 'Cleveland Browns', 'Dallas Cowboys', 'Denver Broncos',
+  'Detroit Lions', 'Green Bay Packers', 'Houston Texans', 'Indianapolis Colts', 'Jacksonville Jaguars',
+  'Kansas City Chiefs', 'Las Vegas Raiders', 'Los Angeles Chargers', 'Los Angeles Rams', 'Miami Dolphins',
+  'Minnesota Vikings', 'New England Patriots', 'New Orleans Saints', 'New York Giants', 'New York Jets',
+  'Philadelphia Eagles', 'Pittsburgh Steelers', 'San Francisco 49ers', 'Seattle Seahawks', 'Tampa Bay Buccaneers',
+  'Tennessee Titans', 'Washington Commanders'
+];
+
+const MLB_TEAMS = [
+  'Arizona Diamondbacks', 'Atlanta Braves', 'Baltimore Orioles', 'Boston Red Sox', 'Chicago White Sox',
+  'Chicago Cubs', 'Cincinnati Reds', 'Cleveland Guardians', 'Colorado Rockies', 'Detroit Tigers',
+  'Houston Astros', 'Kansas City Royals', 'Los Angeles Angels', 'Los Angeles Dodgers', 'Miami Marlins',
+  'Milwaukee Brewers', 'Minnesota Twins', 'New York Yankees', 'New York Mets', 'Oakland Athletics',
+  'Philadelphia Phillies', 'Pittsburgh Pirates', 'San Diego Padres', 'San Francisco Giants', 'Seattle Mariners',
+  'St. Louis Cardinals', 'Tampa Bay Rays', 'Texas Rangers', 'Toronto Blue Jays', 'Washington Nationals'
+];
+
+const detectTeamAndCategory = (name) => {
+  const n = name.toLowerCase();
+  
+  // NHL Teams -> Hockey
+  for (const team of NHL_TEAMS) {
+    const parts = team.split(' ');
+    const nickname = parts.slice(1).join(' ').toLowerCase();
+    if (n.includes(team.toLowerCase()) || (nickname && n.includes(nickname))) {
+      return { team, mainCategory: 'Hockey', category: 'Hockey', price: '97.90' };
+    }
+  }
+
+  // NFL Teams -> Football
+  for (const team of NFL_TEAMS) {
+    const parts = team.split(' ');
+    const nickname = parts.slice(1).join(' ').toLowerCase();
+    if (n.includes(team.toLowerCase()) || (nickname && n.includes(nickname))) {
+      return { team, mainCategory: 'Football', category: 'Football', price: '97.90' };
+    }
+  }
+
+  // MLB Teams -> Baseball
+  for (const team of MLB_TEAMS) {
+    const parts = team.split(' ');
+    const nickname = parts.slice(1).join(' ').toLowerCase();
+    if (n.includes(team.toLowerCase()) || (nickname && n.includes(nickname))) {
+      return { team, mainCategory: 'Baseball', category: 'Baseball', price: '97.90' };
+    }
+  }
+
+  // NBA Teams -> Basketball (NBA)
+  for (const team of NBA_TEAMS) {
+    const parts = team.split(' ');
+    const nickname = parts.slice(parts.length - 1)[0].toLowerCase();
+    if (n.includes(team.toLowerCase()) || (nickname && n.includes(nickname))) {
+      return { team, mainCategory: 'Basketball', category: 'NBA', price: '' };
+    }
+  }
+  
+  return null;
+};
+
+
 const NAV_ITEMS = [
   { id: 'dashboard',   label: 'Dashboard',         icon: LayoutDashboard },
   { id: 'orders',      label: 'Pedidos',            icon: ShoppingBag },
@@ -1639,13 +1711,28 @@ const ProductsSection = ({ showToast }) => {
     const defaultInventory = { S: 0, M: 0, L: 0, XL: 0, '2XL': 0, '3XL': 0, '4XL': 0 };
     const currentInventory = product.inventory ? { ...defaultInventory, ...product.inventory } : defaultInventory;
 
-    const mainCat = product.id === 'NEW' ? '' : getProductSport(product);
+    let mainCat = product.id === 'NEW' ? '' : getProductSport(product);
+    if (product.id === 'NEW' && selectedSport && selectedSport !== 'all') {
+      mainCat = selectedSport;
+    }
     const subCat = (product.id === 'NEW' || mainCat !== 'Soccer') ? '' : getSoccerSubdivision(product);
+
+    let cat = product.category || '';
+    if (product.id === 'NEW' && mainCat) {
+      cat = mainCat;
+      if (mainCat === 'Basketball') cat = 'NBA';
+      else if (mainCat === 'Soccer') cat = '';
+    }
+
+    let initialPrice = product.price || '';
+    if (product.id === 'NEW' && (mainCat === 'Football' || mainCat === 'Baseball' || mainCat === 'Hockey')) {
+      initialPrice = '97.90';
+    }
 
     setForm({
       name: product.name || '',
-      price: product.price || '',
-      category: product.category || '',
+      price: initialPrice,
+      category: cat,
       league: product.league || '',
       mainCategory: mainCat,
       subCategory: subCat,
@@ -1660,6 +1747,25 @@ const ProductsSection = ({ showToast }) => {
       inventory: currentInventory
     });
   };
+
+  const handleNameChange = (val) => {
+    setForm(prev => {
+      const updated = { ...prev, name: val };
+      if (editingProduct && editingProduct.id === 'NEW' && val.trim().length > 3) {
+        const detected = detectTeamAndCategory(val);
+        if (detected) {
+          updated.team = detected.team;
+          updated.mainCategory = detected.mainCategory;
+          updated.category = detected.category;
+          if (detected.price) {
+            updated.price = detected.price;
+          }
+        }
+      }
+      return updated;
+    });
+  };
+
 
   const handleMainCategoryChange = (val) => {
     let cat = val;
@@ -1923,7 +2029,7 @@ const ProductsSection = ({ showToast }) => {
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginBottom: '1rem' }}>
                 <div style={{ gridColumn: '1 / -1' }}>
                   <label style={S.label}>Nome do Produto</label>
-                  <input style={S.input} required value={form.name} onChange={e => setForm({...form, name: e.target.value})} placeholder="Ex: Maple Leafs Home Jersey" />
+                  <input style={S.input} required value={form.name} onChange={e => handleNameChange(e.target.value)} placeholder="Ex: Maple Leafs Home Jersey" />
                 </div>
                 <div>
                   <label style={S.label}>Preço (CAD)</label>
