@@ -150,10 +150,10 @@ export const WishlistProvider = ({ children }) => {
     setWishlistItems(prev => {
       const exists = prev.some(item => item.id === product.id);
       if (exists) {
-        toast.success(window.location.pathname.startsWith('/rebrand') ? 'Removed from Wishlist' : 'Removido da Lista de Desejos');
+        toast.success('Removed from Wishlist');
         return prev.filter(item => item.id !== product.id);
       } else {
-        toast.success(window.location.pathname.startsWith('/rebrand') ? 'Added to Wishlist' : 'Adicionado à Lista de Desejos');
+        toast.success('Added to Wishlist');
         return [...prev, {
           id: product.id,
           name: product.name,

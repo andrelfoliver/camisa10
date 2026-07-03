@@ -1,11 +1,11 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
-import { supabase } from '../services/supabase';
+import { supabaseRebrand as supabase } from '../services/supabase';
 import { trackEvent } from '../services/analytics';
 
 const AuthContext = createContext();
 
 // Email Mestre do Administrador (site de produção)
-const ADMIN_EMAIL = 'camisadez085@gmail.com';
+const ADMIN_EMAIL = 'ifootyc@gmail.com';
 
 export function AuthProvider({ children }) {
   const [session, setSession] = useState(null);

@@ -11,7 +11,7 @@ const Success = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const stripeSessionId = searchParams.get('stripe_session_id');
-  const isRebrand = location.pathname.startsWith('/rebrand');
+  const isRebrand = true;
   
   const { waNumber, paid } = location.state || {};
   const [verifying, setVerifying] = React.useState(!!stripeSessionId);

@@ -55,8 +55,8 @@ const chatbotTranslations = {
 export default function AiChatbot() {
   const navigate = useNavigate();
   const { language } = useLanguage();
-  const isRebrand = window.location.pathname.startsWith('/rebrand');
-  const activeLang = isRebrand ? 'en' : language;
+  const isRebrand = true;
+  const activeLang = 'en';
   const ct = chatbotTranslations[activeLang] || chatbotTranslations.pt;
   const [isOpen, setIsOpen] = useState(false);
   const [input, setInput] = useState('');

@@ -21,8 +21,8 @@ const TIMES = ['há 2 minutos', 'agora mesmo', 'há 5 minutos', 'há 10 minutos'
 const SalesPopup = () => {
   const location = useLocation();
   const { t, language, translateProductDisplay } = useLanguage();
-  const isRebrand = location.pathname.startsWith('/rebrand');
-  const activeLang = isRebrand ? 'en' : language;
+  const isRebrand = true;
+  const activeLang = 'en';
   
   const [products, setProducts] = useState([]);
   const [realOrders, setRealOrders] = useState([]);
