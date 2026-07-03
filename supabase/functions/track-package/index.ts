@@ -348,15 +348,17 @@ async function fetch17trackData(num: string, isUsps: boolean, destCountry: strin
     );
 
     const mappedEvents = await Promise.all(uniqueEvents.map(async (e: any) => {
-      let displayDate = e.time_iso || e.a || '';
-      displayDate = displayDate
+      // Keep the original ISO string with timezone intact for correct conversion in the frontend
+      const rawIso = e.time_iso || e.a || '';
+      // displayDate strips timezone for the legacy formatted string (used by formatToAMPM)
+      const displayDate = rawIso
           .replace('T', ' ')
           .replace(/[-+]\d{2}:?\d{2}$/, '')
           .split('.')[0]
           .trim();
 
       return {
-        rawDate: displayDate,
+        rawDate: rawIso.trim() || displayDate, // Keep full ISO with timezone if available
         date: formatToAMPM(displayDate),
         location: await translateText(e.location || e.c || ''),
         status: await translateText(e.description || e.z || ''),

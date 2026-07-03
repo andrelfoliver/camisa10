@@ -115,49 +115,50 @@ const getDaysPassedBetween = (startDateStr, endDateStr) => {
 // Force parsing a raw carrier time to a standard JS Date object
 const parseCarrierTimeToDate = (rawDate, carrier) => {
   if (!rawDate) return new Date(0);
-  
+
+  // If the string already contains timezone info, parse directly — always correct
   const hasTimezone = rawDate.includes('T') || /[-+]\d{2}:?\d{2}$/.test(rawDate) || rawDate.endsWith('Z');
   if (hasTimezone) {
     return new Date(rawDate);
   }
-  
-  const formattedRaw = rawDate.trim().replace(' ', 'T');
-  const tz = carrier === 'CN' ? 'Asia/Shanghai' : 'America/Toronto';
-  
-  try {
-    const utcDate = new Date(formattedRaw + 'Z'); // Parse as UTC first
-    if (isNaN(utcDate.getTime())) return new Date(rawDate);
 
-    // Format the UTC date in the source timezone to find the offset
-    const formatter = new Intl.DateTimeFormat('en-US', {
-      timeZone: tz,
-      year: 'numeric', month: 'numeric', day: 'numeric',
-      hour: 'numeric', minute: 'numeric', second: 'numeric',
-      hour12: false
-    });
-    
-    const parts = formatter.formatToParts(utcDate);
-    const getPart = (type) => {
-      const p = parts.find(x => x.type === type);
-      return p ? parseInt(p.value, 10) : 0;
-    };
-    
-    const year = getPart('year');
-    const month = getPart('month');
-    const day = getPart('day');
-    let hour = getPart('hour');
-    if (hour === 24) hour = 0;
-    const minute = getPart('minute');
-    const second = getPart('second');
-    
-    const tzDate = Date.UTC(year, month - 1, day, hour, minute, second);
-    const offsetMs = utcDate.getTime() - tzDate;
-    
-    return new Date(utcDate.getTime() + offsetMs);
-  } catch (e) {
-    console.error("Error parsing carrier time:", e);
-    return new Date(rawDate);
+  // Raw string has no timezone marker.
+  // - CA/US events come from the 17track API whose time_iso is UTC (+00:00),
+  //   but old cached entries had the +00:00 stripped → treat as UTC.
+  // - CN events come from a Chinese carrier scrape in Asia/Shanghai (UTC+8).
+  const formattedRaw = rawDate.trim().replace(' ', 'T');
+
+  if (carrier === 'CN') {
+    // Interpret as Asia/Shanghai local time → find the correct UTC instant
+    try {
+      const naiveDate = new Date(formattedRaw + 'Z'); // treat as UTC temporarily
+      if (isNaN(naiveDate.getTime())) return new Date(rawDate);
+
+      const formatter = new Intl.DateTimeFormat('en-US', {
+        timeZone: 'Asia/Shanghai',
+        year: 'numeric', month: 'numeric', day: 'numeric',
+        hour: 'numeric', minute: 'numeric', second: 'numeric',
+        hour12: false
+      });
+      const parts = formatter.formatToParts(naiveDate);
+      const getPart = (type) => {
+        const p = parts.find(x => x.type === type);
+        return p ? parseInt(p.value, 10) : 0;
+      };
+      let hour = getPart('hour');
+      if (hour === 24) hour = 0;
+      const tzDisplayedMs = Date.UTC(getPart('year'), getPart('month') - 1, getPart('day'), hour, getPart('minute'), getPart('second'));
+      const offsetMs = naiveDate.getTime() - tzDisplayedMs;
+      return new Date(naiveDate.getTime() - offsetMs);
+    } catch (e) {
+      console.error('Error parsing CN carrier time:', e);
+      return new Date(rawDate);
+    }
   }
+
+  // CA / US: 17track time_iso is UTC — just append Z and parse
+  const utcDate = new Date(formattedRaw + 'Z');
+  return isNaN(utcDate.getTime()) ? new Date(rawDate) : utcDate;
 };
 
 const getCalgaryTimezoneLabel = (dateObj = new Date()) => {
