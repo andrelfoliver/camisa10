@@ -31,7 +31,7 @@ const Navbar = () => {
   const [activePromoIndex, setActivePromoIndex] = useState(0);
   const promos = [
     { text: '🍁 Free Shipping Across Canada', url: null },
-    { text: '⚡ VIP WhatsApp Group', url: 'https://chat.whatsapp.com/KKKNZoOnr57AanDT33KPrT', isExternal: true, isVolt: true }
+    { text: '⚡ VIP WhatsApp Group', url: 'https://chat.whatsapp.com/BRxOBGKn84E8n3kiaqh7Jv?s=cl&p=i&mlu=2', isExternal: true, isVolt: true }
   ];
 
   useEffect(() => {
@@ -172,7 +172,7 @@ const Navbar = () => {
               <span>Free Shipping Across Canada</span>
             </div>
             <div className="rebrand-promobar-right">
-              <a href="https://chat.whatsapp.com/KKKNZoOnr57AanDT33KPrT" target="_blank" rel="noopener noreferrer" style={{ color: 'var(--rebrand-volt)', textDecoration: 'none' }}>
+              <a href="https://chat.whatsapp.com/BRxOBGKn84E8n3kiaqh7Jv?s=cl&p=i&mlu=2" target="_blank" rel="noopener noreferrer" style={{ color: 'var(--rebrand-volt)', textDecoration: 'none' }}>
                 ⚡ VIP WhatsApp Group
               </a>
               <span style={{ color: 'rgba(255,255,255,0.2)' }}>|</span>
@@ -198,7 +198,7 @@ const Navbar = () => {
                 🍁 Free Shipping Across Canada
               </span>
               <a 
-                href="https://chat.whatsapp.com/KKKNZoOnr57AanDT33KPrT"
+                href="https://chat.whatsapp.com/BRxOBGKn84E8n3kiaqh7Jv?s=cl&p=i&mlu=2"
                 target="_blank" 
                 rel="noopener noreferrer" 
                 style={{ 
@@ -495,7 +495,7 @@ const Navbar = () => {
               <span>{user ? 'Sign Out' : 'Exit Guest'}</span>
             </button>
           )}
-          <a href="https://chat.whatsapp.com/KKKNZoOnr57AanDT33KPrT" target="_blank" rel="noopener noreferrer" style={{ color: 'var(--rebrand-volt)', textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '0.75rem', padding: '1rem 0', borderTop: '1px solid #2C3034', fontWeight: 700 }}>
+          <a href="https://chat.whatsapp.com/BRxOBGKn84E8n3kiaqh7Jv?s=cl&p=i&mlu=2" target="_blank" rel="noopener noreferrer" style={{ color: 'var(--rebrand-volt)', textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '0.75rem', padding: '1rem 0', borderTop: '1px solid #2C3034', fontWeight: 700 }}>
             ⚡ VIP WhatsApp Group
           </a>
           <Link to="/rebrand/profile" style={{ color: '#ffffff', textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '0.75rem', padding: '1rem 0', borderTop: '1px solid #2C3034', fontWeight: 700 }} onClick={() => setMenuOpen(false)}>

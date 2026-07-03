@@ -33,6 +33,7 @@ import RebrandAuth from './rebrand/pages/Auth';
 import RebrandProfile from './rebrand/pages/Profile';
 import RebrandAboutPage from './rebrand/pages/About';
 import RebrandSearchPage from './rebrand/pages/SearchPage';
+import RebrandAffiliatesPage from './rebrand/pages/Affiliates';
 import { RebrandAuthProvider } from './context/RebrandAuthContext';
 
 import { initAnalytics, trackEvent } from './services/analytics';
@@ -124,6 +125,7 @@ const AppLayout = () => {
                   <Route path="profile" element={<RebrandProfile />} />
                   <Route path="about" element={<RebrandAboutPage />} />
                   <Route path="busca" element={<RebrandSearchPage />} />
+                  <Route path="affiliates" element={<RebrandAffiliatesPage />} />
                   <Route path="sucesso" element={<Success />} />
                 </Route>
               </Routes>
