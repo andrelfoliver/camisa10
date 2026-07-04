@@ -5953,9 +5953,20 @@ const AnalyticsSection = () => {
 
   const loadData = async () => {
     setLoading(true);
-    const since = new Date();
-    since.setDate(since.getDate() - parseInt(period));
-    const sinceStr = since.toISOString();
+    // Calcula o início do período baseado na meia-noite de Calgary (MDT = UTC-6)
+    let sinceStr;
+    if (period === '1') {
+      // "Hoje" = desde meia-noite Calgary (UTC-6 MDT)
+      const now = new Date();
+      const calgaryMidnight = new Date(
+        now.toLocaleDateString('en-CA', { timeZone: 'America/Edmonton' }) + 'T00:00:00-06:00'
+      );
+      sinceStr = calgaryMidnight.toISOString();
+    } else {
+      const since = new Date();
+      since.setDate(since.getDate() - parseInt(period));
+      sinceStr = since.toISOString();
+    }
 
     // Funil: contagem por event_name
     const { data: evts } = await supabase
@@ -6018,6 +6029,19 @@ const AnalyticsSection = () => {
 
   const pct = (a, b) => b === 0 ? '—' : `${Math.round((a/b)*100)}%`;
   const fmtPage = (p) => p.replace(/^\//, '').replace(/\/produto\//,'produto: ').replace(/\/colecao\//,'cat: ') || 'Home';
+
+  // Formata timestamp do Supabase (sempre UTC) para hora de Calgary (MDT = UTC-6)
+  // Converte timestamp UTC do Supabase para hora de Calgary (MDT = UTC-6, verão)
+  // Cálculo direto para garantir conversão correta independente do locale do sistema
+  const fmtCalgaryTime = (isoStr) => {
+    if (!isoStr) return '';
+    const normalized = /[Zz]|[+-]\d{2}:?\d{2}$/.test(isoStr) ? isoStr : isoStr + 'Z';
+    const utcMs = new Date(normalized).getTime();
+    if (isNaN(utcMs)) return '';
+    const calgaryMs = utcMs - (6 * 60 * 60 * 1000); // MDT = UTC-6
+    const d = new Date(calgaryMs);
+    return String(d.getUTCHours()).padStart(2, '0') + ':' + String(d.getUTCMinutes()).padStart(2, '0');
+  };
 
   const funnelSteps = [
     { key: 'pageview',        label: 'Visitas',            count: funnel.pageview,        icon: '👁️',  color: '#60A5FA' },
@@ -6153,7 +6177,7 @@ const AnalyticsSection = () => {
                           <div style={{ display: 'flex', justifyContent: 'space-between' }}>
                             <span style={{ color: eventColor, fontSize: '0.78rem', fontWeight: 700 }}>{e.event_name}</span>
                             <span style={{ color: '#4B5563', fontSize: '0.7rem' }}>
-                              {new Date(e.created_at).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
+                              {fmtCalgaryTime(e.created_at)}
                             </span>
                           </div>
                           <div style={{ color: '#6B7280', fontSize: '0.72rem' }}>{fmtPage(e.page || e.metadata?.path || '')}</div>
