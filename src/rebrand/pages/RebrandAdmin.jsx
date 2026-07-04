@@ -5980,17 +5980,26 @@ const AnalyticsSection = () => {
       const productMap = {};
       const sessionSet = {};
 
+      // Rotas internas a ignorar no funil/contagens de cliente
+      const INTERNAL_PATHS = ['/admin', '/rebrand/admin', 'admin'];
+
       evts.forEach(e => {
         const name = (e.event_name || '').toLowerCase();
-        if (name === 'pageview') counts.pageview++;
-        if (name === 'viewcontent') counts.viewcontent++;
-        if (name === 'addtocart') counts.addtocart++;
-        if (name === 'initiatecheckout') counts.initiatecheckout++;
-        if (name === 'purchase') counts.purchase++;
-
-        // Top páginas
         const pg = e.page || e.metadata?.path || '';
-        if (pg) pageMap[pg] = (pageMap[pg] || 0) + 1;
+
+        // Ignora eventos disparados nas rotas admin/internas no funil
+        const isInternal = INTERNAL_PATHS.some(p => pg.includes(p));
+
+        if (!isInternal) {
+          if (name === 'pageview') counts.pageview++;
+          if (name === 'viewcontent') counts.viewcontent++;
+          if (name === 'addtocart') counts.addtocart++;
+          if (name === 'initiatecheckout') counts.initiatecheckout++;
+          if (name === 'purchase') counts.purchase++;
+        }
+
+        // Top páginas (só páginas de cliente, sem admin)
+        if (pg && !isInternal) pageMap[pg] = (pageMap[pg] || 0) + 1;
 
         // Top produtos
         if (name === 'viewcontent') {
