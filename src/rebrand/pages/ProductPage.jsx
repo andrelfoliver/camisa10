@@ -6,6 +6,7 @@ import { useCart } from '../../context/CartContext';
 import { useWishlist } from '../../context/WishlistContext';
 import { formatProductName, getProductRating, getProductReviewsCount } from '../utils/format';
 import SizeGuideModal from '../../components/SizeGuideModal';
+import { trackEvent } from '../../services/analytics';
 
 // Todos os mocks para busca rápida com suporte a cores de time, preços riscados e informações extras
 const ALL_MOCKS = {
@@ -56,6 +57,14 @@ const ProductPage = () => {
         setProduct(mock);
         setSelectedColor(mock.colors?.[0] || '');
         setLoading(false);
+        // Track product view
+        trackEvent('ViewContent', {
+          content_name: mock.name,
+          content_ids: [id],
+          content_category: mock.category,
+          value: mock.price,
+          currency: 'CAD',
+        });
       } else {
         try {
           const { data, error } = await supabase
@@ -95,6 +104,15 @@ const ProductPage = () => {
             setSelectedColor('#000000');
             const isKids = data.name?.toLowerCase().includes('infantil') || data.name?.toLowerCase().includes('kids') || data.name?.toLowerCase().includes('child') || data.name?.toLowerCase().includes('bebê') || data.name?.toLowerCase().includes('baby');
             setSelectedSize(isKids ? '22' : 'M');
+
+            // Track product view
+            trackEvent('ViewContent', {
+              content_name: data.name,
+              content_ids: [data.id],
+              content_category: displayCategory,
+              value: data.price || 89.90,
+              currency: 'CAD',
+            });
           }
         } catch (err) {
           console.error("Error loading DB product detail:", err);

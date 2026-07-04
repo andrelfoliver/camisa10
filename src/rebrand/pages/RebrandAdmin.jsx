@@ -6000,7 +6000,6 @@ const AnalyticsSection = () => {
     // Calcula o início do período baseado na meia-noite de Calgary (MDT = UTC-6)
     let sinceStr;
     if (period === '1') {
-      // "Hoje" = desde meia-noite Calgary (UTC-6 MDT)
       const now = new Date();
       const calgaryMidnight = new Date(
         now.toLocaleDateString('en-CA', { timeZone: 'America/Edmonton' }) + 'T00:00:00-06:00'
@@ -6012,59 +6011,105 @@ const AnalyticsSection = () => {
       sinceStr = since.toISOString();
     }
 
-    // Funil: contagem por event_name
+    // Busca eventos com user_id e created_at para enriquecer sessões
     const { data: evts } = await supabase
       .from('analytics_events')
-      .select('event_name, session_id, page, metadata')
-      .gte('created_at', sinceStr);
+      .select('event_name, session_id, page, metadata, user_id, created_at')
+      .gte('created_at', sinceStr)
+      .order('created_at', { ascending: false });
 
     if (evts) {
       const counts = { pageview: 0, viewcontent: 0, addtocart: 0, initiatecheckout: 0, purchase: 0 };
       const pageMap = {};
       const productMap = {};
       const sessionSet = {};
+      // Para deduplicação: conta 1 PageView por sessão única
+      const sessionPageViews = new Set();
 
-      // Rotas internas a ignorar no funil/contagens de cliente
       const INTERNAL_PATHS = ['/admin', '/rebrand/admin', 'admin'];
 
       evts.forEach(e => {
         const name = (e.event_name || '').toLowerCase();
         const pg = e.page || e.metadata?.path || '';
-
-        // Ignora eventos disparados nas rotas admin/internas no funil
         const isInternal = INTERNAL_PATHS.some(p => pg.includes(p));
 
         if (!isInternal) {
-          if (name === 'pageview') counts.pageview++;
+          // PageView: deduplica por sessão (conta sessões únicas, não eventos brutos)
+          if (name === 'pageview') {
+            if (!sessionPageViews.has(e.session_id)) {
+              sessionPageViews.add(e.session_id);
+              counts.pageview++;
+            }
+          }
           if (name === 'viewcontent') counts.viewcontent++;
           if (name === 'addtocart') counts.addtocart++;
           if (name === 'initiatecheckout') counts.initiatecheckout++;
           if (name === 'purchase') counts.purchase++;
         }
 
-        // Top páginas (só páginas de cliente, sem admin)
         if (pg && !isInternal) pageMap[pg] = (pageMap[pg] || 0) + 1;
 
-        // Top produtos
         if (name === 'viewcontent') {
           const pname = e.metadata?.content_name || e.metadata?.name || '';
           if (pname) productMap[pname] = (productMap[pname] || 0) + 1;
         }
 
-        // Sessões recentes
-        if (e.session_id && !sessionSet[e.session_id]) {
-          sessionSet[e.session_id] = { session_id: e.session_id, count: 0, lastPage: pg };
-        }
+        // Sessões: rastreia userId, última atividade e última página
         if (e.session_id) {
+          if (!sessionSet[e.session_id]) {
+            sessionSet[e.session_id] = {
+              session_id: e.session_id,
+              count: 0,
+              lastPage: '',
+              lastActivity: e.created_at,
+              user_id: e.user_id || null,
+              userName: null,
+            };
+          }
           sessionSet[e.session_id].count++;
-          sessionSet[e.session_id].lastPage = pg || sessionSet[e.session_id].lastPage;
+          if (!isInternal && pg) sessionSet[e.session_id].lastPage = pg;
+          // Guarda o user_id se disponível
+          if (e.user_id && !sessionSet[e.session_id].user_id) {
+            sessionSet[e.session_id].user_id = e.user_id;
+          }
+          // Mantém o created_at mais recente (evts já ordenados DESC)
+          if (!sessionSet[e.session_id].lastActivity) {
+            sessionSet[e.session_id].lastActivity = e.created_at;
+          }
+        }
+      });
+
+      // Busca nomes dos usuários logados
+      const userIds = [...new Set(
+        Object.values(sessionSet).map(s => s.user_id).filter(Boolean)
+      )];
+      let userMap = {};
+      if (userIds.length > 0) {
+        const { data: profiles } = await supabase
+          .from('profiles')
+          .select('id, full_name, email')
+          .in('id', userIds);
+        if (profiles) {
+          profiles.forEach(p => {
+            userMap[p.id] = p.full_name || p.email || 'Usuário';
+          });
+        }
+      }
+
+      // Enriquece sessões com nome do usuário
+      Object.values(sessionSet).forEach(s => {
+        if (s.user_id && userMap[s.user_id]) {
+          s.userName = userMap[s.user_id];
         }
       });
 
       setFunnel(counts);
       setTopPages(Object.entries(pageMap).sort((a,b) => b[1]-a[1]).slice(0, 8).map(([page, views]) => ({ page, views })));
       setTopProducts(Object.entries(productMap).sort((a,b) => b[1]-a[1]).slice(0, 8).map(([name, views]) => ({ name, views })));
-      setRecentSessions(Object.values(sessionSet).sort((a,b) => b.count - a.count).slice(0, 15));
+      // Ordena sessões pela mais recente
+      setRecentSessions(Object.values(sessionSet)
+        .sort((a,b) => new Date(b.lastActivity) - new Date(a.lastActivity))
+        .slice(0, 20));
     }
     setLoading(false);
   };
@@ -6073,10 +6118,10 @@ const AnalyticsSection = () => {
     setSelectedSession(sessionId);
     const { data } = await supabase
       .from('analytics_events')
-      .select('event_name, page, metadata, created_at')
+      .select('event_name, page, metadata, created_at, user_id')
       .eq('session_id', sessionId)
       .order('created_at', { ascending: true })
-      .limit(50);
+      .limit(100);
     setSessionEvents(data || []);
   };
 
@@ -6200,12 +6245,26 @@ const AnalyticsSection = () => {
                 <div key={s.session_id}
                   onClick={() => selectedSession === s.session_id ? (setSelectedSession(null), setSessionEvents([])) : loadSession(s.session_id)}
                   style={{ ...S2.row, cursor: 'pointer', background: selectedSession === s.session_id ? '#2A2D31' : 'transparent',
-                    borderRadius: '6px', padding: '0.5rem 0.4rem', marginBottom: '0.1rem' }}>
-                  <div>
-                    <div style={{ color: '#D1D5DB', fontSize: '0.82rem', fontFamily: 'monospace' }}>{s.session_id.slice(0, 16)}…</div>
-                    <div style={{ color: '#6B7280', fontSize: '0.72rem' }}>Última página: {fmtPage(s.lastPage)}</div>
+                    borderRadius: '6px', padding: '0.5rem 0.4rem', marginBottom: '0.1rem', border: 'none' }}>
+                  <div style={{ minWidth: 0, flex: 1 }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', marginBottom: '0.15rem' }}>
+                      {s.userName ? (
+                        <>
+                          <span style={{ fontSize: '0.7rem' }}>👤</span>
+                          <span style={{ color: '#60A5FA', fontSize: '0.82rem', fontWeight: 700, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{s.userName}</span>
+                        </>
+                      ) : (
+                        <>
+                          <span style={{ fontSize: '0.7rem' }}>🕶️</span>
+                          <span style={{ color: '#D1D5DB', fontSize: '0.78rem', fontFamily: 'monospace' }}>{s.session_id.slice(0, 14)}…</span>
+                        </>
+                      )}
+                    </div>
+                    <div style={{ color: '#6B7280', fontSize: '0.7rem' }}>
+                      {s.lastActivity ? fmtCalgaryTime(s.lastActivity) + ' · ' : ''}{fmtPage(s.lastPage)}
+                    </div>
                   </div>
-                  <span style={{ color: '#FBBF24', fontWeight: 700, fontSize: '0.82rem', flexShrink: 0 }}>{s.count} eventos</span>
+                  <span style={{ color: '#FBBF24', fontWeight: 700, fontSize: '0.8rem', flexShrink: 0, marginLeft: '0.5rem' }}>{s.count} ev.</span>
                 </div>
               ))}
             </div>
