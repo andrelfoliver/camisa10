@@ -3,7 +3,7 @@ import { useNavigate, Navigate, Link } from 'react-router-dom';
 import { useRebrandAuth } from '../../context/RebrandAuthContext';
 import { useWishlist } from '../../context/WishlistContext';
 import { supabaseRebrand as supabase } from '../../services/supabase';
-import { Package, User, LogOut, ChevronRight, Edit2, Check, X, Truck, Clock, CheckCircle, XCircle, ShoppingBag, Heart } from 'lucide-react';
+import { Package, User, LogOut, ChevronRight, Edit2, Check, X, Truck, Clock, CheckCircle, XCircle, ShoppingBag, Heart, Star, MessageSquare } from 'lucide-react';
 import TrackingModal from '../../components/TrackingModal';
 
 const STATUS_CONFIG = {
@@ -29,10 +29,57 @@ const RebrandProfile = () => {
   const [expandedOrder, setExpandedOrder] = useState(null);
   const [trackingModalCode, setTrackingModalCode] = useState('');
 
+  // Depoimento
+  const [myReview, setMyReview] = useState(null);      // depoimento já enviado
+  const [reviewForm, setReviewForm] = useState({ rating: 5, content: '', location: '' });
+  const [reviewSaving, setReviewSaving] = useState(false);
+  const [reviewMsg, setReviewMsg] = useState(null);     // { type: 'success'|'error', text }
+
+  const loadMyReview = async () => {
+    if (!user) return;
+    const { data } = await supabase
+      .from('testimonials')
+      .select('*')
+      .eq('user_id', user.id)
+      .order('created_at', { ascending: false })
+      .limit(1);
+    setMyReview(data?.[0] || null);
+  };
+
+  const handleSubmitReview = async (e) => {
+    e.preventDefault();
+    if (!reviewForm.content.trim()) {
+      setReviewMsg({ type: 'error', text: 'Please write your review before submitting.' });
+      return;
+    }
+    setReviewSaving(true);
+    setReviewMsg(null);
+    const name = user.user_metadata?.full_name || user.email?.split('@')[0] || 'Customer';
+    const payload = {
+      name,
+      content: reviewForm.content.trim(),
+      rating: reviewForm.rating,
+      location: reviewForm.location.trim() || null,
+      status: 'pending',
+      user_id: user.id,
+      sort_order: 9999,
+    };
+    const { error } = await supabase.from('testimonials').insert([payload]);
+    setReviewSaving(false);
+    if (error) {
+      setReviewMsg({ type: 'error', text: 'Error sending review. Please try again.' });
+    } else {
+      setReviewMsg({ type: 'success', text: 'Thank you! Your review has been submitted for approval and will appear on the website soon. 🙏' });
+      setReviewForm({ rating: 5, content: '', location: '' });
+      loadMyReview();
+    }
+  };
+
   useEffect(() => {
     if (user) {
       setEditName(user.user_metadata?.full_name || '');
       loadOrders();
+      loadMyReview();
     }
   }, [user]);
 
@@ -110,6 +157,9 @@ const RebrandProfile = () => {
           </button>
           <button className={`rp-tab${activeTab === 'account' ? ' active' : ''}`} onClick={() => setActiveTab('account')}>
             My Account
+          </button>
+          <button className={`rp-tab${activeTab === 'review' ? ' active' : ''}`} onClick={() => setActiveTab('review')} style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+            <MessageSquare size={14} /> Leave a Review
           </button>
           {isAdmin && (
             <button className="rp-tab" onClick={() => navigate('/admin')} style={{ color: '#FB923C' }}>
@@ -346,6 +396,98 @@ const RebrandProfile = () => {
                 Sign Out
               </button>
             </div>
+          </div>
+        )}
+
+        {activeTab === 'review' && (
+          <div style={{ maxWidth: 560 }}>
+            {myReview ? (
+              <div style={{ background: '#fff', border: '1px solid #e5e7eb', borderRadius: 12, padding: '1.5rem' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.75rem' }}>
+                  <MessageSquare size={18} style={{ color: '#6b7280' }} />
+                  <span style={{ fontWeight: 700, fontSize: '1rem', color: '#111827' }}>Your Review</span>
+                  <span style={{
+                    marginLeft: 'auto', fontSize: '0.72rem', fontWeight: 700, padding: '0.2rem 0.65rem',
+                    borderRadius: 20, textTransform: 'uppercase',
+                    background: myReview.status === 'approved' ? '#d1fae5' : '#fef3c7',
+                    color: myReview.status === 'approved' ? '#059669' : '#b45309'
+                  }}>
+                    {myReview.status === 'approved' ? '✅ Published' : '⏳ Pending approval'}
+                  </span>
+                </div>
+                <div style={{ display: 'flex', gap: '2px', marginBottom: '0.75rem' }}>
+                  {[1,2,3,4,5].map(s => <Star key={s} size={16} fill={s <= myReview.rating ? '#FBBF24' : 'none'} stroke={s <= myReview.rating ? '#FBBF24' : '#d1d5db'} />)}
+                </div>
+                <p style={{ color: '#374151', fontSize: '0.92rem', lineHeight: 1.6, margin: '0 0 0.5rem' }}>"{myReview.content}"</p>
+                {myReview.status === 'pending' && (
+                  <p style={{ color: '#9ca3af', fontSize: '0.78rem', margin: 0 }}>Your review is under review and will be published soon.</p>
+                )}
+              </div>
+            ) : (
+              <div style={{ background: '#fff', border: '1px solid #e5e7eb', borderRadius: 12, padding: '1.5rem' }}>
+                <h2 style={{ fontSize: '1.1rem', fontWeight: 700, color: '#111827', margin: '0 0 0.35rem' }}>Share Your Experience</h2>
+                <p style={{ color: '#6b7280', fontSize: '0.85rem', margin: '0 0 1.25rem' }}>Your feedback helps other customers and gets published on our homepage after approval.</p>
+
+                {reviewMsg && (
+                  <div style={{
+                    padding: '0.75rem 1rem', borderRadius: 8, marginBottom: '1rem', fontSize: '0.85rem',
+                    background: reviewMsg.type === 'success' ? '#d1fae5' : '#fee2e2',
+                    color: reviewMsg.type === 'success' ? '#065f46' : '#991b1b',
+                    border: `1px solid ${reviewMsg.type === 'success' ? '#6ee7b7' : '#fca5a5'}`
+                  }}>
+                    {reviewMsg.text}
+                  </div>
+                )}
+
+                <form onSubmit={handleSubmitReview} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                  {/* Star rating */}
+                  <div>
+                    <div style={{ fontSize: '0.75rem', color: '#9ca3af', fontWeight: 600, textTransform: 'uppercase', marginBottom: '0.5rem' }}>Rating</div>
+                    <div style={{ display: 'flex', gap: '0.35rem' }}>
+                      {[1,2,3,4,5].map(s => (
+                        <button key={s} type="button"
+                          onClick={() => setReviewForm(f => ({ ...f, rating: s }))}
+                          style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '2px' }}>
+                          <Star size={28} fill={s <= reviewForm.rating ? '#FBBF24' : 'none'} stroke={s <= reviewForm.rating ? '#FBBF24' : '#d1d5db'} style={{ transition: 'all 0.15s' }} />
+                        </button>
+                      ))}
+                      <span style={{ marginLeft: '0.5rem', color: '#374151', fontSize: '0.9rem', alignSelf: 'center', fontWeight: 600 }}>
+                        {['', 'Poor', 'Fair', 'Good', 'Very Good', 'Excellent'][reviewForm.rating]}
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Review text */}
+                  <div>
+                    <label style={{ fontSize: '0.75rem', color: '#9ca3af', fontWeight: 600, textTransform: 'uppercase', display: 'block', marginBottom: '0.5rem' }}>Your Review *</label>
+                    <textarea
+                      className="rp-input"
+                      rows={4}
+                      value={reviewForm.content}
+                      onChange={e => setReviewForm(f => ({ ...f, content: e.target.value }))}
+                      placeholder="Tell us about your experience with our products and service..."
+                      style={{ resize: 'vertical', fontFamily: 'inherit' }}
+                      required
+                    />
+                  </div>
+
+                  {/* City (optional) */}
+                  <div>
+                    <label style={{ fontSize: '0.75rem', color: '#9ca3af', fontWeight: 600, textTransform: 'uppercase', display: 'block', marginBottom: '0.5rem' }}>Your City (optional)</label>
+                    <input
+                      className="rp-input"
+                      value={reviewForm.location}
+                      onChange={e => setReviewForm(f => ({ ...f, location: e.target.value }))}
+                      placeholder="e.g. Calgary, AB"
+                    />
+                  </div>
+
+                  <button type="submit" className="rp-btn-primary" disabled={reviewSaving} style={{ alignSelf: 'flex-start', padding: '0.7rem 1.75rem', fontSize: '0.9rem' }}>
+                    {reviewSaving ? 'Sending...' : 'Submit Review 🙏'}
+                  </button>
+                </form>
+              </div>
+            )}
           </div>
         )}
 

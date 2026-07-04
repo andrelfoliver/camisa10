@@ -5208,9 +5208,53 @@ const DepoimentosSection = ({ showToast }) => {
         </div>
       )}
 
+      {/* Depoimentos pendentes de aprovação (enviados por clientes) */}
+      {(() => {
+        const pendentes = depoimentos.filter(d => d.status === 'pending');
+        if (pendentes.length === 0) return null;
+        return (
+          <div style={{ marginBottom: '1.5rem', background: 'rgba(251,191,36,0.08)', border: '1px solid rgba(251,191,36,0.25)', borderRadius: '12px', padding: '1.25rem' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', marginBottom: '1rem' }}>
+              <span style={{ fontSize: '1rem' }}>⏳</span>
+              <span style={{ color: '#FBBF24', fontWeight: 700, fontSize: '0.95rem' }}>
+                {pendentes.length} depoimento{pendentes.length > 1 ? 's' : ''} aguardando aprovação
+              </span>
+            </div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+              {pendentes.map(d => (
+                <div key={d.id} style={{ background: '#1A1D20', borderRadius: '10px', padding: '1rem', display: 'flex', gap: '1rem', alignItems: 'flex-start' }}>
+                  <div style={{ width: '36px', height: '36px', borderRadius: '50%', background: 'rgba(214,255,0,0.12)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                    <span style={{ fontSize: '1rem', fontWeight: 700, color: '#D6FF00' }}>{(d.name || '?')[0].toUpperCase()}</span>
+                  </div>
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.3rem' }}>
+                      <span style={{ fontWeight: 700, fontSize: '0.875rem', color: '#fff' }}>{d.name}</span>
+                      {d.location && <span style={{ fontSize: '0.75rem', color: 'rgba(255,255,255,0.4)' }}>• {d.location}</span>}
+                      <div style={{ display: 'flex', gap: '1px', marginLeft: 'auto' }}>
+                        {[1,2,3,4,5].map(s => <Star key={s} size={11} fill={s <= (d.rating || 5) ? '#FBBF24' : 'none'} color={s <= (d.rating || 5) ? '#FBBF24' : 'rgba(255,255,255,0.2)'} />)}
+                      </div>
+                    </div>
+                    <p style={{ margin: '0 0 0.6rem', fontSize: '0.85rem', color: 'rgba(255,255,255,0.7)', fontStyle: 'italic', lineHeight: 1.5 }}>"{d.content}"</p>
+                    <div style={{ display: 'flex', gap: '0.5rem' }}>
+                      <button onClick={() => handleToggleStatus(d)} style={{ background: 'rgba(34,197,94,0.15)', border: '1px solid rgba(34,197,94,0.3)', color: '#4ADE80', borderRadius: '8px', padding: '0.35rem 0.9rem', fontSize: '0.78rem', fontWeight: 700, cursor: 'pointer' }}>
+                        ✓ Publicar
+                      </button>
+                      <button onClick={() => handleDelete(d.id)} style={{ background: 'rgba(248,113,113,0.1)', border: '1px solid rgba(248,113,113,0.2)', color: '#F87171', borderRadius: '8px', padding: '0.35rem 0.9rem', fontSize: '0.78rem', fontWeight: 700, cursor: 'pointer' }}>
+                        ✕ Rejeitar
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        );
+      })()}
+
       {loading ? <Loader /> : (
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: '1rem' }}>
-          {depoimentos.map(d => (
+          {depoimentos.filter(d => d.status !== 'pending').map(d => (
+
             <div key={d.id} style={{ ...S.card, position: 'relative' }}>
               <div style={{ position: 'absolute', top: '1rem', right: '1rem', display: 'flex', gap: '0.4rem' }}>
                 <button
