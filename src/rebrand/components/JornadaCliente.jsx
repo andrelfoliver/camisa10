@@ -130,23 +130,23 @@ function processSession(sessionId, events, userMap) {
   const lastMs = new Date(last.created_at).getTime();
   const duration = isNaN(firstMs) || isNaN(lastMs) ? 0 : (lastMs - firstMs) / 1000;
 
-  // Attribution (from any event that has it)
-  const attrEvent = sorted.find(e => e.utm_source || e.fbclid || e.gclid) || first;
+  // Atribuição (lê das colunas do banco e do payload JSON de metadata)
+  const attrEvent = sorted.find(e => e.utm_source || e.metadata?.fbclid || e.metadata?.gclid || e.metadata?.utm_source) || first;
   const sessionAttrs = {
-    utm_source: attrEvent.utm_source,
-    utm_medium: attrEvent.utm_medium,
-    utm_campaign: attrEvent.utm_campaign,
-    utm_content: attrEvent.utm_content,
-    utm_term: attrEvent.utm_term,
-    fbclid: attrEvent.fbclid,
-    gclid: attrEvent.gclid,
-    referrer: attrEvent.referrer || attrEvent.metadata?.referrer,
-    landing_page: attrEvent.landing_page || attrEvent.first_page || attrEvent.metadata?.landing_page,
-    device: attrEvent.device || attrEvent.metadata?.device,
-    browser: attrEvent.browser || attrEvent.metadata?.browser,
-    country: attrEvent.country || attrEvent.metadata?.country,
-    province: attrEvent.province || attrEvent.metadata?.province,
-    city: attrEvent.city || attrEvent.metadata?.city,
+    utm_source: attrEvent.utm_source || attrEvent.metadata?.utm_source,
+    utm_medium: attrEvent.utm_medium || attrEvent.metadata?.utm_medium,
+    utm_campaign: attrEvent.utm_campaign || attrEvent.metadata?.utm_campaign,
+    utm_content: attrEvent.utm_content || attrEvent.metadata?.utm_content,
+    utm_term: attrEvent.utm_term || attrEvent.metadata?.utm_term,
+    fbclid: attrEvent.metadata?.fbclid,
+    gclid: attrEvent.metadata?.gclid,
+    referrer: attrEvent.metadata?.referrer || attrEvent.metadata?.landing_page_referrer,
+    landing_page: attrEvent.metadata?.landing_page || attrEvent.metadata?.first_page || attrEvent.page,
+    device: attrEvent.metadata?.device,
+    browser: attrEvent.metadata?.browser,
+    country: attrEvent.metadata?.country,
+    province: attrEvent.metadata?.province,
+    city: attrEvent.metadata?.city,
   };
 
   const eventNames = new Set(sorted.map(e => (e.event_name || '').toLowerCase()));
@@ -292,10 +292,10 @@ const JornadaCliente = ({ showToast }) => {
       sinceStr = since.toISOString();
     }
 
-    // Fetch events
+    // Fetch events (seleciona apenas colunas reais da tabela para evitar erro 42703)
     const { data: evts, error } = await supabase
       .from('analytics_events')
-      .select('event_name, session_id, page, metadata, user_id, created_at, utm_source, utm_medium, utm_campaign, utm_content, utm_term, fbclid, gclid, landing_page, referrer, first_page, device, browser, country, province, city, product_id')
+      .select('event_name, session_id, page, metadata, user_id, created_at, utm_source, utm_medium, utm_campaign, utm_content, utm_term, product_id')
       .gte('created_at', sinceStr)
       .order('created_at', { ascending: false })
       .limit(2000);
@@ -567,7 +567,7 @@ const JornadaCliente = ({ showToast }) => {
               ['Dispositivo', sess.device],
               ['Localização', [sess.city, sess.province].filter(Boolean).join(', ')],
             ].filter(([, v]) => v).map(([k, v]) => (
-              <div key={k} style={{ background: '#121416', borderRadius: 6, padding: '0.4rem 0.65rem' }}>
+              <div key={k} style={{ background: '#121416', borderRadius: 6, padding: '0.4rem 0.65rem', minWidth: 0 }}>
                 <div style={{ fontSize: '0.62rem', color: '#6B7280', fontWeight: 700, textTransform: 'uppercase' }}>{k}</div>
                 <div style={{ fontSize: '0.78rem', color: '#D1D5DB', marginTop: '0.1rem', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{v}</div>
               </div>
@@ -627,7 +627,7 @@ const JornadaCliente = ({ showToast }) => {
                           <div style={{ color: '#9CA3AF', fontSize: '0.7rem', marginTop: '0.1rem' }}>👕 {e.metadata.content_name}</div>
                         )}
                         {!e.metadata?.content_name && pg && (
-                          <div style={{ color: '#6B7280', fontSize: '0.7rem', marginTop: '0.1rem' }}>{fmtPage(pg)}</div>
+                          <div style={{ color: '#6B7280', fontSize: '0.7rem', marginTop: '0.1rem', wordBreak: 'break-all' }}>{fmtPage(pg)}</div>
                         )}
                         {e.metadata?.value > 0 && (
                           <div style={{ color: '#4ADE80', fontSize: '0.7rem' }}>CAD ${parseFloat(e.metadata.value).toFixed(2)}</div>
@@ -820,7 +820,7 @@ const JornadaCliente = ({ showToast }) => {
               <div style={{ fontSize: '0.82rem' }}>{search ? 'Tente ajustar os filtros de busca' : 'Sem dados para o período selecionado'}</div>
             </div>
           ) : (
-            <div style={{ display: 'grid', gridTemplateColumns: selectedSession ? '1fr 1fr' : '1fr', gap: '1.25rem', alignItems: 'start' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: selectedSession ? 'minmax(0, 1.2fr) minmax(0, 1fr)' : '1fr', gap: '1.25rem', alignItems: 'start' }}>
               {/* Session list */}
               <div>
                 <div style={{ fontSize: '0.72rem', color: '#4B5563', marginBottom: '0.5rem' }}>
