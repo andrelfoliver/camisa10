@@ -69,6 +69,22 @@ const RebrandProfile = () => {
     if (error) {
       setReviewMsg({ type: 'error', text: 'Error sending review. Please try again.' });
     } else {
+      // Notificar o gestor por email
+      try {
+        await fetch('/api/notify-testimonial', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            name: payload.name,
+            content: payload.content,
+            rating: payload.rating,
+            location: payload.location || 'Canada',
+            userEmail: user.email,
+          }),
+        });
+      } catch (notifyErr) {
+        console.error('[Profile] Erro ao notificar gestor:', notifyErr);
+      }
       setReviewMsg({ type: 'success', text: 'Thank you! Your review has been submitted for approval and will appear on the website soon. 🙏' });
       setReviewForm({ rating: 5, content: '', location: '' });
       loadMyReview();
