@@ -9,9 +9,9 @@ const SEO = ({
   url = 'https://ifooty.ca',
   type = 'website'
 }) => {
-  const siteTitle = title ? `${title} | iFooty` : 'iFooty | Especialista em Camisas de Futebol no Canadá 🇨🇦';
-  const siteDescription = description || 'iFooty, a sua conexão com o futebol no Canadá. Encontre mantos sagrados com qualidade premium, envio rápido para todo o país e atendimento personalizado para brasileiros e apaixonados por futebol!';
-  const siteKeywords = keywords || 'camisas de futebol canadá, futebol canadá, camisa flamengo canadá, camisa seleção brasileira canadá, camisas de time, jerseys canada';
+  const siteTitle = title ? `${title} | iFooty` : 'iFooty | Premium Sports Jerseys in Canada 🇨🇦';
+  const siteDescription = description || 'Premium sports jerseys in Canada. Fast shipping across Canada & USA. Find NHL, NFL, NBA, soccer, and retro jerseys with premium quality.';
+  const siteKeywords = keywords || 'sports jerseys canada, soccer jerseys canada, nhl jerseys canada, nfl jerseys canada, nba jerseys canada, soccer store canada, retro jerseys canada';
 
   return (
     <Helmet>

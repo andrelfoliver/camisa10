@@ -52,8 +52,8 @@ export default async function handler(req, res) {
         <!DOCTYPE html>
         <html>
           <head>
-            <meta property="og:title" content="iFooty | Especialistas em Camisas de Futebol">
-            <meta property="og:description" content="A sua loja de camisas de futebol brasileiras, europeias e retrô no Canadá.">
+            <meta property="og:title" content="iFooty | Premium Sports Jerseys">
+            <meta property="og:description" content="Your premium sports jersey store in Canada. NHL, NFL, NBA, soccer, and retro jerseys.">
             <meta property="og:image" content="${defaultImage}">
             <meta property="og:url" content="${baseUrl}/produto/${id}">
             <meta http-equiv="refresh" content="0;url=${baseUrl}/produto/${id}">
@@ -64,7 +64,7 @@ export default async function handler(req, res) {
     }
 
     const title = `${product.name} | iFooty`.replace(/"/g, '&quot;');
-    const description = `${product.category || 'Catálogo'} - ${product.description || 'Qualidade premium e envio rápido para todo o Canadá.'}`.replace(/"/g, '&quot;');
+    const description = `${product.category || 'Catalog'} - ${product.description || 'Premium quality and fast shipping across Canada & the USA.'}`.replace(/"/g, '&quot;');
     let imageUrl = product.image;
     let isVideo = imageUrl && imageUrl.toLowerCase().endsWith('.mp4');
 
@@ -105,7 +105,7 @@ export default async function handler(req, res) {
 
     return res.status(200).send(`
       <!DOCTYPE html>
-      <html lang="pt-BR">
+      <html lang="en">
         <head>
           <meta charset="UTF-8">
           ${debugInfo}
