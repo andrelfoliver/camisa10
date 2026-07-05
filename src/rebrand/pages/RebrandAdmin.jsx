@@ -1463,7 +1463,17 @@ const OrdersSection = ({ showToast, onOpenTracking }) => {
                       <td style={S.td}><span style={S.badge(o.status)}>{STATUS_COLORS[o.status]?.label || o.status}</span></td>
                       <td style={{ ...S.td }} onClick={e => e.stopPropagation()}>
                         <div style={{ display: 'flex', gap: '0.5rem' }}>
-                          <button style={S.btnEdit} onClick={() => setSelectedOrder(o)}><Eye size={14} /></button>
+                          {o.tracking_number ? (
+                            <button
+                              title={`Rastrear: ${o.tracking_number.split(/[,;\s]+/)[0]}`}
+                              style={{ ...S.btnEdit, background: 'rgba(214,255,0,0.1)', border: '1px solid rgba(214,255,0,0.3)', color: '#D6FF00' }}
+                              onClick={() => onOpenTracking && onOpenTracking(o.tracking_number.split(/[,;\s]+/).map(s => s.trim()).filter(Boolean)[0])}
+                            >
+                              <Truck size={14} />
+                            </button>
+                          ) : (
+                            <button style={S.btnEdit} onClick={() => setSelectedOrder(o)}><Eye size={14} /></button>
+                          )}
                           <select
                             value={o.status}
                             onChange={e => { e.stopPropagation(); handleStatusChange(o.id, e.target.value); }}
