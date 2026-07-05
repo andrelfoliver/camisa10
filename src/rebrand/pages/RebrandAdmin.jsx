@@ -4128,8 +4128,36 @@ const ClientesSection = ({ showToast }) => {
     }
     const discountText = step === 2 ? ' + 5% OFF' : '';
     if (showToast) showToast(`Disparando ${step}º E-mail de Recuperação${discountText} para ${customer.email}...`, "success");
-    
-    setTimeout(async () => {
+
+    try {
+      const cartItems = (customer.cart || []).map(item => ({
+        name: item.name || item.product_name || 'Produto',
+        size: item.size || item.selectedSize || '—',
+        quantity: item.quantity || 1,
+        price: parseFloat(item.price) || 0,
+        image: item.image || item.image_url || '',
+      }));
+
+      const res = await fetch('/api/send-abandoned-cart-email', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          customerName: customer.name || customer.full_name || 'Cliente',
+          customerEmail: customer.email,
+          cartItems,
+          emailType: step,
+        }),
+      });
+
+      const json = await res.json();
+
+      if (!res.ok || json.error) {
+        console.error('[AbandonedCart] Resend error:', json.error);
+        if (showToast) showToast(`Erro ao enviar e-mail: ${json.error?.message || json.error || 'Desconhecido'}`, "error");
+        return;
+      }
+
+      // Atualiza status no banco somente após confirmação do Resend
       const nowStr = getCalgaryDateStr(new Date());
       if (step === 2) {
         const newSent = { ...sentRecoveryEmails2, [customer.id]: nowStr };
@@ -4140,8 +4168,11 @@ const ClientesSection = ({ showToast }) => {
         setSentRecoveryEmails(newSent);
         await saveSentRecoveryEmailsToDb(newSent, 1);
       }
-      if (showToast) showToast(`E-mail enviado e status atualizado!`, "success");
-    }, 1000);
+      if (showToast) showToast(`✅ E-mail enviado com sucesso para ${customer.email}!`, "success");
+    } catch (err) {
+      console.error('[AbandonedCart] Fetch error:', err);
+      if (showToast) showToast(`Erro de conexão ao disparar e-mail: ${err.message}`, "error");
+    }
   };
 
   const toggleRecoveryEmailStatus = async (customer, step = 1) => {
