@@ -33,53 +33,53 @@ export default async function handler(req, res) {
   const isSecondEmail = Number(emailType) === 2;
 
   const subject = isSecondEmail 
-    ? 'Última chance! Seu carrinho na iFooty está quase expirando ⏳🚨'
-    : 'Esqueceu alguma coisa na sua sacola? 🛒⚽';
+    ? 'Last chance! Your iFooty cart is about to expire ⏳🚨'
+    : 'Did you forget something in your cart? 🛒⚽';
 
   const subtitle = isSecondEmail
-    ? 'O tempo está acabando!'
-    : 'Esqueceu algo na sacola?';
+    ? 'Time is running out!'
+    : 'You left something behind!';
 
   const emailBody = `
-        <p style="color: #4a5568; line-height: 1.6; font-size: 1.05rem; margin-top: 0;">Olá, <strong>${firstName}</strong>!</p>
-        <p style="color: #4a5568; line-height: 1.6; font-size: 1.05rem;">Notamos que você visitou a iFooty e deixou alguns itens selecionados no seu carrinho de compras.</p>
-        <p style="color: #4a5568; line-height: 1.6; font-size: 1.05rem;">Como o estoque de nossos mantos premium é limitado e a demanda é alta, salvamos os seus itens abaixo para que você não os perca:</p>
+        <p style="color: #4a5568; line-height: 1.6; font-size: 1.05rem; margin-top: 0;">Hi, <strong>${firstName}</strong>!</p>
+        <p style="color: #4a5568; line-height: 1.6; font-size: 1.05rem;">We noticed you visited iFooty and left some items selected in your cart.</p>
+        <p style="color: #4a5568; line-height: 1.6; font-size: 1.05rem;">Since our premium jersey stock is limited and demand is high, we saved your items below so you don't miss out:</p>
         
         <div style="margin: 25px 0; border: 1px solid #edf2f7; border-radius: 8px; overflow: hidden;">
           ${cartItemsHtml}
         </div>
         
-        <p style="color: #4a5568; line-height: 1.6; font-size: 1.05rem;">Aproveite para garantir o seu manto oficial com <strong>frete grátis para todo o Canadá e EUA</strong>! 🇨🇦🇺🇸</p>
+        <p style="color: #4a5568; line-height: 1.6; font-size: 1.05rem;">Take advantage of <strong>free shipping across Canada and the USA</strong>! 🇨🇦🇺🇸</p>
         
         <div style="text-align: center; margin: 35px 0 25px 0;">
-          <a href="https://ifooty.ca" style="background-color: #CCFF00; color: #000000; padding: 14px 35px; border-radius: 6px; font-weight: 900; text-decoration: none; display: inline-block; font-size: 1.05rem; text-transform: uppercase; letter-spacing: 0.5px; box-shadow: 0 4px 15px rgba(204, 255, 0, 0.3);">Concluir Minha Compra</a>
+          <a href="https://ifooty.ca" style="background-color: #CCFF00; color: #000000; padding: 14px 35px; border-radius: 6px; font-weight: 900; text-decoration: none; display: inline-block; font-size: 1.05rem; text-transform: uppercase; letter-spacing: 0.5px; box-shadow: 0 4px 15px rgba(204, 255, 0, 0.3);">Complete My Order</a>
         </div>
       `;
 
   const htmlTemplate = isSecondEmail
     ? `
         <div style="font-family: Arial, sans-serif; font-size: 15px; color: #333333; line-height: 1.6; max-width: 600px; margin: 0 auto; padding: 10px;">
-          <p>Olá, ${firstName}. Tudo bem?</p>
+          <p>Hi ${firstName}, how are you?</p>
           
-          <p>Aqui é o Oliver da iFooty.</p>
+          <p>This is Oliver from iFooty.</p>
           
-          <p>Notei aqui no sistema que você deixou alguns itens selecionados no seu carrinho de compras e acabei passando para ver se você ficou com alguma dúvida sobre o tamanho das camisas, estoque ou sobre a entrega.</p>
+          <p>I noticed in our system that you left some items selected in your cart and wanted to reach out in case you had any questions about sizing, stock availability, or shipping.</p>
           
-          <p>Como o nosso estoque de mantos aqui no Canadá é super limitado e a procura é alta, eu não consigo segurar a reserva dos seus itens por muito mais tempo. Mas para te dar um empurrãozinho final e te ajudar a garantir os seus mantos, consegui liberar uma condição especial para você:</p>
+          <p>Our jersey stock here in Canada is very limited and demand is high — I can't hold the reservation on your items for much longer. But to give you a final nudge and help you secure your jerseys, I managed to unlock a special deal for you:</p>
           
-          <p>Use o cupom <strong>IFOOTY5</strong> no checkout para ganhar <strong>5% de Desconto Extra</strong> + <strong>Frete Grátis</strong> para todo o Canadá e EUA! 🇨🇦🇺🇸</p>
+          <p>Use coupon <strong>IFOOTY5</strong> at checkout to get <strong>5% Extra Discount</strong> + <strong>Free Shipping</strong> across Canada and the USA! 🇨🇦🇺🇸</p>
           
-          <p>Você pode ver os itens da sua sacola e concluir a compra clicando no link abaixo:<br/>
+          <p>You can view your cart and complete the purchase by clicking the link below:<br/>
           <a href="https://ifooty.ca" style="color: #0066cc; text-decoration: underline; font-weight: bold;">https://ifooty.ca</a></p>
           
-          <p>Se preferir fazer o pedido diretamente por aqui via Interac e-Transfer ou se tiver qualquer dúvida sobre as camisas, basta responder a este e-mail que eu te ajudo na hora.</p>
+          <p>If you prefer to place the order directly via Interac e-Transfer, or if you have any questions about the jerseys, just reply to this email and I'll help you right away.</p>
           
           <p style="margin-top: 25px; border-top: 1px solid #edf2f7; padding-top: 20px; color: #718096; font-size: 0.9rem;">
-            Qualquer dúvida sobre as formas de pagamento (aceitamos Interac e-Transfer e PayPal), basta me chamar.
+            Any questions about payment methods (we accept Interac e-Transfer and PayPal), just reach out.
           </p>
           
-          <p style="margin-top: 20px;">Abraços,<br/>
-          <strong>Oliver | Suporte iFooty</strong></p>
+          <p style="margin-top: 20px;">Best,<br/>
+          <strong>Oliver | iFooty Support</strong></p>
         </div>
       `
     : `
@@ -94,13 +94,13 @@ export default async function handler(req, res) {
       <div style="padding: 35px 30px; background: #ffffff;">
         ${emailBody}
         
-        <p style="color: #718096; line-height: 1.6; font-size: 0.95rem; margin-top: 25px; border-top: 1px solid #f7fafc; padding-top: 20px;">Qualquer dúvida sobre o pagamento (aceitamos Interac e-Transfer e PayPal) ou sobre o frete, basta responder a este e-mail ou falar conosco diretamente pelo WhatsApp.</p>
-        <p style="color: #4a5568; line-height: 1.6; font-size: 1.05rem; margin-top: 20px; margin-bottom: 0;">Abraços,<br/><strong>Equipe iFooty</strong></p>
+        <p style="color: #718096; line-height: 1.6; font-size: 0.95rem; margin-top: 25px; border-top: 1px solid #f7fafc; padding-top: 20px;">Any questions about payment (we accept Interac e-Transfer and PayPal) or shipping, feel free to reply to this email or message us directly on WhatsApp.</p>
+        <p style="color: #4a5568; line-height: 1.6; font-size: 1.05rem; margin-top: 20px; margin-bottom: 0;">Best regards,<br/><strong>iFooty Team</strong></p>
       </div>
       
       <div style="padding: 20px; background: #f7fafc; text-align: center; color: #a0aec0; font-size: 0.8rem; border-top: 1px solid #edf2f7;">
-        <p>© ${new Date().getFullYear()} iFooty Store Canada. Vestindo a paixão brasileira no Canadá.</p>
-        <p>Se você não iniciou esta sacola, pode desconsiderar este e-mail.</p>
+        <p>© ${new Date().getFullYear()} iFooty Store Canada. Bringing Brazilian passion to Canada.</p>
+        <p>If you didn't add items to a cart, you can safely ignore this email.</p>
       </div>
     </div>
   `;
