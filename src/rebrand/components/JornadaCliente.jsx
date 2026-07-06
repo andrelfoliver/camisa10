@@ -40,7 +40,10 @@ function fmtDuration(seconds) {
 
 function fmtPage(p) {
   if (!p) return 'Home';
-  return p.replace(/^\//, '').replace(/\/produto\//, 'produto: ').replace(/\/colecao\//, 'cat: ').replace(/\/product\//, 'produto: ') || 'Home';
+  // Strip query string and hash — keeps only the clean path
+  const clean = p.split('?')[0].split('#')[0];
+  if (!clean || clean === '/') return 'Home';
+  return clean.replace(/^\//, '').replace(/\/produto\//, 'produto: ').replace(/\/colecao\//, 'cat: ').replace(/\/product\//, 'produto: ').replace(/\/rebrand/, '') || 'Home';
 }
 
 // ─── Source detection ──────────────────────────────────────────────────────────
@@ -575,7 +578,7 @@ const JornadaCliente = ({ showToast }) => {
       border: selected ? '1px solid #D6FF00' : '1px solid #2A2D31',
       borderRadius: 10, padding: '1rem',
       cursor: 'pointer', transition: 'all 0.15s',
-      marginBottom: '0.5rem'
+      marginBottom: '0.5rem', overflow: 'hidden', minWidth: 0
     }),
     badge: (color, bg) => ({
       display: 'inline-flex', alignItems: 'center', gap: '0.25rem',
@@ -845,14 +848,14 @@ const JornadaCliente = ({ showToast }) => {
         </div>
 
         {/* Row 4: Last page + landing page */}
-        <div style={{ marginTop: '0.4rem', display: 'flex', flexDirection: 'column', gap: '0.2rem' }}>
+        <div style={{ marginTop: '0.4rem', display: 'flex', flexDirection: 'column', gap: '0.2rem', minWidth: 0, overflow: 'hidden' }}>
           {sess.lastPage && sess.lastPage !== sess.landing_page && (
-            <div style={{ fontSize: '0.7rem', color: '#EF4444', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+            <div style={{ fontSize: '0.7rem', color: '#EF4444', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: '100%' }}>
               🚪 Saiu em: {fmtPage(sess.lastPage)}
             </div>
           )}
           {sess.landing_page && (
-            <div style={{ fontSize: '0.7rem', color: '#6B7280', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+            <div style={{ fontSize: '0.7rem', color: '#6B7280', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: '100%' }}>
               🔗 {fmtPage(sess.landing_page)}
             </div>
           )}
