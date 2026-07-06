@@ -1293,8 +1293,31 @@ const OrderDetailModal = ({ order, onClose, onStatusChange, onTrackingChange, sh
 
   return (
     <div style={S.modal} onClick={e => e.target === e.currentTarget && onClose()}>
-      <div style={{ ...S.modalBox, maxWidth: '850px' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '1.5rem' }}>
+      <div style={{ ...S.modalBox, maxWidth: '850px', position: 'relative' }}>
+        <button
+          onClick={onClose}
+          style={{
+            position: 'absolute',
+            top: '1.25rem',
+            right: '1.25rem',
+            background: 'none',
+            border: 'none',
+            color: 'rgba(255,255,255,0.5)',
+            cursor: 'pointer',
+            padding: '0.3rem',
+            borderRadius: '50%',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            transition: 'color 0.15s, background-color 0.15s'
+          }}
+          onMouseEnter={e => { e.currentTarget.style.color = '#fff'; e.currentTarget.style.background = 'rgba(255,255,255,0.08)'; }}
+          onMouseLeave={e => { e.currentTarget.style.color = 'rgba(255,255,255,0.5)'; e.currentTarget.style.background = 'none'; }}
+        >
+          <X size={20} />
+        </button>
+
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '1.5rem', paddingRight: '2.5rem' }}>
           <div>
             <div style={{ fontSize: '0.72rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em', color: 'rgba(255,255,255,0.35)', marginBottom: '0.25rem' }}>Pedido</div>
             <h3 style={{ margin: 0, fontWeight: 700, fontFamily: 'monospace', fontSize: '1.1rem' }}>#{order.id}</h3>
@@ -1368,7 +1391,6 @@ const OrderDetailModal = ({ order, onClose, onStatusChange, onTrackingChange, sh
               </button>
             )}
             <span style={S.badge(order.status)}>{STATUS_COLORS[order.status]?.label || order.status}</span>
-            <button style={{ background: 'none', border: 'none', color: 'rgba(255,255,255,0.5)', cursor: 'pointer' }} onClick={onClose}><X size={20} /></button>
           </div>
         </div>
 
