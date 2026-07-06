@@ -311,6 +311,15 @@ const RebrandCheckout = () => {
     } catch (err) { orderError = err; }
     if (orderError) throw orderError;
     const orderId = insertedOrders?.[0]?.id || ('purchase_' + Date.now());
+    // ✅ Pedido salvo com sucesso — limpar snapshot do carrinho
+    try {
+      localStorage.removeItem('ifooty_checkout_snapshot');
+      const snapshotId = sessionStorage.getItem('ifooty_snapshot_id');
+      if (snapshotId) {
+        await supabase.from('checkout_snapshots').update({ status: 'recovered', recovered_at: new Date().toISOString() }).eq('id', snapshotId);
+        sessionStorage.removeItem('ifooty_snapshot_id');
+      }
+    } catch {}
     trackEvent('Purchase', {
       value: finalTotal, currency: 'CAD',
       num_items: cartItems.reduce((acc, i) => acc + i.quantity, 0),
@@ -343,6 +352,50 @@ const RebrandCheckout = () => {
       } catch {}
     }
     return insertedOrders?.[0] || orderData;
+  };
+
+  // 💾 Salva snapshot do carrinho antes do pagamento (previne perda de customizações)
+  const saveCartSnapshot = async (paypalOrderId = null) => {
+    const data = formDataRef.current;
+    const snapshot = {
+      timestamp: Date.now(),
+      items: cartItems,
+      form_data: {
+        name: data.name,
+        email: user?.email || guestEmail,
+        phone: data.phone,
+        deliveryMethod: data.deliveryMethod,
+        street: data.street,
+        addressNumber: data.addressNumber,
+        apartment: data.apartment,
+        district: data.district,
+        city: data.city,
+        province: data.province,
+        postalCode: data.postalCode,
+        country: data.country,
+        instructions: data.instructions,
+      },
+      payment_method: paymentMethod,
+      total_price: finalTotal,
+      paypal_order_id: paypalOrderId,
+      applied_coupon: appliedCoupon || null,
+    };
+    // Salvar no localStorage (backup imediato no browser)
+    localStorage.setItem('ifooty_checkout_snapshot', JSON.stringify(snapshot));
+    // Salvar no Supabase (recuperação pelo admin se o pedido falhar)
+    try {
+      const { data: inserted } = await supabase.from('checkout_snapshots').insert([{
+        session_id: localStorage.getItem('ifooty_session_id') || null,
+        visitor_id: getSavedAttribution().visitor_id || null,
+        items: cartItems,
+        form_data: snapshot.form_data,
+        total_price: finalTotal,
+        payment_method: paymentMethod,
+        paypal_order_id: paypalOrderId,
+        status: 'pending'
+      }]).select().single();
+      if (inserted?.id) sessionStorage.setItem('ifooty_snapshot_id', inserted.id);
+    } catch {}
   };
 
   const handleSubmitOrder = async () => {
@@ -392,6 +445,8 @@ const RebrandCheckout = () => {
 
   const handlePaypalApprove = async (actions) => {
     if (!validateForm()) { showPopup('Please fill all required address fields before completing payment.'); return; }
+    // 💾 Salva snapshot ANTES de capturar pagamento
+    await saveCartSnapshot(actions?.order?.id || null);
     const details = await actions.order.capture();
     setIsSubmitting(true);
     try {
@@ -437,6 +492,8 @@ const RebrandCheckout = () => {
       }
 
       if (session.url) {
+        // 💾 Salva snapshot ANTES de redirecionar ao Stripe
+        await saveCartSnapshot();
         window.location.href = session.url;
       } else {
         throw new Error('No checkout URL returned from Stripe');

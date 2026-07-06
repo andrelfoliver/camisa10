@@ -7,7 +7,7 @@ import {
   LogOut, ExternalLink, ChevronUp, ChevronDown, Edit2, Trash2,
   Plus, Save, X, Check, AlertCircle, TrendingUp, Users, DollarSign, Upload,
   Clock, Search, RefreshCw, Eye, EyeOff, UserCircle, Award, MessageSquare, Star,
-  Shirt, CreditCard, Globe, Activity, Truck, CheckCircle2, XCircle, Menu, MapPin, Mail, Send
+  Shirt, CreditCard, Globe, Activity, Truck, CheckCircle2, XCircle, Menu, MapPin, Mail, Send, AlertTriangle
 } from 'lucide-react';
 import ProductMedia from '../../components/ProductMedia';
 import TrackingModal from '../../components/TrackingModal';
@@ -113,6 +113,7 @@ const NAV_ITEMS = [
   { id: 'financeiro',    label: 'Financeiro',         icon: TrendingUp },
   { id: 'cidades',       label: 'Cidades Atendidas',  icon: MapPin },
   { id: 'manual_emails', label: 'E-mails Manuais',    icon: Mail },
+  { id: 'snapshots',     label: 'Carrinhos Perdidos',  icon: AlertTriangle },
   { id: 'settings',      label: 'Configurações',      icon: Settings },
 ];
 
@@ -3197,6 +3198,186 @@ const CouponsSection = ({ showToast }) => {
 
 // ─── Manual Emails Section ────────────────────────────────────────────────────
 const BLANK_PRODUCT = { name: '', size: '', quantity: 1, price: '' };
+
+// ─── Snapshots Section ───────────────────────────────────────────────────────
+const SnapshotsSection = ({ showToast }) => {
+  const [snapshots, setSnapshots] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [expandedId, setExpandedId] = useState(null);
+
+  const load = async () => {
+    setLoading(true);
+    const { data } = await supabase
+      .from('checkout_snapshots')
+      .select('*')
+      .order('created_at', { ascending: false })
+      .limit(50);
+    setSnapshots(data || []);
+    setLoading(false);
+  };
+
+  useEffect(() => { load(); }, []);
+
+  const markRecovered = async (id) => {
+    await supabase.from('checkout_snapshots')
+      .update({ status: 'recovered', recovered_at: new Date().toISOString() })
+      .eq('id', id);
+    showToast('Marcado como recuperado', 'success');
+    load();
+  };
+
+  const deleteSnapshot = async (id) => {
+    await supabase.from('checkout_snapshots').delete().eq('id', id);
+    showToast('Snapshot removido', 'success');
+    load();
+  };
+
+  const pending = snapshots.filter(s => s.status === 'pending');
+  const recovered = snapshots.filter(s => s.status !== 'pending');
+
+  const cardStyle = {
+    background: '#1A1D20', borderRadius: '12px', padding: '1.25rem',
+    border: '1px solid #2a2d30', marginBottom: '1rem'
+  };
+
+  const badgeStyle = (color) => ({
+    display: 'inline-block', padding: '2px 10px', borderRadius: '20px',
+    fontSize: '0.72rem', fontWeight: 700, background: color + '22', color
+  });
+
+  return (
+    <div style={{ maxWidth: '900px' }}>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1.5rem' }}>
+        <div>
+          <h2 style={{ color: '#fff', fontSize: '1.4rem', fontWeight: 800, margin: 0 }}>Carrinhos Perdidos</h2>
+          <p style={{ color: 'rgba(255,255,255,0.4)', fontSize: '0.85rem', marginTop: '0.25rem' }}>
+            Snapshots do carrinho salvos antes do pagamento — use para recuperar customizações perdidas
+          </p>
+        </div>
+        <button onClick={load} style={{ background: '#2a2d30', border: 'none', color: '#fff', borderRadius: '8px', padding: '0.5rem 1rem', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.4rem', fontSize: '0.85rem' }}>
+          <RefreshCw size={14} /> Atualizar
+        </button>
+      </div>
+
+      {loading ? (
+        <div style={{ color: 'rgba(255,255,255,0.4)', textAlign: 'center', padding: '3rem' }}>Carregando...</div>
+      ) : (
+        <>
+          {/* Pendentes */}
+          <div style={{ marginBottom: '2rem' }}>
+            <h3 style={{ color: '#FBBF24', fontSize: '0.9rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+              <AlertTriangle size={14} /> Pendentes ({pending.length})
+            </h3>
+            {pending.length === 0 ? (
+              <div style={{ ...cardStyle, textAlign: 'center', color: 'rgba(255,255,255,0.3)', padding: '2rem' }}>Nenhum snapshot pendente ✅</div>
+            ) : pending.map(snap => {
+              const fd = snap.form_data || {};
+              const items = snap.items || [];
+              const isExpanded = expandedId === snap.id;
+              const hasCustom = items.some(i => i.extras?.nameNumber);
+              const ago = Math.round((Date.now() - new Date(snap.created_at).getTime()) / 60000);
+              return (
+                <div key={snap.id} style={cardStyle}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '0.75rem' }}>
+                    <div>
+                      <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center', flexWrap: 'wrap', marginBottom: '0.5rem' }}>
+                        <span style={{ color: '#fff', fontWeight: 700 }}>{fd.name || '—'}</span>
+                        <span style={{ color: 'rgba(255,255,255,0.4)', fontSize: '0.8rem' }}>{fd.email || '—'}</span>
+                        {hasCustom && <span style={badgeStyle('#D6FF00')}>✍️ Customização</span>}
+                        <span style={badgeStyle('#60A5FA')}>{snap.payment_method?.toUpperCase()}</span>
+                      </div>
+                      <div style={{ color: 'rgba(255,255,255,0.5)', fontSize: '0.8rem' }}>
+                        {ago < 60 ? `${ago} min atrás` : `${Math.round(ago/60)}h atrás`} • ${snap.total_price?.toFixed(2)} CAD • {items.length} item(s)
+                      </div>
+                    </div>
+                    <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
+                      <button onClick={() => setExpandedId(isExpanded ? null : snap.id)}
+                        style={{ background: '#2a2d30', border: 'none', color: '#fff', borderRadius: '8px', padding: '0.4rem 0.75rem', cursor: 'pointer', fontSize: '0.8rem' }}>
+                        {isExpanded ? 'Fechar' : 'Ver detalhes'}
+                      </button>
+                      <button onClick={() => markRecovered(snap.id)}
+                        style={{ background: 'rgba(74,222,128,0.15)', border: '1px solid #4ADE80', color: '#4ADE80', borderRadius: '8px', padding: '0.4rem 0.75rem', cursor: 'pointer', fontSize: '0.8rem' }}>
+                        ✓ Recuperado
+                      </button>
+                      <button onClick={() => deleteSnapshot(snap.id)}
+                        style={{ background: 'rgba(239,68,68,0.1)', border: '1px solid #F87171', color: '#F87171', borderRadius: '8px', padding: '0.4rem 0.75rem', cursor: 'pointer', fontSize: '0.8rem' }}>
+                        Excluir
+                      </button>
+                    </div>
+                  </div>
+
+                  {isExpanded && (
+                    <div style={{ marginTop: '1rem', borderTop: '1px solid #2a2d30', paddingTop: '1rem' }}>
+                      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginBottom: '1rem' }}>
+                        <div>
+                          <div style={{ color: 'rgba(255,255,255,0.4)', fontSize: '0.75rem', fontWeight: 700, textTransform: 'uppercase', marginBottom: '0.4rem' }}>Endereço</div>
+                          <div style={{ color: '#fff', fontSize: '0.85rem', lineHeight: 1.6 }}>
+                            {fd.street} {fd.addressNumber}{fd.apartment ? `, ${fd.apartment}` : ''}<br/>
+                            {fd.city}, {fd.province} {fd.postalCode}<br/>
+                            {fd.country}
+                          </div>
+                        </div>
+                        <div>
+                          <div style={{ color: 'rgba(255,255,255,0.4)', fontSize: '0.75rem', fontWeight: 700, textTransform: 'uppercase', marginBottom: '0.4rem' }}>Contato</div>
+                          <div style={{ color: '#fff', fontSize: '0.85rem', lineHeight: 1.6 }}>
+                            📧 {fd.email || '—'}<br/>
+                            📱 {fd.phone || '—'}
+                          </div>
+                        </div>
+                      </div>
+                      <div style={{ color: 'rgba(255,255,255,0.4)', fontSize: '0.75rem', fontWeight: 700, textTransform: 'uppercase', marginBottom: '0.5rem' }}>Itens do Carrinho</div>
+                      {items.map((item, idx) => (
+                        <div key={idx} style={{ background: '#121416', borderRadius: '8px', padding: '0.75rem', marginBottom: '0.5rem', display: 'flex', gap: '0.75rem', alignItems: 'center' }}>
+                          {item.image && <img src={item.image} alt={item.name} style={{ width: 48, height: 48, objectFit: 'cover', borderRadius: '6px', flexShrink: 0 }} />}
+                          <div style={{ flex: 1 }}>
+                            <div style={{ color: '#fff', fontWeight: 600, fontSize: '0.9rem' }}>{item.name}</div>
+                            <div style={{ color: 'rgba(255,255,255,0.5)', fontSize: '0.8rem' }}>Tamanho: {item.size} • Qtd: {item.quantity} • ${item.price?.toFixed(2)}</div>
+                            {item.extras?.nameNumber && (
+                              <div style={{ marginTop: '0.3rem', background: 'rgba(214,255,0,0.1)', border: '1px solid rgba(214,255,0,0.3)', borderRadius: '6px', padding: '0.3rem 0.6rem', display: 'inline-block' }}>
+                                <span style={{ color: '#D6FF00', fontWeight: 700, fontSize: '0.8rem' }}>✍️ {item.extras.customName} #{item.extras.customNumber}</span>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      ))}
+                      {snap.paypal_order_id && (
+                        <div style={{ marginTop: '0.75rem', color: 'rgba(255,255,255,0.4)', fontSize: '0.78rem' }}>
+                          PayPal Order ID: <code style={{ color: '#60A5FA' }}>{snap.paypal_order_id}</code>
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+
+          {/* Recuperados */}
+          {recovered.length > 0 && (
+            <div>
+              <h3 style={{ color: '#4ADE80', fontSize: '0.9rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '1rem' }}>
+                ✓ Recuperados ({recovered.length})
+              </h3>
+              {recovered.slice(0, 10).map(snap => (
+                <div key={snap.id} style={{ ...cardStyle, opacity: 0.6 }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '0.5rem' }}>
+                    <div style={{ color: 'rgba(255,255,255,0.6)', fontSize: '0.85rem' }}>
+                      <strong style={{ color: '#fff' }}>{snap.form_data?.name || '—'}</strong> • {snap.form_data?.email} • ${snap.total_price?.toFixed(2)}
+                    </div>
+                    <button onClick={() => deleteSnapshot(snap.id)}
+                      style={{ background: 'transparent', border: 'none', color: 'rgba(255,255,255,0.3)', cursor: 'pointer', fontSize: '0.78rem' }}>
+                      Excluir
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </>
+      )}
+    </div>
+  );
+};
 
 const ManualEmailsSection = ({ showToast, adminEmail }) => {
   const [form, setForm] = useState({
@@ -6769,6 +6950,7 @@ const RebrandAdmin = () => {
     cidades:       <CidadesSection showToast={showToast} />,
     analytics:     <AnalyticsSection showToast={showToast} />,
     manual_emails: <ManualEmailsSection showToast={showToast} adminEmail={user?.email} />,
+    snapshots:     <SnapshotsSection showToast={showToast} />,
     settings:      <SettingsSection showToast={showToast} />,
   };
 
