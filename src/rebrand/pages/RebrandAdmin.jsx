@@ -1440,6 +1440,19 @@ const OrderDetailModal = ({ order, onClose, onStatusChange, onTrackingChange, sh
                   <div style={{ flex: 1 }}>
                     <div style={{ fontWeight: 600, fontSize: '0.875rem' }}>{item.name}</div>
                     <div style={{ fontSize: '0.75rem', color: 'rgba(255,255,255,0.45)', marginTop: '0.15rem' }}>Tamanho: {item.size} · Qtd: {item.quantity}</div>
+                    {item.extras?.nameNumber && (
+                      <div style={{ marginTop: '0.35rem', display: 'inline-flex', alignItems: 'center', gap: '0.4rem', background: 'rgba(214,255,0,0.08)', border: '1px solid rgba(214,255,0,0.25)', borderRadius: '6px', padding: '0.2rem 0.6rem' }}>
+                        <span style={{ fontSize: '0.75rem' }}>✍️</span>
+                        <span style={{ color: '#D6FF00', fontWeight: 800, fontSize: '0.78rem', letterSpacing: '0.02em' }}>
+                          {item.extras.customName} #{item.extras.customNumber}
+                        </span>
+                      </div>
+                    )}
+                    {item.extras?.extraCustomization && item.extras?.customExtraName && (
+                      <div style={{ marginTop: '0.25rem', display: 'inline-flex', alignItems: 'center', gap: '0.4rem', background: 'rgba(96,165,250,0.08)', border: '1px solid rgba(96,165,250,0.25)', borderRadius: '6px', padding: '0.2rem 0.6rem', marginLeft: '0.3rem' }}>
+                        <span style={{ color: '#60A5FA', fontWeight: 700, fontSize: '0.78rem' }}>+ {item.extras.customExtraName}</span>
+                      </div>
+                    )}
                   </div>
                   <div style={{ fontWeight: 700, color: '#D6FF00', whiteSpace: 'nowrap' }}>${parseFloat(item.price || 0).toFixed(2)}</div>
                 </div>
