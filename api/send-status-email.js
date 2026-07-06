@@ -24,12 +24,37 @@ function buildProductsHtml(products) {
           if (!imgUrl.startsWith('http')) imgUrl = `https://ifooty.ca${imgUrl.startsWith('/') ? '' : '/'}${imgUrl}`;
           imgTag = `<img src="${imgUrl}" style="width: 50px; height: 60px; object-fit: cover; border-radius: 4px; border: 1px solid #edf2f7; margin-right: 12px;" />`;
         }
+        
+        let customization = '';
+        if (item.extras?.nameNumber) {
+          customization += `
+            <div style="margin-top: 5px; padding: 6px 10px; background: #FFF9C4; border-left: 4px solid #FBC02D; font-size: 0.82rem; color: #444; border-radius: 4px;">
+              <strong>CUSTOMIZATION:</strong> ${item.extras.customName || 'N/A'} - ${item.extras.customNumber || 'N/A'}
+            </div>
+          `;
+        }
+        if (item.extras?.extraCustomization && item.extras?.customExtraName) {
+          customization += `
+            <div style="margin-top: 5px; padding: 6px 10px; background: #E0F7FA; border-left: 4px solid #00BCD4; font-size: 0.82rem; color: #444; border-radius: 4px;">
+              <strong>EXTRA CUSTOM:</strong> ${item.extras.customExtraName}
+            </div>
+          `;
+        }
+        if (item.extras?.patches) {
+          customization += `
+            <div style="margin-top: 5px; padding: 4px 8px; font-size: 0.8rem; color: #4a5568;">
+              <strong>+ Patches included</strong>
+            </div>
+          `;
+        }
+
         return `
           <div style="margin-bottom: 12px; padding: 12px; border: 1px solid #edf2f7; border-radius: 6px; display: flex; align-items: center; background: #fafafa;">
             ${imgTag}
             <div style="flex: 1;">
               <h4 style="margin: 0 0 4px 0; font-size: 0.95rem; color: #2d3748;">${item.name || item.product_name || 'Jersey'}</h4>
               <p style="margin: 0; font-size: 0.85rem; color: #718096;">Size: <strong>${item.size || '—'}</strong> | Qty: <strong>${item.quantity || 1}</strong> ${item.price ? `| <strong>$${parseFloat(item.price).toFixed(2)} CAD</strong>` : ''}</p>
+              ${customization}
             </div>
           </div>
         `;
