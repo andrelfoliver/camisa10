@@ -1,6 +1,13 @@
 import { Resend } from 'resend';
+import { createClient } from '@supabase/supabase-js';
 
 const resend = new Resend(process.env.RESEND_API_KEY);
+
+// Supabase for logging — supports both VITE_ prefixed and plain env vars
+const _sbUrl = process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL;
+const _sbKey = process.env.SUPABASE_ANON_KEY || process.env.VITE_SUPABASE_ANON_KEY;
+let supabase = null;
+try { if (_sbUrl && _sbKey) supabase = createClient(_sbUrl, _sbKey); } catch (_) {}
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Helper: build formatted products HTML block
@@ -196,8 +203,23 @@ export default async function handler(req, res) {
       });
 
       const isSuccess = !emailRes.error;
-      // Log to console (visible in Vercel Function Logs)
-      console.log(`📧 MANUAL_EMAIL_LOG | admin=${adminEmail} | to=${recipientEmail} | template=${templateName} | order=${orderNumber || '-'} | status=${isSuccess ? 'success' : 'failed'} | msgId=${emailRes.data?.id || '-'}`);
+      // Write to email_logs — completely isolated so it never breaks email delivery
+      try {
+        if (supabase) {
+          await supabase.from('email_logs').insert([{
+            admin_email: adminEmail,
+            recipient_email: recipientEmail,
+            template_name: templateName,
+            order_number: orderNumber || null,
+            status: isSuccess ? 'success' : 'failed',
+            message_id: emailRes.data?.id || null,
+            error_message: emailRes.error ? (emailRes.error.message || JSON.stringify(emailRes.error)) : null
+          }]);
+        }
+      } catch (logErr) {
+        // Log errors must never break the email response
+        console.error('email_logs insert failed (non-fatal):', logErr.message);
+      }
 
       if (emailRes.error) {
         console.error('❌ Resend Manual Email Error:', JSON.stringify(emailRes.error, null, 2));
