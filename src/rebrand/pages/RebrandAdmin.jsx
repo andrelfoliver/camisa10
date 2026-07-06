@@ -1219,7 +1219,7 @@ const ResendEmailModal = ({ order, onClose, showToast, adminEmail }) => {
   );
 };
 
-const OrderDetailModal = ({ order, onClose, onStatusChange, onTrackingChange, showToast, onOpenTracking, onDeleteOrder, adminEmail }) => {
+const OrderDetailModal = ({ order, onClose, onStatusChange, onTrackingChange, onOrderUpdate, showToast, onOpenTracking, onDeleteOrder, adminEmail }) => {
   const [tracking, setTracking] = useState(order.tracking_number || '');
   const [savingTracking, setSavingTracking] = useState(false);
   const [showResendModal, setShowResendModal] = useState(false);
@@ -1227,6 +1227,82 @@ const OrderDetailModal = ({ order, onClose, onStatusChange, onTrackingChange, sh
   const [sendingSupplier, setSendingSupplier] = useState(false);
   const items = Array.isArray(order.items) ? order.items : (typeof order.items === 'string' ? (() => { try { return JSON.parse(order.items); } catch { return []; } })() : []);
   const addr = order.shipping_address || {};
+
+  const [isEditing, setIsEditing] = useState(false);
+  const [customerName, setCustomerName] = useState(order.customer_name || '');
+  const [customerEmail, setCustomerEmail] = useState(order.customer_email || '');
+  const [customerPhone, setCustomerPhone] = useState(order.customer_phone || '');
+  const [street, setStreet] = useState(addr.street || '');
+  const [number, setNumber] = useState(addr.number || '');
+  const [district, setDistrict] = useState(addr.district || '');
+  const [apartment, setApartment] = useState(addr.apartment || '');
+  const [city, setCity] = useState(addr.city || '');
+  const [province, setProvince] = useState(addr.province || '');
+  const [postalCode, setPostalCode] = useState(addr.postalCode || '');
+  const [country, setCountry] = useState(addr.country || '');
+  const [instructions, setInstructions] = useState(addr.instructions || '');
+  const [savingData, setSavingData] = useState(false);
+
+  useEffect(() => {
+    setTracking(order.tracking_number || '');
+    setCustomerName(order.customer_name || '');
+    setCustomerEmail(order.customer_email || '');
+    setCustomerPhone(order.customer_phone || '');
+    const a = order.shipping_address || {};
+    setStreet(a.street || '');
+    setNumber(a.number || '');
+    setDistrict(a.district || '');
+    setApartment(a.apartment || '');
+    setCity(a.city || '');
+    setProvince(a.province || '');
+    setPostalCode(a.postalCode || '');
+    setCountry(a.country || '');
+    setInstructions(a.instructions || '');
+  }, [order]);
+
+  const handleSaveDetails = async () => {
+    setSavingData(true);
+    const updatedAddress = {
+      method: addr.method || 'shipping',
+      street: street,
+      number: number,
+      district: district,
+      apartment: apartment,
+      city: city,
+      province: province,
+      postalCode: postalCode,
+      country: country,
+      instructions: instructions
+    };
+
+    const { error } = await supabase
+      .from('orders')
+      .update({
+        customer_name: customerName,
+        customer_email: customerEmail,
+        customer_phone: customerPhone,
+        shipping_address: updatedAddress
+      })
+      .eq('id', order.id);
+
+    setSavingData(false);
+    if (error) {
+      showToast(`Erro ao salvar: ${error.message}`, 'error');
+    } else {
+      showToast('Dados do cliente atualizados!', 'success');
+      if (onOrderUpdate) {
+        onOrderUpdate(order.id, {
+          customer_name: customerName,
+          customer_email: customerEmail,
+          customer_phone: customerPhone,
+          shipping_address: updatedAddress
+        });
+      }
+      setIsEditing(false);
+    }
+  };
+
+  const labelStyle = { display: 'block', fontSize: '0.72rem', fontWeight: 700, textTransform: 'uppercase', color: 'rgba(255,255,255,0.45)', marginBottom: '0.25rem' };
 
   useEffect(() => {
     const fetchSupplierEmail = async () => {
@@ -1324,6 +1400,67 @@ const OrderDetailModal = ({ order, onClose, onStatusChange, onTrackingChange, sh
             <h3 style={{ margin: 0, fontWeight: 700, fontFamily: 'monospace', fontSize: '1.1rem' }}>#{order.id}</h3>
           </div>
           <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'center', flexWrap: 'wrap' }}>
+            <button 
+              onClick={isEditing ? handleSaveDetails : () => setIsEditing(true)} 
+              disabled={savingData}
+              style={{
+                background: isEditing ? 'rgba(34, 197, 94, 0.1)' : 'rgba(255, 255, 255, 0.05)',
+                border: isEditing ? '1.5px solid #4ade80' : '1px solid rgba(255,255,255,0.15)',
+                color: isEditing ? '#4ade80' : '#fff',
+                padding: '0.4rem 0.8rem',
+                borderRadius: '6px',
+                fontSize: '0.75rem',
+                fontWeight: 700,
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '0.35rem',
+              }}
+            >
+              {savingData ? (
+                <RefreshCw size={12} style={{ animation: 'spin 1s linear infinite' }} />
+              ) : isEditing ? (
+                <Save size={12} />
+              ) : (
+                <Edit2 size={12} />
+              )}
+              {isEditing ? 'Salvar' : 'Editar Dados'}
+            </button>
+            {isEditing && (
+              <button 
+                onClick={() => {
+                  setCustomerName(order.customer_name || '');
+                  setCustomerEmail(order.customer_email || '');
+                  setCustomerPhone(order.customer_phone || '');
+                  const a = order.shipping_address || {};
+                  setStreet(a.street || '');
+                  setNumber(a.number || '');
+                  setDistrict(a.district || '');
+                  setApartment(a.apartment || '');
+                  setCity(a.city || '');
+                  setProvince(a.province || '');
+                  setPostalCode(a.postalCode || '');
+                  setCountry(a.country || '');
+                  setInstructions(a.instructions || '');
+                  setIsEditing(false);
+                }} 
+                style={{
+                  background: 'rgba(239, 68, 68, 0.1)',
+                  border: '1px solid #ef4444',
+                  color: '#ef4444',
+                  padding: '0.4rem 0.8rem',
+                  borderRadius: '6px',
+                  fontSize: '0.75rem',
+                  fontWeight: 700,
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '0.35rem',
+                }}
+              >
+                Cancelar
+              </button>
+            )}
             {onDeleteOrder && (
               <button 
                 onClick={() => onDeleteOrder(order.id)} 
@@ -1399,29 +1536,99 @@ const OrderDetailModal = ({ order, onClose, onStatusChange, onTrackingChange, sh
           {/* Cliente */}
           <div style={{ ...S.card, padding: '1.25rem' }}>
             <div style={{ fontSize: '0.75rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em', color: '#D6FF00', marginBottom: '0.75rem' }}>👤 Cliente</div>
-            <Row label="Nome" value={order.customer_name} />
-            <Row label="Email" value={order.customer_email} />
-            <Row label="Telefone" value={order.customer_phone} />
-            <Row label="Data" value={new Date(order.created_at).toLocaleString('pt-BR')} />
-            <Row label="Pagamento" value={order.payment_method} />
-            {order.coupon_code && <Row label="Cupom" value={`${order.coupon_code} (-$${parseFloat(order.coupon_discount || 0).toFixed(2)})`} />}
+            {isEditing ? (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+                <div>
+                  <label style={labelStyle}>Nome</label>
+                  <input style={S.input} value={customerName} onChange={e => setCustomerName(e.target.value)} />
+                </div>
+                <div>
+                  <label style={labelStyle}>Email</label>
+                  <input style={S.input} value={customerEmail} onChange={e => setCustomerEmail(e.target.value)} />
+                </div>
+                <div>
+                  <label style={labelStyle}>Telefone</label>
+                  <input style={S.input} value={customerPhone} onChange={e => setCustomerPhone(e.target.value)} />
+                </div>
+              </div>
+            ) : (
+              <>
+                <Row label="Nome" value={customerName} />
+                <Row label="Email" value={customerEmail} />
+                <Row label="Telefone" value={customerPhone} />
+                <Row label="Data" value={new Date(order.created_at).toLocaleString('pt-BR')} />
+                <Row label="Pagamento" value={order.payment_method} />
+                {order.coupon_code && <Row label="Cupom" value={`${order.coupon_code} (-$${parseFloat(order.coupon_discount || 0).toFixed(2)})`} />}
+              </>
+            )}
           </div>
 
           {/* Endereço */}
           <div style={{ ...S.card, padding: '1.25rem' }}>
             <div style={{ fontSize: '0.75rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em', color: '#D6FF00', marginBottom: '0.75rem' }}>📍 Endereço</div>
-            {addr.method === 'pickup' ? (
-              <div style={{ color: '#60A5FA', fontWeight: 600, fontSize: '0.875rem' }}>🏪 Retirada no Local</div>
+            {isEditing ? (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+                <div style={{ display: 'grid', gridTemplateColumns: '3fr 1fr', gap: '0.5rem' }}>
+                  <div>
+                    <label style={labelStyle}>Rua</label>
+                    <input style={S.input} value={street} onChange={e => setStreet(e.target.value)} />
+                  </div>
+                  <div>
+                    <label style={labelStyle}>Número</label>
+                    <input style={S.input} value={number} onChange={e => setNumber(e.target.value)} />
+                  </div>
+                </div>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.5rem' }}>
+                  <div>
+                    <label style={labelStyle}>Bairro</label>
+                    <input style={S.input} value={district} onChange={e => setDistrict(e.target.value)} />
+                  </div>
+                  <div>
+                    <label style={labelStyle}>Apto/Suíte</label>
+                    <input style={S.input} value={apartment} onChange={e => setApartment(e.target.value)} />
+                  </div>
+                </div>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.5rem' }}>
+                  <div>
+                    <label style={labelStyle}>Cidade</label>
+                    <input style={S.input} value={city} onChange={e => setCity(e.target.value)} />
+                  </div>
+                  <div>
+                    <label style={labelStyle}>Província</label>
+                    <input style={S.input} value={province} onChange={e => setProvince(e.target.value)} />
+                  </div>
+                </div>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.5rem' }}>
+                  <div>
+                    <label style={labelStyle}>Código Postal</label>
+                    <input style={S.input} value={postalCode} onChange={e => setPostalCode(e.target.value)} />
+                  </div>
+                  <div>
+                    <label style={labelStyle}>País</label>
+                    <input style={S.input} value={country} onChange={e => setCountry(e.target.value)} />
+                  </div>
+                </div>
+                <div>
+                  <label style={labelStyle}>Instruções de Entrega</label>
+                  <input style={S.input} value={instructions} onChange={e => setInstructions(e.target.value)} />
+                </div>
+              </div>
             ) : (
               <>
-                <Row label="Rua" value={[addr.street, addr.number].filter(Boolean).join(', ')} />
-                <Row label="Bairro" value={addr.district} />
-                <Row label="Apto" value={addr.apartment} />
-                <Row label="Cidade" value={addr.city} />
-                <Row label="Província" value={addr.province} />
-                <Row label="Postal" value={addr.postalCode} />
-                <Row label="País" value={addr.country} />
-                {addr.instructions && <Row label="Instruções" value={addr.instructions} />}
+                {addr.method === 'pickup' ? (
+                  <div style={{ color: '#60A5FA', fontWeight: 600, fontSize: '0.875rem' }}>🏪 Retirada no Local</div>
+                ) : (
+                  <>
+                    <Row label="Rua" value={[street, number].filter(Boolean).join(', ')} />
+                    <Row label="Bairro" value={district} />
+                    <Row label="Apto" value={apartment} />
+                    <Row label="Cidade" value={city} />
+                    <Row label="Província" value={province} />
+                    <Row label="Postal" value={postalCode} />
+                    <Row label="País" value={country} />
+                    {instructions && <Row label="Instruções" value={instructions} />}
+                  </>
+                )}
               </>
             )}
           </div>
@@ -1824,6 +2031,10 @@ const OrdersSection = ({ showToast, onOpenTracking, adminEmail }) => {
           onClose={() => setSelectedOrder(null)}
           onStatusChange={handleStatusChange}
           onTrackingChange={(id, track) => setOrders(prev => prev.map(o => o.id === id ? { ...o, tracking_number: track } : o))}
+          onOrderUpdate={(id, updatedFields) => {
+            setOrders(prev => prev.map(o => o.id === id ? { ...o, ...updatedFields } : o));
+            setSelectedOrder(prev => prev && prev.id === id ? { ...prev, ...updatedFields } : prev);
+          }}
           showToast={showToast}
           onOpenTracking={onOpenTracking}
           onDeleteOrder={handleDeleteOrder}
