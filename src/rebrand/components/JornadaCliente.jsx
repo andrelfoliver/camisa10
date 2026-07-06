@@ -45,71 +45,156 @@ function fmtPage(p) {
 
 // ─── Source detection ──────────────────────────────────────────────────────────
 function detectSource(s) {
-  if (s.gclid) return { label: 'Google Ads', color: '#4285F4', bg: 'rgba(66,133,244,0.15)', icon: '🔵' };
-  if (s.fbclid) return { label: 'Meta Ads', color: '#1877F2', bg: 'rgba(24,119,242,0.15)', icon: '🟦' };
-  const src = (s.utm_source || '').toLowerCase();
-  const med = (s.utm_medium || '').toLowerCase();
-  const ref = (s.referrer || '').toLowerCase();
-  if (src.includes('instagram') || ref.includes('instagram')) return { label: 'Instagram', color: '#E1306C', bg: 'rgba(225,48,108,0.15)', icon: '📸' };
-  if (src.includes('facebook') || src.includes('fb') || ref.includes('facebook')) return { label: 'Facebook', color: '#1877F2', bg: 'rgba(24,119,242,0.15)', icon: '📘' };
-  if (src.includes('google') || ref.includes('google')) return { label: 'Google', color: '#4285F4', bg: 'rgba(66,133,244,0.15)', icon: '🔍' };
-  if (src.includes('email') || med.includes('email')) return { label: 'Email', color: '#10B981', bg: 'rgba(16,185,129,0.15)', icon: '📧' };
-  if (src.includes('tiktok') || ref.includes('tiktok')) return { label: 'TikTok', color: '#FF0050', bg: 'rgba(255,0,80,0.15)', icon: '🎵' };
-  if (src.includes('twitter') || src.includes('x.com') || ref.includes('x.com')) return { label: 'Twitter/X', color: '#1DA1F2', bg: 'rgba(29,161,242,0.15)', icon: '🐦' };
-  if (src) return { label: src, color: '#8B5CF6', bg: 'rgba(139,92,246,0.15)', icon: '🔗' };
-  if (ref && !ref.includes('ifooty')) {
-    const domain = ref.replace(/https?:\/\//, '').split('/')[0].replace('www.', '');
-    return { label: domain, color: '#8B5CF6', bg: 'rgba(139,92,246,0.15)', icon: '🔗' };
+  const src = (s.utm_source || '').toLowerCase().trim();
+  const med = (s.utm_medium || '').toLowerCase().trim();
+  const cam = (s.utm_campaign || '').toLowerCase().trim();
+  const ref = (s.referrer || '').toLowerCase().trim();
+  const lpg = (s.landing_page || '').toLowerCase().trim();
+  
+  // 1. Google Ads
+  if (s.gclid || (src === 'google' && (med === 'cpc' || med === 'ads' || med === 'ppc'))) {
+    return { label: 'Google Ads', color: '#4285F4', bg: 'rgba(66,133,244,0.15)', icon: '🔵' };
   }
+  
+  // 2. Meta Ads (Website vs WhatsApp)
+  const isMeta = s.fbclid || ['facebook', 'instagram', 'meta', 'ig', 'fb'].includes(src) || 
+                  (med === 'cpc' && ['facebook', 'instagram', 'meta', 'ig', 'fb'].some(k => ref.includes(k)));
+  if (isMeta) {
+    const isWa = cam.includes('whatsapp') || cam.includes('wa') || src.includes('whatsapp') || med.includes('whatsapp');
+    if (isWa) {
+      return { label: 'Meta Ads - WhatsApp', color: '#25D366', bg: 'rgba(37,211,102,0.15)', icon: '💬' };
+    }
+    return { label: 'Meta Ads - Website', color: '#1877F2', bg: 'rgba(24,119,242,0.15)', icon: '🟦' };
+  }
+  
+  // 3. Instagram Bio
+  const isInstaBio = src.includes('bio') || med.includes('bio') || lpg.includes('utm_content=link_in_bio') || lpg.includes('instagram_bio');
+  if (isInstaBio || (src === 'instagram' && med === 'social' && lpg.includes('bio'))) {
+    return { label: 'Instagram Bio', color: '#E1306C', bg: 'rgba(225,48,108,0.15)', icon: '📸' };
+  }
+  
+  // 4. WhatsApp
+  const isWa = src === 'whatsapp' || med === 'whatsapp' || ref.includes('wa.me') || ref.includes('whatsapp.com');
+  if (isWa) {
+    return { label: 'WhatsApp', color: '#25D366', bg: 'rgba(37,211,102,0.15)', icon: '💬' };
+  }
+
+  // 5. QR Code
+  if (src.includes('qr') || med.includes('qr')) {
+    return { label: 'QR Code', color: '#10B981', bg: 'rgba(16,185,129,0.15)', icon: '📱' };
+  }
+
+  // 6. Afiliado
+  if (src.includes('afiliado') || src.includes('affiliate') || lpg.includes('ref=') || lpg.includes('aff=')) {
+    return { label: 'Afiliado', color: '#F59E0B', bg: 'rgba(245,158,11,0.15)', icon: '🤝' };
+  }
+  
+  // 7. Email
+  if (src === 'email' || med === 'email' || src === 'newsletter') {
+    return { label: 'Email', color: '#10B981', bg: 'rgba(16,185,129,0.15)', icon: '📧' };
+  }
+
+  // 8. Facebook Orgânico
+  if (ref.includes('facebook.com') || src === 'facebook' || src === 'fb') {
+    return { label: 'Facebook Orgânico', color: '#3B5998', bg: 'rgba(59,89,152,0.15)', icon: '📘' };
+  }
+
+  // 9. Google Orgânico
+  if (ref.includes('google.com') || src === 'google') {
+    return { label: 'Google Orgânico', color: '#4285F4', bg: 'rgba(66,133,244,0.15)', icon: '🔍' };
+  }
+
+  // 10. Referral
+  if (ref && !ref.includes('ifooty') && ref !== 'direto') {
+    const domain = ref.replace(/https?:\/\//, '').split('/')[0].replace('www.', '');
+    return { label: `Referral (${domain})`, color: '#8B5CF6', bg: 'rgba(139,92,246,0.15)', icon: '🔗' };
+  }
+
+  // 11. Direto
   return { label: 'Direto', color: '#6B7280', bg: 'rgba(107,114,128,0.15)', icon: '⬇️' };
 }
 
 // ─── Status calculation ────────────────────────────────────────────────────────
-function calcStatus(eventNames, lastEventTime, cartValue) {
+function calcStatus(eventNames, lastPage, lastEventTime, cartValue, duration, pageCount, isPureWhatsapp) {
   const now = Date.now();
   const lastMs = new Date(lastEventTime).getTime();
   const isRecent = !isNaN(lastMs) && (now - lastMs) < 5 * 60 * 1000;
 
   if (eventNames.has('purchase')) return { label: 'Comprou', icon: '🟢', color: '#22C55E', bg: 'rgba(34,197,94,0.15)', priority: 5 };
   if (isRecent) return { label: 'Navegando Agora', icon: '🟡', color: '#EAB308', bg: 'rgba(234,179,8,0.15)', priority: 4 };
-  if (eventNames.has('initiatecheckout')) return { label: 'Abandonou no Checkout', icon: '🔴', color: '#EF4444', bg: 'rgba(239,68,68,0.15)', priority: 3 };
-  if (eventNames.has('addtocart')) return { label: 'Abandonou no Carrinho', icon: '🟠', color: '#F97316', bg: 'rgba(249,115,22,0.15)', priority: 3 };
-  if (eventNames.has('viewcontent')) return { label: 'Visualizou Produto', icon: '🟠', color: '#FBBF24', bg: 'rgba(251,191,36,0.15)', priority: 2 };
+  if (isPureWhatsapp) return { label: 'Sem sessão no site', icon: '💬', color: '#10B981', bg: 'rgba(16,185,129,0.15)', priority: 0 };
+
+  // Validate the final abandonment stage accurately
+  const pg = (lastPage || '').toLowerCase();
+  if (eventNames.has('initiatecheckout') || pg.includes('checkout')) {
+    return { label: 'Abandonou no Checkout', icon: '🔴', color: '#EF4444', bg: 'rgba(239,68,68,0.15)', priority: 3 };
+  }
+  if (eventNames.has('addtocart') || pg.includes('carrinho') || pg.includes('cart')) {
+    return { label: 'Abandonou no Carrinho', icon: '🟠', color: '#F97316', bg: 'rgba(249,115,22,0.15)', priority: 3 };
+  }
+  if (eventNames.has('viewcontent') || pg.includes('produto') || pg.includes('product')) {
+    return { label: 'Abandonou no Produto', icon: '🟠', color: '#FBBF24', bg: 'rgba(251,191,36,0.15)', priority: 2 };
+  }
+  if (pg.includes('colecao') || pg.includes('categoria') || pg.includes('busca') || pg.includes('search')) {
+    return { label: 'Abandonou na Categoria', icon: '🟡', color: '#EAB308', bg: 'rgba(234,179,8,0.08)', priority: 2 };
+  }
+  
+  if (pageCount > 1 || (pg && pg !== '/' && pg !== '/home')) {
+    return { label: 'Abandonou em Outra Página', icon: '⚪', color: '#9CA3AF', bg: 'rgba(156,163,175,0.08)', priority: 1 };
+  }
+  
   return { label: 'Abandonou na Home', icon: '🔴', color: '#EF4444', bg: 'rgba(239,68,68,0.08)', priority: 1 };
 }
 
 // ─── Bottleneck calculation ────────────────────────────────────────────────────
-function calcBottleneck(eventNames) {
+function calcBottleneck(eventNames, lastPage, isPureWhatsapp) {
   if (eventNames.has('purchase')) return null;
-  if (eventNames.has('initiatecheckout')) return 'Pagamento';
-  if (eventNames.has('addtocart')) return 'Checkout';
-  if (eventNames.has('viewcontent')) return 'Carrinho';
+  if (isPureWhatsapp) return 'WhatsApp';
+  const pg = (lastPage || '').toLowerCase();
+  if (eventNames.has('initiatecheckout') || pg.includes('checkout')) return 'Pagamento';
+  if (eventNames.has('addtocart') || pg.includes('carrinho') || pg.includes('cart')) return 'Checkout';
+  if (eventNames.has('viewcontent') || pg.includes('produto') || pg.includes('product')) return 'Carrinho';
   return 'Produto';
 }
 
 // ─── Probable reason ───────────────────────────────────────────────────────────
-function calcReason(eventNames, duration, productDuration) {
+function calcReason(eventNames, duration, lastPage, productViews, cartAdds, isPureWhatsapp) {
   if (eventNames.has('purchase')) return null;
-  if (duration < 30 && !eventNames.has('viewcontent')) return 'Landing page não converteu — tempo muito curto';
-  if (eventNames.has('viewcontent') && !eventNames.has('addtocart')) {
-    if (productDuration > 180) return 'Cliente comparando preços — tempo longo no produto';
-    return 'Produto não converteu — sem adição ao carrinho';
+  if (isPureWhatsapp) return 'Atendimento direto via WhatsApp';
+  if (duration < 5) return 'Pouco interesse (tempo de permanência muito curto)';
+  
+  const pg = (lastPage || '').toLowerCase();
+  if (eventNames.has('initiatecheckout') || pg.includes('checkout')) {
+    return 'Possível problema no pagamento (chegou ao checkout mas não concluiu)';
   }
-  if (eventNames.has('addtocart') && !eventNames.has('initiatecheckout')) return 'Possível dúvida sobre preço ou frete';
-  if (eventNames.has('initiatecheckout') && !eventNames.has('purchase')) return 'Possível problema no método de pagamento';
+  if (eventNames.has('addtocart') || pg.includes('carrinho') || pg.includes('cart')) {
+    return 'Possível dúvida sobre preço ou frete (adicionou ao carrinho mas não iniciou checkout)';
+  }
+  if (eventNames.has('viewcontent') || pg.includes('produto') || pg.includes('product')) {
+    return 'Produto não convenceu (visualizou produto mas não adicionou ao carrinho)';
+  }
+  if (pg.includes('colecao') || pg.includes('categoria') || pg.includes('busca') || pg.includes('search')) {
+    return 'Possível dificuldade para encontrar um produto (visitou coleções mas não abriu nenhum produto)';
+  }
   return 'Abandono sem causa identificada';
 }
 
 // ─── Smart summary ─────────────────────────────────────────────────────────────
 function buildSummary(sess) {
-  const { source, eventNames, productViews, cartAdds, hasCheckout, hasPurchase, duration, cartValue, bottleneck } = sess;
+  const { source, eventNames, productViews, cartAdds, hasCheckout, hasPurchase, duration, cartValue, bottleneck, isPureWhatsapp } = sess;
   const srcLabel = source.label;
   let parts = [];
-  parts.push(`Visitante chegou através de ${srcLabel}.`);
-  if (productViews > 0) parts.push(`Visualizou ${productViews} produto${productViews > 1 ? 's' : ''}.`);
-  if (cartAdds > 0) parts.push(`Adicionou ${cartAdds} item${cartAdds > 1 ? 'ns' : ''} ao carrinho.`);
-  if (hasCheckout) parts.push('Iniciou o checkout.');
-  parts.push(`Permaneceu ${fmtDuration(duration)} no site.`);
+  
+  if (isPureWhatsapp) {
+    parts.push(`Visitante foi direcionado direto para o WhatsApp.`);
+  } else {
+    parts.push(`Visitante chegou através de ${srcLabel}.`);
+    if (productViews > 0) parts.push(`Visualizou ${productViews} produto${productViews > 1 ? 's' : ''}.`);
+    if (cartAdds > 0) parts.push(`Adicionou ${cartAdds} item${cartAdds > 1 ? 'ns' : ''} ao carrinho.`);
+    if (hasCheckout) parts.push('Iniciou o checkout.');
+    parts.push(`Permaneceu ${fmtDuration(duration)} no site.`);
+  }
+
   if (hasPurchase) {
     parts.push('Compra concluída com sucesso. ✅');
   } else {
@@ -189,24 +274,49 @@ function processSession(sessionId, events, userMap) {
     }
   });
 
+  const nonAdminPages = sorted
+    .map(e => e.page || e.metadata?.path || '')
+    .filter(p => p && !isAdminPath(p));
+  const lastPage = nonAdminPages[nonAdminPages.length - 1] || '';
+
+  // Extract campaign objective
+  let campObjective = 'Website';
+  const campaignLower = (sessionAttrs.utm_campaign || '').toLowerCase();
+  const sourceLower = (sessionAttrs.utm_source || '').toLowerCase();
+  const mediumLower = (sessionAttrs.utm_medium || '').toLowerCase();
+  if (campaignLower.includes('whatsapp') || campaignLower.includes('wa') || sourceLower.includes('whatsapp') || mediumLower.includes('whatsapp')) {
+    campObjective = 'WhatsApp';
+  } else if (campaignLower.includes('lead')) {
+    campObjective = 'Lead';
+  } else if (campaignLower.includes('sales') || campaignLower.includes('purchase')) {
+    campObjective = 'Sales / Purchase';
+  }
+
+  // Check if pure WhatsApp session (i.e. WhatsApp campaign or direct WhatsApp convert, with no site pageviews)
+  const hasPageView = eventNames.has('pageview') || sorted.some(e => e.page && !isAdminPath(e.page));
+  const isPureWhatsapp = (campObjective === 'WhatsApp' || sorted.some(e => e.metadata?.payment_method === 'whatsapp')) && !hasPageView;
+
   const source = detectSource(sessionAttrs);
-  const status = calcStatus(eventNames, last.created_at, cartValue);
-  const bottleneck = calcBottleneck(eventNames);
+  const status = calcStatus(eventNames, lastPage, last.created_at, cartValue, duration, pageSet.size, isPureWhatsapp);
+  const bottleneck = calcBottleneck(eventNames, lastPage, isPureWhatsapp);
   const hasCheckout = eventNames.has('initiatecheckout');
   const hasPurchase = eventNames.has('purchase');
-  const reason = calcReason(eventNames, duration, productDuration);
+  const reason = calcReason(eventNames, duration, lastPage, productViews, cartAdds, isPureWhatsapp);
 
   const sess = {
     session_id: sessionId,
     userId,
     userName,
     isAdminSession,
+    isPureWhatsapp,
+    camp_objective: campObjective,
     duration,
     source,
     status,
     bottleneck,
     reason,
     pageCount: pageSet.size,
+    lastPage,
     productViews,
     cartAdds,
     cartValue,
@@ -553,26 +663,56 @@ const JornadaCliente = ({ showToast }) => {
           </div>
         )}
 
-        {/* Attribution */}
+        {/* Attribution - Detailed */}
         <div>
-          <div style={S.title}>🗺️ Atribuição</div>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.35rem' }}>
+          <div style={S.title}>🗺️ Atribuição Detalhada</div>
+          {/* Main attribution highlights */}
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.35rem', marginBottom: '0.75rem' }}>
             {[
-              ['Origem', sess.source.label],
-              ['Mídia', sess.utm_medium],
-              ['Campanha', sess.utm_campaign],
-              ['Conjunto', sess.utm_content],
-              ['Landing Page', fmtPage(sess.landing_page)],
-              ['Referrer', sess.referrer ? sess.referrer.replace(/https?:\/\//, '').split('/')[0] : null],
-              ['Dispositivo', sess.device],
-              ['Localização', [sess.city, sess.province].filter(Boolean).join(', ')],
-            ].filter(([, v]) => v).map(([k, v]) => (
+              { k: 'Plataforma', v: sess.source.label, icon: sess.source.icon },
+              { k: 'Objetivo', v: sess.camp_objective, icon: sess.camp_objective === 'WhatsApp' ? '💬' : sess.camp_objective === 'Lead' ? '📋' : '🌐' },
+              { k: 'Campanha', v: sess.utm_campaign },
+              { k: 'Conjunto (Ad Set)', v: sess.utm_content },
+              { k: 'Anúncio', v: sess.utm_term },
+              { k: 'Última Página', v: sess.lastPage ? fmtPage(sess.lastPage) : null },
+              { k: 'Landing Page', v: fmtPage(sess.landing_page) },
+              { k: 'Referrer', v: sess.referrer ? sess.referrer.replace(/https?:\/\//, '').split('/')[0] : null },
+            ].filter(({ v }) => v).map(({ k, v, icon }) => (
               <div key={k} style={{ background: '#121416', borderRadius: 6, padding: '0.4rem 0.65rem', minWidth: 0 }}>
                 <div style={{ fontSize: '0.62rem', color: '#6B7280', fontWeight: 700, textTransform: 'uppercase' }}>{k}</div>
-                <div style={{ fontSize: '0.78rem', color: '#D1D5DB', marginTop: '0.1rem', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{v}</div>
+                <div style={{ fontSize: '0.78rem', color: '#D1D5DB', marginTop: '0.1rem', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                  {icon && <span style={{ marginRight: '0.25rem' }}>{icon}</span>}{v}
+                </div>
               </div>
             ))}
           </div>
+          {/* Raw UTMs + Technical */}
+          <details style={{ cursor: 'pointer' }}>
+            <summary style={{ fontSize: '0.72rem', color: '#6B7280', fontWeight: 700, textTransform: 'uppercase', userSelect: 'none', marginBottom: '0.5rem', listStyle: 'none', display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
+              <span>▶</span> Dados Técnicos &amp; UTMs Completos
+            </summary>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.35rem', marginTop: '0.5rem' }}>
+              {[
+                { k: 'utm_source', v: sess.utm_source },
+                { k: 'utm_medium', v: sess.utm_medium },
+                { k: 'utm_campaign', v: sess.utm_campaign },
+                { k: 'utm_content', v: sess.utm_content },
+                { k: 'utm_term', v: sess.utm_term },
+                { k: 'fbclid', v: sess.fbclid ? '✅ presente' : null },
+                { k: 'gclid', v: sess.gclid ? '✅ presente' : null },
+                { k: 'Dispositivo', v: sess.device },
+                { k: 'Navegador', v: sess.browser },
+                { k: 'País', v: sess.country },
+                { k: 'Província', v: sess.province },
+                { k: 'Cidade', v: sess.city },
+              ].filter(({ v }) => v).map(({ k, v }) => (
+                <div key={k} style={{ background: '#0D0F11', borderRadius: 6, padding: '0.35rem 0.6rem', minWidth: 0 }}>
+                  <div style={{ fontSize: '0.58rem', color: '#4B5563', fontWeight: 700, textTransform: 'uppercase', fontFamily: 'monospace' }}>{k}</div>
+                  <div style={{ fontSize: '0.75rem', color: '#9CA3AF', marginTop: '0.1rem', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', fontFamily: 'monospace' }}>{v}</div>
+                </div>
+              ))}
+            </div>
+          </details>
         </div>
 
         {/* Funnel visual */}
@@ -676,11 +816,16 @@ const JornadaCliente = ({ showToast }) => {
           </span>
         </div>
 
-        {/* Row 2: Source + Campaign */}
+        {/* Row 2: Source + Campaign + Objective */}
         <div style={{ display: 'flex', gap: '0.35rem', flexWrap: 'wrap', marginBottom: '0.5rem' }}>
           <span style={S.badge(sess.source.color, sess.source.bg)}>{sess.source.icon} {sess.source.label}</span>
+          {sess.camp_objective && sess.camp_objective !== 'Website' && (
+            <span style={S.badge('#25D366', 'rgba(37,211,102,0.12)')}>
+              {sess.camp_objective === 'WhatsApp' ? '💬' : sess.camp_objective === 'Lead' ? '📋' : '🎯'} {sess.camp_objective}
+            </span>
+          )}
           {sess.utm_campaign && (
-            <span style={S.badge('#A78BFA', 'rgba(167,139,250,0.15)')}>📣 {sess.utm_campaign.slice(0, 20)}</span>
+            <span style={S.badge('#A78BFA', 'rgba(167,139,250,0.15)')}>📣 {sess.utm_campaign.slice(0, 22)}</span>
           )}
           {sess.city && <span style={S.badge('#6B7280', 'rgba(107,114,128,0.1)')}>📍 {sess.city}</span>}
         </div>
@@ -699,12 +844,19 @@ const JornadaCliente = ({ showToast }) => {
           )}
         </div>
 
-        {/* Landing page */}
-        {sess.landing_page && (
-          <div style={{ marginTop: '0.4rem', fontSize: '0.7rem', color: '#6B7280', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-            🔗 {fmtPage(sess.landing_page)}
-          </div>
-        )}
+        {/* Row 4: Last page + landing page */}
+        <div style={{ marginTop: '0.4rem', display: 'flex', flexDirection: 'column', gap: '0.2rem' }}>
+          {sess.lastPage && sess.lastPage !== sess.landing_page && (
+            <div style={{ fontSize: '0.7rem', color: '#EF4444', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+              🚪 Saiu em: {fmtPage(sess.lastPage)}
+            </div>
+          )}
+          {sess.landing_page && (
+            <div style={{ fontSize: '0.7rem', color: '#6B7280', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+              🔗 {fmtPage(sess.landing_page)}
+            </div>
+          )}
+        </div>
       </div>
     );
   };
