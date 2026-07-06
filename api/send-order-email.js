@@ -331,10 +331,10 @@ export default async function handler(req, res) {
     }
 
     // --- EMAIL 1.5: ADICIONAL PAYPAL/STRIPE GESTOR --- (enviado quando pago via PayPal ou Stripe)
-    let paymentConfirmRes = { data: null, error: null };
+    let paypalPaymentRes = { data: null, error: null };
     if (!supplierOnly && (order.payment_method === 'paypal' || order.payment_method === 'stripe') && order.status === 'paid') {
       try {
-        paymentConfirmRes = await resend.emails.send({
+        paypalPaymentRes = await resend.emails.send({
           from: 'iFooty Alerts <vendas@ifooty.ca>',
           to: [adminEmail || 'camisadez085@gmail.com'],
           replyTo: adminEmail || 'camisadez085@gmail.com',
@@ -368,10 +368,10 @@ export default async function handler(req, res) {
             </div>
           `
         });
-        if (paymentConfirmRes.error) {
-          console.error('❌ Resend Payment Alert Error:', JSON.stringify(paymentConfirmRes.error, null, 2));
+        if (paypalPaymentRes.error) {
+          console.error('❌ Resend Payment Alert Error:', JSON.stringify(paypalPaymentRes.error, null, 2));
         } else {
-          console.log('✅ Payment Alert Sent:', paymentConfirmRes.data?.id);
+          console.log('✅ Payment Alert Sent:', paypalPaymentRes.data?.id);
         }
       } catch (errConfirm) {
         console.error('❌ Error sending Payment email:', errConfirm);
