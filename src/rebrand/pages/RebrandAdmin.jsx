@@ -7,7 +7,7 @@ import {
   LogOut, ExternalLink, ChevronUp, ChevronDown, Edit2, Trash2,
   Plus, Save, X, Check, AlertCircle, TrendingUp, Users, DollarSign, Upload,
   Clock, Search, RefreshCw, Eye, EyeOff, UserCircle, Award, MessageSquare, Star,
-  Shirt, CreditCard, Globe, Activity, Truck, CheckCircle2, XCircle, Menu, MapPin
+  Shirt, CreditCard, Globe, Activity, Truck, CheckCircle2, XCircle, Menu, MapPin, Mail, Send
 } from 'lucide-react';
 import ProductMedia from '../../components/ProductMedia';
 import TrackingModal from '../../components/TrackingModal';
@@ -99,20 +99,21 @@ const detectTeamAndCategory = (name) => {
 
 
 const NAV_ITEMS = [
-  { id: 'dashboard',   label: 'Dashboard',         icon: LayoutDashboard },
-  { id: 'orders',      label: 'Pedidos',            icon: ShoppingBag },
-  { id: 'products',    label: 'Produtos',           icon: Package },
-  { id: 'visual',      label: 'Visual',             icon: Compass },
-  { id: 'coupons',     label: 'Cupons',             icon: Tag },
-  { id: 'clientes',    label: 'Clientes',           icon: UserCircle },
-  { id: 'afiliados',   label: 'Afiliados',          icon: Award },
-  { id: 'analytics',   label: 'Jornada do Cliente', icon: Activity },
-  { id: 'conversas',   label: 'Conversas IA',       icon: MessageSquare },
-  { id: 'pricing',     label: 'Tabela de Preços',   icon: DollarSign },
-  { id: 'depoimentos', label: 'Depoimentos',        icon: Star },
-  { id: 'financeiro',  label: 'Financeiro',         icon: TrendingUp },
-  { id: 'cidades',     label: 'Cidades Atendidas',  icon: MapPin },
-  { id: 'settings',    label: 'Configurações',      icon: Settings },
+  { id: 'dashboard',     label: 'Dashboard',         icon: LayoutDashboard },
+  { id: 'orders',        label: 'Pedidos',            icon: ShoppingBag },
+  { id: 'products',      label: 'Produtos',           icon: Package },
+  { id: 'visual',        label: 'Visual',             icon: Compass },
+  { id: 'coupons',       label: 'Cupons',             icon: Tag },
+  { id: 'clientes',      label: 'Clientes',           icon: UserCircle },
+  { id: 'afiliados',     label: 'Afiliados',          icon: Award },
+  { id: 'analytics',     label: 'Jornada do Cliente', icon: Activity },
+  { id: 'conversas',     label: 'Conversas IA',       icon: MessageSquare },
+  { id: 'pricing',       label: 'Tabela de Preços',   icon: DollarSign },
+  { id: 'depoimentos',   label: 'Depoimentos',        icon: Star },
+  { id: 'financeiro',    label: 'Financeiro',         icon: TrendingUp },
+  { id: 'cidades',       label: 'Cidades Atendidas',  icon: MapPin },
+  { id: 'manual_emails', label: 'E-mails Manuais',    icon: Mail },
+  { id: 'settings',      label: 'Configurações',      icon: Settings },
 ];
 
 const STATUS_COLORS = {
@@ -1081,9 +1082,146 @@ const DashboardSection = ({ showValues, setShowValues }) => {
 
 // ─── Orders Section ───────────────────────────────────────────────────────────
 // ─── Order Detail Modal ───────────────────────────────────────────────────────
-const OrderDetailModal = ({ order, onClose, onStatusChange, onTrackingChange, showToast, onOpenTracking, onDeleteOrder }) => {
+// ─── ResendEmailModal ─────────────────────────────────────────────────────────
+const EMAIL_TEMPLATES = [
+  { value: 'order_confirmation', label: 'Order Confirmation' },
+  { value: 'payment_received',   label: 'Payment Received' },
+  { value: 'preparing_order',    label: 'Preparing Order' },
+  { value: 'order_shipped',      label: 'Order Shipped' },
+  { value: 'out_for_delivery',   label: 'Out for Delivery' },
+  { value: 'delivered',          label: 'Delivered' },
+  { value: 'custom_message',     label: 'Custom Message' },
+];
+
+const ResendEmailModal = ({ order, onClose, showToast, adminEmail }) => {
+  const [template, setTemplate] = useState('order_confirmation');
+  const [sending, setSending] = useState(false);
+  const [customSubject, setCustomSubject] = useState('');
+  const [customBody, setCustomBody] = useState('');
+
+  const items = Array.isArray(order?.items)
+    ? order.items
+    : (typeof order?.items === 'string'
+        ? (() => { try { return JSON.parse(order.items); } catch { return []; } })()
+        : []);
+
+  const handleSend = async () => {
+    if (!order?.customer_email) {
+      showToast('Este pedido não tem e-mail de cliente registrado.', 'error');
+      return;
+    }
+    setSending(true);
+    try {
+      const res = await fetch('/api/send-manual-email', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          adminEmail,
+          recipientEmail: order.customer_email,
+          customerName: order.customer_name || 'Customer',
+          templateName: template,
+          orderNumber: order.id,
+          totalAmount: order.total || order.total_price || 0,
+          shippingAddress: order.shipping_address || {},
+          products: items,
+          trackingNumber: order.tracking_number || '',
+          customSubject,
+          customBody,
+        }),
+      });
+      const data = await res.json();
+      if (res.ok && data.success) {
+        showToast(`✅ E-mail enviado com sucesso! ID: ${data.id || '—'}`, 'success');
+        onClose();
+      } else {
+        showToast(`❌ Erro: ${data.error?.message || data.error || 'Falha no envio'}`, 'error');
+      }
+    } catch (err) {
+      showToast(`❌ Erro interno: ${err.message}`, 'error');
+    } finally {
+      setSending(false);
+    }
+  };
+
+  return (
+    <div style={S.modal} onClick={e => e.target === e.currentTarget && onClose()}>
+      <div style={{ ...S.modalBox, maxWidth: '520px' }}>
+        {/* Header */}
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
+          <div>
+            <div style={{ fontSize: '0.72rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em', color: 'rgba(255,255,255,0.35)', marginBottom: '0.2rem' }}>Reenviar E-mail</div>
+            <h3 style={{ margin: 0, fontSize: '1rem', fontWeight: 700 }}>#{order?.id?.slice(0, 8)} — {order?.customer_name || '—'}</h3>
+          </div>
+          <button style={{ background: 'none', border: 'none', color: 'rgba(255,255,255,0.5)', cursor: 'pointer' }} onClick={onClose}><X size={20} /></button>
+        </div>
+
+        {/* Recipient (read-only) */}
+        <div style={{ marginBottom: '1rem' }}>
+          <label style={{ fontSize: '0.75rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em', color: 'rgba(255,255,255,0.45)', display: 'block', marginBottom: '0.4rem' }}>Recipient</label>
+          <input
+            style={{ ...S.input, background: 'rgba(255,255,255,0.04)', color: 'rgba(255,255,255,0.55)', cursor: 'not-allowed' }}
+            value={order?.customer_email || '—'}
+            readOnly
+          />
+        </div>
+
+        {/* Template Selector */}
+        <div style={{ marginBottom: '1rem' }}>
+          <label style={{ fontSize: '0.75rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em', color: 'rgba(255,255,255,0.45)', display: 'block', marginBottom: '0.4rem' }}>Email Template</label>
+          <select style={S.input} value={template} onChange={e => setTemplate(e.target.value)}>
+            {EMAIL_TEMPLATES.map(t => <option key={t.value} value={t.value}>{t.label}</option>)}
+          </select>
+        </div>
+
+        {/* Custom message fields */}
+        {template === 'custom_message' && (
+          <>
+            <div style={{ marginBottom: '1rem' }}>
+              <label style={{ fontSize: '0.75rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em', color: 'rgba(255,255,255,0.45)', display: 'block', marginBottom: '0.4rem' }}>Subject</label>
+              <input style={S.input} value={customSubject} onChange={e => setCustomSubject(e.target.value)} placeholder="Email subject..." />
+            </div>
+            <div style={{ marginBottom: '1rem' }}>
+              <label style={{ fontSize: '0.75rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em', color: 'rgba(255,255,255,0.45)', display: 'block', marginBottom: '0.4rem' }}>Message</label>
+              <textarea
+                style={{ ...S.input, minHeight: '120px', resize: 'vertical' }}
+                value={customBody}
+                onChange={e => setCustomBody(e.target.value)}
+                placeholder="Your custom message here..."
+              />
+            </div>
+          </>
+        )}
+
+        {/* Summary chips */}
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem', marginBottom: '1.5rem' }}>
+          {[
+            { label: 'Order', value: `#${order?.id?.slice(0, 8)}` },
+            { label: 'Total', value: `$${parseFloat(order?.total || order?.total_price || 0).toFixed(2)} CAD` },
+            { label: 'Items', value: items.length },
+            order?.tracking_number ? { label: 'Tracking', value: order.tracking_number } : null,
+          ].filter(Boolean).map(chip => (
+            <div key={chip.label} style={{ background: 'rgba(214,255,0,0.08)', border: '1px solid rgba(214,255,0,0.2)', borderRadius: '20px', padding: '0.25rem 0.75rem', fontSize: '0.78rem', color: 'rgba(255,255,255,0.7)' }}>
+              <span style={{ color: '#D6FF00', fontWeight: 700 }}>{chip.label}:</span> {chip.value}
+            </div>
+          ))}
+        </div>
+
+        <button
+          onClick={handleSend}
+          disabled={sending || !order?.customer_email}
+          style={{ ...S.btnPrimary, width: '100%', justifyContent: 'center', fontSize: '0.9rem', opacity: (sending || !order?.customer_email) ? 0.5 : 1 }}
+        >
+          {sending ? <><RefreshCw size={15} style={{ animation: 'spin 1s linear infinite' }} /> Sending...</> : <><Send size={15} /> Send Email</>}
+        </button>
+      </div>
+    </div>
+  );
+};
+
+const OrderDetailModal = ({ order, onClose, onStatusChange, onTrackingChange, showToast, onOpenTracking, onDeleteOrder, adminEmail }) => {
   const [tracking, setTracking] = useState(order.tracking_number || '');
   const [savingTracking, setSavingTracking] = useState(false);
+  const [showResendModal, setShowResendModal] = useState(false);
   const items = Array.isArray(order.items) ? order.items : (typeof order.items === 'string' ? (() => { try { return JSON.parse(order.items); } catch { return []; } })() : []);
   const addr = order.shipping_address || {};
 
@@ -1112,7 +1250,7 @@ const OrderDetailModal = ({ order, onClose, onStatusChange, onTrackingChange, sh
             <div style={{ fontSize: '0.72rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em', color: 'rgba(255,255,255,0.35)', marginBottom: '0.25rem' }}>Pedido</div>
             <h3 style={{ margin: 0, fontWeight: 700, fontFamily: 'monospace', fontSize: '1.1rem' }}>#{order.id}</h3>
           </div>
-          <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'center' }}>
+          <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'center', flexWrap: 'wrap' }}>
             {onDeleteOrder && (
               <button 
                 onClick={() => onDeleteOrder(order.id)} 
@@ -1128,10 +1266,29 @@ const OrderDetailModal = ({ order, onClose, onStatusChange, onTrackingChange, sh
                   display: 'flex',
                   alignItems: 'center',
                   gap: '0.35rem',
-                  marginRight: '0.5rem'
                 }}
               >
                 <Trash2 size={12} /> Excluir Pedido
+              </button>
+            )}
+            {order.customer_email && (
+              <button
+                onClick={() => setShowResendModal(true)}
+                style={{
+                  background: 'rgba(99,102,241,0.12)',
+                  border: '1px solid rgba(99,102,241,0.5)',
+                  color: '#818CF8',
+                  padding: '0.4rem 0.8rem',
+                  borderRadius: '6px',
+                  fontSize: '0.75rem',
+                  fontWeight: 700,
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '0.35rem',
+                }}
+              >
+                <Mail size={12} /> Reenviar E-mail
               </button>
             )}
             <span style={S.badge(order.status)}>{STATUS_COLORS[order.status]?.label || order.status}</span>
@@ -1275,12 +1432,21 @@ const OrderDetailModal = ({ order, onClose, onStatusChange, onTrackingChange, sh
           </div>
         </div>
       </div>
+
+      {showResendModal && (
+        <ResendEmailModal
+          order={order}
+          adminEmail={adminEmail}
+          onClose={() => setShowResendModal(false)}
+          showToast={showToast}
+        />
+      )}
     </div>
   );
 };
 
 // ─── Orders Section ───────────────────────────────────────────────────────────
-const OrdersSection = ({ showToast, onOpenTracking }) => {
+const OrdersSection = ({ showToast, onOpenTracking, adminEmail }) => {
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState('all');
@@ -1549,6 +1715,7 @@ const OrdersSection = ({ showToast, onOpenTracking }) => {
           showToast={showToast}
           onOpenTracking={onOpenTracking}
           onDeleteOrder={handleDeleteOrder}
+          adminEmail={adminEmail}
         />
       )}
 
@@ -2926,6 +3093,416 @@ const CouponsSection = ({ showToast }) => {
           </div>
         </div>
       )}
+    </div>
+  );
+};
+
+// ─── Manual Emails Section ────────────────────────────────────────────────────
+const BLANK_PRODUCT = { name: '', size: '', quantity: 1, price: '' };
+
+const ManualEmailsSection = ({ showToast, adminEmail }) => {
+  const [form, setForm] = useState({
+    recipientEmail: '',
+    customerName: '',
+    templateName: 'order_confirmation',
+    orderNumber: '',
+    totalAmount: '',
+    trackingNumber: '',
+    customSubject: '',
+    customBody: '',
+  });
+  const [products, setProducts] = useState([{ ...BLANK_PRODUCT }]);
+  const [shippingAddress, setShippingAddress] = useState({ street: '', number: '', apartment: '', city: '', province: '', postalCode: '', country: 'Canada' });
+  const [sending, setSending] = useState(false);
+  const [logs, setLogs] = useState([]);
+  const [logsLoading, setLogsLoading] = useState(true);
+
+  // Order search / autofill
+  const [orderSearch, setOrderSearch] = useState('');
+  const [orderSearchResults, setOrderSearchResults] = useState([]);
+  const [orderSearchLoading, setOrderSearchLoading] = useState(false);
+  const [autofilledOrder, setAutofilledOrder] = useState(null);
+
+  const loadLogs = useCallback(async () => {
+    setLogsLoading(true);
+    const { data } = await supabase.from('email_logs').select('*').order('created_at', { ascending: false }).limit(50);
+    setLogs(data || []);
+    setLogsLoading(false);
+  }, []);
+
+  useEffect(() => { loadLogs(); }, [loadLogs]);
+
+  // Load all orders once on mount for local search
+  const [allOrders, setAllOrders] = useState([]);
+  useEffect(() => {
+    supabase
+      .from('orders')
+      .select('id, customer_name, customer_email, total_price, status, items, shipping_address, tracking_number, created_at')
+      .order('created_at', { ascending: false })
+      .limit(500)
+      .then(({ data, error }) => {
+        if (error) console.error('ManualEmails: failed to load orders', error);
+        setAllOrders(data || []);
+      });
+  }, []);
+
+
+  // Search orders with debounce — filter locally
+  useEffect(() => {
+    if (!orderSearch.trim()) { setOrderSearchResults([]); setOrderSearchLoading(false); return; }
+    setOrderSearchLoading(true);
+    const timer = setTimeout(() => {
+      const q = orderSearch.trim().toLowerCase();
+      const results = allOrders.filter(o =>
+        (o.customer_name || '').toLowerCase().includes(q) ||
+        (o.customer_email || '').toLowerCase().includes(q) ||
+        (o.id || '').toLowerCase().startsWith(q)
+      ).slice(0, 8);
+      setOrderSearchResults(results);
+      setOrderSearchLoading(false);
+    }, 250);
+    return () => clearTimeout(timer);
+  }, [orderSearch, allOrders]);
+
+
+
+  const autofillFromOrder = (order) => {
+    const items = Array.isArray(order.items)
+      ? order.items
+      : (typeof order.items === 'string' ? (() => { try { return JSON.parse(order.items); } catch { return []; } })() : []);
+    const addr = order.shipping_address || {};
+    setForm(f => ({
+      ...f,
+      recipientEmail: order.customer_email || '',
+      customerName: order.customer_name || '',
+      orderNumber: order.id || '',
+      totalAmount: String(order.total || order.total_price || ''),
+      trackingNumber: order.tracking_number || '',
+    }));
+    setShippingAddress({
+      street: addr.street || '',
+      number: addr.number || '',
+      apartment: addr.apartment || '',
+      city: addr.city || '',
+      province: addr.province || '',
+      postalCode: addr.postalCode || '',
+      country: addr.country || 'Canada',
+    });
+    if (items.length > 0) {
+      setProducts(items.map(item => ({
+        name: item.name || item.product_name || '',
+        size: item.size || '',
+        quantity: item.quantity || 1,
+        price: item.price || '',
+      })));
+    }
+    setAutofilledOrder(order);
+    setOrderSearch('');
+    setOrderSearchResults([]);
+  };
+
+  const setField = (key, val) => setForm(f => ({ ...f, [key]: val }));
+  const setAddrField = (key, val) => setShippingAddress(a => ({ ...a, [key]: val }));
+
+  const addProduct = () => setProducts(p => [...p, { ...BLANK_PRODUCT }]);
+  const removeProduct = (i) => setProducts(p => p.filter((_, idx) => idx !== i));
+  const setProduct = (i, key, val) => setProducts(p => p.map((item, idx) => idx === i ? { ...item, [key]: val } : item));
+
+  const handleSend = async () => {
+    if (!form.recipientEmail || !form.templateName) {
+      showToast('Recipient email and template are required.', 'error');
+      return;
+    }
+    setSending(true);
+    try {
+      const res = await fetch('/api/send-manual-email', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          adminEmail,
+          recipientEmail: form.recipientEmail.trim(),
+          customerName: form.customerName.trim() || 'Customer',
+          templateName: form.templateName,
+          orderNumber: form.orderNumber.trim() || null,
+          totalAmount: form.totalAmount ? parseFloat(form.totalAmount) : 0,
+          shippingAddress,
+          products: products.filter(p => p.name.trim()),
+          trackingNumber: form.trackingNumber.trim() || '',
+          customSubject: form.customSubject.trim(),
+          customBody: form.customBody.trim(),
+        }),
+      });
+      const data = await res.json();
+      if (res.ok && data.success) {
+        showToast(`✅ Email sent! Message ID: ${data.id || '—'}`, 'success');
+        // Reset form
+        setForm({ recipientEmail: '', customerName: '', templateName: 'order_confirmation', orderNumber: '', totalAmount: '', trackingNumber: '', customSubject: '', customBody: '' });
+        setProducts([{ ...BLANK_PRODUCT }]);
+        setShippingAddress({ street: '', number: '', apartment: '', city: '', province: '', postalCode: '', country: 'Canada' });
+        loadLogs();
+      } else {
+        showToast(`❌ Error: ${data.error?.message || data.error || 'Send failed'}`, 'error');
+        loadLogs();
+      }
+    } catch (err) {
+      showToast(`❌ Internal error: ${err.message}`, 'error');
+    } finally {
+      setSending(false);
+    }
+  };
+
+  const inputStyle = { ...S.input, marginBottom: 0 };
+  const labelStyle = { fontSize: '0.73rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em', color: 'rgba(255,255,255,0.4)', display: 'block', marginBottom: '0.35rem' };
+  const fieldWrap = { marginBottom: '1rem' };
+
+  return (
+    <div>
+      <div style={{ marginBottom: '1.75rem' }}>
+        <h2 style={{ margin: 0, fontSize: '1.35rem', fontWeight: 800 }}>✉️ E-mails Manuais</h2>
+        <p style={{ margin: '0.3rem 0 0', color: 'rgba(255,255,255,0.4)', fontSize: '0.85rem' }}>Envie qualquer template oficial de e-mail para qualquer cliente via Resend.</p>
+      </div>
+
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem' }}>
+        {/* ── Left Column: Form ── */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
+
+          {/* Order Search / Autofill */}
+          <div style={{ ...S.card, padding: '1.25rem', border: '1px solid rgba(214,255,0,0.2)' }}>
+            <div style={{ fontSize: '0.75rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em', color: '#D6FF00', marginBottom: '0.75rem' }}>🔍 Buscar Pedido Existente</div>
+            <p style={{ fontSize: '0.8rem', color: 'rgba(255,255,255,0.4)', margin: '0 0 0.75rem' }}>Digite o ID, nome ou e-mail do cliente para preencher o formulário automaticamente.</p>
+            <div style={{ position: 'relative' }}>
+              <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+                <Search size={15} style={{ color: 'rgba(255,255,255,0.3)', flexShrink: 0 }} />
+                <input
+                  style={{ ...S.input, flex: 1, marginBottom: 0 }}
+                  value={orderSearch}
+                  onChange={e => { setOrderSearch(e.target.value); setAutofilledOrder(null); }}
+                  placeholder="Ex: antonio, acayress@gmail.com, b56f19..."
+                />
+                {orderSearchLoading && <RefreshCw size={15} style={{ color: '#D6FF00', animation: 'spin 1s linear infinite', flexShrink: 0 }} />}
+              </div>
+
+              {/* Dropdown Results */}
+              {orderSearchResults.length > 0 && (
+                <div style={{
+                  position: 'absolute', top: '100%', left: 0, right: 0, zIndex: 50,
+                  background: '#1A1D20', border: '1px solid #2A2D30', borderRadius: '8px',
+                  marginTop: '0.35rem', boxShadow: '0 8px 24px rgba(0,0,0,0.5)', overflow: 'hidden'
+                }}>
+                  {orderSearchResults.map(order => (
+                    <button
+                      key={order.id}
+                      onClick={() => autofillFromOrder(order)}
+                      style={{
+                        width: '100%', display: 'flex', alignItems: 'center', gap: '0.75rem',
+                        padding: '0.75rem 1rem', background: 'transparent', border: 'none',
+                        borderBottom: '1px solid rgba(255,255,255,0.05)', cursor: 'pointer',
+                        textAlign: 'left', transition: 'background 0.15s'
+                      }}
+                      onMouseEnter={e => e.currentTarget.style.background = 'rgba(214,255,0,0.06)'}
+                      onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
+                    >
+                      <div style={{ width: '36px', height: '36px', borderRadius: '50%', background: 'rgba(214,255,0,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                        <span style={{ fontSize: '0.7rem', fontWeight: 800, color: '#D6FF00' }}>{(order.customer_name || '?')[0].toUpperCase()}</span>
+                      </div>
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <div style={{ fontWeight: 700, fontSize: '0.85rem', color: '#fff', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{order.customer_name || '—'}</div>
+                        <div style={{ fontSize: '0.75rem', color: 'rgba(255,255,255,0.4)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{order.customer_email} · #{order.id.slice(0, 8)}</div>
+                      </div>
+                      <div style={{ flexShrink: 0, textAlign: 'right' }}>
+                        <div style={{ fontSize: '0.8rem', fontWeight: 700, color: '#D6FF00' }}>${parseFloat(order.total || order.total_price || 0).toFixed(2)}</div>
+                        <div style={{ fontSize: '0.68rem', color: STATUS_COLORS[order.status]?.color || 'rgba(255,255,255,0.3)' }}>{STATUS_COLORS[order.status]?.label || order.status}</div>
+                      </div>
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {/* Autofilled badge */}
+            {autofilledOrder && (
+              <div style={{ marginTop: '0.75rem', display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.5rem 0.75rem', background: 'rgba(74,222,128,0.08)', border: '1px solid rgba(74,222,128,0.25)', borderRadius: '6px' }}>
+                <CheckCircle2 size={14} color="#4ADE80" />
+                <span style={{ fontSize: '0.8rem', color: '#4ADE80', fontWeight: 600 }}>Preenchido com o pedido #{autofilledOrder.id.slice(0, 8)} de {autofilledOrder.customer_name}</span>
+                <button onClick={() => setAutofilledOrder(null)} style={{ marginLeft: 'auto', background: 'none', border: 'none', color: 'rgba(255,255,255,0.3)', cursor: 'pointer', padding: 0, lineHeight: 1 }}><X size={13} /></button>
+              </div>
+            )}
+          </div>
+
+          {/* Recipient */}
+          <div style={{ ...S.card, padding: '1.25rem' }}>
+            <div style={{ fontSize: '0.75rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em', color: '#D6FF00', marginBottom: '0.9rem' }}>👤 Destinatário</div>
+            <div className="admin-grid-2">
+              <div style={fieldWrap}>
+                <label style={labelStyle}>Recipient Email *</label>
+                <input style={inputStyle} type="email" value={form.recipientEmail} onChange={e => setField('recipientEmail', e.target.value)} placeholder="customer@email.com" />
+              </div>
+              <div style={fieldWrap}>
+                <label style={labelStyle}>Customer Name</label>
+                <input style={inputStyle} value={form.customerName} onChange={e => setField('customerName', e.target.value)} placeholder="Full Name" />
+              </div>
+            </div>
+          </div>
+
+          {/* Template & Order */}
+          <div style={{ ...S.card, padding: '1.25rem' }}>
+            <div style={{ fontSize: '0.75rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em', color: '#D6FF00', marginBottom: '0.9rem' }}>📋 Template & Pedido</div>
+            <div style={fieldWrap}>
+              <label style={labelStyle}>Email Template *</label>
+              <select style={inputStyle} value={form.templateName} onChange={e => setField('templateName', e.target.value)}>
+                {EMAIL_TEMPLATES.map(t => <option key={t.value} value={t.value}>{t.label}</option>)}
+              </select>
+            </div>
+            <div className="admin-grid-2">
+              <div style={fieldWrap}>
+                <label style={labelStyle}>Order Number</label>
+                <input style={inputStyle} value={form.orderNumber} onChange={e => setField('orderNumber', e.target.value)} placeholder="#abc123..." />
+              </div>
+              <div style={fieldWrap}>
+                <label style={labelStyle}>Total Amount (CAD)</label>
+                <input style={inputStyle} type="number" step="0.01" min="0" value={form.totalAmount} onChange={e => setField('totalAmount', e.target.value)} placeholder="0.00" />
+              </div>
+            </div>
+            <div style={fieldWrap}>
+              <label style={labelStyle}>Tracking Number</label>
+              <input style={inputStyle} value={form.trackingNumber} onChange={e => setField('trackingNumber', e.target.value)} placeholder="1Z999AA10123456784" />
+            </div>
+            {form.templateName === 'custom_message' && (
+              <>
+                <div style={fieldWrap}>
+                  <label style={labelStyle}>Subject</label>
+                  <input style={inputStyle} value={form.customSubject} onChange={e => setField('customSubject', e.target.value)} placeholder="Email subject..." />
+                </div>
+                <div style={fieldWrap}>
+                  <label style={labelStyle}>Message</label>
+                  <textarea style={{ ...inputStyle, minHeight: '110px', resize: 'vertical' }} value={form.customBody} onChange={e => setField('customBody', e.target.value)} placeholder="Your custom message..." />
+                </div>
+              </>
+            )}
+          </div>
+
+          {/* Shipping Address */}
+          <div style={{ ...S.card, padding: '1.25rem' }}>
+            <div style={{ fontSize: '0.75rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em', color: '#D6FF00', marginBottom: '0.9rem' }}>📍 Shipping Address</div>
+            <div className="admin-grid-2">
+              <div style={fieldWrap}>
+                <label style={labelStyle}>Street</label>
+                <input style={inputStyle} value={shippingAddress.street} onChange={e => setAddrField('street', e.target.value)} placeholder="Street name" />
+              </div>
+              <div style={fieldWrap}>
+                <label style={labelStyle}>Number</label>
+                <input style={inputStyle} value={shippingAddress.number} onChange={e => setAddrField('number', e.target.value)} placeholder="123" />
+              </div>
+            </div>
+            <div style={fieldWrap}>
+              <label style={labelStyle}>Apt / Unit</label>
+              <input style={inputStyle} value={shippingAddress.apartment} onChange={e => setAddrField('apartment', e.target.value)} placeholder="Optional" />
+            </div>
+            <div className="admin-grid-2">
+              <div style={fieldWrap}>
+                <label style={labelStyle}>City</label>
+                <input style={inputStyle} value={shippingAddress.city} onChange={e => setAddrField('city', e.target.value)} placeholder="Toronto" />
+              </div>
+              <div style={fieldWrap}>
+                <label style={labelStyle}>Province</label>
+                <input style={inputStyle} value={shippingAddress.province} onChange={e => setAddrField('province', e.target.value)} placeholder="ON" />
+              </div>
+            </div>
+            <div className="admin-grid-2">
+              <div style={fieldWrap}>
+                <label style={labelStyle}>Postal Code</label>
+                <input style={inputStyle} value={shippingAddress.postalCode} onChange={e => setAddrField('postalCode', e.target.value)} placeholder="M5V 1J1" />
+              </div>
+              <div style={fieldWrap}>
+                <label style={labelStyle}>Country</label>
+                <input style={inputStyle} value={shippingAddress.country} onChange={e => setAddrField('country', e.target.value)} placeholder="Canada" />
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* ── Right Column: Products + Send ── */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
+
+          {/* Products */}
+          <div style={{ ...S.card, padding: '1.25rem' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.9rem' }}>
+              <div style={{ fontSize: '0.75rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em', color: '#D6FF00' }}>🛍️ Products</div>
+              <button onClick={addProduct} style={{ ...S.btnSecondary, fontSize: '0.75rem', padding: '0.3rem 0.75rem' }}><Plus size={12} /> Add Row</button>
+            </div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+              {products.map((prod, i) => (
+                <div key={i} style={{ background: 'rgba(255,255,255,0.03)', borderRadius: '8px', padding: '0.75rem', border: '1px solid rgba(255,255,255,0.07)' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
+                    <span style={{ fontSize: '0.72rem', color: 'rgba(255,255,255,0.35)', fontWeight: 700 }}>Item #{i + 1}</span>
+                    {products.length > 1 && (
+                      <button onClick={() => removeProduct(i)} style={{ background: 'none', border: 'none', color: '#F87171', cursor: 'pointer', padding: 0 }}><X size={13} /></button>
+                    )}
+                  </div>
+                  <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 1fr', gap: '0.5rem', marginBottom: '0.5rem' }}>
+                    <input style={{ ...inputStyle, fontSize: '0.8rem' }} value={prod.name} onChange={e => setProduct(i, 'name', e.target.value)} placeholder="Jersey name..." />
+                    <input style={{ ...inputStyle, fontSize: '0.8rem' }} value={prod.size} onChange={e => setProduct(i, 'size', e.target.value)} placeholder="Size" />
+                    <input style={{ ...inputStyle, fontSize: '0.8rem' }} type="number" min="1" value={prod.quantity} onChange={e => setProduct(i, 'quantity', parseInt(e.target.value) || 1)} placeholder="Qty" />
+                  </div>
+                  <input style={{ ...inputStyle, fontSize: '0.8rem' }} type="number" step="0.01" min="0" value={prod.price} onChange={e => setProduct(i, 'price', e.target.value)} placeholder="Unit price (CAD)" />
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Send Button */}
+          <button
+            onClick={handleSend}
+            disabled={sending || !form.recipientEmail}
+            style={{ ...S.btnPrimary, justifyContent: 'center', fontSize: '0.95rem', padding: '0.9rem 1.5rem', opacity: (sending || !form.recipientEmail) ? 0.5 : 1 }}
+          >
+            {sending
+              ? <><RefreshCw size={16} style={{ animation: 'spin 1s linear infinite' }} /> Sending...</>
+              : <><Send size={16} /> Send Email</>}
+          </button>
+        </div>
+      </div>
+
+      {/* ── Log Table ── */}
+      <div style={{ ...S.card, padding: '1.25rem', marginTop: '1.75rem' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+          <div style={{ fontSize: '0.75rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em', color: '#D6FF00' }}>📜 Send Log</div>
+          <button onClick={loadLogs} style={{ ...S.btnSecondary, fontSize: '0.75rem', padding: '0.3rem 0.75rem' }}><RefreshCw size={12} /> Refresh</button>
+        </div>
+        {logsLoading ? (
+          <div style={{ color: 'rgba(255,255,255,0.3)', fontSize: '0.875rem', textAlign: 'center', padding: '2rem' }}>Loading logs...</div>
+        ) : logs.length === 0 ? (
+          <div style={{ color: 'rgba(255,255,255,0.3)', fontSize: '0.875rem', textAlign: 'center', padding: '2rem' }}>No emails sent yet.</div>
+        ) : (
+          <div className="table-responsive">
+            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.8rem' }}>
+              <thead>
+                <tr style={{ borderBottom: '1px solid rgba(255,255,255,0.08)' }}>
+                  {['Date/Time', 'Recipient', 'Template', 'Order #', 'Status', 'Message ID'].map(h => (
+                    <th key={h} style={{ padding: '0.5rem 0.75rem', textAlign: 'left', fontWeight: 700, textTransform: 'uppercase', fontSize: '0.68rem', letterSpacing: '0.06em', color: 'rgba(255,255,255,0.35)', whiteSpace: 'nowrap' }}>{h}</th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {logs.map(log => (
+                  <tr key={log.id} style={{ borderBottom: '1px solid rgba(255,255,255,0.04)' }}>
+                    <td style={{ padding: '0.6rem 0.75rem', color: 'rgba(255,255,255,0.5)', whiteSpace: 'nowrap' }}>{new Date(log.created_at).toLocaleString('pt-BR')}</td>
+                    <td style={{ padding: '0.6rem 0.75rem', color: '#fff', maxWidth: '160px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{log.recipient_email}</td>
+                    <td style={{ padding: '0.6rem 0.75rem', color: 'rgba(255,255,255,0.7)' }}>{EMAIL_TEMPLATES.find(t => t.value === log.template_name)?.label || log.template_name}</td>
+                    <td style={{ padding: '0.6rem 0.75rem', color: 'rgba(255,255,255,0.5)', fontFamily: 'monospace', fontSize: '0.75rem' }}>{log.order_number ? `#${log.order_number.slice(0, 8)}` : '—'}</td>
+                    <td style={{ padding: '0.6rem 0.75rem' }}>
+                      <span style={{ padding: '0.2rem 0.55rem', borderRadius: '20px', fontSize: '0.7rem', fontWeight: 700, background: log.status === 'success' ? 'rgba(74,222,128,0.12)' : 'rgba(248,113,113,0.12)', color: log.status === 'success' ? '#4ADE80' : '#F87171' }}>
+                        {log.status === 'success' ? '✓ Sent' : '✗ Failed'}
+                      </span>
+                    </td>
+                    <td style={{ padding: '0.6rem 0.75rem', color: 'rgba(255,255,255,0.35)', fontFamily: 'monospace', fontSize: '0.72rem', maxWidth: '130px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{log.message_id || log.error_message || '—'}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </div>
     </div>
   );
 };
@@ -6080,20 +6657,21 @@ const RebrandAdmin = () => {
   }
 
   const sections = {
-    dashboard:   <DashboardSection showValues={showValues} setShowValues={setShowValues} />,
-    orders:      <OrdersSection showToast={showToast} onOpenTracking={(code) => { setTrackingCodeToView(code); setIsTrackModalOpen(true); }} />,
-    products:    <ProductsSection showToast={showToast} />,
-    visual:      <VisualSection showToast={showToast} />,
-    coupons:     <CouponsSection showToast={showToast} />,
-    clientes:    <ClientesSection showToast={showToast} />,
-    afiliados:   <AfiliadosSection showToast={showToast} />,
-    conversas:   <ConversasSection />,
-    pricing:     <PrecificacaoSection showToast={showToast} />,
-    depoimentos: <DepoimentosSection showToast={showToast} />,
-    financeiro:  <FinanceiroSection showToast={showToast} />,
-    cidades:     <CidadesSection showToast={showToast} />,
-    analytics:   <AnalyticsSection showToast={showToast} />,
-    settings:    <SettingsSection showToast={showToast} />,
+    dashboard:     <DashboardSection showValues={showValues} setShowValues={setShowValues} />,
+    orders:        <OrdersSection showToast={showToast} onOpenTracking={(code) => { setTrackingCodeToView(code); setIsTrackModalOpen(true); }} adminEmail={user?.email} />,
+    products:      <ProductsSection showToast={showToast} />,
+    visual:        <VisualSection showToast={showToast} />,
+    coupons:       <CouponsSection showToast={showToast} />,
+    clientes:      <ClientesSection showToast={showToast} />,
+    afiliados:     <AfiliadosSection showToast={showToast} />,
+    conversas:     <ConversasSection />,
+    pricing:       <PrecificacaoSection showToast={showToast} />,
+    depoimentos:   <DepoimentosSection showToast={showToast} />,
+    financeiro:    <FinanceiroSection showToast={showToast} />,
+    cidades:       <CidadesSection showToast={showToast} />,
+    analytics:     <AnalyticsSection showToast={showToast} />,
+    manual_emails: <ManualEmailsSection showToast={showToast} adminEmail={user?.email} />,
+    settings:      <SettingsSection showToast={showToast} />,
   };
 
   return (
