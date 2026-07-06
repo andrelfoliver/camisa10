@@ -1112,7 +1112,7 @@ const ResendEmailModal = ({ order, onClose, showToast, adminEmail }) => {
     }
     setSending(true);
     try {
-      const res = await fetch('/api/send-manual-email', {
+      const res = await fetch('/api/send-status-email', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -3215,7 +3215,7 @@ const ManualEmailsSection = ({ showToast, adminEmail }) => {
     }
     setSending(true);
     try {
-      const res = await fetch('/api/send-manual-email', {
+      const res = await fetch('/api/send-status-email', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
