@@ -1222,8 +1222,57 @@ const OrderDetailModal = ({ order, onClose, onStatusChange, onTrackingChange, sh
   const [tracking, setTracking] = useState(order.tracking_number || '');
   const [savingTracking, setSavingTracking] = useState(false);
   const [showResendModal, setShowResendModal] = useState(false);
+  const [supplierEmail, setSupplierEmail] = useState('');
+  const [sendingSupplier, setSendingSupplier] = useState(false);
   const items = Array.isArray(order.items) ? order.items : (typeof order.items === 'string' ? (() => { try { return JSON.parse(order.items); } catch { return []; } })() : []);
   const addr = order.shipping_address || {};
+
+  useEffect(() => {
+    const fetchSupplierEmail = async () => {
+      try {
+        const { data } = await supabase
+          .from('store_settings')
+          .select('value')
+          .eq('key', 'supplier_email')
+          .single();
+        if (data?.value) {
+          setSupplierEmail(data.value.trim());
+        }
+      } catch (err) {
+        console.error('Erro ao carregar email do fornecedor:', err);
+      }
+    };
+    fetchSupplierEmail();
+  }, []);
+
+  const handleSendSupplierEmail = async () => {
+    if (!supplierEmail) {
+      showToast('E-mail do fornecedor não configurado.', 'error');
+      return;
+    }
+    setSendingSupplier(true);
+    try {
+      const res = await fetch('/api/send-order-email', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          order,
+          supplierEmail,
+          supplierOnly: true
+        })
+      });
+      const data = await res.json();
+      if (res.ok && data.success) {
+        showToast('E-mail de produção enviado ao fornecedor!', 'success');
+      } else {
+        showToast(`Erro ao enviar e-mail: ${data.error || 'Falha no envio'}`, 'error');
+      }
+    } catch (err) {
+      showToast(`Erro ao enviar e-mail: ${err.message}`, 'error');
+    } finally {
+      setSendingSupplier(false);
+    }
+  };
 
   const handleSaveTracking = async () => {
     if (!tracking.trim()) return;
@@ -1289,6 +1338,33 @@ const OrderDetailModal = ({ order, onClose, onStatusChange, onTrackingChange, sh
                 }}
               >
                 <Mail size={12} /> Reenviar E-mail
+              </button>
+            )}
+            {supplierEmail && (
+              <button
+                onClick={handleSendSupplierEmail}
+                disabled={sendingSupplier}
+                style={{
+                  background: 'rgba(245,158,11,0.12)',
+                  border: '1px solid rgba(245,158,11,0.5)',
+                  color: '#F59E0B',
+                  padding: '0.4rem 0.8rem',
+                  borderRadius: '6px',
+                  fontSize: '0.75rem',
+                  fontWeight: 700,
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '0.35rem',
+                  opacity: sendingSupplier ? 0.6 : 1,
+                }}
+              >
+                {sendingSupplier ? (
+                  <RefreshCw size={12} style={{ animation: 'spin 1s linear infinite' }} />
+                ) : (
+                  <Truck size={12} />
+                )}
+                Enviar Fornecedor
               </button>
             )}
             <span style={S.badge(order.status)}>{STATUS_COLORS[order.status]?.label || order.status}</span>
