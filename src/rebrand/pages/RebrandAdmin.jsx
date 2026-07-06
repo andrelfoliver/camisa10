@@ -5027,11 +5027,15 @@ const ClientesSection = ({ showToast }) => {
     async function load() {
       setLoading(true);
 
-      // Fetch both sources in parallel
-      const [{ data: profiles, error: pError }, { data: orders, error: oError }, { data: settings }] = await Promise.all([
+      // Fetch all sources in parallel
+      const [{ data: profiles, error: pError }, { data: orders, error: oError }, { data: settings }, { data: evts, error: eError }] = await Promise.all([
         supabase.from('profiles').select('*').order('created_at', { ascending: false }),
-        supabase.from('orders').select('id, customer_email, customer_name, customer_phone, total_price, status, created_at'),
-        supabase.from('store_settings').select('*').in('key', ['sent_recovery_emails', 'sent_recovery_emails_2'])
+        supabase.from('orders').select('id, customer_email, customer_name, customer_phone, total_price, status, created_at, session_id'),
+        supabase.from('store_settings').select('*').in('key', ['sent_recovery_emails', 'sent_recovery_emails_2']),
+        supabase.from('analytics_events')
+          .select('event_name, session_id, page, metadata, user_id, created_at, utm_source, utm_medium, utm_campaign')
+          .order('created_at', { ascending: false })
+          .limit(3000)
       ]);
 
       if (cancelled) return;
@@ -5099,6 +5103,8 @@ const ClientesSection = ({ showToast }) => {
 
       // Also add order-only customers (not in profiles) — guests who checked out
       const profileEmails = new Set((profiles || []).map(p => (p.email || '').toLowerCase().trim()));
+      const orderedSessionIds = new Set((orders || []).map(o => o.session_id).filter(Boolean));
+      
       (orders || []).forEach(o => {
         const emailKey = (o.customer_email || '').toLowerCase().trim();
         if (!emailKey || profileEmails.has(emailKey)) return;
@@ -5123,6 +5129,100 @@ const ClientesSection = ({ showToast }) => {
             province: '',
             postal_code: ''
           });
+        }
+      });
+
+      // Find anonymous sessions with active/abandoned carts from analytics_events
+      const sessionMap = {};
+      (evts || []).forEach(e => {
+        if (!e.session_id) return;
+        if (!sessionMap[e.session_id]) sessionMap[e.session_id] = [];
+        sessionMap[e.session_id].push(e);
+      });
+
+      const registeredUserIds = new Set((profiles || []).map(p => p.id));
+
+      Object.entries(sessionMap).forEach(([sid, sessionEvents]) => {
+        // Skip if this session is already linked to a finished order
+        if (orderedSessionIds.has(sid)) return;
+
+        const hasAddToCart = sessionEvents.some(e => (e.event_name || '').toLowerCase() === 'addtocart');
+        const hasPurchase = sessionEvents.some(e => (e.event_name || '').toLowerCase() === 'purchase');
+        
+        // Find if user logged in during this session
+        const firstWithUser = sessionEvents.find(e => e.user_id);
+        const userId = firstWithUser ? firstWithUser.user_id : null;
+
+        // Only include if they added to cart, didn't purchase, and are anonymous (no registered userId)
+        if (hasAddToCart && !hasPurchase && (!userId || !registeredUserIds.has(userId))) {
+          // Extract cart items from AddToCart events
+          const cartItemsMap = {};
+          const addToCartEvents = sessionEvents.filter(e => (e.event_name || '').toLowerCase() === 'addtocart');
+          
+          addToCartEvents.forEach(e => {
+            const meta = e.metadata || {};
+            const prodName = meta.content_name || meta.name || 'Produto Sem Nome';
+            const prodId = meta.content_ids?.[0] || e.product_id || 'unknown';
+            const price = parseFloat(meta.value || meta.price) || 0;
+            const quantity = parseInt(meta.quantity) || 1;
+            const size = meta.size || 'M';
+            const key = `${prodId}-${size}`;
+
+            if (!cartItemsMap[key]) {
+              cartItemsMap[key] = {
+                cartId: key,
+                id: prodId,
+                name: prodName,
+                price: price / quantity || price || 89.90,
+                quantity: 0,
+                size: size,
+                image: null
+              };
+            }
+            cartItemsMap[key].quantity += quantity;
+          });
+
+          const cartItems = Object.values(cartItemsMap);
+
+          if (cartItems.length > 0) {
+            // Find location info from metadata
+            const geoEvent = sessionEvents.find(e => e.metadata?.city || e.metadata?.province || e.metadata?.country);
+            const city = geoEvent?.metadata?.city || '';
+            const province = geoEvent?.metadata?.province || '';
+            const country = geoEvent?.metadata?.country || '';
+            
+            // Format source
+            const attrEvent = sessionEvents.find(e => e.utm_source || e.metadata?.utm_source) || sessionEvents[sessionEvents.length - 1];
+            const utmSource = attrEvent.utm_source || attrEvent.metadata?.utm_source || 'Direto';
+
+            const lastEvent = sessionEvents[0]; // sorted desc, so first is most recent
+
+            // Check if there is an email/phone typed in InitiateCheckout metadata
+            const checkoutEvent = sessionEvents.find(e => (e.event_name || '').toLowerCase() === 'initiatecheckout' && e.metadata?.email);
+            const email = checkoutEvent?.metadata?.email || '';
+            const phone = checkoutEvent?.metadata?.phone || '';
+
+            profileList.push({
+              id: 'session-' + sid,
+              name: email ? `Convidado (Sacola Ativa)` : `Visitante Anônimo (${city || 'Desconhecido'}, ${province || country || ''})`,
+              email: email || '',
+              phone: phone || '',
+              avatar_url: '',
+              orders: 0,
+              spent: 0,
+              lastOrder: lastEvent.created_at,
+              registeredAt: null,
+              source: 'session',
+              cart: cartItems,
+              street: '',
+              apartment: '',
+              city: city,
+              province: province,
+              postal_code: '',
+              sessionId: sid,
+              utmSource: utmSource
+            });
+          }
         }
       });
 

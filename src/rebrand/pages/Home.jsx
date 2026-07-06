@@ -443,6 +443,45 @@ const Home = () => {
         </div>
       </div>
 
+      {/* 20% OFF FIRST ORDER PROMO BANNER */}
+      <section style={{ background: 'linear-gradient(135deg, #121416 0%, #1a1d20 100%)', borderBottom: '1.5px solid #D6FF00', padding: '2rem 1.5rem', textAlign: 'center', fontFamily: 'Inter, system-ui, sans-serif' }}>
+        <div style={{ maxWidth: '1200px', margin: '0 auto', display: 'flex', flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '1.5rem' }}>
+          <div style={{ textAlign: 'left', flex: 1, minWidth: '280px' }}>
+            <span style={{ background: '#D6FF00', color: '#000000', padding: '0.35rem 0.75rem', borderRadius: '4px', fontSize: '0.72rem', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '1px' }}>
+              Special Welcome Offer 🎁
+            </span>
+            <h2 style={{ fontSize: '1.8rem', fontWeight: 900, color: '#ffffff', margin: '0.6rem 0 0.3rem 0', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+              GET 20% OFF YOUR FIRST ORDER
+            </h2>
+            <p style={{ color: '#9CA3AF', fontSize: '0.88rem', margin: 0, lineHeight: 1.4 }}>
+              Register today to unlock your exclusive discount. Use code <strong style={{ color: '#D6FF00', letterSpacing: '0.5px' }}>FIRST20</strong> at checkout.
+            </p>
+          </div>
+          <div style={{ display: 'flex', gap: '1rem', alignItems: 'center', flexShrink: 0 }}>
+            <button
+              onClick={() => navigate('/auth')}
+              style={{
+                background: '#D6FF00',
+                color: '#000000',
+                border: 'none',
+                fontWeight: '800',
+                textTransform: 'uppercase',
+                letterSpacing: '0.05em',
+                padding: '0.75rem 1.75rem',
+                borderRadius: '6px',
+                fontSize: '0.8rem',
+                cursor: 'pointer',
+                transition: 'opacity 0.2s'
+              }}
+              onMouseEnter={(e) => e.currentTarget.style.opacity = '0.85'}
+              onMouseLeave={(e) => e.currentTarget.style.opacity = '1'}
+            >
+              Create Free Account
+            </button>
+          </div>
+        </div>
+      </section>
+
       {/* 2. SHOP BY SPORT - GRIDS ASSIMÉTRICOS (Mais amplo, vem primeiro) */}
       <section className="rebrand-section container" style={{ maxWidth: '1400px', margin: '0 auto', paddingTop: '4rem' }}>
         <div className="rebrand-section-header">
