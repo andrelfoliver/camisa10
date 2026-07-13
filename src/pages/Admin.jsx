@@ -1732,7 +1732,7 @@ const Admin = () => {
     if (name.includes('retrô') || name.includes('retro')) return c.costRetro || 15;
     if (name.includes('manga longa') || name.includes('long sleeve')) return c.costLongSleeve || 12;
     if (name.includes('kit infantil') || name.includes('kids')) return c.costKids || 11;
-    if (name.includes('baby') || name.includes('body')) return c.costBaby || 8;
+    if ((name.includes('baby') && !name.includes('babylook') && !name.includes('baby look')) || name.includes('body')) return c.costBaby || 8;
     if (name.includes('treino') || name.includes('training')) return c.costTraining || 17;
     if (name.includes('short') || name.includes('bermuda')) return c.costShorts || 8;
 
@@ -2140,7 +2140,7 @@ const Admin = () => {
     let updates = {};
 
     // Identifica Versão
-    if (lowerName.includes('baby') || lowerName.includes('body')) {
+    if (((lowerName.includes('baby') && !lowerName.includes('babylook') && !lowerName.includes('baby look')) || lowerName.includes('body'))) {
       updates.version = 'Baby body';
       updates.price = 43.90;
     } else if (lowerName.includes('jogador') || lowerName.includes('player')) {

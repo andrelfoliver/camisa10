@@ -84,6 +84,8 @@ const ProductPage = () => {
     product?.category?.toLowerCase().includes('womens') ||
     product?.name?.toLowerCase().includes('feminina') ||
     product?.name?.toLowerCase().includes('womens') ||
+    product?.name?.toLowerCase().includes('babylook') ||
+    product?.name?.toLowerCase().includes('baby look') ||
     product?.version?.toLowerCase().includes('feminina') ||
     product?.version?.toLowerCase().includes('womens') ||
     product?.version?.toLowerCase().includes('women'));

@@ -102,7 +102,7 @@ const ProductPage = () => {
               desc: data.description || 'Premium stitched sports jersey. Features authentic player details, breathable mesh elements, and lightweight tailored design for maximum performance and look.'
             });
             setSelectedColor('#000000');
-            const isKids = data.name?.toLowerCase().includes('infantil') || data.name?.toLowerCase().includes('kids') || data.name?.toLowerCase().includes('child') || data.name?.toLowerCase().includes('bebê') || data.name?.toLowerCase().includes('baby');
+            const isKids = data.name?.toLowerCase().includes('infantil') || data.name?.toLowerCase().includes('kids') || data.name?.toLowerCase().includes('child') || data.name?.toLowerCase().includes('bebê') || (data.name?.toLowerCase().includes('baby') && !data.name?.toLowerCase().includes('babylook') && !data.name?.toLowerCase().includes('baby look'));
             setSelectedSize(isKids ? '22' : 'M');
 
             // Track product view
@@ -176,7 +176,7 @@ const ProductPage = () => {
     product?.name?.toLowerCase().includes('kids') ||
     product?.name?.toLowerCase().includes('child') ||
     product?.name?.toLowerCase().includes('bebê') ||
-    product?.name?.toLowerCase().includes('baby');
+    (product?.name?.toLowerCase().includes('baby') && !product?.name?.toLowerCase().includes('babylook') && !product?.name?.toLowerCase().includes('baby look'));
 
   const isPlayerVersion = 
     !isKidsKit && (
@@ -186,9 +186,13 @@ const ProductPage = () => {
       product?.desc?.toLowerCase().includes('versão jogador')
     );
 
+  const isBabylook = 
+    product?.name?.toLowerCase().includes('babylook') ||
+    product?.name?.toLowerCase().includes('baby look');
+
   const availableSizes = isKidsKit
     ? ['16', '18', '20', '22', '24', '26', '28']
-    : (isPlayerVersion 
+    : (isPlayerVersion || isBabylook
       ? ['S', 'M', 'L', 'XL', '2XL'] 
       : ['S', 'M', 'L', 'XL', '2XL', '3XL', '4XL']);
 
