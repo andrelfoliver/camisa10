@@ -15,20 +15,46 @@ export default async function handler(req, res) {
 
   const firstName = customerName.split(' ')[0] || 'Cliente';
 
-  const cartItemsHtml = cartItems.map(item => `
-    <div style="display: flex; align-items: center; padding: 15px; border-bottom: 1px solid #edf2f7; background: #fdfdfd;">
-      <div style="flex: 0 0 50px; margin-right: 15px;">
-        <img src="${item.image}" alt="" style="width: 50px; height: 50px; object-fit: contain; background: #fff; border: 1px solid #edf2f7; border-radius: 4px;" />
+  const cartItemsHtml = cartItems.map(item => {
+    let customization = '';
+    if (item.extras?.nameNumber) {
+      customization += `
+        <div style="margin-top: 5px; padding: 4px 8px; background: #FFF9C4; border-left: 3px solid #FBC02D; font-size: 0.78rem; color: #444; border-radius: 4px; display: inline-block;">
+          <strong>CUSTOMIZATION:</strong> ${item.extras.customName || 'N/A'} - ${item.extras.customNumber || 'N/A'}
+        </div>
+      `;
+    }
+    if (item.extras?.patches || item.extras?.patch) {
+      const patchText = item.extras?.customPatch ? `: ${item.extras.customPatch}` : '';
+      customization += `
+        <div style="margin-top: 5px; padding: 4px 8px; font-size: 0.78rem; color: #4a5568; background: #fafafa; border: 1px solid #edf2f7; border-radius: 4px; display: inline-block; margin-left: 5px;">
+          <strong>+ Patches included</strong>${patchText}
+        </div>
+      `;
+    }
+    if (item.extras?.extraCustomization && item.extras?.customExtraName) {
+      customization += `
+        <div style="margin-top: 5px; padding: 4px 8px; background: #E0F7FA; border-left: 3px solid #00BCD4; font-size: 0.78rem; color: #444; border-radius: 4px; display: inline-block; margin-left: 5px;">
+          <strong>EXTRA:</strong> ${item.extras.customExtraName}
+        </div>
+      `;
+    }
+    return `
+      <div style="display: flex; align-items: center; padding: 15px; border-bottom: 1px solid #edf2f7; background: #fdfdfd;">
+        <div style="flex: 0 0 50px; margin-right: 15px;">
+          <img src="${item.image}" alt="" style="width: 50px; height: 50px; object-fit: contain; background: #fff; border: 1px solid #edf2f7; border-radius: 4px;" />
+        </div>
+        <div style="flex: 1;">
+          <h4 style="margin: 0; color: #1a202c; font-size: 0.95rem;">${item.name}</h4>
+          <p style="margin: 5px 0 0 0; color: #718096; font-size: 0.85rem;">Tamanho: <strong>${item.size}</strong> | Qtd: ${item.quantity}</p>
+          ${customization}
+        </div>
+        <div style="flex: 0 0 auto; text-align: right; font-weight: bold; color: #000000; font-size: 0.95rem;">
+          $${(item.price * item.quantity).toFixed(2)}
+        </div>
       </div>
-      <div style="flex: 1;">
-        <h4 style="margin: 0; color: #1a202c; font-size: 0.95rem;">${item.name}</h4>
-        <p style="margin: 5px 0 0 0; color: #718096; font-size: 0.85rem;">Tamanho: <strong>${item.size}</strong> | Qtd: ${item.quantity}</p>
-      </div>
-      <div style="flex: 0 0 auto; text-align: right; font-weight: bold; color: #000000; font-size: 0.95rem;">
-        $${(item.price * item.quantity).toFixed(2)}
-      </div>
-    </div>
-  `).join('');
+    `;
+  }).join('');
 
   const isSecondEmail = Number(emailType) === 2;
 
