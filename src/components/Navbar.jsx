@@ -4,6 +4,7 @@ import { useCart } from '../context/CartContext';
 import { useAuth } from '../context/AuthContext';
 import { Link, useNavigate } from 'react-router-dom';
 import { supabase } from '../services/supabase';
+import { translateToPortuguese, formatProductName } from '../rebrand/utils/format';
 
 import { useLanguage } from '../context/LanguageContext';
 
@@ -62,10 +63,11 @@ const Navbar = () => {
         return;
       }
 
+      const translatedQuery = translateToPortuguese(searchQuery);
       const { data } = await supabase
         .from('products')
         .select('id, name, image')
-        .or(`name.ilike.%${searchQuery}%,team.ilike.%${searchQuery}%`)
+        .or(`name.ilike.%${searchQuery}%,team.ilike.%${searchQuery}%,name.ilike.%${translatedQuery}%,team.ilike.%${translatedQuery}%`)
         .limit(5);
 
       if (data) setSuggestions(data);
@@ -494,7 +496,7 @@ const Navbar = () => {
                         onMouseOut={(e) => e.currentTarget.style.background = 'transparent'}
                       >
                         <img src={s.image} alt="" style={{ width: '40px', height: '40px', borderRadius: '4px', objectFit: 'cover' }} />
-                        <span style={{ color: '#fff', fontSize: '0.95rem', fontWeight: 500 }}>{s.name}</span>
+                        <span style={{ color: '#fff', fontSize: '0.95rem', fontWeight: 500 }}>{formatProductName(s.name)}</span>
                         <ChevronRight size={14} style={{ marginLeft: 'auto', color: 'var(--text-muted)' }} />
                       </Link>
                     ))}

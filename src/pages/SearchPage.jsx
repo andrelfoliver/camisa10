@@ -4,6 +4,7 @@ import { supabase } from '../services/supabase';
 import ProductCard from '../components/ProductCard';
 import { getAllProducts } from '../data/mockProducts';
 import { Search, ChevronRight, X, AlertCircle } from 'lucide-react';
+import { formatProductName, translateToPortuguese } from '../rebrand/utils/format';
 
 const SearchPage = () => {
     const [searchParams] = useSearchParams();
@@ -33,14 +34,20 @@ const SearchPage = () => {
                 
                 // Perform fuzzy-ish search
                 const lowercaseQuery = query.toLowerCase();
+                const translatedQuery = translateToPortuguese(query).toLowerCase();
                 const filtered = allProducts.filter(p => {
                     const name = (p.name || '').toLowerCase();
+                    const formattedName = formatProductName(p.name).toLowerCase();
                     const team = (p.team || '').toLowerCase();
                     const league = (p.league || '').toLowerCase();
                     const category = (p.category || '').toLowerCase();
 
                     return name.includes(lowercaseQuery) || 
+                           formattedName.includes(lowercaseQuery) ||
+                           name.includes(translatedQuery) ||
+                           formattedName.includes(translatedQuery) ||
                            team.includes(lowercaseQuery) || 
+                           team.includes(translatedQuery) ||
                            league.includes(lowercaseQuery) ||
                            category.includes(lowercaseQuery);
                 });

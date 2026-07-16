@@ -145,4 +145,70 @@ export const getProductReviewsCount = (id) => {
   return Math.floor(rand * 50) + 12;
 };
 
+export const translateToPortuguese = (query) => {
+  if (!query) return '';
+  
+  const englishToPortuguese = {
+    'player': 'jogador',
+    'fan': 'torcedor',
+    'home': 'titular',
+    'away': 'reserva',
+    'kids': 'infantil',
+    'women': 'feminina',
+    'female': 'feminina',
+    'men': 'masculino',
+    'retro': 'retrô',
+    'brazil': 'brasil',
+    'norway': 'noruega',
+    'germany': 'alemanha',
+    'france': 'frança',
+    'spain': 'espanha',
+    'italy': 'itália',
+    'england': 'inglaterra',
+    'japan': 'japão',
+    'belgium': 'bélgica',
+    'sweden': 'suécia',
+    'switzerland': 'suíça',
+    'netherlands': 'holanda',
+    'morocco': 'marrocos',
+    'cameroon': 'camarões',
+    'south korea': 'coreia do sul',
+    'korea': 'coreia',
+    'denmark': 'dinamarca',
+    'uruguay': 'uruguai',
+    'mexico': 'méxico',
+    'united states': 'estados unidos',
+    'croatia': 'croácia',
+    'colombia': 'colômbia',
+    'macedonia': 'macedônia',
+    'scotland': 'escócia',
+    'turkey': 'turquia',
+    'wales': 'gales',
+    'ukraine': 'ucrânia',
+    'austria': 'áustria',
+    'poland': 'polônia',
+    'finland': 'finlândia',
+    'czech republic': 'república tcheca',
+    'ghana': 'gana',
+    'egypt': 'egito',
+    'nigeria': 'nigéria',
+    'algeria': 'argélia',
+    'tunisia': 'tunísia',
+    'saudi arabia': 'arábia saudita',
+    'iran': 'irã',
+    'qatar': 'catar'
+  };
+
+  let formatted = query.toLowerCase();
+  const sortedKeys = Object.keys(englishToPortuguese).sort((a, b) => b.length - a.length);
+  
+  for (const key of sortedKeys) {
+    const regex = new RegExp(`\\b${key}\\b`, 'g');
+    formatted = formatted.replace(regex, englishToPortuguese[key]);
+  }
+  
+  return formatted;
+};
+
+
 
