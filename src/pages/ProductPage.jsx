@@ -90,6 +90,11 @@ const ProductPage = () => {
     product?.version?.toLowerCase().includes('womens') ||
     product?.version?.toLowerCase().includes('women'));
 
+  const isBabylook = !isShoes && !isNba && !isStreetwear && (
+    product?.name?.toLowerCase().includes('babylook') ||
+    product?.name?.toLowerCase().includes('baby look')
+  );
+
   const isPlayer = !isShoes && !isNba && !isStreetwear && (
     product?.version?.toLowerCase().includes('jogador') ||
     product?.version?.toLowerCase().includes('player') ||
@@ -916,7 +921,8 @@ const ProductPage = () => {
         isShoes={isShoes}
         isNba={isNba}
         isStreetwear={isStreetwear}
-        isFemale={isFemale}
+        isFemale={isFemale && !isBabylook}
+        isBabylook={isBabylook}
       />
 
       {/* 8. PROVA SOCIAL */}

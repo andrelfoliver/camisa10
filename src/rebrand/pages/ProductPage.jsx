@@ -614,7 +614,8 @@ const ProductPage = () => {
           isOpen={isSizeGuideOpen} 
           onClose={() => setIsSizeGuideOpen(false)} 
           isNba={product?.category?.toLowerCase() === 'basketball'} 
-          isFemale={isFemale}
+          isFemale={isFemale && !isBabylook}
+          isBabylook={isBabylook}
           isRebrand={true}
         />
       </div>

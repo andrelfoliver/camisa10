@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { X, Ruler, ChevronRight } from 'lucide-react';
 import { useLanguage } from '../context/LanguageContext';
 
-const SizeGuideModal = ({ isOpen, onClose, isShoes, isNba, isStreetwear, isFemale, isRebrand }) => {
+const SizeGuideModal = ({ isOpen, onClose, isShoes, isNba, isStreetwear, isFemale, isBabylook, isRebrand }) => {
   const { t, language } = useLanguage();
   const lang = isRebrand ? 'en' : language;
   const [activeTab, setActiveTab] = useState('fan');
@@ -14,12 +14,14 @@ const SizeGuideModal = ({ isOpen, onClose, isShoes, isNba, isStreetwear, isFemal
       setActiveTab('nba');
     } else if (isStreetwear) {
       setActiveTab('streetwear');
+    } else if (isBabylook) {
+      setActiveTab('babylook');
     } else if (isFemale) {
       setActiveTab('women');
     } else {
       setActiveTab('fan');
     }
-  }, [isShoes, isNba, isStreetwear, isFemale, isOpen]);
+  }, [isShoes, isNba, isStreetwear, isFemale, isBabylook, isOpen]);
 
   // Handle ESC key press to close the modal
   React.useEffect(() => {
@@ -41,7 +43,8 @@ const SizeGuideModal = ({ isOpen, onClose, isShoes, isNba, isStreetwear, isFemal
   const tabs = [
     { id: 'fan', label: lang === 'pt' ? 'Torcedor' : 'Fan Edition' },
     { id: 'player', label: lang === 'pt' ? 'Jogador' : 'Player Edition' },
-    { id: 'women', label: lang === 'pt' ? 'Feminina (Babylook)' : 'Women (Babylook)' },
+    { id: 'women', label: lang === 'pt' ? 'Feminina' : 'Women' },
+    { id: 'babylook', label: lang === 'pt' ? 'Feminina Babylook' : 'Women Babylook' },
     { id: 'kids', label: lang === 'pt' ? 'Infantil' : 'Kids' },
     { id: 'baby', label: lang === 'pt' ? 'Bebê' : 'Baby Body' },
     { id: 'special', label: lang === 'pt' ? 'Especiais' : 'Plus Size' },
@@ -236,7 +239,25 @@ const SizeGuideModal = ({ isOpen, onClose, isShoes, isNba, isStreetwear, isFemal
 
           {activeTab === 'women' && (
             <div className="reveal">
-              <h3 style={{ marginBottom: '1.5rem', fontSize: '1.1rem', color: 'var(--accent-color)' }}>🚺 {lang === 'pt' ? 'Camisas Femininas (Babylook)' : 'Women Jerseys (Babylook)'}</h3>
+              <h3 style={{ marginBottom: '1.5rem', fontSize: '1.1rem', color: 'var(--accent-color)' }}>🚺 {lang === 'pt' ? 'Camisas Femininas (Modelo Padrão)' : 'Women Jerseys (Standard Fit)'}</h3>
+              <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+                <TableHeader />
+                <tbody>
+                  {[['P (S)', '61-63', '40-41'], ['M', '63-66', '41-44'], ['G (L)', '66-69', '44-47'], ['GG (XL)', '69-71', '47-50']].map(([s, h, w], i) => (
+                    <tr key={i} style={{ borderBottom: '1px solid var(--border-color)' }}>
+                      <td style={{ padding: '0.8rem', fontWeight: 600 }}>{s}</td>
+                      <td style={{ padding: '0.8rem', textAlign: 'center', color: 'var(--text-muted)' }}>{h} cm</td>
+                      <td style={{ padding: '0.8rem', textAlign: 'center', color: 'var(--text-muted)' }}>{w} cm</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+
+          {activeTab === 'babylook' && (
+            <div className="reveal">
+              <h3 style={{ marginBottom: '1.5rem', fontSize: '1.1rem', color: 'var(--accent-color)' }}>🚺 {lang === 'pt' ? 'Camisas Femininas Babylook (Modelagem Cropped/Justa)' : 'Women Babylook Jerseys (Slim/Cropped Fit)'}</h3>
               <div className="table-responsive" style={{ overflowX: 'auto', marginBottom: '1rem' }}>
                 <table style={{ width: '100%', borderCollapse: 'collapse' }}>
                   <thead>
