@@ -94,8 +94,10 @@ export default async function handler(req, res) {
              <strong>EXTRA CUSTOM:</strong> ${item.extras.customExtraName}
            </div>`;
       }
-      const patches = item.extras?.patches
-        ? `<div style="margin-top: 3px; font-size: 0.85rem; color: #666;"><strong>${t.patchesLabel}</strong></div>`
+      const hasPatch = item.extras?.patches || item.extras?.patch;
+      const patchText = item.extras?.customPatch ? `: ${item.extras.customPatch}` : '';
+      const patches = hasPatch
+        ? `<div style="margin-top: 3px; font-size: 0.85rem; color: #666;"><strong>${t.patchesLabel}</strong>${patchText}</div>`
         : '';
       return `
         <div style="margin-bottom: 20px; padding: 15px; border: 1px solid #edf2f7; border-radius: 8px; display: flex; align-items: center; gap: 15px;">
@@ -128,8 +130,10 @@ export default async function handler(req, res) {
              ⭐ <strong>EXTRA:</strong> ${item.extras.customExtraName}
            </div>`;
       }
-      const patches = item.extras?.patches
-        ? `<div style="margin-top: 3px; font-size: 0.85rem; color: #4a5568;">🎖️ <strong>+ Patches</strong></div>`
+      const hasPatch = item.extras?.patches || item.extras?.patch;
+      const patchText = item.extras?.customPatch ? `: ${item.extras.customPatch}` : '';
+      const patches = hasPatch
+        ? `<div style="margin-top: 3px; font-size: 0.85rem; color: #4a5568;">🎖️ <strong>+ Patches</strong>${patchText}</div>`
         : '';
       return `
         <div style="margin-bottom: 15px; padding: 12px; border: 1px solid #e2e8f0; border-radius: 8px; display: flex; align-items: center; gap: 12px; background: #ffffff;">
@@ -151,11 +155,13 @@ export default async function handler(req, res) {
     // --- TABELA-RESUMO (para fornecedor) ---
     const totalQty = order.items.reduce((acc, i) => acc + (i.quantity || 1), 0);
     const summaryRows = order.items.flatMap(item => {
-      const hasCustomization = item.extras?.nameNumber || (item.extras?.extraCustomization && item.extras?.customExtraName) || item.extras?.patches;
+      const hasCustomization = item.extras?.nameNumber || (item.extras?.extraCustomization && item.extras?.customExtraName) || item.extras?.patches || item.extras?.patch;
       if (!hasCustomization) {
         // Item sem personalização — uma linha simples
         let custom = '—';
-        if (item.extras?.patches) custom = 'Patches';
+        if (item.extras?.patches || item.extras?.patch) {
+          custom = item.extras?.customPatch ? `Patch (${item.extras.customPatch})` : 'Patches';
+        }
         return [`
           <tr>
             <td style="padding: 8px 10px; border-bottom: 1px solid #e2e8f0; font-size: 0.85rem; color: #1e293b;">${item.name}</td>
@@ -168,7 +174,7 @@ export default async function handler(req, res) {
 
       // Item com personalização — expande por número atribuído
       const extraName = item.extras?.extraCustomization && item.extras?.customExtraName ? item.extras.customExtraName : '';
-      const patches = item.extras?.patches ? 'Patches' : '';
+      const patches = (item.extras?.patches || item.extras?.patch) ? (item.extras?.customPatch ? `Patch (${item.extras.customPatch})` : 'Patches') : '';
 
       if (item.extras?.nameNumber && item.extras?.customNumber) {
         // Múltiplos números separados por vírgula → uma linha por unidade

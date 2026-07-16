@@ -40,10 +40,11 @@ function buildProductsHtml(products) {
             </div>
           `;
         }
-        if (item.extras?.patches) {
+        if (item.extras?.patches || item.extras?.patch) {
+          const patchText = item.extras?.customPatch ? `: ${item.extras.customPatch}` : '';
           customization += `
             <div style="margin-top: 5px; padding: 4px 8px; font-size: 0.8rem; color: #4a5568;">
-              <strong>+ Patches included</strong>
+              <strong>+ Patches included</strong>${patchText}
             </div>
           `;
         }
