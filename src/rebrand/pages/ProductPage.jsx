@@ -38,6 +38,8 @@ const ProductPage = () => {
   const [nameNumberEnabled, setNameNumberEnabled] = useState(false);
   const [customName, setCustomName] = useState('');
   const [customNumber, setCustomNumber] = useState('');
+  const [patchEnabled, setPatchEnabled] = useState(false);
+  const [customPatch, setCustomPatch] = useState('');
 
   // Favorito
   const { toggleWishlist, isInWishlist } = useWishlist();
@@ -137,7 +139,8 @@ const ProductPage = () => {
       nameNumber: nameNumberEnabled,
       customName: nameNumberEnabled ? customName.toUpperCase() : '',
       customNumber: nameNumberEnabled ? customNumber : '',
-      patch: false,
+      patch: patchEnabled,
+      customPatch: patchEnabled ? customPatch : '',
       extraCustomization: false,
       onlyShirt: isKidsKit && selectedInclusions === 'shirt'
     };
@@ -348,6 +351,7 @@ const ProductPage = () => {
             {/* Price (Fanatics Style: Clean & Inline) */}
             {(() => {
               const customFee = nameNumberEnabled ? (pricingConfig?.nameNumber || 11.90) : 0;
+              const patchFee = patchEnabled ? (pricingConfig?.patch || 5.00) : 0;
               let basePrice = product.price;
               
               if (isKidsKit) {
@@ -361,7 +365,7 @@ const ProductPage = () => {
               const sizeFee = (!isKidsKit && ['2XL', '3XL'].includes(selectedSize))
                 ? (pricingConfig?.size2XL3XL || 7.00) 
                 : (!isKidsKit && selectedSize === '4XL' ? (pricingConfig?.size4XL || 10.00) : 0);
-              const totalAddons = customFee + sizeFee;
+              const totalAddons = customFee + sizeFee + patchFee;
               const currentPrice = basePrice + totalAddons;
               const regPrice = isKidsKit 
                 ? (selectedInclusions === 'shirt' 
@@ -506,6 +510,49 @@ const ProductPage = () => {
                   />
                 </div>
               )}
+            </div>
+
+            {/* Custom Patch Option */}
+            <div style={{
+              background: '#f8f9fa',
+              padding: '1rem',
+              borderRadius: '6px',
+              border: '1px solid #dee2e6',
+              marginBottom: '1.5rem'
+            }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '1rem' }}>
+                <div 
+                  onClick={() => setPatchEnabled(!patchEnabled)}
+                  style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', cursor: 'pointer' }}
+                >
+                  <div style={{ 
+                    width: '18px', height: '18px', borderRadius: '3px', border: '2px solid #121416',
+                    background: patchEnabled ? '#121416' : 'transparent',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'all 0.2s',
+                    flexShrink: 0
+                  }}>
+                    {patchEnabled && <span style={{ color: '#fff', fontWeight: 800, fontSize: '0.6rem' }}>✓</span>}
+                  </div>
+                  <div>
+                    <span style={{ fontSize: '0.85rem', color: '#121416', fontWeight: 700 }}>Add Patch</span>
+                    <span style={{ fontSize: '0.75rem', color: '#6c757d', marginLeft: '0.4rem' }}>
+                      (+ ${(pricingConfig?.patch || 5.00).toFixed(2)} CAD)
+                    </span>
+                  </div>
+                </div>
+
+                {patchEnabled && (
+                  <div style={{ flex: 1, minWidth: '180px' }}>
+                    <input 
+                      type="text" 
+                      placeholder="Desired Patch (e.g. Champions League)" 
+                      value={customPatch}
+                      onChange={e => setCustomPatch(e.target.value.substring(0, 50))}
+                      style={{ width: '100%', padding: '0.5rem', border: '1px solid #ced4da', borderRadius: '4px', fontSize: '0.8rem', fontWeight: 600 }}
+                    />
+                  </div>
+                )}
+              </div>
             </div>
 
             {/* Quantity and Add to Cart Row */}

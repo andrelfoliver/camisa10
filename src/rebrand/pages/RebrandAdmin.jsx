@@ -1655,6 +1655,12 @@ const OrderDetailModal = ({ order, onClose, onStatusChange, onTrackingChange, on
                         </span>
                       </div>
                     )}
+                    {item.extras?.patch && item.extras?.customPatch && (
+                      <div style={{ marginTop: '0.25rem', display: 'inline-flex', alignItems: 'center', gap: '0.4rem', background: 'rgba(251,191,36,0.08)', border: '1px solid rgba(251,191,36,0.25)', borderRadius: '6px', padding: '0.2rem 0.6rem', marginLeft: '0.3rem' }}>
+                        <span style={{ fontSize: '0.75rem' }}>🎖️</span>
+                        <span style={{ color: '#FBBF24', fontWeight: 700, fontSize: '0.78rem' }}>Patch: {item.extras.customPatch}</span>
+                      </div>
+                    )}
                     {item.extras?.extraCustomization && item.extras?.customExtraName && (
                       <div style={{ marginTop: '0.25rem', display: 'inline-flex', alignItems: 'center', gap: '0.4rem', background: 'rgba(96,165,250,0.08)', border: '1px solid rgba(96,165,250,0.25)', borderRadius: '6px', padding: '0.2rem 0.6rem', marginLeft: '0.3rem' }}>
                         <span style={{ color: '#60A5FA', fontWeight: 700, fontSize: '0.78rem' }}>+ {item.extras.customExtraName}</span>
@@ -3561,6 +3567,11 @@ const SnapshotsSection = ({ showToast }) => {
                                 <span style={{ color: '#D6FF00', fontWeight: 700, fontSize: '0.8rem' }}>✍️ {item.extras.customName} #{item.extras.customNumber}</span>
                               </div>
                             )}
+                            {item.extras?.patch && item.extras?.customPatch && (
+                              <div style={{ marginTop: '0.3rem', background: 'rgba(251,191,36,0.1)', border: '1px solid rgba(251,191,36,0.3)', borderRadius: '6px', padding: '0.3rem 0.6rem', display: 'inline-block', marginLeft: '0.3rem' }}>
+                                <span style={{ color: '#FBBF24', fontWeight: 700, fontSize: '0.8rem' }}>🎖️ Patch: {item.extras.customPatch}</span>
+                              </div>
+                            )}
                           </div>
                         </div>
                       ))}
@@ -5409,8 +5420,9 @@ const ClientesSection = ({ showToast }) => {
         <td style="padding: 12px 10px; border-bottom: 1px solid #e5e7eb;">
           <div style="font-size: 13px; color: #4b5563;">
             ${item.extras?.nameNumber ? `Custom: ${item.extras.customName} #${item.extras.customNumber}` : ''}
-            ${item.extras?.extraCustomization ? `<br/>Extra: ${item.extras.customExtraName}` : ''}
-            ${!item.extras?.nameNumber && !item.extras?.extraCustomization ? 'Standard' : ''}
+            ${item.extras?.patch ? `${item.extras?.nameNumber ? '<br/>' : ''}Patch: ${item.extras.customPatch}` : ''}
+            ${item.extras?.extraCustomization ? `${(item.extras?.nameNumber || item.extras?.patch) ? '<br/>' : ''}Extra: ${item.extras.customExtraName}` : ''}
+            ${!item.extras?.nameNumber && !item.extras?.patch && !item.extras?.extraCustomization ? 'Standard' : ''}
           </div>
         </td>
         <td style="padding: 12px 10px; border-bottom: 1px solid #e5e7eb; text-align: center; color: #374151;">${item.quantity || 1}</td>

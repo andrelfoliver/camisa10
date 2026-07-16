@@ -212,6 +212,7 @@ const RebrandCheckout = () => {
     cartItems.forEach(item => {
       msg += `- ${item.quantity}x ${item.name} (${item.size})`;
       if (item.extras?.nameNumber) msg += ` [Print: ${item.extras.customName} (${item.extras.customNumber})]`;
+      if (item.extras?.patch) msg += ` [Patch: ${item.extras.customPatch || 'Yes'}]`;
       if (item.extras?.extraCustomization) msg += ` [Extra: ${item.extras.customExtraName}]`;
       msg += ` - $${(convertPrice(item.price) * item.quantity).toFixed(2)}\n`;
     });
@@ -881,6 +882,7 @@ const RebrandCheckout = () => {
                       <p style={{ margin: '0 0 0.2rem', fontWeight: 700, fontSize: '0.85rem', color: '#121416', lineHeight: 1.3 }}>{item.name}</p>
                       <p style={{ margin: 0, fontSize: '0.75rem', color: '#6c757d' }}>Size: <strong>{item.size}</strong> · Qty: <strong>{item.quantity}</strong></p>
                       {item.extras?.nameNumber && <p style={{ margin: '0.2rem 0 0', fontSize: '0.72rem', color: '#6c757d' }}>✍️ {item.extras.customName} #{item.extras.customNumber}</p>}
+                      {item.extras?.patch && <p style={{ margin: '0.2rem 0 0', fontSize: '0.72rem', color: '#6c757d' }}>🎖️ Patch: {item.extras.customPatch || 'Yes'}</p>}
                     </div>
                     <p style={{ margin: 0, fontWeight: 800, fontSize: '0.9rem', color: '#121416', flexShrink: 0 }}>
                       {formatPrice(convertPrice(item.price) * item.quantity)}

@@ -90,6 +90,11 @@ const CartSidebar = () => {
                       ✍️ {item.extras.customName} ({item.extras.customNumber})
                     </div>
                   )}
+                  {item.extras?.patch && item.extras?.customPatch && (
+                    <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '0.1rem' }}>
+                      🎖️ Patch: {item.extras.customPatch}
+                    </div>
+                  )}
                   {item.extras?.extraCustomization && (
                     <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '0.1rem' }}>
                       ⭐ Extra: {item.extras.customExtraName}

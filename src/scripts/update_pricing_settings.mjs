@@ -3,7 +3,7 @@ const key = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZi
 
 const pricing = {
   nameNumber: 11.90,
-  patch: 3.90,
+  patch: 5.00,
   size2XL3XL: 7.90,
   size4XL: 11.90,
   discounts: [

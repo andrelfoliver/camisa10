@@ -63,7 +63,7 @@ export const CartProvider = ({ children }) => {
   const [cartReady, setCartReady] = useState(false); // TRAVA DE SEGURANÇA
   
   const [pricing, setPricing] = useState({
-    nameNumber: 11.90, patch: 3.90, size2XL3XL: 7.90, size4XL: 11.90,
+    nameNumber: 11.90, patch: 5.00, size2XL3XL: 7.90, size4XL: 11.90,
     shippingCost: 0, freeShippingThreshold: 0,
     discounts: [{ qty: 2, percent: 4 }, { qty: 3, percent: 7 }, { qty: 5, percent: 10 }, { qty: 10, percent: 15 }]
   });
@@ -202,6 +202,9 @@ export const CartProvider = ({ children }) => {
       if(data && data.value) {
         try {
           const parsed = JSON.parse(data.value);
+          if (parsed) {
+            parsed.patch = 5.00; // Force patch cost to 5.00 CAD
+          }
           setPricing(parsed);
         } catch(e) {}
       }
@@ -209,7 +212,7 @@ export const CartProvider = ({ children }) => {
     loadPricing();
   }, []);
 
-  const addToCart = (product, size, extras = { nameNumber: false, patch: false, extraCustomization: false, onlyShirt: false }, quantity = 1) => {
+  const addToCart = (product, size, extras = { nameNumber: false, patch: false, customPatch: '', extraCustomization: false, onlyShirt: false }, quantity = 1) => {
     const isKids = product?.category?.toLowerCase().includes('infantil') ||
       product?.name?.toLowerCase().includes('infantil') ||
       product?.name?.toLowerCase().includes('kids');
@@ -239,7 +242,7 @@ export const CartProvider = ({ children }) => {
     if (extras.extraCustomization) addonsPrice += 6.90;
 
     const finalPrice = basePrice + addonsPrice;
-    const cartId = `${product.id}-${size}-${extras.nameNumber ? 'yes' : 'no'}-${extras.patch ? 'yes' : 'no'}-${extras.extraCustomization ? 'yes' : 'no'}-${extras.onlyShirt ? 'yes' : 'no'}-${extras.customName || ''}-${extras.customNumber || ''}-${extras.customExtraName || ''}`;
+    const cartId = `${product.id}-${size}-${extras.nameNumber ? 'yes' : 'no'}-${extras.patch ? 'yes' : 'no'}-${extras.extraCustomization ? 'yes' : 'no'}-${extras.onlyShirt ? 'yes' : 'no'}-${extras.customName || ''}-${extras.customNumber || ''}-${extras.customExtraName || ''}-${extras.customPatch || ''}`;
 
     setCartItems(prev => {
       const existing = prev.find(item => item.cartId === cartId);
