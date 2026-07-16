@@ -4,6 +4,7 @@ import { Search, ShoppingBag, User, MapPin, X, Menu } from 'lucide-react';
 import { useCart } from '../../context/CartContext';
 import { useRebrandAuth } from '../../context/RebrandAuthContext';
 import { supabaseRebrand as supabase } from '../../services/supabase';
+import { formatProductName, translateToPortuguese } from '../utils/format';
 
 const NAV_LINKS = [
   { to: '/colecao/soccer',       label: 'Soccer',       special: null },
@@ -123,10 +124,19 @@ const Navbar = () => {
       return;
     }
     const queryLower = searchQuery.toLowerCase();
-    const filtered = allProducts.filter(p => 
-      (p.name || '').toLowerCase().includes(queryLower) ||
-      (p.category || '').toLowerCase().includes(queryLower)
-    ).slice(0, 5); // Limit to top 5 hits
+    const translatedQuery = translateToPortuguese(searchQuery).toLowerCase();
+    const filtered = allProducts.filter(p => {
+      const name = (p.name || '').toLowerCase();
+      const formattedName = formatProductName(p.name).toLowerCase();
+      const category = (p.category || '').toLowerCase();
+      
+      return name.includes(queryLower) ||
+             formattedName.includes(queryLower) ||
+             name.includes(translatedQuery) ||
+             formattedName.includes(translatedQuery) ||
+             category.includes(queryLower) ||
+             category.includes(translatedQuery);
+    }).slice(0, 5); // Limit to top 5 hits
     setSearchResults(filtered);
   }, [searchQuery, allProducts]);
 
@@ -278,9 +288,9 @@ const Navbar = () => {
                       setShowSuggestions(false);
                     }}
                   >
-                    <img src={p.image} alt={p.name} className="rebrand-suggestion-img" />
+                    <img src={p.image} alt={formatProductName(p.name)} className="rebrand-suggestion-img" />
                     <div className="rebrand-suggestion-info">
-                      <span className="rebrand-suggestion-name">{p.name}</span>
+                      <span className="rebrand-suggestion-name">{formatProductName(p.name)}</span>
                       <span className="rebrand-suggestion-meta">{p.category} | ${p.price.toFixed(2)} CAD</span>
                     </div>
                   </div>
@@ -401,9 +411,9 @@ const Navbar = () => {
                       setSearchOpen(false);
                     }}
                   >
-                    <img src={p.image} alt={p.name} className="rebrand-suggestion-img" />
+                    <img src={p.image} alt={formatProductName(p.name)} className="rebrand-suggestion-img" />
                     <div className="rebrand-suggestion-info">
-                      <span className="rebrand-suggestion-name">{p.name}</span>
+                      <span className="rebrand-suggestion-name">{formatProductName(p.name)}</span>
                       <span className="rebrand-suggestion-meta">{p.category} | ${p.price.toFixed(2)} CAD</span>
                     </div>
                   </div>
