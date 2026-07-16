@@ -190,9 +190,20 @@ const ProductPage = () => {
     product?.name?.toLowerCase().includes('babylook') ||
     product?.name?.toLowerCase().includes('baby look');
 
+  const isFemale = 
+    product?.category?.toLowerCase().includes('feminina') ||
+    product?.category?.toLowerCase().includes('womens') ||
+    product?.name?.toLowerCase().includes('feminina') ||
+    product?.name?.toLowerCase().includes('womens') ||
+    product?.name?.toLowerCase().includes('babylook') ||
+    product?.name?.toLowerCase().includes('baby look') ||
+    product?.version?.toLowerCase().includes('feminina') ||
+    product?.version?.toLowerCase().includes('womens') ||
+    product?.version?.toLowerCase().includes('women');
+
   const availableSizes = isKidsKit
     ? ['16', '18', '20', '22', '24', '26', '28']
-    : (isPlayerVersion || isBabylook
+    : (isPlayerVersion || isBabylook || isFemale
       ? ['S', 'M', 'L', 'XL', '2XL'] 
       : ['S', 'M', 'L', 'XL', '2XL', '3XL', '4XL']);
 
@@ -603,6 +614,7 @@ const ProductPage = () => {
           isOpen={isSizeGuideOpen} 
           onClose={() => setIsSizeGuideOpen(false)} 
           isNba={product?.category?.toLowerCase() === 'basketball'} 
+          isFemale={isFemale}
           isRebrand={true}
         />
       </div>

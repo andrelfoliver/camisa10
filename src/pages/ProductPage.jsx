@@ -916,6 +916,7 @@ const ProductPage = () => {
         isShoes={isShoes}
         isNba={isNba}
         isStreetwear={isStreetwear}
+        isFemale={isFemale}
       />
 
       {/* 8. PROVA SOCIAL */}

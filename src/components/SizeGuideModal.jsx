@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { X, Ruler, ChevronRight } from 'lucide-react';
 import { useLanguage } from '../context/LanguageContext';
 
-const SizeGuideModal = ({ isOpen, onClose, isShoes, isNba, isStreetwear, isRebrand }) => {
+const SizeGuideModal = ({ isOpen, onClose, isShoes, isNba, isStreetwear, isFemale, isRebrand }) => {
   const { t, language } = useLanguage();
   const lang = isRebrand ? 'en' : language;
   const [activeTab, setActiveTab] = useState('fan');
@@ -14,10 +14,12 @@ const SizeGuideModal = ({ isOpen, onClose, isShoes, isNba, isStreetwear, isRebra
       setActiveTab('nba');
     } else if (isStreetwear) {
       setActiveTab('streetwear');
+    } else if (isFemale) {
+      setActiveTab('women');
     } else {
       setActiveTab('fan');
     }
-  }, [isShoes, isNba, isStreetwear, isOpen]);
+  }, [isShoes, isNba, isStreetwear, isFemale, isOpen]);
 
   // Handle ESC key press to close the modal
   React.useEffect(() => {
@@ -39,7 +41,7 @@ const SizeGuideModal = ({ isOpen, onClose, isShoes, isNba, isStreetwear, isRebra
   const tabs = [
     { id: 'fan', label: lang === 'pt' ? 'Torcedor' : 'Fan Edition' },
     { id: 'player', label: lang === 'pt' ? 'Jogador' : 'Player Edition' },
-    { id: 'women', label: lang === 'pt' ? 'Feminina' : 'Women' },
+    { id: 'women', label: lang === 'pt' ? 'Feminina (Babylook)' : 'Women (Babylook)' },
     { id: 'kids', label: lang === 'pt' ? 'Infantil' : 'Kids' },
     { id: 'baby', label: lang === 'pt' ? 'Bebê' : 'Baby Body' },
     { id: 'special', label: lang === 'pt' ? 'Especiais' : 'Plus Size' },
@@ -234,19 +236,42 @@ const SizeGuideModal = ({ isOpen, onClose, isShoes, isNba, isStreetwear, isRebra
 
           {activeTab === 'women' && (
             <div className="reveal">
-              <h3 style={{ marginBottom: '1.5rem', fontSize: '1.1rem', color: 'var(--accent-color)' }}>🚺 {lang === 'pt' ? 'Camisas Femininas' : 'Women Jerseys'}</h3>
-              <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-                <TableHeader />
-                <tbody>
-                  {[['P (S)', '61-63', '40-41'], ['M', '63-66', '41-44'], ['G (L)', '66-69', '44-47'], ['GG (XL)', '69-71', '47-50']].map(([s, h, w], i) => (
-                    <tr key={i} style={{ borderBottom: '1px solid var(--border-color)' }}>
-                      <td style={{ padding: '0.8rem', fontWeight: 600 }}>{s}</td>
-                      <td style={{ padding: '0.8rem', textAlign: 'center', color: 'var(--text-muted)' }}>{h} cm</td>
-                      <td style={{ padding: '0.8rem', textAlign: 'center', color: 'var(--text-muted)' }}>{w} cm</td>
+              <h3 style={{ marginBottom: '1.5rem', fontSize: '1.1rem', color: 'var(--accent-color)' }}>🚺 {lang === 'pt' ? 'Camisas Femininas (Babylook)' : 'Women Jerseys (Babylook)'}</h3>
+              <div className="table-responsive" style={{ overflowX: 'auto', marginBottom: '1rem' }}>
+                <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+                  <thead>
+                    <tr style={{ background: isRebrand ? '#f8f9fa' : 'rgba(204, 255, 0, 0.1)' }}>
+                      <th style={{ padding: '1rem', textAlign: 'left', borderBottom: isRebrand ? '2px solid #121416' : '2px solid var(--accent-color)' }}>{lang === 'pt' ? 'Tamanho' : 'Size'}</th>
+                      <th style={{ padding: '1rem', textAlign: 'center', borderBottom: isRebrand ? '2px solid #121416' : '2px solid var(--accent-color)' }}>{lang === 'pt' ? 'Comprimento' : 'Length'}</th>
+                      <th style={{ padding: '1rem', textAlign: 'center', borderBottom: isRebrand ? '2px solid #121416' : '2px solid var(--accent-color)' }}>{lang === 'pt' ? 'Largura / Busto' : 'Width / Bust'}</th>
+                      <th style={{ padding: '1rem', textAlign: 'center', borderBottom: isRebrand ? '2px solid #121416' : '2px solid var(--accent-color)' }}>{lang === 'pt' ? 'Altura Rec.' : 'Height Rec.'}</th>
+                      <th style={{ padding: '1rem', textAlign: 'center', borderBottom: isRebrand ? '2px solid #121416' : '2px solid var(--accent-color)' }}>{lang === 'pt' ? 'Peso Rec.' : 'Weight Rec.'}</th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
+                  </thead>
+                  <tbody>
+                    {[
+                      ['P (S)', '44 cm', '36 cm', '140-150 cm', '30-40 kg'],
+                      ['M', '46 cm', '38.5 cm', '150-160 cm', '40-50 kg'],
+                      ['G (L)', '48 cm', '40 cm', '160-170 cm', '50-60 kg'],
+                      ['GG (XL)', '50 cm', '41.5 cm', '170-180 cm', '60-70 kg'],
+                      ['XXL (2XL)', '52 cm', '43 cm', '180-190 cm', '70-80 kg']
+                    ].map(([s, h, w, hr, wr], i) => (
+                      <tr key={i} style={{ borderBottom: '1px solid var(--border-color)' }}>
+                        <td style={{ padding: '0.8rem', fontWeight: 600 }}>{s}</td>
+                        <td style={{ padding: '0.8rem', textAlign: 'center', color: 'var(--text-muted)' }}>{h}</td>
+                        <td style={{ padding: '0.8rem', textAlign: 'center', color: 'var(--text-muted)' }}>{w}</td>
+                        <td style={{ padding: '0.8rem', textAlign: 'center', color: 'var(--text-muted)' }}>{hr}</td>
+                        <td style={{ padding: '0.8rem', textAlign: 'center', color: 'var(--text-muted)' }}>{wr}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+              <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', fontStyle: 'italic', marginTop: '0.8rem' }}>
+                💡 {lang === 'pt' 
+                  ? 'Nota: As camisas babylook possuem modelagem bem justa e curta (estilo cropped). Recomendamos verificar a tabela de medidas e, em caso de dúvida, escolher um tamanho maior.' 
+                  : 'Note: Babylook shirts have a very slim and short fit (cropped style). We recommend checking the size table and, if in doubt, choosing one size larger.'}
+              </p>
             </div>
           )}
 
