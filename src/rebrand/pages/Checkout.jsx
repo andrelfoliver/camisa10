@@ -11,7 +11,11 @@ import { supabaseRebrand as supabase } from '../../services/supabase';
 import { trackEvent, getSavedUtms, getSavedAttribution } from '../../services/analytics';
 
 const RebrandCheckout = () => {
-  const { cartItems, cartTotal, subtotal, discount, clearCart, appliedShipping, pricingConfig } = useCart();
+  const { 
+    cartItems, cartTotal, subtotal, discount, clearCart, appliedShipping, pricingConfig,
+    appliedCoupon: contextCoupon, setAppliedCoupon: setContextCoupon,
+    couponCode: contextCouponCode, setCouponCode: setContextCouponCode
+  } = useCart();
   const { user } = useRebrandAuth();
   const { currency, setCurrency, convertPrice, formatPrice } = useLanguage();
   const navigate = useNavigate();
@@ -51,21 +55,38 @@ const RebrandCheckout = () => {
 
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [waNumber, setWaNumber] = useState('17788061419');
-  const [couponCode, setCouponCode] = useState('');
-  const [appliedCoupon, setAppliedCoupon] = useState(null);
+  const [couponCode, setCouponCode] = useState(contextCouponCode || '');
+  const [appliedCoupon, setAppliedCoupon] = useState(contextCoupon || null);
   const [isVerifyingCoupon, setIsVerifyingCoupon] = useState(false);
   const [couponError, setCouponError] = useState('');
   const [paymentMethod, setPaymentMethod] = useState('whatsapp');
   const [notification, setNotification] = useState({ show: false, message: '' });
-  const [promoOpen, setPromoOpen] = useState(false);
+  const [promoOpen, setPromoOpen] = useState(!!contextCoupon);
+
+  useEffect(() => {
+    if (contextCoupon && !appliedCoupon) {
+      setAppliedCoupon(contextCoupon);
+      setCouponCode(contextCoupon.code);
+    }
+  }, [contextCoupon]);
   const [isFirstTimeBuyer, setIsFirstTimeBuyer] = useState(false);
   const [firstTimeBuyerChecked, setFirstTimeBuyerChecked] = useState(false);
 
   const currentShipping = formData.deliveryMethod === 'pickup' ? 0 : appliedShipping;
 
-  const baseFinalTotal = appliedCoupon
-    ? (subtotal - discount) * (1 - appliedCoupon.discount_percent / 100) + (currentShipping || 0)
-    : (subtotal - discount + (currentShipping || 0));
+  const isPromoOnlyCoupon = appliedCoupon?.code === 'WEEK10' || appliedCoupon?.code === 'OFERTA10' || appliedCoupon?.code === 'WEEKLY10' || !!appliedCoupon?.promo_only;
+
+  const promoItemsSubtotal = isPromoOnlyCoupon
+    ? cartItems.filter(item => !!item.is_sale).reduce((acc, item) => acc + (item.price * item.quantity), 0)
+    : 0;
+
+  const couponDiscountAmount = appliedCoupon
+    ? (isPromoOnlyCoupon
+        ? promoItemsSubtotal * (appliedCoupon.discount_percent / 100)
+        : (subtotal - discount) * (appliedCoupon.discount_percent / 100))
+    : 0;
+
+  const baseFinalTotal = Math.max(0, subtotal - discount - couponDiscountAmount + (currentShipping || 0));
 
   const finalTotal = paymentMethod === 'paypal'
     ? Number(((baseFinalTotal + 0.30) / 0.951).toFixed(2))
@@ -79,8 +100,12 @@ const RebrandCheckout = () => {
 
   const displaySubtotal = convertPrice(subtotal);
   const displayDiscount = convertPrice(discount);
+  const displayPromoItemsSubtotal = convertPrice(promoItemsSubtotal);
   const displayCouponDiscount = appliedCoupon
-    ? (displaySubtotal - displayDiscount) * (appliedCoupon.discount_percent / 100) : 0;
+    ? (isPromoOnlyCoupon
+        ? displayPromoItemsSubtotal * (appliedCoupon.discount_percent / 100)
+        : (displaySubtotal - displayDiscount) * (appliedCoupon.discount_percent / 100))
+    : 0;
   const displayShipping = convertPrice(currentShipping);
   const displayBaseFinalTotal = displaySubtotal - displayDiscount - displayCouponDiscount + displayShipping;
   const displayFinalTotal = paymentMethod === 'paypal'
@@ -225,6 +250,18 @@ const RebrandCheckout = () => {
     return msg;
   };
 
+  const updateAppliedCouponState = (couponObj) => {
+    setAppliedCoupon(couponObj);
+    if (setContextCoupon) setContextCoupon(couponObj);
+    if (couponObj) {
+      sessionStorage.setItem('ifooty_applied_coupon', JSON.stringify(couponObj));
+      if (setContextCouponCode) setContextCouponCode(couponObj.code);
+    } else {
+      sessionStorage.removeItem('ifooty_applied_coupon');
+      if (setContextCouponCode) setContextCouponCode('');
+    }
+  };
+
   const handleApplyCoupon = async () => {
     if (!couponCode) return;
     setIsVerifyingCoupon(true);
@@ -232,20 +269,37 @@ const RebrandCheckout = () => {
     try {
       const codeUpper = couponCode.toUpperCase().trim();
       
+      if (codeUpper === 'WEEK10' || codeUpper === 'OFERTA10' || codeUpper === 'WEEKLY10') {
+        const hasPromoItems = cartItems.some(item => !!item.is_sale);
+        if (cartItems.length > 0 && !hasPromoItems) {
+          setCouponError('O cupom WEEK10 é válido apenas para camisas marcadas em promoção.');
+          updateAppliedCouponState(null);
+          return;
+        }
+
+        updateAppliedCouponState({
+          code: codeUpper,
+          discount_percent: 10,
+          is_active: true,
+          promo_only: true
+        });
+        return;
+      }
+
       if (codeUpper === 'FIRST20') {
         if (!user) {
           setCouponError('This coupon is only available for registered customers. Please sign in or create an account.');
-          setAppliedCoupon(null);
+          updateAppliedCouponState(null);
           return;
         }
         // Verify no previous orders for this user
         const { count } = await supabase.from('orders').select('id', { count: 'exact', head: true }).eq('user_id', user.id);
         if ((count ?? 0) > 0) {
           setCouponError('This coupon is valid for first-time purchases only.');
-          setAppliedCoupon(null);
+          updateAppliedCouponState(null);
           return;
         }
-        setAppliedCoupon({
+        updateAppliedCouponState({
           code: 'FIRST20',
           discount_percent: 20,
           is_active: true
@@ -257,24 +311,24 @@ const RebrandCheckout = () => {
         .eq('code', codeUpper).eq('is_active', true).single();
       if (error || !data) {
         setCouponError('Invalid or expired coupon code.');
-        setAppliedCoupon(null);
+        updateAppliedCouponState(null);
       } else {
         // First-order-only validation (handled client-side; codes listed in FIRST_ORDER_CODES)
         if (FIRST_ORDER_CODES.has(data.code)) {
           if (!user) {
             setCouponError('This coupon is only available for registered customers. Please sign in or create an account.');
-            setAppliedCoupon(null);
+            updateAppliedCouponState(null);
             return;
           }
           // Verify no previous orders for this user
           const { count } = await supabase.from('orders').select('id', { count: 'exact', head: true }).eq('user_id', user.id);
           if ((count ?? 0) > 0) {
             setCouponError('This coupon is valid for first-time purchases only.');
-            setAppliedCoupon(null);
+            updateAppliedCouponState(null);
             return;
           }
         }
-        setAppliedCoupon(data);
+        updateAppliedCouponState(data);
         if (data.agent_id) localStorage.setItem('ifooty_referrer', data.agent_id);
       }
     } catch { setCouponError('Error validating coupon.'); }
@@ -929,7 +983,7 @@ const RebrandCheckout = () => {
                         {isVerifyingCoupon ? '...' : 'Apply'}
                       </button>
                     ) : (
-                      <button onClick={() => { setAppliedCoupon(null); setCouponCode(''); }}
+                      <button onClick={() => { updateAppliedCouponState(null); setCouponCode(''); }}
                         style={{ padding: '0 0.8rem', borderRadius: '8px', background: '#fff3f3', color: '#dc3545', border: '1px solid #fecaca', fontSize: '0.85rem', cursor: 'pointer', flexShrink: 0 }}>
                         Remove
                       </button>

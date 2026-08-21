@@ -356,16 +356,140 @@ export const CartProvider = ({ children }) => {
       }
     }
 
+    let couponDiscount = 0;
+    if (appliedCoupon) {
+      const isPromoOnlyCoupon = appliedCoupon.code === 'WEEK10' || appliedCoupon.code === 'OFERTA10' || appliedCoupon.code === 'WEEKLY10' || !!appliedCoupon.promo_only;
+      
+      if (isPromoOnlyCoupon) {
+        // Desconto aplica-se APENAS às camisas que estão em promoção (is_sale: true)
+        const promoItemsSubtotal = cartItems
+          .filter(item => !!item.is_sale)
+          .reduce((acc, item) => acc + (item.price * item.quantity), 0);
+        
+        couponDiscount = promoItemsSubtotal * (appliedCoupon.discount_percent / 100);
+      } else {
+        couponDiscount = Math.max(0, (subtotal - discount) * (appliedCoupon.discount_percent / 100));
+      }
+    }
+
     return {
       subtotal,
       discount,
+      couponDiscount,
       appliedShipping,
-      total: Math.max(0, subtotal - discount + appliedShipping),
+      total: Math.max(0, subtotal - discount - couponDiscount + appliedShipping),
       totalItems
     };
   };
 
-  const { subtotal, discount, appliedShipping, total: cartTotal, totalItems } = computeTotals();
+  const [appliedCoupon, setAppliedCoupon] = useState(() => {
+    try {
+      const saved = sessionStorage.getItem('ifooty_applied_coupon');
+      return saved ? JSON.parse(saved) : null;
+    } catch {
+      return null;
+    }
+  });
+  const [couponCode, setCouponCode] = useState(() => appliedCoupon?.code || '');
+  const [couponError, setCouponError] = useState('');
+  const [isVerifyingCoupon, setIsVerifyingCoupon] = useState(false);
+
+  const applyCoupon = async (rawCode, currentUser = user) => {
+    if (!rawCode) {
+      setCouponError('Please enter a coupon code.');
+      return { success: false, error: 'Please enter a coupon code.' };
+    }
+    const codeUpper = rawCode.toUpperCase().trim();
+    setIsVerifyingCoupon(true);
+    setCouponError('');
+
+    try {
+      if (codeUpper === 'WEEK10' || codeUpper === 'OFERTA10' || codeUpper === 'WEEKLY10') {
+        const hasPromoItems = cartItems.some(item => !!item.is_sale);
+        if (cartItems.length > 0 && !hasPromoItems) {
+          const err = 'O cupom WEEK10 é válido apenas para camisas marcadas em promoção.';
+          setCouponError(err);
+          setIsVerifyingCoupon(false);
+          return { success: false, error: err };
+        }
+
+        const couponObj = {
+          code: codeUpper,
+          discount_percent: 10,
+          is_active: true,
+          promo_only: true
+        };
+        setAppliedCoupon(couponObj);
+        setCouponCode(codeUpper);
+        sessionStorage.setItem('ifooty_applied_coupon', JSON.stringify(couponObj));
+        setIsVerifyingCoupon(false);
+        return { success: true, coupon: couponObj };
+      }
+
+      if (codeUpper === 'FIRST20') {
+        if (!currentUser) {
+          const err = 'This coupon is only available for registered customers. Please sign in or create an account.';
+          setCouponError(err);
+          setIsVerifyingCoupon(false);
+          return { success: false, error: err };
+        }
+        const { count } = await supabase.from('orders').select('id', { count: 'exact', head: true }).eq('user_id', currentUser.id);
+        if ((count ?? 0) > 0) {
+          const err = 'This coupon is valid for first-time purchases only.';
+          setCouponError(err);
+          setIsVerifyingCoupon(false);
+          return { success: false, error: err };
+        }
+        const couponObj = {
+          code: 'FIRST20',
+          discount_percent: 20,
+          is_active: true
+        };
+        setAppliedCoupon(couponObj);
+        setCouponCode(codeUpper);
+        sessionStorage.setItem('ifooty_applied_coupon', JSON.stringify(couponObj));
+        setIsVerifyingCoupon(false);
+        return { success: true, coupon: couponObj };
+      }
+
+      const { data, error } = await supabase.from('coupons').select('*')
+        .eq('code', codeUpper).eq('is_active', true).single();
+
+      if (error || !data) {
+        const err = 'Invalid or expired coupon code.';
+        setCouponError(err);
+        setIsVerifyingCoupon(false);
+        return { success: false, error: err };
+      }
+
+      const couponObj = {
+        code: data.code,
+        discount_percent: data.discount_percent || 10,
+        is_active: true,
+        ...data
+      };
+      setAppliedCoupon(couponObj);
+      setCouponCode(data.code);
+      sessionStorage.setItem('ifooty_applied_coupon', JSON.stringify(couponObj));
+      setIsVerifyingCoupon(false);
+      return { success: true, coupon: couponObj };
+    } catch (err) {
+      console.error('Error applying coupon:', err);
+      const errMsg = 'Error applying coupon.';
+      setCouponError(errMsg);
+      setIsVerifyingCoupon(false);
+      return { success: false, error: errMsg };
+    }
+  };
+
+  const removeCoupon = () => {
+    setAppliedCoupon(null);
+    setCouponCode('');
+    setCouponError('');
+    sessionStorage.removeItem('ifooty_applied_coupon');
+  };
+
+  const { subtotal, discount, couponDiscount, appliedShipping, total: cartTotal, totalItems } = computeTotals();
 
   return (
     <CartContext.Provider
@@ -379,6 +503,16 @@ export const CartProvider = ({ children }) => {
         setIsCartOpen,
         subtotal,
         discount,
+        couponDiscount,
+        appliedCoupon,
+        setAppliedCoupon,
+        couponCode,
+        setCouponCode,
+        couponError,
+        setCouponError,
+        isVerifyingCoupon,
+        applyCoupon,
+        removeCoupon,
         appliedShipping,
         cartTotal,
         totalItems,

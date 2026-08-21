@@ -5,11 +5,22 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { useLanguage } from '../../context/LanguageContext';
 
 const RebrandCartSidebar = () => {
-  const { isCartOpen, setIsCartOpen, cartItems, removeFromCart, updateQuantity, subtotal, discount, cartTotal } = useCart();
+  const { 
+    isCartOpen, setIsCartOpen, cartItems, removeFromCart, updateQuantity, 
+    subtotal, discount, couponDiscount, appliedCoupon, couponCode, setCouponCode, 
+    couponError, isVerifyingCoupon, applyCoupon, removeCoupon, cartTotal 
+  } = useCart();
   const { formatPrice } = useLanguage();
   const navigate = useNavigate();
   const location = useLocation();
-  const [promoOpen, setPromoOpen] = useState(false);
+  const [promoOpen, setPromoOpen] = useState(!!appliedCoupon);
+  const [inputCoupon, setInputCoupon] = useState(couponCode || '');
+
+  const handleApplySidebarCoupon = async (e) => {
+    e.preventDefault();
+    if (!inputCoupon.trim()) return;
+    await applyCoupon(inputCoupon.trim());
+  };
 
   const handleContinueShopping = () => {
     setIsCartOpen(false);
@@ -200,19 +211,92 @@ const RebrandCartSidebar = () => {
                 onClick={() => setPromoOpen(o => !o)}
               >
                 <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                  <Tag size={14} color="#6c757d" />
-                  <span style={{ fontWeight: 700, fontSize: '0.9rem', color: '#121416' }}>
-                    Have a Promo Code?
+                  <Tag size={14} color={appliedCoupon ? "#16a34a" : "#6c757d"} />
+                  <span style={{ fontWeight: 700, fontSize: '0.9rem', color: appliedCoupon ? '#16a34a' : '#121416' }}>
+                    {appliedCoupon ? `Promo Code (${appliedCoupon.code})` : 'Have a Promo Code?'}
                   </span>
                 </div>
                 <span style={{ color: '#121416', fontWeight: 800, fontSize: '0.8rem', letterSpacing: '0.5px' }}>
-                  {promoOpen ? '−' : 'ADD'}
+                  {appliedCoupon ? 'EDIT' : (promoOpen ? '−' : 'ADD')}
                 </span>
               </div>
-              {promoOpen && (
-                <p style={{ margin: '0.6rem 0 0 0', fontSize: '0.78rem', color: '#6c757d' }}>
-                  Enter your promo code on the checkout page.
-                </p>
+
+              {(promoOpen || appliedCoupon) && (
+                <div style={{ marginTop: '0.8rem' }}>
+                  {appliedCoupon ? (
+                    <div style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'space-between',
+                      background: '#f0fdf4',
+                      border: '1px solid #bbf7d0',
+                      borderRadius: '6px',
+                      padding: '0.5rem 0.8rem'
+                    }}>
+                      <div>
+                        <div style={{ fontSize: '0.8rem', fontWeight: 800, color: '#16a34a' }}>
+                          ✓ {appliedCoupon.code} aplicado (-{appliedCoupon.discount_percent}% OFF)
+                        </div>
+                      </div>
+                      <button
+                        onClick={removeCoupon}
+                        style={{
+                          background: 'none',
+                          border: 'none',
+                          color: '#dc2626',
+                          fontSize: '0.75rem',
+                          fontWeight: 700,
+                          cursor: 'pointer',
+                          textDecoration: 'underline'
+                        }}
+                      >
+                        Remove
+                      </button>
+                    </div>
+                  ) : (
+                    <form onSubmit={handleApplySidebarCoupon} style={{ display: 'flex', gap: '0.4rem' }}>
+                      <input
+                        type="text"
+                        placeholder="e.g. WEEK10"
+                        value={inputCoupon}
+                        onChange={(e) => setInputCoupon(e.target.value.toUpperCase())}
+                        style={{
+                          flex: 1,
+                          padding: '0.55rem 0.75rem',
+                          border: '1px solid #ced4da',
+                          borderRadius: '6px',
+                          fontSize: '0.85rem',
+                          fontWeight: 700,
+                          textTransform: 'uppercase',
+                          outline: 'none'
+                        }}
+                      />
+                      <button
+                        type="submit"
+                        disabled={isVerifyingCoupon || !inputCoupon.trim()}
+                        style={{
+                          background: '#121416',
+                          color: '#ffffff',
+                          border: 'none',
+                          borderRadius: '6px',
+                          padding: '0.55rem 1rem',
+                          fontWeight: 800,
+                          fontSize: '0.8rem',
+                          cursor: isVerifyingCoupon || !inputCoupon.trim() ? 'not-allowed' : 'pointer',
+                          opacity: isVerifyingCoupon || !inputCoupon.trim() ? 0.6 : 1,
+                          transition: 'all 0.2s'
+                        }}
+                      >
+                        {isVerifyingCoupon ? '...' : 'Apply'}
+                      </button>
+                    </form>
+                  )}
+                  {couponError && (
+                    <p style={{ color: '#dc2626', fontSize: '0.75rem', margin: '0.4rem 0 0 0', fontWeight: 600 }}>
+                      {couponError}
+                    </p>
+                  )}
+                </div>
               )}
             </div>
 
@@ -222,11 +306,19 @@ const RebrandCartSidebar = () => {
               <span>{formatPrice(subtotal)}</span>
             </div>
 
-            {/* Discount */}
+            {/* Volume Discount */}
             {discount > 0 && (
               <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.4rem', fontSize: '0.9rem', color: '#16a34a', fontWeight: 700 }}>
                 <span>Volume Discount</span>
                 <span>-{formatPrice(discount)}</span>
+              </div>
+            )}
+
+            {/* Coupon Discount */}
+            {couponDiscount > 0 && appliedCoupon && (
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.4rem', fontSize: '0.9rem', color: '#16a34a', fontWeight: 700 }}>
+                <span>Coupon ({appliedCoupon.code} -{appliedCoupon.discount_percent}%)</span>
+                <span>-{formatPrice(couponDiscount)}</span>
               </div>
             )}
 

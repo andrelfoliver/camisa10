@@ -6,6 +6,7 @@ import RebrandCartSidebar from './RebrandCartSidebar';
 import AiChatbot from '../../components/AiChatbot';
 import ExitIntentPopup from '../../components/ExitIntentPopup';
 import SalesPopup from '../../components/SalesPopup';
+import WeeklyOfferPopup from './WeeklyOfferPopup';
 import '../styles/rebrand.css'; // Importa estilos específicos do Rebranding
 
 const RebrandLayout = () => {
@@ -29,6 +30,7 @@ const RebrandLayout = () => {
       <AiChatbot />
       <ExitIntentPopup />
       <SalesPopup />
+      <WeeklyOfferPopup />
     </div>
   );
 };

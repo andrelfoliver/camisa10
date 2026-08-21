@@ -2690,6 +2690,62 @@ const ProductsSection = ({ showToast }) => {
                     ⚡ Trending Fan Gear
                   </label>
                 </div>
+
+                {form.is_sale && (
+                  <div style={{ gridColumn: '1 / -1', background: 'rgba(214, 255, 0, 0.05)', border: '1px solid rgba(214, 255, 0, 0.3)', borderRadius: '8px', padding: '1rem 1.25rem', margin: '0.4rem 0 0.8rem 0' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.75rem' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: '#D6FF00', fontWeight: 800, fontSize: '0.85rem' }}>
+                        <span>🔥</span>
+                        <span>PRODUTO NO CARROSSEL DE OFERTAS DA SEMANA (ON SALE)</span>
+                      </div>
+                      <span style={{ fontSize: '0.75rem', color: 'rgba(255,255,255,0.6)' }}>
+                        {products.filter(p => p.is_sale && p.id !== form.id).length + 1} camisa(s) em promoção
+                      </span>
+                    </div>
+
+                    <p style={{ fontSize: '0.78rem', color: 'rgba(255,255,255,0.7)', margin: '0 0 0.75rem 0' }}>
+                      Este produto aparecerá automaticamente com destaque no <strong>Carrossel de Ofertas da Semana</strong> na página inicial e na coleção de Sale Items.
+                    </p>
+
+                    {/* Mini Carrossel de Camisas em Promoção */}
+                    <div style={{ display: 'flex', gap: '0.75rem', overflowX: 'auto', paddingBottom: '0.5rem', scrollbarWidth: 'thin' }}>
+                      {/* Card do produto atual */}
+                      <div style={{ flex: '0 0 110px', background: '#121416', border: '1.5px solid #D6FF00', borderRadius: '6px', padding: '0.5rem', textAlign: 'center', position: 'relative' }}>
+                        <span style={{ position: 'absolute', top: '3px', right: '3px', background: '#D6FF00', color: '#000', fontSize: '0.55rem', fontWeight: 900, padding: '1px 4px', borderRadius: '3px' }}>
+                          ATUAL
+                        </span>
+                        <div style={{ width: '100%', height: '70px', background: '#000', borderRadius: '4px', overflow: 'hidden', marginBottom: '0.35rem', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                          {(imagePreview || form.image) ? (
+                            <ProductMedia src={imagePreview || form.image} alt="Atual" style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
+                          ) : (
+                            <span style={{ fontSize: '0.65rem', color: '#666' }}>Sem foto</span>
+                          )}
+                        </div>
+                        <div style={{ fontSize: '0.7rem', fontWeight: 700, color: '#fff', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                          {form.name || 'Nova Camisa'}
+                        </div>
+                        <div style={{ fontSize: '0.68rem', color: '#D6FF00', fontWeight: 800 }}>
+                          ${form.price ? Number(form.price).toFixed(2) : '0.00'}
+                        </div>
+                      </div>
+
+                      {/* Outros produtos em promoção */}
+                      {products.filter(p => p.is_sale && p.id !== form.id).map(p => (
+                        <div key={p.id} style={{ flex: '0 0 110px', background: '#0B0C0E', border: '1px solid #2A2D30', borderRadius: '6px', padding: '0.5rem', textAlign: 'center' }}>
+                          <div style={{ width: '100%', height: '70px', background: '#000', borderRadius: '4px', overflow: 'hidden', marginBottom: '0.35rem', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                            <ProductMedia src={p.image || p.images?.[0]} alt={p.name} style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
+                          </div>
+                          <div style={{ fontSize: '0.7rem', fontWeight: 600, color: 'rgba(255,255,255,0.8)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                            {p.name}
+                          </div>
+                          <div style={{ fontSize: '0.68rem', color: '#D6FF00', fontWeight: 700 }}>
+                            ${p.price ? Number(p.price).toFixed(2) : '0.00'}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
                 <div style={{ gridColumn: '1 / -1' }}>
                   <label style={S.label}>Imagem do Produto</label>
                   {imagePreview && (

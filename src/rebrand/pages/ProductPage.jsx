@@ -151,7 +151,8 @@ const ProductPage = () => {
       price: finalPrice,
       image: product.image,
       category: product.category,
-      color: selectedColor
+      color: selectedColor,
+      is_sale: !!product.is_sale
     }, selectedSize, extras, quantity);
   };
 

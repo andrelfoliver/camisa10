@@ -155,7 +155,9 @@ const SearchPage = () => {
                       id: p.id,
                       name: p.name,
                       price: p.price,
-                      image: p.image
+                      image: p.image,
+                      category: p.category,
+                      is_sale: !!p.is_sale
                     }, 'M');
                   }}
                   onQuickView={(pId) => navigate(`/produto/${pId}`)}
