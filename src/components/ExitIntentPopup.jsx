@@ -7,7 +7,7 @@ import { useLocation } from 'react-router-dom';
 const ExitIntentPopup = () => {
     const { t } = useLanguage();
     const location = useLocation();
-    const isRebrand = location.pathname.includes('/rebrand');
+    const isRebrand = true;
 
     const EN_STRINGS = {
         exit_title: 'Before you go...',
@@ -16,16 +16,13 @@ const ExitIntentPopup = () => {
         exit_placeholder: 'e.g. Retro Brazil 1970 jersey, Real Madrid tracksuit...',
         exit_btn_submit: 'Submit Suggestion',
         exit_submitting: 'Sending...',
-        exit_footer: 'We promise to try to bring this update to you! ⚽',
-        exit_success: 'Thank you for your feedback! We will check it out. ⚽',
+        exit_footer: 'We promise to try to bring this to you! ⚽',
+        exit_success: 'Thank you for your feedback! We will look into it. ⚽',
         exit_error: 'An error occurred while sending. Please try again later.'
     };
 
     const getTranslation = (key) => {
-        if (isRebrand) {
-            return EN_STRINGS[key] || key;
-        }
-        return t(key);
+        return EN_STRINGS[key] || t(key) || key;
     };
 
     const [isVisible, setIsVisible] = useState(false);
