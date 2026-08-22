@@ -426,32 +426,6 @@ export const CartProvider = ({ children }) => {
         return { success: true, coupon: couponObj };
       }
 
-      if (codeUpper === 'FIRST20') {
-        if (!currentUser) {
-          const err = 'This coupon is only available for registered customers. Please sign in or create an account.';
-          setCouponError(err);
-          setIsVerifyingCoupon(false);
-          return { success: false, error: err };
-        }
-        const { count } = await supabase.from('orders').select('id', { count: 'exact', head: true }).eq('user_id', currentUser.id);
-        if ((count ?? 0) > 0) {
-          const err = 'This coupon is valid for first-time purchases only.';
-          setCouponError(err);
-          setIsVerifyingCoupon(false);
-          return { success: false, error: err };
-        }
-        const couponObj = {
-          code: 'FIRST20',
-          discount_percent: 20,
-          is_active: true
-        };
-        setAppliedCoupon(couponObj);
-        setCouponCode(codeUpper);
-        sessionStorage.setItem('ifooty_applied_coupon', JSON.stringify(couponObj));
-        setIsVerifyingCoupon(false);
-        return { success: true, coupon: couponObj };
-      }
-
       const { data, error } = await supabase.from('coupons').select('*')
         .eq('code', codeUpper).eq('is_active', true).single();
 

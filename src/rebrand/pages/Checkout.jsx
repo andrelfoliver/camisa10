@@ -20,9 +20,6 @@ const RebrandCheckout = () => {
   const { currency, setCurrency, convertPrice, formatPrice } = useLanguage();
   const navigate = useNavigate();
 
-  // Codes only valid for first-time purchases
-  const FIRST_ORDER_CODES = new Set(['FIRST20']);
-
   const [guestEmail, setGuestEmail] = useState(() => sessionStorage.getItem('ifooty_guest_email') || '');
   const [guestInputEmail, setGuestInputEmail] = useState('');
 
@@ -69,8 +66,6 @@ const RebrandCheckout = () => {
       setCouponCode(contextCoupon.code);
     }
   }, [contextCoupon]);
-  const [isFirstTimeBuyer, setIsFirstTimeBuyer] = useState(false);
-  const [firstTimeBuyerChecked, setFirstTimeBuyerChecked] = useState(false);
 
   const currentShipping = formData.deliveryMethod === 'pickup' ? 0 : appliedShipping;
 
@@ -205,13 +200,6 @@ const RebrandCheckout = () => {
           }));
         }
       });
-      // Check if user has any previous orders (first-time buyer check)
-      supabase.from('orders').select('id', { count: 'exact', head: true }).eq('user_id', user.id).then(({ count }) => {
-        const eligible = (count ?? 0) === 0;
-        setIsFirstTimeBuyer(eligible);
-        setFirstTimeBuyerChecked(true);
-        if (eligible) setPromoOpen(true);
-      });
     }
   }, [user]);
 
@@ -285,27 +273,6 @@ const RebrandCheckout = () => {
         });
         return;
       }
-
-      if (codeUpper === 'FIRST20') {
-        if (!user) {
-          setCouponError('This coupon is only available for registered customers. Please sign in or create an account.');
-          updateAppliedCouponState(null);
-          return;
-        }
-        // Verify no previous orders for this user
-        const { count } = await supabase.from('orders').select('id', { count: 'exact', head: true }).eq('user_id', user.id);
-        if ((count ?? 0) > 0) {
-          setCouponError('This coupon is valid for first-time purchases only.');
-          updateAppliedCouponState(null);
-          return;
-        }
-        updateAppliedCouponState({
-          code: 'FIRST20',
-          discount_percent: 20,
-          is_active: true
-        });
-        return;
-      }
       
       const { data, error } = await supabase.from('coupons').select('*')
         .eq('code', codeUpper).eq('is_active', true).single();
@@ -313,21 +280,6 @@ const RebrandCheckout = () => {
         setCouponError('Invalid or expired coupon code.');
         updateAppliedCouponState(null);
       } else {
-        // First-order-only validation (handled client-side; codes listed in FIRST_ORDER_CODES)
-        if (FIRST_ORDER_CODES.has(data.code)) {
-          if (!user) {
-            setCouponError('This coupon is only available for registered customers. Please sign in or create an account.');
-            updateAppliedCouponState(null);
-            return;
-          }
-          // Verify no previous orders for this user
-          const { count } = await supabase.from('orders').select('id', { count: 'exact', head: true }).eq('user_id', user.id);
-          if ((count ?? 0) > 0) {
-            setCouponError('This coupon is valid for first-time purchases only.');
-            updateAppliedCouponState(null);
-            return;
-          }
-        }
         updateAppliedCouponState(data);
         if (data.agent_id) localStorage.setItem('ifooty_referrer', data.agent_id);
       }
@@ -657,25 +609,6 @@ const RebrandCheckout = () => {
             Checkout Option
           </h2>
 
-          {/* First-time buyer promo banner */}
-          <div style={{
-            background: 'linear-gradient(135deg, #121416 0%, #2d2d2d 100%)',
-            borderRadius: '12px',
-            padding: '1rem 1.25rem',
-            marginBottom: '1.75rem',
-            display: 'flex',
-            alignItems: 'center',
-            gap: '0.75rem'
-          }}>
-            <span style={{ fontSize: '1.6rem', flexShrink: 0 }}>🎁</span>
-            <div>
-              <p style={{ margin: 0, fontWeight: 800, color: '#D6FF00', fontSize: '0.95rem' }}>20% OFF your first order!</p>
-              <p style={{ margin: '0.2rem 0 0', color: '#9CA3AF', fontSize: '0.78rem', lineHeight: 1.4 }}>
-                Create a free account and use code <strong style={{ color: '#fff', letterSpacing: '0.5px' }}>FIRST20</strong> at checkout.
-              </p>
-            </div>
-          </div>
-          
           {/* Guest Checkout Option */}
           <div style={{ marginBottom: '2rem' }}>
             <h3 style={{ fontSize: '0.95rem', fontWeight: 700, color: '#121416', marginBottom: '0.5rem' }}>Guest Checkout</h3>
@@ -694,12 +627,12 @@ const RebrandCheckout = () => {
               <button
                 type="submit"
                 style={{
-                  width: '100%', padding: '0.85rem', background: '#6c757d', color: '#fff',
+                  width: '100%', padding: '0.85rem', background: '#121416', color: '#fff',
                   border: 'none', borderRadius: '100px', fontWeight: 700, fontSize: '0.9rem',
                   cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem'
                 }}
               >
-                Continue as Guest (no discount)
+                Continue as Guest
               </button>
             </form>
           </div>
@@ -712,9 +645,9 @@ const RebrandCheckout = () => {
 
           {/* Sign In Option */}
           <div style={{ textAlign: 'center' }}>
-            <h3 style={{ fontSize: '0.95rem', fontWeight: 700, color: '#121416', marginBottom: '0.5rem' }}>Get 20% OFF — Create an Account</h3>
+            <h3 style={{ fontSize: '0.95rem', fontWeight: 700, color: '#121416', marginBottom: '0.5rem' }}>Sign In / Create Account</h3>
             <p style={{ color: '#6c757d', fontSize: '0.85rem', marginBottom: '1.2rem', lineHeight: 1.4 }}>
-              New customers get <strong>20% OFF</strong> their first order. Sign in or create a free account to unlock your discount.
+              Sign in or create a free account to track orders and save your address.
             </p>
             <button
               onClick={() => {
@@ -722,8 +655,8 @@ const RebrandCheckout = () => {
                 navigate('/auth');
               }}
               style={{
-                width: '100%', padding: '0.9rem', background: '#121416', color: '#D6FF00',
-                border: 'none', borderRadius: '100px', fontWeight: 800, fontSize: '0.95rem',
+                width: '100%', padding: '0.9rem', background: '#f8f9fa', color: '#121416',
+                border: '1px solid #ced4da', borderRadius: '100px', fontWeight: 800, fontSize: '0.95rem',
                 cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem',
                 letterSpacing: '0.3px'
               }}
@@ -944,28 +877,6 @@ const RebrandCheckout = () => {
                   </div>
                 ))}
               </div>
-
-              {/* First-time buyer banner — shown when eligible and logged in */}
-              {user && firstTimeBuyerChecked && isFirstTimeBuyer && !appliedCoupon && (
-                <div style={{
-                  background: 'linear-gradient(135deg, #0f172a 0%, #1e293b 100%)',
-                  border: '1.5px solid #D6FF00',
-                  borderRadius: '10px',
-                  padding: '0.85rem 1rem',
-                  marginBottom: '1rem',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '0.75rem',
-                  cursor: 'pointer'
-                }} onClick={() => { setCouponCode('FIRST20'); setPromoOpen(true); }}>
-                  <span style={{ fontSize: '1.4rem', flexShrink: 0 }}>🎁</span>
-                  <div style={{ flex: 1 }}>
-                    <p style={{ margin: 0, fontWeight: 800, color: '#D6FF00', fontSize: '0.82rem' }}>Welcome! You have 20% OFF</p>
-                    <p style={{ margin: '0.15rem 0 0', color: '#94a3b8', fontSize: '0.72rem' }}>Use code <strong style={{ color: '#fff' }}>FIRST20</strong> — tap to apply automatically</p>
-                  </div>
-                  <span style={{ fontSize: '0.72rem', fontWeight: 700, color: '#D6FF00', background: 'rgba(214,255,0,0.12)', borderRadius: '20px', padding: '0.2rem 0.6rem', flexShrink: 0 }}>APPLY</span>
-                </div>
-              )}
 
               {/* Promo Code */}
               <div style={{ borderBottom: '1px solid #f0f0f0', paddingBottom: '1rem', marginBottom: '1rem' }}>
