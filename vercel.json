@@ -6,7 +6,7 @@
         {
           "type": "header",
           "key": "User-Agent",
-          "value": "(?i).*whatsapp.*|.*facebookexternalhit.*|.*twitterbot.*|.*linkedinbot.*|.*telegrambot.*|.*slackbot.*"
+          "value": "(?i).*googlebot.*|.*bingbot.*|.*whatsapp.*|.*facebookexternalhit.*|.*twitterbot.*|.*linkedinbot.*|.*telegrambot.*|.*slackbot.*"
         }
       ],
       "destination": "/api/product-metadata?id=:id"

@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
+import { Helmet } from 'react-helmet-async';
 import { supabaseRebrand as supabase } from '../../services/supabase';
 import { Star, ShoppingBag, ArrowLeft, ShieldCheck, Truck, RefreshCw, Calendar, Heart, Share2, Info, ChevronLeft, ChevronRight, Award } from 'lucide-react';
 import { useCart } from '../../context/CartContext';
@@ -101,7 +102,8 @@ const ProductPage = () => {
               rating: data.rating || getProductRating(data.id),
               reviews: data.reviews_count || getProductReviewsCount(data.id),
               colors: ['#000000', '#ffffff', '#e31837'],
-              desc: data.description || 'Premium stitched sports jersey. Features authentic player details, breathable mesh elements, and lightweight tailored design for maximum performance and look.'
+              desc: data.description || 'Premium stitched sports jersey. Features authentic player details, breathable mesh elements, and lightweight tailored design for maximum performance and look.',
+              inventory: data.inventory
             });
             setSelectedColor('#000000');
             const isKids = data.name?.toLowerCase().includes('infantil') || data.name?.toLowerCase().includes('kids') || data.name?.toLowerCase().includes('child') || data.name?.toLowerCase().includes('bebê') || (data.name?.toLowerCase().includes('baby') && !data.name?.toLowerCase().includes('babylook') && !data.name?.toLowerCase().includes('baby look'));
@@ -211,8 +213,93 @@ const ProductPage = () => {
       ? ['S', 'M', 'L', 'XL', '2XL'] 
       : ['S', 'M', 'L', 'XL', '2XL', '3XL', '4XL']);
 
+  const formattedTitle = `${formatProductName(product?.name || '')} | iFooty Canada`;
+  const productDescription = product?.desc 
+    ? product.desc 
+    : `${formatProductName(product?.name || '')} - available in multiple sizes with shipping across Canada & USA at iFooty.ca.`;
+  const canonicalUrl = `https://ifooty.ca/produto/${id}`;
+  const rawImageUrl = product?.image || 'https://ifooty.ca/og-image-full.png';
+  const ogImageUrl = rawImageUrl.startsWith('http') ? rawImageUrl : `https://ifooty.ca${rawImageUrl.startsWith('/') ? '' : '/'}${rawImageUrl}`;
+
+  // Availability calculation based on real inventory
+  const totalStock = product?.inventory
+    ? Object.values(product.inventory).reduce((acc, qty) => acc + (parseInt(qty) || 0), 0)
+    : null;
+  const isAvailable = totalStock === null ? true : totalStock > 0;
+
+  const productJsonLd = {
+    "@context": "https://schema.org/",
+    "@type": "Product",
+    "name": formatProductName(product?.name || ''),
+    "image": [ogImageUrl],
+    "description": productDescription,
+    "sku": `IFOOTY-${id}`,
+    "offers": {
+      "@type": "Offer",
+      "url": canonicalUrl,
+      "priceCurrency": "CAD",
+      "price": (product?.price || 89.90).toFixed(2),
+      "availability": isAvailable ? "https://schema.org/InStock" : "https://schema.org/OutOfStock",
+      "itemCondition": "https://schema.org/NewCondition"
+    }
+  };
+
+  const breadcrumbJsonLd = {
+    "@context": "https://schema.org/",
+    "@type": "BreadcrumbList",
+    "itemListElement": [
+      {
+        "@type": "ListItem",
+        "position": 1,
+        "name": "Home",
+        "item": "https://ifooty.ca/"
+      },
+      {
+        "@type": "ListItem",
+        "position": 2,
+        "name": product?.category || "Jerseys",
+        "item": `https://ifooty.ca/colecao/${(product?.category || 'soccer').toLowerCase()}`
+      },
+      {
+        "@type": "ListItem",
+        "position": 3,
+        "name": formatProductName(product?.name || ''),
+        "item": canonicalUrl
+      }
+    ]
+  };
+
   return (
     <div style={{ background: '#ffffff', padding: '1.5rem 2rem 4rem' }} className="rebrand-scope">
+      <Helmet>
+        <title>{formattedTitle}</title>
+        <meta name="description" content={productDescription} />
+        <link rel="canonical" href={canonicalUrl} />
+
+        {/* Open Graph */}
+        <meta property="og:type" content="product" />
+        <meta property="og:url" content={canonicalUrl} />
+        <meta property="og:title" content={formattedTitle} />
+        <meta property="og:description" content={productDescription} />
+        <meta property="og:image" content={ogImageUrl} />
+        <meta property="og:site_name" content="iFooty" />
+
+        {/* Twitter */}
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:url" content={canonicalUrl} />
+        <meta name="twitter:title" content={formattedTitle} />
+        <meta name="twitter:description" content={productDescription} />
+        <meta name="twitter:image" content={ogImageUrl} />
+
+        {/* JSON-LD Structured Data */}
+        <script type="application/ld+json">
+          {JSON.stringify(productJsonLd)}
+        </script>
+        <script type="application/ld+json">
+          {JSON.stringify(breadcrumbJsonLd)}
+        </script>
+      </Helmet>
+
       <div className="container" style={{ maxWidth: '1200px', margin: '0 auto' }}>
         
         {/* Back Link */}
@@ -239,7 +326,7 @@ const ProductPage = () => {
                       >
                         <img 
                           src={img} 
-                          alt={`Thumbnail ${idx + 1}`} 
+                          alt={`${formatProductName(product.name)} - View ${idx + 1}`} 
                           style={{ objectFit: 'contain' }} 
                         />
                       </button>
@@ -284,7 +371,7 @@ const ProductPage = () => {
 
                     <img 
                       src={images[activeThumb] || product.image} 
-                      alt={product.name} 
+                      alt={formatProductName(product.name)} 
                       style={{ 
                         width: '100%', 
                         height: '100%', 

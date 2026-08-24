@@ -16,26 +16,36 @@ const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 async function generateSitemap() {
   console.log("Gerando sitemap.xml...");
   
-  // Páginas Estáticas Fixas
+  // Páginas Estáticas Fixas e Coleções Ativas
   const baseUrl = "https://ifooty.ca";
   const staticPages = [
-    "/",
-    "/colecao/brasileirao",
-    "/colecao/selecoes",
-    "/colecao/internacionais",
-    "/colecao/retro",
-    "/colecao/lancamentos"
+    { path: "/", priority: "1.0", changefreq: "daily" },
+    { path: "/colecao/soccer", priority: "0.9", changefreq: "daily" },
+    { path: "/colecao/basketball", priority: "0.8", changefreq: "weekly" },
+    { path: "/colecao/football", priority: "0.8", changefreq: "weekly" },
+    { path: "/colecao/baseball", priority: "0.8", changefreq: "weekly" },
+    { path: "/colecao/hockey", priority: "0.8", changefreq: "weekly" },
+    { path: "/colecao/new-arrivals", priority: "0.9", changefreq: "daily" },
+    { path: "/colecao/best-sellers", priority: "0.9", changefreq: "daily" },
+    { path: "/colecao/sale", priority: "0.9", changefreq: "daily" },
+    { path: "/colecao/retro", priority: "0.8", changefreq: "weekly" },
+    { path: "/colecao/brasileirao", priority: "0.7", changefreq: "weekly" },
+    { path: "/colecao/selecoes", priority: "0.7", changefreq: "weekly" },
+    { path: "/colecao/internacionais", priority: "0.7", changefreq: "weekly" },
+    { path: "/colecao/lancamentos", priority: "0.7", changefreq: "weekly" },
+    { path: "/about", priority: "0.6", changefreq: "monthly" },
+    { path: "/affiliates", priority: "0.5", changefreq: "monthly" }
   ];
 
   let xml = `<?xml version="1.0" encoding="UTF-8"?>\n`;
   xml += `<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n`;
 
   // Adicionar páginas estáticas
-  staticPages.forEach(path => {
+  staticPages.forEach(item => {
     xml += `  <url>\n`;
-    xml += `    <loc>${baseUrl}${path}</loc>\n`;
-    xml += `    <changefreq>weekly</changefreq>\n`;
-    xml += `    <priority>${path === '/' ? '1.0' : '0.8'}</priority>\n`;
+    xml += `    <loc>${baseUrl}${item.path}</loc>\n`;
+    xml += `    <changefreq>${item.changefreq}</changefreq>\n`;
+    xml += `    <priority>${item.priority}</priority>\n`;
     xml += `  </url>\n`;
   });
 
@@ -52,7 +62,7 @@ async function generateSitemap() {
       xml += `  <url>\n`;
       xml += `    <loc>${baseUrl}/produto/${product.id}</loc>\n`;
       xml += `    <changefreq>daily</changefreq>\n`;
-      xml += `    <priority>0.9</priority>\n`;
+      xml += `    <priority>0.8</priority>\n`;
       xml += `  </url>\n`;
     });
   }

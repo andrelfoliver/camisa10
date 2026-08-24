@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
+import { Helmet } from 'react-helmet-async';
 import { supabaseRebrand as supabase } from '../../services/supabase';
 import { Star, ShoppingBag, Eye, SlidersHorizontal, ArrowLeft, ChevronDown, ChevronUp } from 'lucide-react';
 import { useCart } from '../../context/CartContext';
@@ -370,8 +371,72 @@ const CategoryPage = () => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
+  const categoryDisplayName = (category_id || '')
+    .split('-')
+    .map(w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase())
+    .join(' ');
+  const categoryTitle = `${categoryDisplayName} Jerseys | iFooty Canada`;
+  const categoryDescription = `Explore ${categoryDisplayName} jerseys at iFooty.ca. Browse our collection with shipping across Canada and the USA.`;
+  const canonicalUrl = `https://ifooty.ca/colecao/${category_id}`;
+
+  const categoryJsonLd = {
+    "@context": "https://schema.org/",
+    "@type": "CollectionPage",
+    "name": categoryTitle,
+    "description": categoryDescription,
+    "url": canonicalUrl
+  };
+
+  const breadcrumbJsonLd = {
+    "@context": "https://schema.org/",
+    "@type": "BreadcrumbList",
+    "itemListElement": [
+      {
+        "@type": "ListItem",
+        "position": 1,
+        "name": "Home",
+        "item": "https://ifooty.ca/"
+      },
+      {
+        "@type": "ListItem",
+        "position": 2,
+        "name": categoryDisplayName,
+        "item": canonicalUrl
+      }
+    ]
+  };
+
   return (
     <div style={{ background: '#ffffff', minHeight: '80vh', padding: '3rem 2rem' }} className="rebrand-scope">
+      <Helmet>
+        <title>{categoryTitle}</title>
+        <meta name="description" content={categoryDescription} />
+        <link rel="canonical" href={canonicalUrl} />
+
+        {/* Open Graph */}
+        <meta property="og:type" content="website" />
+        <meta property="og:url" content={canonicalUrl} />
+        <meta property="og:title" content={categoryTitle} />
+        <meta property="og:description" content={categoryDescription} />
+        <meta property="og:image" content="https://ifooty.ca/og-image-full.png" />
+        <meta property="og:site_name" content="iFooty" />
+
+        {/* Twitter */}
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:url" content={canonicalUrl} />
+        <meta name="twitter:title" content={categoryTitle} />
+        <meta name="twitter:description" content={categoryDescription} />
+        <meta name="twitter:image" content="https://ifooty.ca/og-image-full.png" />
+
+        {/* JSON-LD */}
+        <script type="application/ld+json">
+          {JSON.stringify(categoryJsonLd)}
+        </script>
+        <script type="application/ld+json">
+          {JSON.stringify(breadcrumbJsonLd)}
+        </script>
+      </Helmet>
+
       <div className="container" style={{ maxWidth: '1400px', margin: '0 auto' }}>
         
         {/* Breadcrumb e Voltar */}
