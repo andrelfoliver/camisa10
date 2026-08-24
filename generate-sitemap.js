@@ -28,11 +28,6 @@ async function generateSitemap() {
     { path: "/colecao/new-arrivals", priority: "0.9", changefreq: "daily" },
     { path: "/colecao/best-sellers", priority: "0.9", changefreq: "daily" },
     { path: "/colecao/sale", priority: "0.9", changefreq: "daily" },
-    { path: "/colecao/retro", priority: "0.8", changefreq: "weekly" },
-    { path: "/colecao/brasileirao", priority: "0.7", changefreq: "weekly" },
-    { path: "/colecao/selecoes", priority: "0.7", changefreq: "weekly" },
-    { path: "/colecao/internacionais", priority: "0.7", changefreq: "weekly" },
-    { path: "/colecao/lancamentos", priority: "0.7", changefreq: "weekly" },
     { path: "/about", priority: "0.6", changefreq: "monthly" },
     { path: "/affiliates", priority: "0.5", changefreq: "monthly" }
   ];
