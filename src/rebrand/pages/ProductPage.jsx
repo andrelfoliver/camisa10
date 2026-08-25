@@ -235,13 +235,44 @@ const ProductPage = () => {
     "image": [ogImageUrl],
     "description": productDescription,
     "sku": `IFOOTY-${id}`,
+    "brand": {
+      "@type": "Brand",
+      "name": "iFooty"
+    },
     "offers": {
       "@type": "Offer",
       "url": canonicalUrl,
       "priceCurrency": "CAD",
       "price": (product?.price || 89.90).toFixed(2),
       "availability": isAvailable ? "https://schema.org/InStock" : "https://schema.org/OutOfStock",
-      "itemCondition": "https://schema.org/NewCondition"
+      "itemCondition": "https://schema.org/NewCondition",
+      "shippingDetails": {
+        "@type": "OfferShippingDetails",
+        "shippingDestination": {
+          "@type": "DefinedRegion",
+          "addressCountry": "CA"
+        },
+        "shippingRate": {
+          "@type": "MonetaryAmount",
+          "value": "0",
+          "currency": "CAD"
+        },
+        "deliveryTime": {
+          "@type": "ShippingDeliveryTime",
+          "handlingTime": {
+            "@type": "QuantitativeValue",
+            "minValue": 1,
+            "maxValue": 3,
+            "unitCode": "DAY"
+          },
+          "transitTime": {
+            "@type": "QuantitativeValue",
+            "minValue": 10,
+            "maxValue": 15,
+            "unitCode": "DAY"
+          }
+        }
+      }
     }
   };
 
