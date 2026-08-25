@@ -17,7 +17,7 @@ const RebrandCheckout = () => {
     couponCode: contextCouponCode, setCouponCode: setContextCouponCode
   } = useCart();
   const { user } = useRebrandAuth();
-  const { currency, setCurrency, convertPrice, formatPrice } = useLanguage();
+  const { currency, setCurrency, convertPrice, formatPrice, t } = useLanguage();
   const navigate = useNavigate();
 
   const [guestEmail, setGuestEmail] = useState(() => sessionStorage.getItem('ifooty_guest_email') || '');
@@ -606,14 +606,14 @@ const RebrandCheckout = () => {
           boxSizing: 'border-box'
         }}>
           <h2 style={{ fontSize: '1.4rem', fontWeight: 800, color: '#121416', marginBottom: '1.5rem', textAlign: 'center', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
-            Checkout Option
+            {t('rb_checkout_login_title')}
           </h2>
 
           {/* Guest Checkout Option */}
           <div style={{ marginBottom: '2rem' }}>
-            <h3 style={{ fontSize: '0.95rem', fontWeight: 700, color: '#121416', marginBottom: '0.5rem' }}>Guest Checkout</h3>
+            <h3 style={{ fontSize: '0.95rem', fontWeight: 700, color: '#121416', marginBottom: '0.5rem' }}>{t('rb_guest_checkout')}</h3>
             <p style={{ color: '#6c757d', fontSize: '0.85rem', marginBottom: '1rem', lineHeight: 1.4 }}>
-              No account needed. Just enter your email to receive order updates and tracking.
+              {t('rb_checkout_login_text')}
             </p>
             <form onSubmit={handleGuestSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '0.8rem' }}>
               <input
@@ -645,9 +645,9 @@ const RebrandCheckout = () => {
 
           {/* Sign In Option */}
           <div style={{ textAlign: 'center' }}>
-            <h3 style={{ fontSize: '0.95rem', fontWeight: 700, color: '#121416', marginBottom: '0.5rem' }}>Sign In / Create Account</h3>
+            <h3 style={{ fontSize: '0.95rem', fontWeight: 700, color: '#121416', marginBottom: '0.5rem' }}>{t('rb_checkout_signin_create')}</h3>
             <p style={{ color: '#6c757d', fontSize: '0.85rem', marginBottom: '1.2rem', lineHeight: 1.4 }}>
-              Sign in or create a free account to track orders and save your address.
+              {t('rb_checkout_signin_desc')}
             </p>
             <button
               onClick={() => {
@@ -661,7 +661,7 @@ const RebrandCheckout = () => {
                 letterSpacing: '0.3px'
               }}
             >
-              <LogIn size={16} /> Sign In / Create Account
+              <LogIn size={16} /> {t('rb_checkout_signin_create')}
             </button>
           </div>
         </div>
@@ -706,10 +706,10 @@ const RebrandCheckout = () => {
         {/* Top Bar */}
         <div style={{ background: '#fff', borderBottom: '1px solid #e9ecef', padding: '1rem 2rem', display: 'flex', alignItems: 'center', gap: '1rem' }}>
           <button onClick={() => navigate('/')} style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', background: 'none', border: 'none', cursor: 'pointer', color: '#6c757d', fontWeight: 600, fontSize: '0.9rem' }}>
-            <ArrowLeft size={16} /> Continue Shopping
+            <ArrowLeft size={16} /> {t('rb_cart_continue')}
           </button>
           <span style={{ color: '#dee2e6' }}>|</span>
-          <h1 style={{ margin: 0, fontSize: '1.1rem', fontWeight: 800, color: '#121416' }}>Checkout</h1>
+          <h1 style={{ margin: 0, fontSize: '1.1rem', fontWeight: 800, color: '#121416' }}>{t('rb_cart_checkout')}</h1>
         </div>
 
         {/* Main Grid */}
@@ -719,15 +719,15 @@ const RebrandCheckout = () => {
           <div>
             {/* Delivery Method */}
             <section style={{ background: '#fff', borderRadius: '12px', padding: '1.5rem', marginBottom: '1.5rem', boxShadow: '0 2px 8px rgba(0,0,0,0.06)' }}>
-              <h2 style={{ fontSize: '1rem', fontWeight: 800, color: '#121416', marginBottom: '1rem', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Delivery Method</h2>
+              <h2 style={{ fontSize: '1rem', fontWeight: 800, color: '#121416', marginBottom: '1rem', textTransform: 'uppercase', letterSpacing: '0.5px' }}>{t('rb_checkout_delivery_method')}</h2>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem' }}>
                 <button
                   onClick={() => setFormData(p => ({ ...p, deliveryMethod: 'shipping' }))}
                   style={{ padding: '1rem', borderRadius: '10px', border: `2px solid ${formData.deliveryMethod === 'shipping' ? '#121416' : '#dee2e6'}`, background: formData.deliveryMethod === 'shipping' ? '#f8f9fa' : '#fff', cursor: 'pointer', textAlign: 'left', transition: 'all 0.15s' }}
                 >
                   <Truck size={20} color={formData.deliveryMethod === 'shipping' ? '#121416' : '#adb5bd'} />
-                  <div style={{ marginTop: '0.5rem', fontWeight: 700, fontSize: '0.9rem', color: '#121416' }}>Home Delivery</div>
-                  <div style={{ fontSize: '0.75rem', color: '#6c757d', marginTop: '0.2rem' }}>Shipped to your door (10 - 15 days)</div>
+                  <div style={{ marginTop: '0.5rem', fontWeight: 700, fontSize: '0.9rem', color: '#121416' }}>{t('rb_checkout_home_delivery_label')}</div>
+                  <div style={{ fontSize: '0.75rem', color: '#6c757d', marginTop: '0.2rem' }}>{t('rb_checkout_shipped_to_door')}</div>
                 </button>
                 <button
                   onClick={() => { if (formData.country === 'Canada') setFormData(p => ({ ...p, deliveryMethod: 'pickup' })); }}
@@ -735,18 +735,18 @@ const RebrandCheckout = () => {
                   style={{ padding: '1rem', borderRadius: '10px', border: `2px solid ${formData.deliveryMethod === 'pickup' ? '#121416' : '#dee2e6'}`, background: formData.deliveryMethod === 'pickup' ? '#f8f9fa' : '#fff', cursor: formData.country === 'Canada' ? 'pointer' : 'not-allowed', opacity: formData.country === 'Canada' ? 1 : 0.5, textAlign: 'left', transition: 'all 0.15s' }}
                 >
                   <MapPin size={20} color={formData.deliveryMethod === 'pickup' ? '#121416' : '#adb5bd'} />
-                  <div style={{ marginTop: '0.5rem', fontWeight: 700, fontSize: '0.9rem', color: '#121416' }}>Local Pickup</div>
-                  <div style={{ fontSize: '0.75rem', color: '#16a34a', marginTop: '0.2rem' }}>FREE — Calgary, AB</div>
+                  <div style={{ marginTop: '0.5rem', fontWeight: 700, fontSize: '0.9rem', color: '#121416' }}>{t('rb_checkout_local_pickup')}</div>
+                  <div style={{ fontSize: '0.75rem', color: '#16a34a', marginTop: '0.2rem' }}>{t('rb_checkout_pickup_subtext')}</div>
                 </button>
               </div>
             </section>
 
             {/* Contact Info */}
             <section style={{ background: '#fff', borderRadius: '12px', padding: '1.5rem', marginBottom: '1.5rem', boxShadow: '0 2px 8px rgba(0,0,0,0.06)' }}>
-              <h2 style={{ fontSize: '1rem', fontWeight: 800, color: '#121416', marginBottom: '1rem', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Contact Information</h2>
+              <h2 style={{ fontSize: '1rem', fontWeight: 800, color: '#121416', marginBottom: '1rem', textTransform: 'uppercase', letterSpacing: '0.5px' }}>{t('rb_checkout_contact_info')}</h2>
               <div style={{ display: 'grid', gridTemplateColumns: '1.5fr 1fr', gap: '1rem' }}>
                 <div>
-                  <label style={labelStyle}>Full Name</label>
+                  <label style={labelStyle}>{t('rb_checkout_full_name')}</label>
                   <input 
                     type="text" 
                     value={formData.name} 
@@ -758,12 +758,12 @@ const RebrandCheckout = () => {
                         window.dispatchEvent(new Event('storage'));
                       }
                     }} 
-                    placeholder="As on your ID" 
+                    placeholder={t('rb_checkout_as_on_id')} 
                     style={inputStyle} 
                   />
                 </div>
                 <div>
-                  <label style={labelStyle}>Phone Number</label>
+                  <label style={labelStyle}>{t('rb_checkout_phone_number')}</label>
                   <input type="tel" value={formData.phone} onChange={e => setFormData(p => ({ ...p, phone: e.target.value.replace(/\D/g, '').substring(0, 14) }))} placeholder="(000) 000-0000" style={inputStyle} />
                 </div>
               </div>
@@ -772,43 +772,43 @@ const RebrandCheckout = () => {
             {/* Address (if shipping) */}
             {formData.deliveryMethod === 'shipping' && (
               <section style={{ background: '#fff', borderRadius: '12px', padding: '1.5rem', marginBottom: '1.5rem', boxShadow: '0 2px 8px rgba(0,0,0,0.06)' }}>
-                <h2 style={{ fontSize: '1rem', fontWeight: 800, color: '#121416', marginBottom: '1rem', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Shipping Address</h2>
+                <h2 style={{ fontSize: '1rem', fontWeight: 800, color: '#121416', marginBottom: '1rem', textTransform: 'uppercase', letterSpacing: '0.5px' }}>{t('rb_checkout_shipping_address')}</h2>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
                   <div>
-                    <label style={labelStyle}>Postal / ZIP Code</label>
+                    <label style={labelStyle}>{t('rb_checkout_postal_code')}</label>
                     <input type="text" placeholder="e.g. T2X 0V1" value={formData.postalCode} onChange={e => setFormData(p => ({ ...p, postalCode: e.target.value.toUpperCase() }))} style={inputStyle} />
                   </div>
                   <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '1rem' }}>
                     <div>
-                      <label style={labelStyle}>Street Address <span style={{ color: '#16a34a', fontSize: '0.75rem' }}>(type to autocomplete)</span></label>
+                      <label style={labelStyle}>{t('rb_checkout_street_address')} <span style={{ color: '#16a34a', fontSize: '0.75rem' }}>{t('rb_checkout_type_autocomplete')}</span></label>
                       <input type="text" placeholder="e.g. 123 Main Street" ref={addressInputRef} value={formData.street} onChange={e => setFormData(p => ({ ...p, street: e.target.value }))} style={{ ...inputStyle, borderColor: '#121416' }} />
                     </div>
                     <div>
-                      <label style={labelStyle}>Number</label>
+                      <label style={labelStyle}>{t('rb_checkout_number')}</label>
                       <input type="text" placeholder="123" value={formData.addressNumber} onChange={e => setFormData(p => ({ ...p, addressNumber: e.target.value }))} style={inputStyle} />
                     </div>
                   </div>
                   <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '1rem' }}>
                     <div>
-                      <label style={labelStyle}>Neighbourhood</label>
+                      <label style={labelStyle}>{t('rb_checkout_neighbourhood')}</label>
                       <input type="text" placeholder="e.g. Wolf Willow" value={formData.district} onChange={e => setFormData(p => ({ ...p, district: e.target.value }))} style={inputStyle} />
                     </div>
                     <div>
-                      <label style={labelStyle}>Unit / Apt (Optional)</label>
+                      <label style={labelStyle}>{t('rb_checkout_unit_apt')}</label>
                       <input type="text" placeholder="402" value={formData.apartment} onChange={e => setFormData(p => ({ ...p, apartment: e.target.value }))} style={inputStyle} />
                     </div>
                     <div>
-                      <label style={labelStyle}>City</label>
+                      <label style={labelStyle}>{t('rb_checkout_city')}</label>
                       <input type="text" value={formData.city} onChange={e => setFormData(p => ({ ...p, city: e.target.value }))} style={inputStyle} />
                     </div>
                   </div>
                   <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
                     <div>
-                      <label style={labelStyle}>Province / State</label>
+                      <label style={labelStyle}>{t('rb_checkout_province_state')}</label>
                       <input type="text" value={formData.province} onChange={e => setFormData(p => ({ ...p, province: e.target.value }))} style={inputStyle} />
                     </div>
                     <div>
-                      <label style={labelStyle}>Country</label>
+                      <label style={labelStyle}>{t('rb_checkout_country')}</label>
                       <select value={formData.country} onChange={e => setFormData(p => ({ ...p, country: e.target.value, deliveryMethod: e.target.value === 'United States' ? 'shipping' : p.deliveryMethod }))}
                         style={{ ...inputStyle, cursor: 'pointer' }}>
                         <option value="Canada">Canada</option>
@@ -817,8 +817,8 @@ const RebrandCheckout = () => {
                     </div>
                   </div>
                   <div>
-                    <label style={labelStyle}>Delivery Instructions (Optional — <span style={{ color: '#dc3545', fontWeight: 700 }}>IN ENGLISH ONLY</span>)</label>
-                    <textarea placeholder="e.g. Leave at front door, buzzer code 1234..." value={formData.instructions} onChange={e => setFormData(p => ({ ...p, instructions: e.target.value }))} style={{ ...inputStyle, minHeight: '70px', resize: 'vertical' }} />
+                    <label style={labelStyle}>{t('rb_checkout_instructions')}</label>
+                    <textarea placeholder={t('rb_checkout_instructions_placeholder')} value={formData.instructions} onChange={e => setFormData(p => ({ ...p, instructions: e.target.value }))} style={{ ...inputStyle, minHeight: '70px', resize: 'vertical' }} />
                   </div>
                 </div>
               </section>
@@ -843,19 +843,19 @@ const RebrandCheckout = () => {
               <div style={{ width: '22px', height: '22px', borderRadius: '6px', border: '2px solid #121416', background: formData.saveAddress ? '#121416' : '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, transition: 'all 0.15s' }}>
                 {formData.saveAddress && <Save size={13} color="#fff" />}
               </div>
-              <span style={{ fontSize: '0.9rem', color: '#495057', fontWeight: 500 }}>Save my address for future orders</span>
+              <span style={{ fontSize: '0.9rem', color: '#495057', fontWeight: 500 }}>{t('rb_checkout_save_address')}</span>
             </div>
           </div>
 
           {/* RIGHT — Order Summary */}
           <div>
             <section style={{ background: '#fff', borderRadius: '12px', padding: '1.5rem', boxShadow: '0 2px 8px rgba(0,0,0,0.06)', position: 'sticky', top: '1rem' }}>
-              <h2 style={{ fontSize: '1rem', fontWeight: 800, color: '#121416', marginBottom: '1.2rem', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Order Summary</h2>
+              <h2 style={{ fontSize: '1rem', fontWeight: 800, color: '#121416', marginBottom: '1.2rem', textTransform: 'uppercase', letterSpacing: '0.5px' }}>{t('rb_checkout_order_summary')}</h2>
 
               {/* Urgency */}
               <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', background: '#fff8e1', border: '1px solid #ffe082', borderRadius: '8px', padding: '0.6rem 0.9rem', marginBottom: '1.2rem' }}>
                 <span>🔥</span>
-                <span style={{ fontSize: '0.78rem', fontWeight: 700, color: '#b45309' }}>Items May Sell Out, Order Now!</span>
+                <span style={{ fontSize: '0.78rem', fontWeight: 700, color: '#b45309' }}>{t('rb_cart_urgency_banner')}</span>
               </div>
 
               {/* Items */}
@@ -867,7 +867,7 @@ const RebrandCheckout = () => {
                     </div>
                     <div style={{ flex: 1 }}>
                       <p style={{ margin: '0 0 0.2rem', fontWeight: 700, fontSize: '0.85rem', color: '#121416', lineHeight: 1.3 }}>{item.name}</p>
-                      <p style={{ margin: 0, fontSize: '0.75rem', color: '#6c757d' }}>Size: <strong>{item.size}</strong> · Qty: <strong>{item.quantity}</strong></p>
+                      <p style={{ margin: 0, fontSize: '0.75rem', color: '#6c757d' }}>{t('rb_prod_size')}: <strong>{item.size}</strong> · {t('rb_prod_quantity')}: <strong>{item.quantity}</strong></p>
                       {item.extras?.nameNumber && <p style={{ margin: '0.2rem 0 0', fontSize: '0.72rem', color: '#6c757d' }}>✍️ {item.extras.customName} #{item.extras.customNumber}</p>}
                       {item.extras?.patch && <p style={{ margin: '0.2rem 0 0', fontSize: '0.72rem', color: '#6c757d' }}>🎖️ Patch: {item.extras.customPatch || 'Yes'}</p>}
                     </div>
@@ -881,8 +881,8 @@ const RebrandCheckout = () => {
               {/* Promo Code */}
               <div style={{ borderBottom: '1px solid #f0f0f0', paddingBottom: '1rem', marginBottom: '1rem' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', cursor: 'pointer' }} onClick={() => setPromoOpen(o => !o)}>
-                  <span style={{ fontWeight: 700, fontSize: '0.9rem', color: '#121416' }}>Have a Promo Code?</span>
-                  <span style={{ fontWeight: 800, fontSize: '0.8rem', color: '#121416' }}>{promoOpen ? '−' : 'ADD'}</span>
+                  <span style={{ fontWeight: 700, fontSize: '0.9rem', color: '#121416' }}>{appliedCoupon ? `${t('rb_cart_promo_code')} (${appliedCoupon.code})` : t('rb_cart_have_promo_code')}</span>
+                  <span style={{ fontWeight: 800, fontSize: '0.8rem', color: '#121416' }}>{appliedCoupon ? t('rb_cart_edit') : (promoOpen ? '−' : t('rb_cart_add'))}</span>
                 </div>
                 {promoOpen && (
                   <div style={{ marginTop: '0.8rem', display: 'flex', gap: '0.5rem' }}>
@@ -891,12 +891,12 @@ const RebrandCheckout = () => {
                     {!appliedCoupon ? (
                       <button onClick={handleApplyCoupon} disabled={isVerifyingCoupon || !couponCode}
                         style={{ padding: '0 1rem', borderRadius: '8px', background: '#121416', color: '#fff', border: 'none', fontWeight: 800, fontSize: '0.85rem', cursor: 'pointer', flexShrink: 0 }}>
-                        {isVerifyingCoupon ? '...' : 'Apply'}
+                        {isVerifyingCoupon ? '...' : t('rb_cart_apply')}
                       </button>
                     ) : (
                       <button onClick={() => { updateAppliedCouponState(null); setCouponCode(''); }}
                         style={{ padding: '0 0.8rem', borderRadius: '8px', background: '#fff3f3', color: '#dc3545', border: '1px solid #fecaca', fontSize: '0.85rem', cursor: 'pointer', flexShrink: 0 }}>
-                        Remove
+                        {t('rb_cart_remove')}
                       </button>
                     )}
                   </div>
@@ -908,20 +908,20 @@ const RebrandCheckout = () => {
               {/* Totals */}
               <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', marginBottom: '1rem' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.9rem', color: '#6c757d' }}>
-                  <span>Subtotal</span><span>{formatPrice(displaySubtotal)}</span>
+                  <span>{t('rb_cart_subtotal')}</span><span>{formatPrice(displaySubtotal)}</span>
                 </div>
                 {discount > 0 && (
                   <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.9rem', color: '#16a34a', fontWeight: 700 }}>
-                    <span>Volume Discount</span><span>-{formatPrice(displayDiscount)}</span>
+                    <span>{t('rb_cart_volume_discount')}</span><span>-{formatPrice(displayDiscount)}</span>
                   </div>
                 )}
                 {appliedCoupon && (
                   <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.9rem', color: '#16a34a', fontWeight: 700 }}>
-                    <span>Coupon ({appliedCoupon.discount_percent}% OFF)</span><span>-{formatPrice(displayCouponDiscount)}</span>
+                    <span>{t('rb_cart_promo_code')} ({appliedCoupon.discount_percent}% OFF)</span><span>-{formatPrice(displayCouponDiscount)}</span>
                   </div>
                 )}
                 <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.9rem', color: currentShipping === 0 ? '#16a34a' : '#495057', fontWeight: currentShipping === 0 ? 700 : 400 }}>
-                  <span>Shipping</span><span>{currentShipping === 0 ? 'FREE' : formatPrice(displayShipping)}</span>
+                  <span>{t('rb_cart_shipping')}</span><span>{currentShipping === 0 ? t('rb_cart_free') : formatPrice(displayShipping)}</span>
                 </div>
                 {paymentMethod === 'paypal' && (
                   <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.85rem', color: '#b45309', fontWeight: 600 }}>
@@ -937,12 +937,12 @@ const RebrandCheckout = () => {
 
               {/* Cart Total */}
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', background: '#f8f9fa', borderRadius: '8px', padding: '0.9rem 1rem', marginBottom: '1.2rem' }}>
-                <span style={{ fontWeight: 800, fontSize: '1rem', color: '#121416' }}>Cart Total</span>
+                <span style={{ fontWeight: 800, fontSize: '1rem', color: '#121416' }}>{t('rb_cart_total')}</span>
                 <span style={{ fontWeight: 900, fontSize: '1.4rem', color: '#121416' }}>{formatPrice(displayFinalTotal)}</span>
               </div>
 
               {/* Payment Method */}
-              <p style={{ fontSize: '0.75rem', fontWeight: 600, color: '#6c757d', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '0.75rem' }}>Payment Method</p>
+              <p style={{ fontSize: '0.75rem', fontWeight: 600, color: '#6c757d', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '0.75rem' }}>{t('rb_checkout_payment_method')}</p>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '0.5rem', marginBottom: '1.2rem' }}>
                 <button onClick={() => setPaymentMethod('whatsapp')}
                   style={{ padding: '0.9rem 0.4rem', borderRadius: '10px', border: `2px solid ${paymentMethod === 'whatsapp' ? '#25D366' : '#dee2e6'}`, background: paymentMethod === 'whatsapp' ? '#f0fdf4' : '#fff', cursor: 'pointer', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.4rem', transition: 'all 0.15s' }}>
@@ -969,7 +969,7 @@ const RebrandCheckout = () => {
                   style={{ width: '100%', padding: '1rem', background: isSubmitting ? '#adb5bd' : '#121416', color: '#fff', border: 'none', borderRadius: '100px', fontWeight: 800, fontSize: '1rem', cursor: isSubmitting ? 'not-allowed' : 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem', transition: 'background 0.2s' }}
                 >
                   <WhatsAppIcon size={20} />
-                  {isSubmitting ? 'Processing...' : 'Place Order via WhatsApp'}
+                  {isSubmitting ? '...' : t('rb_checkout_place_order_wa')}
                 </button>
               ) : paymentMethod === 'stripe' ? (
                 <button
@@ -978,7 +978,7 @@ const RebrandCheckout = () => {
                   style={{ width: '100%', padding: '1rem', background: isSubmitting ? '#adb5bd' : '#635BFF', color: '#fff', border: 'none', borderRadius: '100px', fontWeight: 800, fontSize: '1rem', cursor: isSubmitting ? 'not-allowed' : 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem', transition: 'background 0.2s' }}
                 >
                   <CreditCard size={20} />
-                  {isSubmitting ? 'Redirecting...' : `Pay ${formatPrice(displayFinalTotal)} with Card`}
+                  {isSubmitting ? '...' : `${t('rb_checkout_pay_card')} (${formatPrice(displayFinalTotal)})`}
                 </button>
               ) : (
                 <div style={{ position: 'relative', zIndex: 1 }}>
@@ -994,7 +994,7 @@ const RebrandCheckout = () => {
               {/* Trust Badges */}
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem', marginTop: '1rem' }}>
                 <Lock size={12} color="#6c757d" />
-                <span style={{ fontSize: '0.75rem', color: '#6c757d' }}>Secure & Encrypted Checkout</span>
+                <span style={{ fontSize: '0.75rem', color: '#6c757d' }}>{t('rb_checkout_secure')}</span>
               </div>
             </section>
           </div>
@@ -1005,8 +1005,8 @@ const RebrandCheckout = () => {
           <div style={{ background: '#f0fdf4', border: '1px solid #bbf7d0', borderRadius: '12px', padding: '1rem 1.5rem', display: 'flex', alignItems: 'center', gap: '0.7rem' }}>
             <ShieldCheck size={20} color="#16a34a" />
             <div>
-              <p style={{ margin: 0, fontWeight: 700, fontSize: '0.9rem', color: '#15803d' }}>✓ Ready To Ship</p>
-              <p style={{ margin: 0, fontSize: '0.8rem', color: '#166534' }}>This item leaves our warehouse in 1–4 business days. Eligible for free Canada-wide shipping.</p>
+              <p style={{ margin: 0, fontWeight: 700, fontSize: '0.9rem', color: '#15803d' }}>{t('rb_prod_shipping_ready')}</p>
+              <p style={{ margin: 0, fontSize: '0.8rem', color: '#166534' }}>{t('rb_checkout_ready_to_ship_banner')}</p>
             </div>
           </div>
         </div>

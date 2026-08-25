@@ -4,6 +4,7 @@ import { Helmet } from 'react-helmet-async';
 import { supabaseRebrand as supabase } from '../../services/supabase';
 import { Star, ShoppingBag, Eye, SlidersHorizontal, ArrowLeft, ChevronDown, ChevronUp } from 'lucide-react';
 import { useCart } from '../../context/CartContext';
+import { useLanguage } from '../../context/LanguageContext';
 import { formatProductName, getProductRating, getProductReviewsCount } from '../utils/format';
 import ProductCard from '../components/ProductCard';
 
@@ -125,6 +126,7 @@ const CategoryPage = () => {
   const { category_id } = useParams();
   const navigate = useNavigate();
   const { addToCart } = useCart();
+  const { t } = useLanguage();
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
 
@@ -442,7 +444,7 @@ const CategoryPage = () => {
         {/* Breadcrumb e Voltar */}
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
           <Link to="/rebrand" style={{ display: 'inline-flex', alignItems: 'center', gap: '0.5rem', color: 'var(--rebrand-text-muted)', textDecoration: 'none', fontWeight: 700, fontSize: '0.85rem', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
-            <ArrowLeft size={14} /> Back to Home
+            <ArrowLeft size={14} /> {t('rb_cat_back_home')}
           </Link>
           <span style={{ fontSize: '0.8rem', color: 'var(--rebrand-text-muted)', fontWeight: 600 }}>
             iFooty / {category_id.toUpperCase()}
@@ -460,18 +462,29 @@ const CategoryPage = () => {
         }}>
           <div>
             <h1 style={{ fontSize: '2.5rem', fontWeight: 800, lineHeight: '1.1', margin: '0 0 0.5rem 0', color: '#121416', textTransform: 'capitalize' }}>
-              {category_id} Jerseys
+              {(() => {
+                const c = category_id.toLowerCase();
+                if (c === 'soccer') return `${t('rb_sport_soccer')} ${t('rb_cat_jerseys')}`;
+                if (c === 'basketball' || c === 'nba') return `${t('rb_sport_basketball')} ${t('rb_cat_jerseys')}`;
+                if (c === 'football' || c === 'nfl') return `${t('rb_sport_football')} ${t('rb_cat_jerseys')}`;
+                if (c === 'baseball' || c === 'mlb') return `${t('rb_sport_baseball')} ${t('rb_cat_jerseys')}`;
+                if (c === 'hockey' || c === 'nhl') return `${t('rb_sport_hockey')} ${t('rb_cat_jerseys')}`;
+                if (c === 'sale') return t('rb_badge_sale');
+                if (c === 'new-arrivals') return t('rb_badge_new_arrival');
+                if (c === 'best-sellers') return t('rb_badge_best_seller');
+                return `${category_id} ${t('rb_cat_jerseys')}`;
+              })()}
             </h1>
             <span style={{ fontSize: '0.85rem', color: 'var(--rebrand-text-muted)', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '2px' }}>
-              🍁 Official Fan Shop
+              🍁 {t('rb_cat_official_fan_shop')}
             </span>
           </div>
           <div style={{ textAlign: 'right' }}>
             <span style={{ fontSize: '1.8rem', fontWeight: 800, color: 'var(--rebrand-text-main)', display: 'block', fontFamily: 'var(--rebrand-font-display)' }}>
-              {filteredProducts.length} ITEMS
+              {filteredProducts.length} {t('rb_cat_items')}
             </span>
             <span style={{ fontSize: '0.75rem', color: '#2b8a3e', fontWeight: 800, textTransform: 'uppercase' }}>
-              ● Up to 30% Off select items
+              {t('rb_cat_up_to_discount')}
             </span>
           </div>
         </div>
@@ -483,21 +496,26 @@ const CategoryPage = () => {
           <div>
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', borderBottom: '2px solid #121416', paddingBottom: '0.8rem', marginBottom: '1rem' }}>
               <SlidersHorizontal size={16} />
-              <span style={{ fontWeight: 800, textTransform: 'uppercase', fontSize: '0.85rem', letterSpacing: '1px' }}>Shop By Category</span>
+              <span style={{ fontWeight: 800, textTransform: 'uppercase', fontSize: '0.85rem', letterSpacing: '1px' }}>{t('rb_cat_shop_by_category')}</span>
             </div>
 
             {/* Accordion: Department */}
             <div className="rebrand-filter-accordion-item">
               <button className="rebrand-filter-accordion-header" onClick={() => toggleSection('department')}>
-                <span>Department</span>
+                <span>{t('rb_cat_department')}</span>
                 {sections.department ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
               </button>
               {sections.department && (
                 <div className="rebrand-filter-accordion-content">
-                  {['Jerseys', 'T-Shirts', 'Caps & Hats', 'Hoodies'].map(dept => (
-                    <label key={dept} style={{ display: 'flex', alignItems: 'center', gap: '0.8rem', cursor: 'pointer', fontSize: '0.85rem', fontWeight: 500 }}>
-                      <input type="checkbox" defaultChecked={dept === 'Jerseys'} style={{ accentColor: '#000000', width: '16px', height: '16px' }} />
-                      <span>{dept}</span>
+                  {[
+                    { label: t('rb_cat_jerseys'), val: 'Jerseys' },
+                    { label: t('rb_cat_tshirts'), val: 'T-Shirts' },
+                    { label: t('rb_cat_caps'), val: 'Caps & Hats' },
+                    { label: t('rb_cat_hoodies'), val: 'Hoodies' }
+                  ].map(dept => (
+                    <label key={dept.val} style={{ display: 'flex', alignItems: 'center', gap: '0.8rem', cursor: 'pointer', fontSize: '0.85rem', fontWeight: 500 }}>
+                      <input type="checkbox" defaultChecked={dept.val === 'Jerseys'} style={{ accentColor: '#000000', width: '16px', height: '16px' }} />
+                      <span>{dept.label}</span>
                     </label>
                   ))}
                 </div>
@@ -508,13 +526,13 @@ const CategoryPage = () => {
             {category_id.toLowerCase() === 'soccer' && (
               <div className="rebrand-filter-accordion-item">
                 <button className="rebrand-filter-accordion-header" onClick={() => toggleSection('league')}>
-                  <span>League / Competition</span>
+                  <span>{t('rb_cat_league_comp')}</span>
                   {sections.league ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
                 </button>
                 {sections.league && (
                   <div className="rebrand-filter-accordion-content">
                     {[
-                      { label: 'All Leagues', val: 'All' },
+                      { label: t('rb_cat_all'), val: 'All' },
                       { label: 'Argentine League', val: 'Liga Profesional' },
                       { label: 'Brazilian League', val: 'Brasileirão' },
                       { label: 'Bundesliga', val: 'Bundesliga' },
@@ -522,7 +540,7 @@ const CategoryPage = () => {
                       { label: 'Ligue 1', val: 'Ligue 1' },
                       { label: 'MLS', val: 'MLS' },
                       { label: 'National Teams', val: 'Seleções' },
-                      { label: 'New Arrivals', val: 'Lançamentos' },
+                      { label: t('rb_badge_new_arrival'), val: 'Lançamentos' },
                       { label: 'Premier League', val: 'Premier League' },
                       { label: 'Retro Collection', val: 'Retrô' },
                       { label: 'Saudi Pro League', val: 'Saudi Pro League' },
@@ -548,16 +566,16 @@ const CategoryPage = () => {
             {/* Accordion: Gender / Age */}
             <div className="rebrand-filter-accordion-item">
               <button className="rebrand-filter-accordion-header" onClick={() => toggleSection('gender')}>
-                <span>Gender / Age</span>
+                <span>{t('rb_cat_gender_age')}</span>
                 {sections.gender ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
               </button>
               {sections.gender && (
                 <div className="rebrand-filter-accordion-content">
                   {[
-                    { label: 'All', val: 'All' },
-                    { label: 'Men', val: 'Men' },
-                    { label: 'Women', val: 'Women' },
-                    { label: 'Kids & Youth', val: 'Kids' }
+                    { label: t('rb_cat_all'), val: 'All' },
+                    { label: t('rb_cat_men'), val: 'Men' },
+                    { label: t('rb_cat_women'), val: 'Women' },
+                    { label: t('rb_cat_kids'), val: 'Kids' }
                   ].map(gender => (
                     <label key={gender.val} style={{ display: 'flex', alignItems: 'center', gap: '0.8rem', cursor: 'pointer', fontSize: '0.85rem', fontWeight: 500 }}>
                       <input 
@@ -578,7 +596,7 @@ const CategoryPage = () => {
             {uniqueTeams.length > 0 && (
               <div className="rebrand-filter-accordion-item">
                 <button className="rebrand-filter-accordion-header" onClick={() => toggleSection('teams')}>
-                  <span>Teams</span>
+                  <span>{t('rb_cat_teams')}</span>
                   {sections.teams ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
                 </button>
                 {sections.teams && (
@@ -591,18 +609,18 @@ const CategoryPage = () => {
                         onChange={() => setSelectedTeam('All')}
                         style={{ accentColor: '#000000', width: '16px', height: '16px' }} 
                       />
-                      <span>All Teams</span>
+                      <span>{t('rb_cat_all_teams')}</span>
                     </label>
-                    {uniqueTeams.map(t => (
-                      <label key={t} style={{ display: 'flex', alignItems: 'center', gap: '0.8rem', cursor: 'pointer', fontSize: '0.85rem', fontWeight: 500, marginBottom: '0.4rem' }}>
+                    {uniqueTeams.map(tName => (
+                      <label key={tName} style={{ display: 'flex', alignItems: 'center', gap: '0.8rem', cursor: 'pointer', fontSize: '0.85rem', fontWeight: 500, marginBottom: '0.4rem' }}>
                         <input 
                           type="radio" 
                           name="teamFilter" 
-                          checked={selectedTeam === t}
-                          onChange={() => setSelectedTeam(t)}
+                          checked={selectedTeam === tName}
+                          onChange={() => setSelectedTeam(tName)}
                           style={{ accentColor: '#000000', width: '16px', height: '16px' }} 
                         />
-                        <span>{TEAM_TRANSLATIONS[t] || t}</span>
+                        <span>{TEAM_TRANSLATIONS[tName] || tName}</span>
                       </label>
                     ))}
                   </div>
@@ -613,7 +631,7 @@ const CategoryPage = () => {
             {/* Accordion: Player */}
             <div className="rebrand-filter-accordion-item">
               <button className="rebrand-filter-accordion-header" onClick={() => toggleSection('players')}>
-                <span>Players</span>
+                <span>{t('rb_cat_players')}</span>
                 {sections.players ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
               </button>
               {sections.players && (
@@ -626,7 +644,7 @@ const CategoryPage = () => {
                       onChange={() => setSelectedPlayer('All')}
                       style={{ accentColor: '#000000', width: '16px', height: '16px' }} 
                     />
-                    <span>All Players</span>
+                    <span>{t('rb_cat_all_players')}</span>
                   </label>
                   {uniquePlayers.map(player => (
                     <label key={player} style={{ display: 'flex', alignItems: 'center', gap: '0.8rem', cursor: 'pointer', fontSize: '0.85rem', fontWeight: 500, marginBottom: '0.4rem' }}>
@@ -647,7 +665,7 @@ const CategoryPage = () => {
             {/* Accordion: Size */}
             <div className="rebrand-filter-accordion-item">
               <button className="rebrand-filter-accordion-header" onClick={() => toggleSection('size')}>
-                <span>Size</span>
+                <span>{t('rb_prod_size')}</span>
                 {sections.size ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
               </button>
               {sections.size && (
@@ -668,7 +686,7 @@ const CategoryPage = () => {
                         transition: 'all 0.1s'
                       }}
                     >
-                      {size}
+                      {size === 'All' ? t('rb_cat_all') : size}
                     </button>
                   ))}
                 </div>
@@ -678,15 +696,15 @@ const CategoryPage = () => {
             {/* Accordion: Price */}
             <div className="rebrand-filter-accordion-item">
               <button className="rebrand-filter-accordion-header" onClick={() => toggleSection('price')}>
-                <span>Price Range</span>
+                <span>{t('rb_cat_price_range')}</span>
                 {sections.price ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
               </button>
               {sections.price && (
                 <div className="rebrand-filter-accordion-content">
                   {[
-                    { label: 'All Prices', val: 'All' },
-                    { label: 'Under $100 CAD', val: 'under-100' },
-                    { label: 'Over $100 CAD', val: 'over-100' }
+                    { label: t('rb_cat_all_prices'), val: 'All' },
+                    { label: t('rb_cat_under_100'), val: 'under-100' },
+                    { label: t('rb_cat_over_100'), val: 'over-100' }
                   ].map(price => (
                     <label key={price.val} style={{ display: 'flex', alignItems: 'center', gap: '0.8rem', cursor: 'pointer', fontSize: '0.85rem', fontWeight: 500 }}>
                       <input 
@@ -709,12 +727,12 @@ const CategoryPage = () => {
           <div id="catalog-start">
             {loading ? (
               <div style={{ textAlign: 'center', padding: '6rem 0' }}>
-                <p style={{ color: 'var(--rebrand-text-muted)', fontSize: '1.1rem', fontWeight: 600 }}>Loading official jerseys...</p>
+                <p style={{ color: 'var(--rebrand-text-muted)', fontSize: '1.1rem', fontWeight: 600 }}>{t('rb_cat_loading')}</p>
               </div>
             ) : filteredProducts.length === 0 ? (
               <div style={{ textAlign: 'center', padding: '6rem 0', border: '1.5px dashed var(--rebrand-border)', borderRadius: '8px' }}>
-                <h4 style={{ color: 'var(--rebrand-text-muted)', marginBottom: '0.5rem' }}>No products matching current filters</h4>
-                <p style={{ color: 'var(--rebrand-text-muted)', fontSize: '0.85rem' }}>Try clearing size or price filters to view other collections.</p>
+                <h4 style={{ color: 'var(--rebrand-text-muted)', marginBottom: '0.5rem' }}>{t('rb_cat_empty_title')}</h4>
+                <p style={{ color: 'var(--rebrand-text-muted)', fontSize: '0.85rem' }}>{t('rb_cat_empty_text')}</p>
               </div>
             ) : (
               <>
@@ -749,7 +767,7 @@ const CategoryPage = () => {
                       }}
                       className="rebrand-pagination-btn"
                     >
-                      Prev
+                      {t('rb_cat_previous')}
                     </button>
                     {Array.from({ length: totalPages }, (_, i) => i + 1)
                       .filter(page => {
@@ -781,7 +799,7 @@ const CategoryPage = () => {
                       }}
                       className="rebrand-pagination-btn"
                     >
-                      Next
+                      {t('rb_cat_next')}
                     </button>
                   </div>
                 )}

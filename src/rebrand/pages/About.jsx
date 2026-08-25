@@ -1,8 +1,10 @@
 import React from 'react';
 import { ArrowLeft, Award, Globe, ShieldCheck, Mail, MessageCircle } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { useLanguage } from '../../context/LanguageContext';
 
 const RebrandAboutPage = () => {
+  const { t } = useLanguage();
   return (
     <div style={{ background: '#ffffff', minHeight: '80vh', padding: '3rem 2rem' }} className="rebrand-scope">
       <div className="container" style={{ maxWidth: '800px', margin: '0 auto' }}>
@@ -10,16 +12,16 @@ const RebrandAboutPage = () => {
         {/* Back Link */}
         <div style={{ marginBottom: '2rem' }}>
           <Link to="/rebrand" style={{ display: 'inline-flex', alignItems: 'center', gap: '0.5rem', color: 'var(--rebrand-text-muted)', textDecoration: 'none', fontWeight: 700, fontSize: '0.85rem', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
-            <ArrowLeft size={14} /> Back to Shop
+            <ArrowLeft size={14} /> {t('rb_checkout_back')}
           </Link>
         </div>
 
         {/* Title */}
         <h1 style={{ fontSize: '3rem', fontWeight: 900, color: '#121416', marginBottom: '0.5rem', lineHeight: '1.1' }}>
-          About iFooty
+          {t('rb_about_title')}
         </h1>
         <p style={{ fontSize: '1.1rem', color: 'var(--rebrand-text-muted)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '2.5rem' }}>
-          🍁 Canada's Premium Stitched Jersey Store
+          🍁 {t('rb_slogan')}
         </p>
 
         {/* Story Blocks */}

@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate, Navigate, Link } from 'react-router-dom';
 import { useRebrandAuth } from '../../context/RebrandAuthContext';
 import { useWishlist } from '../../context/WishlistContext';
+import { useLanguage } from '../../context/LanguageContext';
 import { supabaseRebrand as supabase } from '../../services/supabase';
 import { Package, User, LogOut, ChevronRight, Edit2, Check, X, Truck, Clock, CheckCircle, XCircle, ShoppingBag, Heart, Star, MessageSquare } from 'lucide-react';
 import TrackingModal from '../../components/TrackingModal';
@@ -17,6 +18,7 @@ const STATUS_CONFIG = {
 
 const RebrandProfile = () => {
   const { user, signOut, loading: authLoading, isAdmin } = useRebrandAuth();
+  const { t } = useLanguage();
   const navigate = useNavigate();
 
   const [activeTab, setActiveTab] = useState('orders');
@@ -166,16 +168,16 @@ const RebrandProfile = () => {
 
         <div style={{ display: 'flex', borderBottom: '1px solid #e5e7eb', marginBottom: '1.5rem', overflowX: 'auto', gap: '0.5rem' }}>
           <button className={`rp-tab${activeTab === 'orders' ? ' active' : ''}`} onClick={() => setActiveTab('orders')}>
-            My Orders
+            {t('rb_profile_orders')}
           </button>
           <button className={`rp-tab${activeTab === 'wishlist' ? ' active' : ''}`} onClick={() => setActiveTab('wishlist')}>
             Wishlist
           </button>
           <button className={`rp-tab${activeTab === 'account' ? ' active' : ''}`} onClick={() => setActiveTab('account')}>
-            My Account
+            {t('rb_my_account')}
           </button>
           <button className={`rp-tab${activeTab === 'review' ? ' active' : ''}`} onClick={() => setActiveTab('review')} style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
-            <MessageSquare size={14} /> Leave a Review
+            <MessageSquare size={14} /> {t('rb_profile_feedback')}
           </button>
           {isAdmin && (
             <button className="rp-tab" onClick={() => navigate('/admin')} style={{ color: '#FB923C' }}>

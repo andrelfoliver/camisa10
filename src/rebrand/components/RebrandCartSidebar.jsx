@@ -10,7 +10,7 @@ const RebrandCartSidebar = () => {
     subtotal, discount, couponDiscount, appliedCoupon, couponCode, setCouponCode, 
     couponError, isVerifyingCoupon, applyCoupon, removeCoupon, cartTotal 
   } = useCart();
-  const { formatPrice } = useLanguage();
+  const { formatPrice, t } = useLanguage();
   const navigate = useNavigate();
   const location = useLocation();
   const [promoOpen, setPromoOpen] = useState(!!appliedCoupon);
@@ -72,7 +72,7 @@ const RebrandCartSidebar = () => {
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
             <ShoppingBag size={20} color="#121416" />
             <h2 style={{ fontSize: '1.1rem', margin: 0, fontWeight: 800, color: '#121416', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
-              My Bag
+              {t('rb_cart_title')}
             </h2>
             {cartItems.length > 0 && (
               <span style={{
@@ -98,7 +98,7 @@ const RebrandCartSidebar = () => {
           }}>
             <span style={{ fontSize: '0.9rem' }}>🔥</span>
             <span style={{ fontSize: '0.78rem', fontWeight: 700, color: '#b45309' }}>
-              Items May Sell Out, Order Now!
+              {t('rb_cart_urgency_banner')}
             </span>
           </div>
         )}
@@ -108,12 +108,12 @@ const RebrandCartSidebar = () => {
           {cartItems.length === 0 ? (
             <div style={{ textAlign: 'center', marginTop: '3rem', color: '#6c757d' }}>
               <ShoppingBag size={40} color="#dee2e6" style={{ marginBottom: '1rem' }} />
-              <p style={{ fontWeight: 600, fontSize: '1rem' }}>Your bag is empty</p>
+              <p style={{ fontWeight: 600, fontSize: '1rem' }}>{t('rb_cart_empty')}</p>
               <button
                 onClick={handleContinueShopping}
                 style={{ marginTop: '1rem', background: '#121416', color: '#fff', border: 'none', borderRadius: '100px', padding: '0.7rem 1.5rem', fontWeight: 700, cursor: 'pointer', fontSize: '0.9rem' }}
               >
-                Browse Products
+                {t('rb_cart_start_shopping')}
               </button>
             </div>
           ) : (
@@ -140,7 +140,7 @@ const RebrandCartSidebar = () => {
                     {item.name}
                   </p>
                   <p style={{ margin: '0 0 0.4rem 0', fontSize: '0.78rem', color: '#6c757d' }}>
-                    Size: <strong>{item.size}</strong>
+                    {t('rb_cart_size')}: <strong>{item.size}</strong>
                   </p>
 
                   {/* Extras */}
@@ -181,7 +181,7 @@ const RebrandCartSidebar = () => {
                       </p>
                       {item.quantity > 1 && (
                         <p style={{ margin: 0, fontSize: '0.7rem', color: '#6c757d' }}>
-                          each {formatPrice(item.price)}
+                          {t('rb_cart_each')} {formatPrice(item.price)}
                         </p>
                       )}
                     </div>
@@ -213,11 +213,11 @@ const RebrandCartSidebar = () => {
                 <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                   <Tag size={14} color={appliedCoupon ? "#16a34a" : "#6c757d"} />
                   <span style={{ fontWeight: 700, fontSize: '0.9rem', color: appliedCoupon ? '#16a34a' : '#121416' }}>
-                    {appliedCoupon ? `Promo Code (${appliedCoupon.code})` : 'Have a Promo Code?'}
+                    {appliedCoupon ? `${t('rb_cart_promo_code')} (${appliedCoupon.code})` : t('rb_cart_have_promo_code')}
                   </span>
                 </div>
                 <span style={{ color: '#121416', fontWeight: 800, fontSize: '0.8rem', letterSpacing: '0.5px' }}>
-                  {appliedCoupon ? 'EDIT' : (promoOpen ? '−' : 'ADD')}
+                  {appliedCoupon ? t('rb_cart_edit') : (promoOpen ? '−' : t('rb_cart_add'))}
                 </span>
               </div>
 
@@ -250,7 +250,7 @@ const RebrandCartSidebar = () => {
                           textDecoration: 'underline'
                         }}
                       >
-                        Remove
+                        {t('rb_cart_remove')}
                       </button>
                     </div>
                   ) : (
@@ -287,7 +287,7 @@ const RebrandCartSidebar = () => {
                           transition: 'all 0.2s'
                         }}
                       >
-                        {isVerifyingCoupon ? '...' : 'Apply'}
+                        {isVerifyingCoupon ? '...' : t('rb_cart_apply')}
                       </button>
                     </form>
                   )}
@@ -302,14 +302,14 @@ const RebrandCartSidebar = () => {
 
             {/* Subtotal */}
             <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.4rem', fontSize: '0.9rem', color: '#6c757d' }}>
-              <span>Subtotal</span>
+              <span>{t('rb_cart_subtotal')}</span>
               <span>{formatPrice(subtotal)}</span>
             </div>
 
             {/* Volume Discount */}
             {discount > 0 && (
               <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.4rem', fontSize: '0.9rem', color: '#16a34a', fontWeight: 700 }}>
-                <span>Volume Discount</span>
+                <span>{t('rb_cart_volume_discount')}</span>
                 <span>-{formatPrice(discount)}</span>
               </div>
             )}
@@ -317,7 +317,7 @@ const RebrandCartSidebar = () => {
             {/* Coupon Discount */}
             {couponDiscount > 0 && appliedCoupon && (
               <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.4rem', fontSize: '0.9rem', color: '#16a34a', fontWeight: 700 }}>
-                <span>Coupon ({appliedCoupon.code} -{appliedCoupon.discount_percent}%)</span>
+                <span>{t('rb_cart_promo_code')} ({appliedCoupon.code} -{appliedCoupon.discount_percent}%)</span>
                 <span>-{formatPrice(couponDiscount)}</span>
               </div>
             )}
@@ -328,7 +328,7 @@ const RebrandCartSidebar = () => {
               background: '#f8f9fa', borderRadius: '8px',
               padding: '0.8rem 1rem', margin: '0.8rem 0'
             }}>
-              <span style={{ fontWeight: 800, fontSize: '1rem', color: '#121416' }}>Cart Total</span>
+              <span style={{ fontWeight: 800, fontSize: '1rem', color: '#121416' }}>{t('rb_cart_total')}</span>
               <span style={{ fontWeight: 900, fontSize: '1.4rem', color: '#121416' }}>
                 {formatPrice(cartTotal)}
               </span>
@@ -349,7 +349,7 @@ const RebrandCartSidebar = () => {
               onMouseOut={e => e.currentTarget.style.background = '#121416'}
               onClick={() => { setIsCartOpen(false); navigate('/checkout'); }}
             >
-              Checkout <ArrowRight size={18} />
+              {t('rb_cart_checkout')} <ArrowRight size={18} />
             </button>
 
             {/* Continue Shopping */}
@@ -362,7 +362,7 @@ const RebrandCartSidebar = () => {
                 color: '#121416', cursor: 'pointer'
               }}
             >
-              Continue Shopping
+              {t('rb_cart_continue')}
             </button>
           </div>
         )}

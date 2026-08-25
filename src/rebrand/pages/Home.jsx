@@ -3,6 +3,7 @@ import { useNavigate, Link } from 'react-router-dom';
 import { supabaseRebrand as supabase } from '../../services/supabase';
 import { ArrowRight, Star, ShoppingBag, Eye, ShieldCheck, Truck, RefreshCw, BadgeAlert, Check, ChevronLeft, ChevronRight, Shirt, Flame, Tag } from 'lucide-react';
 import { useCart } from '../../context/CartContext';
+import { useLanguage } from '../../context/LanguageContext';
 import { formatProductName, getProductRating, getProductReviewsCount } from '../utils/format';
 
 // Mocks premium de outros esportes para simular a loja multiesportiva antes de cadastrar no banco
@@ -129,6 +130,7 @@ const TESTIMONIAL_TRANSLATIONS = {
 const Home = () => {
   const navigate = useNavigate();
   const { addToCart } = useCart();
+  const { language, t } = useLanguage();
   const [dbProducts, setDbProducts] = useState([]);
   const [testimonials, setTestimonials] = useState([]);
   const [showEnglish, setShowEnglish] = useState({});
@@ -137,8 +139,8 @@ const Home = () => {
   const [activeSlide, setActiveSlide] = useState(0);
   const [carouselSlides, setCarouselSlides] = useState(CAROUSEL_SLIDES);
   const [heroImage, setHeroImage] = useState('');
-  const [heroTitle, setHeroTitle] = useState('WEAR YOUR TEAM.');
-  const [heroSubtitle, setHeroSubtitle] = useState('THE HOME OF SPORTS JERSEYS.');
+  const [dbHeroTitle, setDbHeroTitle] = useState(null);
+  const [dbHeroSubtitle, setDbHeroSubtitle] = useState(null);
 
   const toggleTranslation = (id) => {
     setShowEnglish(prev => ({ ...prev, [id]: !prev[id] }));
@@ -238,10 +240,10 @@ const Home = () => {
         if (imgData?.value) setHeroImage(imgData.value);
 
         const { data: titleData } = await supabase.from('store_settings').select('value').eq('key', 'rebrand_hero_title').single();
-        if (titleData?.value) setHeroTitle(titleData.value);
+        if (titleData?.value) setDbHeroTitle(titleData.value);
 
         const { data: subData } = await supabase.from('store_settings').select('value').eq('key', 'rebrand_hero_subtitle').single();
-        if (subData?.value) setHeroSubtitle(subData.value);
+        if (subData?.value) setDbHeroSubtitle(subData.value);
       } catch (err) {
         console.warn("Could not load hero settings:", err);
       }
@@ -332,20 +334,20 @@ const Home = () => {
   const displaySaleProducts = saleProducts.length > 0 ? saleProducts : dbProducts.filter(p => p.oldPrice || p.badge === 'Sale').slice(0, 8);
 
   const sportsCategories = [
-    { name: 'Soccer', img: '/assets/rebrand/real_madrid.jpg', link: 'soccer', bgSize: 'auto 100%', bgPos: 'center top' },
-    { name: 'Basketball', img: '/assets/rebrand/raptors.jpg', link: 'basketball', bgSize: 'auto 145%', bgPos: 'center 5%' },
-    { name: 'Football', img: '/assets/rebrand/chiefs.jpg', link: 'football', bgSize: 'auto 115%', bgPos: 'center top' },
-    { name: 'Baseball', img: '/assets/rebrand/blue_jays.jpg', link: 'baseball', bgSize: 'auto 115%', bgPos: 'center top' },
-    { name: 'Hockey', img: '/assets/rebrand/maple_leafs.jpg', link: 'hockey', bgSize: 'auto 110%', bgPos: 'center top' }
+    { name: t('rb_sport_soccer'), img: '/assets/rebrand/real_madrid.jpg', link: 'soccer', bgSize: 'auto 100%', bgPos: 'center top' },
+    { name: t('rb_sport_basketball'), img: '/assets/rebrand/raptors.jpg', link: 'basketball', bgSize: 'auto 145%', bgPos: 'center 5%' },
+    { name: t('rb_sport_football'), img: '/assets/rebrand/chiefs.jpg', link: 'football', bgSize: 'auto 115%', bgPos: 'center top' },
+    { name: t('rb_sport_baseball'), img: '/assets/rebrand/blue_jays.jpg', link: 'baseball', bgSize: 'auto 115%', bgPos: 'center top' },
+    { name: t('rb_sport_hockey'), img: '/assets/rebrand/maple_leafs.jpg', link: 'hockey', bgSize: 'auto 110%', bgPos: 'center top' }
   ];
 
   // Logos de Ligas (Design Redondo Premium)
   const leagueList = [
-    { name: 'NHL', desc: 'Hockey', logo: '🏒', bg: '#121416', link: 'hockey' },
-    { name: 'NBA', desc: 'Basketball', logo: '🏀', bg: '#0056b3', link: 'basketball' },
-    { name: 'MLB', desc: 'Baseball', logo: '⚾', bg: '#ba8b00', link: 'baseball' },
-    { name: 'NFL', desc: 'Football', logo: '🏈', bg: '#dc3545', link: 'football' },
-    { name: 'MLS', desc: 'Soccer', logo: '⚽', bg: '#1098ad', link: 'soccer' }
+    { name: 'NHL', desc: t('rb_sport_hockey'), logo: '🏒', bg: '#121416', link: 'hockey' },
+    { name: 'NBA', desc: t('rb_sport_basketball'), logo: '🏀', bg: '#0056b3', link: 'basketball' },
+    { name: 'MLB', desc: t('rb_sport_baseball'), logo: '⚾', bg: '#ba8b00', link: 'baseball' },
+    { name: 'NFL', desc: t('rb_sport_football'), logo: '🏈', bg: '#dc3545', link: 'football' },
+    { name: 'MLS', desc: t('rb_sport_soccer'), logo: '⚽', bg: '#1098ad', link: 'soccer' }
   ];
 
   const trendingTeams = [
@@ -365,6 +367,46 @@ const Home = () => {
       )
     : [];
 
+  const isDefaultTitle = !dbHeroTitle || ['wear your team.', 'wear your team'].includes(dbHeroTitle.trim().toLowerCase());
+  const heroTitle = isDefaultTitle ? t('rb_home_hero_title') : dbHeroTitle;
+
+  const isDefaultSubtitle = !dbHeroSubtitle || ['the home of sports jerseys.', 'find your favorite jersey', 'soccer - nba - nfl - mlb - nhl'].includes(dbHeroSubtitle.trim().toLowerCase());
+  const heroSubtitle = isDefaultSubtitle ? t('rb_home_hero_subtitle') : dbHeroSubtitle;
+
+  const getSlideBadge = (slide) => {
+    if (!slide?.badge) return '';
+    const b = slide.badge.toLowerCase();
+    if (b.includes('summer')) return language === 'pt' ? '⚾ Coleção de Verão' : language === 'es' ? '⚾ Colección de Verano' : '⚾ Summer Collection';
+    if (b.includes('nfl')) return language === 'pt' ? '🏈 Coleção NFL' : language === 'es' ? '🏈 Colección NFL' : '🏈 NFL Collection';
+    if (b.includes('nhl')) return language === 'pt' ? '🏒 Coleção NHL' : language === 'es' ? '🏒 Colección NHL' : '🏒 NHL Collection';
+    if (b.includes('club')) return language === 'pt' ? '⚽ Coleção de Clubes' : language === 'es' ? '⚽ Colección de Clubes' : '⚽ Club Collection';
+    if (b.includes('nba')) return language === 'pt' ? '🏀 Coleção NBA' : language === 'es' ? '🏀 Colección NBA' : '🏀 NBA Collection';
+    return slide.badge;
+  };
+
+  const getSlideTitle = (slide) => {
+    if (!slide?.title) return '';
+    const tStr = slide.title.toUpperCase();
+    const jerseysWord = language === 'pt' ? 'CAMISAS' : language === 'es' ? 'CAMISETAS' : 'JERSEYS';
+    if (tStr.includes('BLUE JAYS')) return `BLUE JAYS ${jerseysWord}`;
+    if (tStr.includes('CHIEFS')) return `CHIEFS ${jerseysWord}`;
+    if (tStr.includes('MAPLE LEAFS')) return `MAPLE LEAFS ${jerseysWord}`;
+    if (tStr.includes('REAL MADRID')) return `REAL MADRID ${jerseysWord}`;
+    if (tStr.includes('RAPTORS')) return `RAPTORS ${jerseysWord}`;
+    return slide.title;
+  };
+
+  const getSlideBtnText = (slide) => {
+    if (!slide?.btnText) return '';
+    const btn = slide.btnText;
+    if (btn === 'Shop MLB') return language === 'pt' ? 'Comprar MLB' : language === 'es' ? 'Comprar MLB' : 'Shop MLB';
+    if (btn === 'Shop NFL') return language === 'pt' ? 'Comprar NFL' : language === 'es' ? 'Comprar NFL' : 'Shop NFL';
+    if (btn === 'Shop NHL') return language === 'pt' ? 'Comprar NHL' : language === 'es' ? 'Comprar NHL' : 'Shop NHL';
+    if (btn === 'Shop Soccer') return language === 'pt' ? 'Comprar Futebol' : language === 'es' ? 'Comprar Fútbol' : 'Shop Soccer';
+    if (btn === 'Shop NBA') return language === 'pt' ? 'Comprar NBA' : language === 'es' ? 'Comprar NBA' : 'Shop NBA';
+    return btn;
+  };
+
   return (
     <div style={{ background: '#ffffff' }}>
 
@@ -383,13 +425,13 @@ const Home = () => {
             </div>
 
             <h1 className="rebrand-hero-title">
-              {heroTitle.toLowerCase().includes('team') ? (
+              {heroTitle.match(/(team|time|equipo)\.?$/i) ? (
                 <>
                   <span style={{ display: 'block', whiteSpace: 'nowrap' }}>
-                    {heroTitle.replace(/team\.?/i, '').trim()}
+                    {heroTitle.replace(/(team|time|equipo)\.?$/i, '').trim()}
                   </span>
                   <span className="rebrand-hero-title-team">
-                    {heroTitle.match(/team\.?/i)?.[0] || 'TEAM.'}
+                    {heroTitle.match(/(team|time|equipo)\.?$/i)?.[0] || ''}
                   </span>
                 </>
               ) : (
@@ -399,7 +441,7 @@ const Home = () => {
 
             {/* Subtítulo abaixo do título */}
             <div style={{ fontSize: '0.75rem', color: 'rgba(255,255,255,0.8)', fontWeight: 600, letterSpacing: '3px', margin: '0.8rem 0 2rem 0', textTransform: 'uppercase' }}>
-              {heroSubtitle === 'SOCCER - NBA - NFL - MLB - NHL' ? 'THE HOME OF SPORTS JERSEYS.' : (heroSubtitle || 'THE HOME OF SPORTS JERSEYS.')}
+              {heroSubtitle}
             </div>
           </div>
 
@@ -423,7 +465,7 @@ const Home = () => {
                   fontSize: '0.85rem'
                 }}
               >
-                Shop Now <ArrowRight size={16} style={{ strokeWidth: 3 }} />
+                {t('rb_home_shop_now')} <ArrowRight size={16} style={{ strokeWidth: 3 }} />
               </button>
             </div>
           </div>
@@ -433,23 +475,23 @@ const Home = () => {
       {/* FAIXA DE DIFERENCIAIS / TRUST ELEMENT (Otimizado abaixo do Hero) */}
       <div className="rebrand-trustbar" style={{ background: '#000000', borderTop: '1px solid rgba(255,255,255,0.1)', borderBottom: '1px solid rgba(255,255,255,0.1)' }}>
         <div className="rebrand-trustbar-item">
-          <Shirt size={16} color="var(--rebrand-volt)" /> Premium Quality
+          <Shirt size={16} color="var(--rebrand-volt)" /> {t('rb_prod_premium_quality')}
         </div>
         <div className="rebrand-trustbar-item">
-          <Truck size={18} color="var(--rebrand-volt)" /> Fast Shipping Across Canada
+          <Truck size={18} color="var(--rebrand-volt)" /> {t('rb_free_shipping')}
         </div>
         <div className="rebrand-trustbar-item">
           <Star size={16} color="var(--rebrand-volt)" fill="var(--rebrand-volt)" /> 5-Star Customer Experience
         </div>
         <div className="rebrand-trustbar-item">
-          <span style={{ color: 'var(--rebrand-volt)', fontSize: '1rem', display: 'flex', alignItems: 'center' }}>🍁</span> Canadian Store
+          <span style={{ color: 'var(--rebrand-volt)', fontSize: '1rem', display: 'flex', alignItems: 'center' }}>🍁</span> {t('rb_slogan')}
         </div>
       </div>
 
       {/* 2. SHOP BY SPORT - GRIDS ASSIMÉTRICOS (Mais amplo, vem primeiro) */}
       <section className="rebrand-section container" style={{ maxWidth: '1400px', margin: '0 auto', paddingTop: '4rem' }}>
         <div className="rebrand-section-header">
-          <h2 className="rebrand-section-title">Shop by Sport</h2>
+          <h2 className="rebrand-section-title">{t('rb_home_shop_by_sport')}</h2>
         </div>
 
         <div className="rebrand-sport-grid">
@@ -464,7 +506,7 @@ const Home = () => {
               <div className="rebrand-sport-card-info">
                 <h3 className="rebrand-sport-name">{sport.name}</h3>
                 <span className="rebrand-sport-btn">
-                  Shop Now <ArrowRight size={14} />
+                  {t('rb_home_shop_now')} <ArrowRight size={14} />
                 </span>
               </div>
             </div>
@@ -476,10 +518,10 @@ const Home = () => {
       <section style={{ borderBottom: '1px solid var(--rebrand-border)', padding: '4rem 2rem', background: '#F8F9FA' }}>
         <div className="container" style={{ maxWidth: '1400px', margin: '0 auto', textAlign: 'center' }}>
           <span style={{ fontSize: '0.8rem', color: 'var(--rebrand-text-muted)', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '2px', display: 'block', marginBottom: '0.5rem' }}>
-            Browse officially licensed gear
+            {t('rb_home_browse_licensed')}
           </span>
           <h2 className="rebrand-section-title" style={{ margin: '0 0 3rem 0' }}>
-            Shop by League
+            {t('rb_home_shop_by_league')}
           </h2>
 
           <div className="rebrand-league-row" style={{ display: 'flex', gap: '2.5rem', justifyContent: 'center', flexWrap: 'wrap' }}>
@@ -518,18 +560,18 @@ const Home = () => {
               >
                 <div className="rebrand-spotlight-info">
                   <div className="rebrand-spotlight-badge-container">
-                    <span className="rebrand-spotlight-badge">{slide.badge}</span>
+                    <span className="rebrand-spotlight-badge">{getSlideBadge(slide)}</span>
                   </div>
                   <h2 className="rebrand-spotlight-title">
-                    {slide.title}
+                    {getSlideTitle(slide)}
                   </h2>
                   <div className="rebrand-spotlight-price-container">
-                    <span className="rebrand-spotlight-price-label">Starting at</span>
+                    <span className="rebrand-spotlight-price-label">{t('rb_home_starting_at')}</span>
                     <span className="rebrand-spotlight-price">{slide.price}</span>
                   </div>
                   <div className="rebrand-spotlight-btn-container">
                     <Link to={slide.link} className="rebrand-btn rebrand-btn-primary spotlight-btn">
-                      {slide.btnText}
+                      {getSlideBtnText(slide)}
                     </Link>
                   </div>
                 </div>
@@ -561,9 +603,9 @@ const Home = () => {
             <div style={{ marginTop: '4rem', borderTop: '1px dashed rgba(0,0,0,0.12)', paddingTop: '3rem', animation: 'fadeIn 0.5s ease-out' }}>
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '2rem' }}>
                 <h3 style={{ fontSize: '1.4rem', textTransform: 'uppercase', letterSpacing: '1.5px', color: '#121416', fontWeight: 800, margin: 0 }}>
-                  Featured in {activeSlideData.sport}
+                  {t('rb_home_featured_in')} {activeSlideData.sport}
                 </h3>
-                <span style={{ fontSize: '0.8rem', color: 'var(--rebrand-text-muted)', fontWeight: 600 }}>Spotlight Collection</span>
+                <span style={{ fontSize: '0.8rem', color: 'var(--rebrand-text-muted)', fontWeight: 600 }}>{t('rb_home_spotlight_collection')}</span>
               </div>
               
               <div className="rebrand-products-grid">
@@ -599,7 +641,7 @@ const Home = () => {
                             }} 
                             className="rebrand-product-btn-quick"
                           >
-                            <ShoppingBag size={14} style={{ marginRight: '0.4rem' }} /> Add to Cart
+                            <ShoppingBag size={14} style={{ marginRight: '0.4rem' }} /> {t('rb_prod_add_to_cart')}
                           </button>
                           <button 
                             onClick={() => navigate(`/produto/${product.id}`)} 
@@ -656,7 +698,7 @@ const Home = () => {
             justifyContent: 'center',
             gap: '0.4rem'
           }}>
-            ⚡ Special Bundle Deals
+            {t('rb_home_special_bundle_deals')}
           </h2>
 
           <div style={{ display: 'flex', justifyContent: 'center', gap: '1.5rem', flexWrap: 'wrap', maxWidth: '800px', margin: '0 auto' }}>
@@ -674,9 +716,9 @@ const Home = () => {
               boxSizing: 'border-box'
             }}>
               <div>
-                <h3 style={{ fontSize: '1.1rem', fontWeight: 700, color: 'var(--rebrand-text-main)', margin: '0 0 0.5rem 0' }}>Buy 2 Jerseys</h3>
+                <h3 style={{ fontSize: '1.1rem', fontWeight: 700, color: 'var(--rebrand-text-main)', margin: '0 0 0.5rem 0' }}>{t('rb_home_buy_2_jerseys')}</h3>
                 <p style={{ color: 'var(--rebrand-text-muted)', fontSize: '0.8rem', margin: '0 0 1.25rem 0' }}>
-                  Get them for only <strong>$91.97 CAD</strong> (Save $3.83)
+                  {t('rb_home_get_2_for_only')} <strong>$91.97 CAD</strong> ({t('rb_home_save')} $3.83)
                 </p>
               </div>
 
@@ -696,7 +738,7 @@ const Home = () => {
                 }}
                 className="interactive-card"
               >
-                Select Jerseys
+                {t('rb_home_select_jerseys')}
               </button>
             </div>
 
@@ -727,13 +769,13 @@ const Home = () => {
                 textTransform: 'uppercase',
                 letterSpacing: '0.5px'
               }}>
-                Best Deal
+                {t('rb_home_best_deal')}
               </div>
 
               <div>
-                <h3 style={{ fontSize: '1.1rem', fontWeight: 700, color: 'var(--rebrand-text-main)', margin: '0 0 0.5rem 0' }}>Buy 3 Jerseys</h3>
+                <h3 style={{ fontSize: '1.1rem', fontWeight: 700, color: 'var(--rebrand-text-main)', margin: '0 0 0.5rem 0' }}>{t('rb_home_buy_3_jerseys')}</h3>
                 <p style={{ color: 'var(--rebrand-text-muted)', fontSize: '0.8rem', margin: '0 0 1.25rem 0' }}>
-                  Get them for only <strong>$133.64 CAD</strong> (Save $10.06)
+                  {t('rb_home_get_2_for_only')} <strong>$133.64 CAD</strong> ({t('rb_home_save')} $10.06)
                 </p>
               </div>
 
@@ -753,13 +795,13 @@ const Home = () => {
                 }}
                 className="interactive-card"
               >
-                Select Jerseys
+                {t('rb_home_select_jerseys')}
               </button>
             </div>
           </div>
 
           <span style={{ display: 'block', marginTop: '1.25rem', color: 'var(--rebrand-text-muted)', fontSize: '0.7rem' }}>
-            * Discounts are calculated and applied automatically at checkout
+            {t('rb_home_discounts_calculated_at_checkout')}
           </span>
         </div>
       </section>
@@ -767,20 +809,33 @@ const Home = () => {
       {/* 5. FEATURED COLLECTIONS & PRODUCTS WITH PRICE DISCOUNTS */}
       <section id="trending-fan-gear" className="rebrand-section container" style={{ maxWidth: '1400px', margin: '0 auto' }}>
         <div className="rebrand-section-header" style={{ marginBottom: '2.5rem' }}>
-          <h2 className="rebrand-section-title">Trending Fan Gear</h2>
+          <h2 className="rebrand-section-title">{t('rb_home_trending_fan_gear')}</h2>
         </div>
 
         {/* Tab Filters */}
         <div className="rebrand-filter-tabs">
-          {['all', 'Soccer', 'Basketball', 'Football', 'Baseball', 'Hockey'].map(tab => (
-            <button
-              key={tab}
-              onClick={() => setActiveTab(tab)}
-              className={`rebrand-filter-btn ${activeTab === tab ? 'active' : ''}`}
-            >
-              {tab === 'all' ? 'Show All' : tab}
-            </button>
-          ))}
+          {['all', 'Soccer', 'Basketball', 'Football', 'Baseball', 'Hockey'].map(tab => {
+            const getTabLabel = (tName) => {
+              if (tName === 'all') return t('rb_home_show_all');
+              const map = {
+                'Soccer': t('rb_sport_soccer'),
+                'Basketball': t('rb_sport_basketball'),
+                'Football': t('rb_sport_football'),
+                'Baseball': t('rb_sport_baseball'),
+                'Hockey': t('rb_sport_hockey')
+              };
+              return map[tName] || tName;
+            };
+            return (
+              <button
+                key={tab}
+                onClick={() => setActiveTab(tab)}
+                className={`rebrand-filter-btn ${activeTab === tab ? 'active' : ''}`}
+              >
+                {getTabLabel(tab)}
+              </button>
+            );
+          })}
         </div>
 
         {/* Products Grid */}
@@ -880,7 +935,7 @@ const Home = () => {
       <section className="rebrand-teams-section">
         <div className="container" style={{ maxWidth: '1400px', margin: '0 auto', textAlign: 'center' }}>
           <h3 className="rebrand-teams-title">
-            TRENDING TEAMS IN CANADA
+            {t('rb_home_trending_teams_in_canada')}
           </h3>
           <div className="rebrand-teams-grid">
             {trendingTeams.map((team, idx) => (
@@ -920,8 +975,8 @@ const Home = () => {
           `}</style>
           
           <div className="rebrand-section-header" style={{ marginBottom: '2.5rem', textAlign: 'center' }}>
-            <h2 className="rebrand-section-title" style={{ fontSize: '2.2rem', marginBottom: '0.5rem' }}>What Our Customers Say</h2>
-            <p style={{ color: 'var(--rebrand-text-muted)', fontSize: '0.9rem', marginTop: '0.25rem' }}>Real feedback from sports fans across Canada</p>
+            <h2 className="rebrand-section-title" style={{ fontSize: '2.2rem', marginBottom: '0.5rem' }}>{t('rb_home_testimonials_title')}</h2>
+            <p style={{ color: 'var(--rebrand-text-muted)', fontSize: '0.9rem', marginTop: '0.25rem' }}>{t('rb_home_testimonials_subtitle')}</p>
           </div>
 
           <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
@@ -960,9 +1015,9 @@ const Home = () => {
                 width: '100%'
               }}
             >
-              {testimonials.map((t) => (
+              {testimonials.map((review) => (
                 <div 
-                  key={t.id} 
+                  key={review.id} 
                   style={{ 
                     background: '#ffffff', 
                     border: '1px solid var(--rebrand-border)', 
@@ -980,16 +1035,16 @@ const Home = () => {
                 >
                   <div>
                     <div style={{ display: 'flex', gap: '0.2rem', marginBottom: '1rem', color: '#FFB100' }}>
-                      {Array.from({ length: t.rating || 5 }).map((_, idx) => (
+                      {Array.from({ length: review.rating || 5 }).map((_, idx) => (
                         <Star key={idx} size={15} fill="currentColor" color="currentColor" />
                       ))}
                     </div>
                     <p style={{ fontStyle: 'italic', color: 'var(--rebrand-text-main)', fontSize: '0.92rem', lineHeight: '1.6', margin: 0 }}>
-                      "{showEnglish[t.id] ? TESTIMONIAL_TRANSLATIONS[t.id] : t.content}"
+                      "{showEnglish[review.id] ? TESTIMONIAL_TRANSLATIONS[review.id] : review.content}"
                     </p>
-                    {TESTIMONIAL_TRANSLATIONS[t.id] && (
+                    {TESTIMONIAL_TRANSLATIONS[review.id] && (
                       <button 
-                        onClick={() => toggleTranslation(t.id)}
+                        onClick={() => toggleTranslation(review.id)}
                         style={{
                           background: 'none',
                           border: 'none',
@@ -1005,21 +1060,21 @@ const Home = () => {
                           gap: '0.2rem'
                         }}
                       >
-                        {showEnglish[t.id] ? 'Show Original' : 'Translate to English'}
+                        {showEnglish[review.id] ? 'Show Original' : 'Translate to English'}
                       </button>
                     )}
                   </div>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginTop: '1.5rem', borderTop: '1px solid #f3f4f6', paddingTop: '1rem' }}>
-                    {t.avatar_url ? (
-                      <img src={t.avatar_url} alt={t.name} style={{ width: '38px', height: '38px', borderRadius: '50%', objectFit: 'cover' }} />
+                    {review.avatar_url ? (
+                      <img src={review.avatar_url} alt={review.name} style={{ width: '38px', height: '38px', borderRadius: '50%', objectFit: 'cover' }} />
                     ) : (
                       <div style={{ width: '38px', height: '38px', borderRadius: '50%', background: '#f3f4f6', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, fontSize: '0.85rem', color: '#121416' }}>
-                        {t.name ? t.name[0].toUpperCase() : 'U'}
+                        {review.name ? review.name[0].toUpperCase() : 'U'}
                       </div>
                     )}
                     <div>
-                      <h5 style={{ margin: 0, fontWeight: 700, fontSize: '0.85rem', color: '#121416' }}>{t.name}</h5>
-                      <span style={{ fontSize: '0.7rem', color: 'var(--rebrand-text-muted)', fontWeight: 600 }}>{t.location || 'Verified Buyer'}</span>
+                      <h5 style={{ margin: 0, fontWeight: 700, fontSize: '0.85rem', color: '#121416' }}>{review.name}</h5>
+                      <span style={{ fontSize: '0.7rem', color: 'var(--rebrand-text-muted)', fontWeight: 600 }}>{review.location || 'Verified Buyer'}</span>
                     </div>
                   </div>
                 </div>

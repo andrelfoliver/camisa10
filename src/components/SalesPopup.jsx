@@ -22,7 +22,7 @@ const SalesPopup = () => {
   const location = useLocation();
   const { t, language, translateProductDisplay } = useLanguage();
   const isRebrand = true;
-  const activeLang = 'en';
+  const activeLang = language || 'en';
   
   const [products, setProducts] = useState([]);
   const [realOrders, setRealOrders] = useState([]);
@@ -58,16 +58,24 @@ const SalesPopup = () => {
     const now = new Date();
     const diffInMinutes = Math.floor((now - date) / 60000);
 
-    if (diffInMinutes < 1) return activeLang === 'pt' ? 'agora mesmo' : 'just now';
+    if (diffInMinutes < 1) {
+      return activeLang === 'pt' ? 'agora mesmo' : activeLang === 'es' ? 'hace un momento' : 'just now';
+    }
     if (diffInMinutes < 60) {
-      return activeLang === 'pt' ? `há ${diffInMinutes} minutos` : `${diffInMinutes}m ago`;
+      if (activeLang === 'pt') return `há ${diffInMinutes} minutos`;
+      if (activeLang === 'es') return `hace ${diffInMinutes} minutos`;
+      return `${diffInMinutes}m ago`;
     }
     const diffInHours = Math.floor(diffInMinutes / 60);
     if (diffInHours < 24) {
-      return activeLang === 'pt' ? `há ${diffInHours} ${diffInHours === 1 ? 'hora' : 'horas'}` : `${diffInHours}h ago`;
+      if (activeLang === 'pt') return `há ${diffInHours} ${diffInHours === 1 ? 'hora' : 'horas'}`;
+      if (activeLang === 'es') return `hace ${diffInHours} ${diffInHours === 1 ? 'hora' : 'horas'}`;
+      return `${diffInHours}h ago`;
     }
     const diffInDays = Math.floor(diffInHours / 24);
-    return activeLang === 'pt' ? `há ${diffInDays} ${diffInDays === 1 ? 'dia' : 'dias'}` : `${diffInDays}d ago`;
+    if (activeLang === 'pt') return `há ${diffInDays} ${diffInDays === 1 ? 'dia' : 'dias'}`;
+    if (activeLang === 'es') return `hace ${diffInDays} ${diffInDays === 1 ? 'día' : 'días'}`;
+    return `${diffInDays}d ago`;
   };
 
   useEffect(() => {
@@ -89,8 +97,8 @@ const SalesPopup = () => {
       const productInfo = products.find(p => p.name === item?.name);
 
       const saleData = {
-        name: order.customer_name ? order.customer_name.split(' ')[0] : 'Alguém',
-        city: (order.shipping_address && order.shipping_address.city) || 'Canadá',
+        name: order.customer_name ? order.customer_name.split(' ')[0] : (activeLang === 'pt' ? 'Alguém' : activeLang === 'es' ? 'Alguien' : 'Someone'),
+        city: (order.shipping_address && order.shipping_address.city) || (activeLang === 'pt' ? 'Canadá' : activeLang === 'es' ? 'Canadá' : 'Canada'),
         productName: item ? item.name : (products[0]?.name || 'Camisa iFooty'),
         image: item?.image || productInfo?.image || null,
         time: getRelativeTime(order.created_at),
@@ -109,14 +117,11 @@ const SalesPopup = () => {
 
     timeoutId = setTimeout(runSaleRoutine, 10000);
     return () => clearTimeout(timeoutId);
-  }, [products, realOrders]);
+  }, [products, realOrders, activeLang]);
 
   const formatRelTime = (str) => {
-    // If it's already a real relative time string from getRelativeTime, return it
-    if (str.includes('ago') || str.includes('now') || str.includes('há') || str === 'agora mesmo') return str;
-    
-    // Fallback for old hardcoded TIMES array entries
-    if (activeLang === 'pt') return str;
+    if (str.includes('ago') || str.includes('now') || str.includes('há') || str.includes('hace') || str === 'agora mesmo') return str;
+    if (activeLang === 'pt' || activeLang === 'es') return str;
     return str.replace('há ', '').replace(' minutos', 'm ago').replace(' minuto', 'm ago').replace(' hora', 'h ago').replace('agora mesmo', 'just now');
   };
 
@@ -178,14 +183,14 @@ const SalesPopup = () => {
 
       <div style={{ display: 'flex', flexDirection: 'column' }}>
         <p style={{ margin: 0, fontSize: '0.85rem', color: 'var(--text-muted)' }}>
-          <strong style={{ color: 'var(--text-main)' }}>{currentSale.name}</strong> {activeLang === 'pt' ? 'em' : 'in'} {currentSale.city} {activeLang === 'pt' ? 'comprou' : 'bought'}
+          <strong style={{ color: 'var(--text-main)' }}>{currentSale.name}</strong> {activeLang === 'pt' ? 'em' : activeLang === 'es' ? 'en' : 'in'} {currentSale.city} {activeLang === 'pt' ? 'comprou' : activeLang === 'es' ? 'compró' : 'bought'}
         </p>
         <p style={{ margin: '2px 0 4px', fontSize: '0.95rem', fontWeight: 700, color: 'var(--accent-color)', lineHeight: 1.2, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
           {isRebrand ? currentSale.productName : translateProductDisplay(currentSale.productName)}
         </p>
         <div style={{ display: 'flex', alignItems: 'center', gap: '4px', color: '#10B981', fontSize: '0.75rem', fontWeight: 600 }}>
           <CheckCircle2 size={12} />
-          <span>{activeLang === 'pt' ? 'Comprado' : 'Purchased'} {formatRelTime(currentSale.time)}</span>
+          <span>{activeLang === 'pt' ? 'Comprado' : activeLang === 'es' ? 'Comprado' : 'Purchased'} {formatRelTime(currentSale.time)}</span>
         </div>
       </div>
     </div>

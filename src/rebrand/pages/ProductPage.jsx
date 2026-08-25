@@ -5,6 +5,7 @@ import { supabaseRebrand as supabase } from '../../services/supabase';
 import { Star, ShoppingBag, ArrowLeft, ShieldCheck, Truck, RefreshCw, Calendar, Heart, Share2, Info, ChevronLeft, ChevronRight, Award } from 'lucide-react';
 import { useCart } from '../../context/CartContext';
 import { useWishlist } from '../../context/WishlistContext';
+import { useLanguage } from '../../context/LanguageContext';
 import { formatProductName, getProductRating, getProductReviewsCount } from '../utils/format';
 import { getCategoryRoute, getCategoryDisplayName } from '../utils/categoryRoutes';
 import SizeGuideModal from '../../components/SizeGuideModal';
@@ -31,6 +32,7 @@ const ProductPage = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const { addToCart, pricingConfig } = useCart();
+  const { t } = useLanguage();
   const [product, setProduct] = useState(null);
   const [loading, setLoading] = useState(true);
 
@@ -519,12 +521,12 @@ const ProductPage = () => {
 
             {/* Sizes Selection with Size Chart (Fanatics Style) */}
             <div className="rebrand-size-header-bar" style={{ marginBottom: '0.8rem' }}>
-              <span style={{ fontSize: '0.85rem', fontWeight: 800, color: 'var(--rebrand-text-main)', textTransform: 'uppercase' }}>Size</span>
+              <span style={{ fontSize: '0.85rem', fontWeight: 800, color: 'var(--rebrand-text-main)', textTransform: 'uppercase' }}>{t('rb_prod_size')}</span>
               <span 
                 onClick={() => setIsSizeGuideOpen(true)}
                 style={{ fontSize: '0.8rem', color: '#121416', textDecoration: 'underline', fontWeight: 700, cursor: 'pointer', textTransform: 'uppercase' }}
               >
-                Size Chart
+                {t('rb_prod_size_guide')}
               </span>
             </div>
             
@@ -545,7 +547,7 @@ const ProductPage = () => {
 
             {isKidsKit && (
               <div style={{ marginBottom: '1.5rem' }}>
-                <span style={{ display: 'block', fontSize: '0.75rem', fontWeight: 800, color: '#121416', textTransform: 'uppercase', marginBottom: '0.5rem' }}>Included Items</span>
+                <span style={{ display: 'block', fontSize: '0.75rem', fontWeight: 800, color: '#121416', textTransform: 'uppercase', marginBottom: '0.5rem' }}>{t('rb_prod_whats_included')}</span>
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.5rem' }}>
                   <button
                     type="button"
@@ -562,7 +564,7 @@ const ProductPage = () => {
                       transition: 'all 0.15s'
                     }}
                   >
-                    Full Kit (Shirt + Shorts)
+                    {t('rb_prod_full_kit')}
                   </button>
                   <button
                     type="button"
@@ -579,7 +581,7 @@ const ProductPage = () => {
                       transition: 'all 0.15s'
                     }}
                   >
-                    Shirt Only
+                    {t('rb_prod_shirt_only')}
                   </button>
                 </div>
               </div>
@@ -605,7 +607,7 @@ const ProductPage = () => {
                   {nameNumberEnabled && <span style={{ color: '#fff', fontWeight: 800, fontSize: '0.6rem' }}>✓</span>}
                 </div>
                 <div>
-                  <span style={{ fontSize: '0.85rem', color: '#121416', fontWeight: 700 }}>Add Custom Name & Number</span>
+                  <span style={{ fontSize: '0.85rem', color: '#121416', fontWeight: 700 }}>{t('rb_prod_add_custom')}</span>
                   <span style={{ fontSize: '0.75rem', color: '#6c757d', marginLeft: '0.4rem' }}>
                     (+ ${(pricingConfig?.nameNumber || 11.90).toFixed(2)} CAD)
                   </span>
@@ -616,14 +618,14 @@ const ProductPage = () => {
                 <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '0.5rem' }}>
                   <input 
                     type="text" 
-                    placeholder="Player Name (e.g. MAHOMES)" 
+                    placeholder={t('rb_prod_player_name')} 
                     value={customName}
                     onChange={e => setCustomName(e.target.value.substring(0, 15))}
                     style={{ width: '100%', padding: '0.5rem', border: '1px solid #ced4da', borderRadius: '4px', textTransform: 'uppercase', fontSize: '0.8rem', fontWeight: 600 }}
                   />
                   <input 
                     type="text" 
-                    placeholder="Number (e.g. 15)" 
+                    placeholder={t('rb_prod_player_number')} 
                     value={customNumber}
                     onChange={e => setCustomNumber(e.target.value.replace(/\D/g, '').substring(0, 2))}
                     style={{ width: '100%', padding: '0.5rem', border: '1px solid #ced4da', borderRadius: '4px', textAlign: 'center', fontSize: '0.8rem', fontWeight: 700 }}
@@ -654,7 +656,7 @@ const ProductPage = () => {
                     {patchEnabled && <span style={{ color: '#fff', fontWeight: 800, fontSize: '0.6rem' }}>✓</span>}
                   </div>
                   <div>
-                    <span style={{ fontSize: '0.85rem', color: '#121416', fontWeight: 700 }}>Add Patch</span>
+                    <span style={{ fontSize: '0.85rem', color: '#121416', fontWeight: 700 }}>{t('rb_prod_add_patch')}</span>
                     <span style={{ fontSize: '0.75rem', color: '#6c757d', marginLeft: '0.4rem' }}>
                       (+ ${(pricingConfig?.patch || 5.00).toFixed(2)} CAD)
                     </span>
@@ -665,7 +667,7 @@ const ProductPage = () => {
                   <div style={{ flex: 1, minWidth: '180px' }}>
                     <input 
                       type="text" 
-                      placeholder="Desired Patch (e.g. Champions League)" 
+                      placeholder={t('rb_prod_patch_placeholder')} 
                       value={customPatch}
                       onChange={e => setCustomPatch(e.target.value.substring(0, 50))}
                       style={{ width: '100%', padding: '0.5rem', border: '1px solid #ced4da', borderRadius: '4px', fontSize: '0.8rem', fontWeight: 600 }}
@@ -678,7 +680,7 @@ const ProductPage = () => {
             {/* Quantity and Add to Cart Row */}
             <div style={{ display: 'flex', gap: '1rem', marginBottom: '1.5rem', alignItems: 'stretch' }}>
               <div style={{ display: 'flex', flexDirection: 'column' }}>
-                <span style={{ fontSize: '0.75rem', fontWeight: 700, color: '#121416', textTransform: 'uppercase', marginBottom: '0.3rem' }}>Quantity</span>
+                <span style={{ fontSize: '0.75rem', fontWeight: 700, color: '#121416', textTransform: 'uppercase', marginBottom: '0.3rem' }}>{t('rb_prod_quantity')}</span>
                 <select 
                   value={quantity} 
                   onChange={e => setQuantity(Number(e.target.value))}
@@ -704,7 +706,7 @@ const ProductPage = () => {
                     fontSize: '1rem', background: '#121416', color: '#ffffff', border: 'none', borderRadius: '100px'
                   }}
                 >
-                  <ShoppingBag size={18} color="var(--rebrand-volt)" /> Add to Cart
+                  <ShoppingBag size={18} color="var(--rebrand-volt)" /> {t('rb_prod_add_to_cart')}
                 </button>
               </div>
             </div>
@@ -715,16 +717,16 @@ const ProductPage = () => {
                 onClick={() => setIsShippingOpen(!isShippingOpen)}
                 style={{ padding: '1rem 0', display: 'flex', justifyContent: 'space-between', alignItems: 'center', cursor: 'pointer' }}
               >
-                <span style={{ fontWeight: 800, fontSize: '0.9rem', color: '#121416' }}>Shipping</span>
+                <span style={{ fontWeight: 800, fontSize: '0.9rem', color: '#121416' }}>{t('rb_prod_shipping')}</span>
                 <span style={{ fontWeight: 850, fontSize: '1.2rem', color: '#121416', userSelect: 'none' }}>{isShippingOpen ? '−' : '+'}</span>
               </div>
               {isShippingOpen && (
                 <div style={{ paddingBottom: '1rem', display: 'flex', gap: '0.7rem', alignItems: 'flex-start' }}>
                   <Truck size={18} color="#121416" style={{ flexShrink: 0, marginTop: '2px' }} />
                   <ul style={{ margin: 0, padding: 0, listStyle: 'none', fontSize: '0.8rem', color: '#495057', lineHeight: 1.6 }}>
-                    <li style={{ marginBottom: '0.3rem' }}>This item leaves our warehouse in 1-3 business days.</li>
-                    <li style={{ marginBottom: '0.3rem' }}><strong>✓ Ready To Ship</strong> immediately upon processing.</li>
-                    <li>Eligible for <strong>free Canada-wide shipping</strong> on orders over $99 CAD.</li>
+                    <li style={{ marginBottom: '0.3rem' }}>{t('rb_prod_shipping_leaves')}</li>
+                    <li style={{ marginBottom: '0.3rem' }}><strong>{t('rb_prod_shipping_ready')}</strong></li>
+                    <li>{t('rb_prod_shipping_free')}</li>
                   </ul>
                 </div>
               )}
@@ -736,7 +738,7 @@ const ProductPage = () => {
                 onClick={() => setIsDescriptionOpen(!isDescriptionOpen)}
                 style={{ padding: '1rem 0', display: 'flex', justifyContent: 'space-between', alignItems: 'center', cursor: 'pointer' }}
               >
-                <span style={{ fontWeight: 800, fontSize: '0.9rem', color: '#121416' }}>Description</span>
+                <span style={{ fontWeight: 800, fontSize: '0.9rem', color: '#121416' }}>{t('rb_prod_description')}</span>
                 <span style={{ fontWeight: 850, fontSize: '1.2rem', color: '#121416', userSelect: 'none' }}>{isDescriptionOpen ? '−' : '+'}</span>
               </div>
               {isDescriptionOpen && (
@@ -758,18 +760,18 @@ const ProductPage = () => {
             }}>
               <div>
                 <Award size={24} color="#2b8a3e" style={{ margin: '0 auto 0.5rem auto' }} />
-                <span style={{ display: 'block', fontSize: '0.75rem', fontWeight: 750, color: 'var(--rebrand-text-main)', textTransform: 'uppercase' }}>Premium Quality</span>
-                <span style={{ display: 'block', fontSize: '0.65rem', color: 'var(--rebrand-text-muted)', marginTop: '0.2rem' }}>High-grade fabrics</span>
+                <span style={{ display: 'block', fontSize: '0.75rem', fontWeight: 750, color: 'var(--rebrand-text-main)', textTransform: 'uppercase' }}>{t('rb_prod_premium_quality')}</span>
+                <span style={{ display: 'block', fontSize: '0.65rem', color: 'var(--rebrand-text-muted)', marginTop: '0.2rem' }}>{t('rb_prod_high_grade')}</span>
               </div>
               <div>
                 <ShieldCheck size={24} color="#2b8a3e" style={{ margin: '0 auto 0.5rem auto' }} />
-                <span style={{ display: 'block', fontSize: '0.75rem', fontWeight: 750, color: 'var(--rebrand-text-main)', textTransform: 'uppercase' }}>Defect Warranty</span>
-                <span style={{ display: 'block', fontSize: '0.65rem', color: 'var(--rebrand-text-muted)', marginTop: '0.2rem' }}>100% factory covered</span>
+                <span style={{ display: 'block', fontSize: '0.75rem', fontWeight: 750, color: 'var(--rebrand-text-main)', textTransform: 'uppercase' }}>{t('rb_prod_defect_warranty')}</span>
+                <span style={{ display: 'block', fontSize: '0.65rem', color: 'var(--rebrand-text-muted)', marginTop: '0.2rem' }}>{t('rb_prod_factory_covered')}</span>
               </div>
               <div>
                 <Calendar size={24} color="#2b8a3e" style={{ margin: '0 auto 0.5rem auto' }} />
-                <span style={{ display: 'block', fontSize: '0.75rem', fontWeight: 750, color: 'var(--rebrand-text-main)', textTransform: 'uppercase' }}>Fast Shipping</span>
-                <span style={{ display: 'block', fontSize: '0.65rem', color: 'var(--rebrand-text-muted)', marginTop: '0.2rem' }}>With tracking number</span>
+                <span style={{ display: 'block', fontSize: '0.75rem', fontWeight: 750, color: 'var(--rebrand-text-main)', textTransform: 'uppercase' }}>{t('rb_prod_fast_shipping')}</span>
+                <span style={{ display: 'block', fontSize: '0.65rem', color: 'var(--rebrand-text-muted)', marginTop: '0.2rem' }}>{t('rb_prod_with_tracking')}</span>
               </div>
             </div>
 

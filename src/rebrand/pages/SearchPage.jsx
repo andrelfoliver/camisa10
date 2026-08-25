@@ -3,6 +3,7 @@ import { useSearchParams, Link, useNavigate } from 'react-router-dom';
 import { supabaseRebrand as supabase } from '../../services/supabase';
 import ProductCard from '../components/ProductCard';
 import { useCart } from '../../context/CartContext';
+import { useLanguage } from '../../context/LanguageContext';
 import { Search, ChevronRight, X, AlertCircle } from 'lucide-react';
 import { formatProductName, getProductRating, getProductReviewsCount, translateToPortuguese } from '../utils/format';
 
@@ -11,6 +12,7 @@ const SearchPage = () => {
   const query = searchParams.get('q') || '';
   const navigate = useNavigate();
   const { addToCart } = useCart();
+  const { t } = useLanguage();
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
 
@@ -98,10 +100,10 @@ const SearchPage = () => {
         {/* Breadcrumb e Voltar */}
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
           <Link to="/rebrand" style={{ display: 'inline-flex', alignItems: 'center', gap: '0.5rem', color: 'var(--rebrand-text-muted)', textDecoration: 'none', fontWeight: 700, fontSize: '0.85rem', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
-            Back to Home
+            {t('rb_cat_back_home')}
           </Link>
           <span style={{ fontSize: '0.8rem', color: 'var(--rebrand-text-muted)', fontWeight: 600 }}>
-            iFooty / Search Results
+            iFooty / {t('rb_search_title')}
           </span>
         </div>
 
@@ -116,10 +118,10 @@ const SearchPage = () => {
         }}>
           <div>
             <h1 style={{ fontSize: '2.5rem', fontWeight: 800, lineHeight: '1.1', margin: '0 0 0.5rem 0', color: '#121416' }}>
-              Search Results
+              {t('rb_search_title')}
             </h1>
             <span style={{ fontSize: '0.85rem', color: 'var(--rebrand-text-muted)', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '2px' }}>
-              🔎 Showing matches for "{query}"
+              🔎 {t('rb_search_results_for')} "{query}"
             </span>
           </div>
           <div style={{ textAlign: 'right' }}>
@@ -133,16 +135,16 @@ const SearchPage = () => {
         <div>
           {loading ? (
             <div style={{ textAlign: 'center', padding: '6rem 0' }}>
-              <p style={{ color: 'var(--rebrand-text-muted)', fontSize: '1.1rem', fontWeight: 600 }}>Searching official catalog...</p>
+              <p style={{ color: 'var(--rebrand-text-muted)', fontSize: '1.1rem', fontWeight: 600 }}>{t('rb_cat_loading')}</p>
             </div>
           ) : products.length === 0 ? (
             <div style={{ textAlign: 'center', padding: '6rem 2rem', border: '1.5px dashed var(--rebrand-border)', borderRadius: '8px' }}>
               <AlertCircle size={48} color="var(--rebrand-text-muted)" style={{ marginBottom: '1.5rem' }} />
-              <h2 style={{ fontSize: '1.8rem', marginBottom: '1rem', color: 'var(--rebrand-text-main)' }}>No jerseys found</h2>
+              <h2 style={{ fontSize: '1.8rem', marginBottom: '1rem', color: 'var(--rebrand-text-main)' }}>{t('rb_search_no_results')}</h2>
               <p style={{ color: 'var(--rebrand-text-muted)', maxWidth: '500px', margin: '0 auto 2rem' }}>
-                We couldn't find any results for "{query}". Try checking the spelling or searching for more general terms like "Real Madrid", "Brazil", or "Messi".
+                {t('rb_search_try_again')}
               </p>
-              <Link to="/rebrand" className="rebrand-btn" style={{ textDecoration: 'none', display: 'inline-flex' }}>Back to Shop</Link>
+              <Link to="/rebrand" className="rebrand-btn" style={{ textDecoration: 'none', display: 'inline-flex' }}>{t('rb_checkout_back')}</Link>
             </div>
           ) : (
             <div className="rebrand-products-grid">

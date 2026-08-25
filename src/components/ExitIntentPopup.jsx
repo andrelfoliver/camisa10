@@ -9,21 +9,7 @@ const ExitIntentPopup = () => {
     const location = useLocation();
     const isRebrand = true;
 
-    const EN_STRINGS = {
-        exit_title: 'Before you go...',
-        exit_subtitle: 'We are sorry that you did not find what you were looking for.',
-        exit_label: 'Tell us: which product would you like to see here at iFooty?',
-        exit_placeholder: 'e.g. Retro Brazil 1970 jersey, Real Madrid tracksuit...',
-        exit_btn_submit: 'Submit Suggestion',
-        exit_submitting: 'Sending...',
-        exit_footer: 'We promise to try to bring this to you! ⚽',
-        exit_success: 'Thank you for your feedback! We will look into it. ⚽',
-        exit_error: 'An error occurred while sending. Please try again later.'
-    };
-
-    const getTranslation = (key) => {
-        return EN_STRINGS[key] || t(key) || key;
-    };
+    const getTranslation = (key) => t(key);
 
     const [isVisible, setIsVisible] = useState(false);
     const [feedback, setFeedback] = useState('');

@@ -3,6 +3,7 @@ import { useNavigate, Link } from 'react-router-dom';
 import { X, Copy, Check, ShoppingBag, Flame, ChevronLeft, ChevronRight, Star, ArrowRight } from 'lucide-react';
 import { supabaseRebrand as supabase } from '../../services/supabase';
 import { useCart } from '../../context/CartContext';
+import { useLanguage } from '../../context/LanguageContext';
 import { formatProductName } from '../utils/format';
 
 const SIZES = ['S', 'M', 'L', 'XL', '2XL', '3XL', '4XL'];
@@ -11,6 +12,7 @@ const COUPON_CODE = 'WEEK10';
 const WeeklyOfferPopup = () => {
   const navigate = useNavigate();
   const { addToCart, pricingConfig } = useCart();
+  const { t } = useLanguage();
 
   const [isOpen, setIsOpen] = useState(false);
   const [copied, setCopied] = useState(false);
@@ -204,15 +206,15 @@ const WeeklyOfferPopup = () => {
         <div style={{ textAlign: 'center', marginBottom: '1.5rem', paddingRight: '2rem', paddingLeft: '2rem' }}>
           <div style={{ display: 'inline-flex', alignItems: 'center', gap: '0.4rem', background: 'rgba(214, 255, 0, 0.12)', border: '1px solid rgba(214, 255, 0, 0.35)', color: '#D6FF00', padding: '0.3rem 0.85rem', borderRadius: '50px', fontSize: '0.72rem', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '0.6rem' }}>
             <Flame size={14} color="#D6FF00" />
-            <span>Oferta da Semana • Deal of the Week</span>
+            <span>{t('rb_popup_weekly_deal')}</span>
           </div>
 
           <h2 style={{ fontSize: '1.85rem', fontWeight: 900, textTransform: 'uppercase', margin: '0 0 0.4rem 0', letterSpacing: '-0.5px', lineHeight: 1.1 }}>
-            GANHE <span style={{ color: '#D6FF00' }}>10% OFF</span> EXTRA
+            {t('rb_popup_get_extra')}
           </h2>
           
           <p style={{ color: '#9CA3AF', fontSize: '0.85rem', margin: '0 auto', maxWidth: '520px', lineHeight: 1.4 }}>
-            Adicione as camisas em promoção diretamente ao seu carrinho e use o cupom no checkout:
+            {t('rb_popup_subtitle')}
           </p>
 
           {/* Coupon Mini Bar */}
@@ -227,7 +229,7 @@ const WeeklyOfferPopup = () => {
             marginTop: '0.8rem'
           }}>
             <span style={{ fontSize: '0.75rem', color: '#9CA3AF', fontWeight: 700, textTransform: 'uppercase' }}>
-              CUPOM:
+              {t('rb_popup_coupon_label')}
             </span>
             <span style={{ fontSize: '1.15rem', fontWeight: 900, color: '#D6FF00', letterSpacing: '1.5px' }}>
               {COUPON_CODE}
@@ -251,7 +253,7 @@ const WeeklyOfferPopup = () => {
                 transition: 'all 0.2s'
               }}
             >
-              {copied ? <><Check size={12} /> Copiado</> : <><Copy size={12} /> Copiar</>}
+              {copied ? <><Check size={12} /> {t('rb_popup_copied')}</> : <><Copy size={12} /> {t('rb_popup_copy')}</>}
             </button>
           </div>
         </div>
@@ -259,7 +261,7 @@ const WeeklyOfferPopup = () => {
         {/* Carousel Header & Controls */}
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.75rem', padding: '0 0.2rem' }}>
           <span style={{ fontSize: '0.8rem', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.5px', color: '#ffffff' }}>
-            🏷️ Camisas Selecionadas em Promoção ({saleProducts.length})
+            {t('rb_popup_selected_promos')} ({saleProducts.length})
           </span>
 
           <div style={{ display: 'flex', gap: '0.4rem' }}>
@@ -398,7 +400,7 @@ const WeeklyOfferPopup = () => {
                     {/* Size Selector */}
                     <div style={{ marginBottom: '0.75rem' }}>
                       <div style={{ fontSize: '0.65rem', color: '#9CA3AF', fontWeight: 700, marginBottom: '0.3rem', textTransform: 'uppercase' }}>
-                        Tamanho: <strong style={{ color: '#fff' }}>{currentSize}</strong>
+                        {t('rb_cat_size')}: <strong style={{ color: '#fff' }}>{currentSize}</strong>
                       </div>
                       <div style={{ display: 'flex', gap: '0.25rem', flexWrap: 'wrap' }}>
                         {SIZES.map(s => (
@@ -449,11 +451,11 @@ const WeeklyOfferPopup = () => {
                   >
                     {isAdded ? (
                       <>
-                        <Check size={14} /> Adicionado!
+                        <Check size={14} /> {t('rb_popup_added')}
                       </>
                     ) : (
                       <>
-                        <ShoppingBag size={14} /> Adicionar ({currentSize})
+                        <ShoppingBag size={14} /> {t('rb_popup_add')} ({currentSize})
                       </>
                     )}
                   </button>
@@ -466,7 +468,7 @@ const WeeklyOfferPopup = () => {
         {/* Footer Actions */}
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: '1rem', borderTop: '1px solid rgba(255,255,255,0.08)', paddingTop: '1rem', flexWrap: 'wrap', gap: '0.8rem' }}>
           <span style={{ fontSize: '0.72rem', color: '#6B7280' }}>
-            * Cupom de 10% válido para todas as compras.
+            {t('rb_popup_disclaimer')}
           </span>
 
           <button
@@ -488,7 +490,7 @@ const WeeklyOfferPopup = () => {
               cursor: 'pointer'
             }}
           >
-            Ver Todas as Camisas em Promoção <ArrowRight size={14} />
+            {t('rb_popup_view_all')} <ArrowRight size={14} />
           </button>
         </div>
       </div>

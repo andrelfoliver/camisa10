@@ -49,14 +49,35 @@ const chatbotTranslations = {
     quick_shipping_text: 'What are the delivery times and shipping costs?',
     quick_payment_label: 'Payment methods 💳',
     quick_payment_text: 'What payment methods do you accept?'
+  },
+  es: {
+    ai_subtitle: 'Asistente de IA',
+    online_status: 'En línea • Listo para ayudar',
+    tooltip_text: '¿Dudas sobre tu talla? ¡Pregunta a Mister!',
+    placeholder_name: 'Escribe tu nombre...',
+    placeholder_input: 'Escribe tu duda...',
+    limit_exceeded: 'Límite alcanzado. Borra el chat para reiniciar.',
+    reset_title: '¿Limpiar Conversación?',
+    reset_confirm: '¿Estás seguro de que deseas borrar todo el historial? Esta acción no se puede deshacer.',
+    reset_btn_cancel: 'Cancelar',
+    reset_btn_confirm: 'Limpiar',
+    error_connection: 'Lo siento, tuve un problema de conexión. ¿Podrías intentar enviar tu mensaje de nuevo? 😢',
+    support_tooltip: 'Hablar con Soporte',
+    reset_tooltip: 'Limpiar Conversación',
+    close_tooltip: 'Cerrar',
+    quick_size_label: '¿Cuál es mi talla? 📐',
+    quick_size_text: '¿Cómo calculo mi talla ideal?',
+    quick_shipping_label: 'Tiempos de entrega 🚚',
+    quick_shipping_text: '¿Cuáles son los tiempos de entrega y costo de envío?',
+    quick_payment_label: 'Métodos de pago 💳',
+    quick_payment_text: '¿Qué métodos de pago aceptan?'
   }
 };
 
 export default function AiChatbot() {
   const navigate = useNavigate();
   const { language } = useLanguage();
-  const isRebrand = true;
-  const activeLang = 'en';
+  const activeLang = language || 'en';
   const ct = chatbotTranslations[activeLang] || chatbotTranslations.pt;
   const [isOpen, setIsOpen] = useState(false);
   const [input, setInput] = useState('');
@@ -78,6 +99,25 @@ export default function AiChatbot() {
   });
 
   const getInitialMessages = (name, lang = 'pt') => {
+    if (lang === 'es') {
+      if (!name) {
+        return [{
+          role: 'assistant',
+          content: `¡Hola! Soy **Mister Oliver** ⚽, tu asistente de IA en iFooty. ¿Cómo puedo llamarte?`
+        }];
+      }
+      return [{
+        role: 'assistant',
+        content: `¡Hola! Soy **Mister Oliver** ⚽, tu asistente de IA en iFooty.
+¡Gusto en verte de nuevo, **${name}**! 🤝 ¿Cómo puedo ayudarte hoy?
+
+Puedo ayudarte con:
+- 📐 **Calcular tu talla ideal** (solo escribe tu altura y peso)
+- 🚚 **Tiempos de entrega y envío**
+- 💳 **Métodos de pago en Canadá y EE.UU.**
+- 👕 **¡Encontrar las mejores camisetas de la tienda!**`
+      }];
+    }
     if (lang === 'en') {
       if (!name) {
         return [{

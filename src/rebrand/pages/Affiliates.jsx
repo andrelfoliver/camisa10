@@ -5,6 +5,7 @@ import {
   CheckCircle2, AlertCircle, FileText, Lock, LogIn, ChevronRight, BarChart3, Shield
 } from 'lucide-react';
 import { useRebrandAuth } from '../../context/RebrandAuthContext';
+import { useLanguage } from '../../context/LanguageContext';
 
 const Section = ({ icon: Icon, title, children, id }) => (
   <section id={id} style={{ marginBottom: '3rem' }}>
@@ -20,6 +21,7 @@ const Section = ({ icon: Icon, title, children, id }) => (
 
 const RebrandAffiliatesPage = () => {
   const { user } = useRebrandAuth();
+  const { t } = useLanguage();
   const navigate = useNavigate();
 
   const [formData, setFormData] = useState({
@@ -91,17 +93,22 @@ const RebrandAffiliatesPage = () => {
         {/* Back Link */}
         <div style={{ marginBottom: '2rem' }}>
           <Link to="/rebrand" style={{ display: 'inline-flex', alignItems: 'center', gap: '0.5rem', color: 'var(--rebrand-text-muted)', textDecoration: 'none', fontWeight: 700, fontSize: '0.85rem', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
-            <ArrowLeft size={14} /> Back to Shop
+            <ArrowLeft size={14} /> {t('rb_checkout_back')}
           </Link>
         </div>
 
-        {/* Title */}
-        <h1 style={{ fontSize: '3rem', fontWeight: 900, color: '#121416', marginBottom: '0.5rem', lineHeight: '1.1' }}>
-          Affiliate Program
-        </h1>
-        <p style={{ fontSize: '1.1rem', color: 'var(--rebrand-text-muted)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '2.5rem' }}>
-          🏆 Wear your colors & earn commission with iFooty
-        </p>
+        {/* Hero Header */}
+        <div style={{ borderBottom: '1px solid var(--rebrand-border)', paddingBottom: '2.5rem', marginBottom: '3rem' }}>
+          <span style={{ fontSize: '0.85rem', color: 'var(--rebrand-text-muted)', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '2px', display: 'block', marginBottom: '0.5rem' }}>
+            🤝 iFooty Partnership Program
+          </span>
+          <h1 style={{ fontSize: '2.8rem', fontWeight: 900, color: '#121416', lineHeight: '1.1', margin: '0 0 1rem 0' }}>
+            {t('rb_affiliates_title')}
+          </h1>
+          <p style={{ fontSize: '1.1rem', color: 'var(--rebrand-text-muted)', maxWidth: '600px', margin: 0, lineHeight: '1.5' }}>
+            {t('rb_affiliates_subtitle')}
+          </p>
+        </div>
 
         {/* Action Buttons */}
         <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap', marginBottom: '3rem' }}>

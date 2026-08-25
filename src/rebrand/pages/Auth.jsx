@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useRebrandAuth } from '../../context/RebrandAuthContext';
+import { useLanguage } from '../../context/LanguageContext';
 import { UserCircle, ArrowLeft, ShieldAlert } from 'lucide-react';
 import { Navigate, useNavigate } from 'react-router-dom';
 import { supabaseRebrand as supabase } from '../../services/supabase';
@@ -8,6 +9,7 @@ const GOOGLE_CLIENT_ID = (import.meta.env.VITE_GOOGLE_CLIENT_ID || '').trim();
 
 const RebrandAuth = () => {
   const { user, signInWithIdToken } = useRebrandAuth();
+  const { language, t } = useLanguage();
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
@@ -131,6 +133,7 @@ const RebrandAuth = () => {
           shape: 'pill',
           logo_alignment: 'left',
           width: 340,
+          locale: language === 'pt' ? 'pt-BR' : language === 'es' ? 'es' : 'en'
         });
       } else {
         setError("Google Login is currently unavailable.");
@@ -151,7 +154,7 @@ const RebrandAuth = () => {
       return () => { cancelled = true; clearInterval(interval); };
     }
     return () => { cancelled = true; };
-  }, [handleGoogleCallback]);
+  }, [handleGoogleCallback, language]);
 
   if (user) {
     const REBRAND_ADMIN_EMAIL = 'ifootyc@gmail.com';
@@ -187,7 +190,7 @@ const RebrandAuth = () => {
           onClick={() => navigate('/')}
           style={{ display: 'inline-flex', alignItems: 'center', gap: '0.4rem', color: '#6c757d', background: 'transparent', border: 'none', cursor: 'pointer', fontSize: '0.85rem', marginBottom: '1.5rem', fontWeight: 600 }}
         >
-          <ArrowLeft size={14} /> Back to Shop
+          <ArrowLeft size={14} /> {t('rb_checkout_back')}
         </button>
 
         <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '1.5rem', color: '#121416' }}>
@@ -195,10 +198,10 @@ const RebrandAuth = () => {
         </div>
 
         <h1 style={{ fontSize: '1.5rem', fontWeight: 800, color: '#121416', marginBottom: '0.5rem', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
-          Sign In
+          {t('rb_auth_title')}
         </h1>
         <p style={{ color: '#6c757d', fontSize: '0.9rem', marginBottom: '2.5rem' }}>
-          Access your account, orders and exclusive fan offers.
+          {t('rb_auth_subtitle')}
         </p>
 
         {error && (
@@ -217,7 +220,7 @@ const RebrandAuth = () => {
             padding: '1rem', background: '#f8f9fa', borderRadius: '8px',
             color: '#121416', fontWeight: 700, fontSize: '0.9rem', marginBottom: '1.5rem'
           }}>
-            Processing, please wait...
+            {t('rb_auth_processing')}
           </div>
         )}
 
@@ -228,14 +231,14 @@ const RebrandAuth = () => {
             
             {!gisReady && (
               <p style={{ color: '#6c757d', fontSize: '0.8rem', marginBottom: '1.5rem' }}>
-                Loading Google Login...
+                {t('rb_auth_loading_google')}
               </p>
             )}
 
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', margin: '1.5rem 0' }}>
               <div style={{ flex: 1, height: '1px', background: '#dee2e6' }}></div>
               <span style={{ fontSize: '0.75rem', color: '#6c757d', textTransform: 'uppercase', fontWeight: 700, letterSpacing: '0.5px' }}>
-                or use email code
+                {t('rb_auth_or_email_code')}
               </span>
               <div style={{ flex: 1, height: '1px', background: '#dee2e6' }}></div>
             </div>
@@ -244,7 +247,7 @@ const RebrandAuth = () => {
               <form onSubmit={handleSendOtp} style={{ display: 'flex', flexDirection: 'column', gap: '0.8rem' }}>
                 <input
                   type="email"
-                  placeholder="Enter your email address"
+                  placeholder={t('rb_auth_email_placeholder')}
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   required
@@ -263,13 +266,13 @@ const RebrandAuth = () => {
                     transition: 'opacity 0.2s'
                   }}
                 >
-                  Send Verification Code
+                  {t('rb_auth_send_code')}
                 </button>
               </form>
             ) : (
               <form onSubmit={handleVerifyOtp} style={{ display: 'flex', flexDirection: 'column', gap: '0.8rem' }}>
                 <p style={{ fontSize: '0.85rem', color: '#6c757d', margin: '0.5rem 0' }}>
-                  We sent the verification code to:
+                  {t('rb_auth_code_sent_to')}
                   <strong style={{ display: 'block', color: '#121416', marginTop: '0.2rem' }}>{email}</strong>
                 </p>
 
@@ -295,7 +298,7 @@ const RebrandAuth = () => {
                     cursor: 'pointer', background: '#2b8a3e', color: '#fff', border: 'none'
                   }}
                 >
-                  Verify & Sign In
+                  {t('rb_auth_verify_signin')}
                 </button>
 
                 <button
@@ -306,7 +309,7 @@ const RebrandAuth = () => {
                     cursor: 'pointer', fontSize: '0.85rem', textDecoration: 'underline', marginTop: '0.5rem'
                   }}
                 >
-                  Change email
+                  {t('rb_auth_change_email')}
                 </button>
               </form>
             )}

@@ -1,20 +1,27 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
-import { Search, ShoppingBag, User, MapPin, X, Menu } from 'lucide-react';
+import { Search, ShoppingBag, User, MapPin, X, Menu, Globe, ChevronDown } from 'lucide-react';
 import { useCart } from '../../context/CartContext';
 import { useRebrandAuth } from '../../context/RebrandAuthContext';
+import { useLanguage } from '../../context/LanguageContext';
 import { supabaseRebrand as supabase } from '../../services/supabase';
 import { formatProductName, translateToPortuguese } from '../utils/format';
 
 const NAV_LINKS = [
-  { to: '/colecao/soccer',       label: 'Soccer',       special: null },
-  { to: '/colecao/basketball',   label: 'Basketball',   special: null },
-  { to: '/colecao/football',     label: 'Football',     special: null },
-  { to: '/colecao/baseball',     label: 'Baseball',     special: null },
-  { to: '/colecao/hockey',       label: 'Hockey',       special: null },
-  { to: '/colecao/new-arrivals', label: 'New Arrivals', special: 'volt' },
-  { to: '/colecao/best-sellers', label: 'Best Sellers', special: null },
-  { to: '/colecao/sale',         label: 'Sale Items',   special: 'red' },
+  { to: '/colecao/soccer',       labelKey: 'rb_nav_soccer',       special: null },
+  { to: '/colecao/basketball',   labelKey: 'rb_nav_basketball',   special: null },
+  { to: '/colecao/football',     labelKey: 'rb_nav_football',     special: null },
+  { to: '/colecao/baseball',     labelKey: 'rb_nav_baseball',     special: null },
+  { to: '/colecao/hockey',       labelKey: 'rb_nav_hockey',       special: null },
+  { to: '/colecao/new-arrivals', labelKey: 'rb_nav_new_arrivals', special: 'volt' },
+  { to: '/colecao/best-sellers', labelKey: 'rb_nav_best_sellers', special: null },
+  { to: '/colecao/sale',         labelKey: 'rb_nav_sale',         special: 'red' },
+];
+
+const LANGUAGE_OPTIONS = [
+  { code: 'en', flag: '🇨🇦', label: 'English' },
+  { code: 'pt', flag: '🇧🇷', label: 'Português' },
+  { code: 'es', flag: '🇪🇸', label: 'Español' },
 ];
 
 const Navbar = () => {
@@ -22,17 +29,41 @@ const Navbar = () => {
   const location = useLocation();
   const { totalItems, setIsCartOpen } = useCart();
   const { user, signOut, isAdmin } = useRebrandAuth();
+  const { t, language, setLanguage } = useLanguage();
   const userAvatar = user?.user_metadata?.avatar_url || user?.user_metadata?.picture;
 
-  const [displayName, setDisplayName] = useState('Hello, Sign In');
-  const [accountStatus, setAccountStatus] = useState('My Account');
+  // Language selector state
+  const [langOpen, setLangOpen] = useState(false);
+  const [mobileLangOpen, setMobileLangOpen] = useState(false);
+  const [drawerLangOpen, setDrawerLangOpen] = useState(false);
+  const langRef = useRef(null);
+  const mobileLangRef = useRef(null);
+
+  // Close language dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (e) => {
+      if (langRef.current && !langRef.current.contains(e.target)) {
+        setLangOpen(false);
+      }
+      if (mobileLangRef.current && !mobileLangRef.current.contains(e.target)) {
+        setMobileLangOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  const [displayName, setDisplayName] = useState(t('rb_hello_sign_in'));
+  const [accountStatus, setAccountStatus] = useState(t('rb_my_account'));
   const [accountLink, setAccountLink] = useState('/auth');
 
   // Alternating promos for mobile/tablet top bar
   const [activePromoIndex, setActivePromoIndex] = useState(0);
+  const currentLangObj = LANGUAGE_OPTIONS.find(l => l.code === language) || LANGUAGE_OPTIONS[0];
+
   const promos = [
-    { text: '🍁 Free Shipping Across Canada', url: null },
-    { text: '⚡ VIP WhatsApp Group', url: 'https://chat.whatsapp.com/BRxOBGKn84E8n3kiaqh7Jv?s=cl&p=i&mlu=2', isExternal: true, isVolt: true }
+    { text: `🍁 ${t('rb_free_shipping')}`, url: null },
+    { text: `⚡ ${t('rb_vip_whatsapp')}`, url: 'https://chat.whatsapp.com/BRxOBGKn84E8n3kiaqh7Jv?s=cl&p=i&mlu=2', isExternal: true, isVolt: true }
   ];
 
   useEffect(() => {
@@ -47,20 +78,20 @@ const Navbar = () => {
       if (user) {
         const name = user.user_metadata?.full_name || user.email || '';
         const first = name.split(' ')[0] || 'User';
-        setDisplayName(`Hello, ${first}`);
-        setAccountStatus('My Account');
+        setDisplayName(`${t('rb_hello_sign_in').split(',')[0]}, ${first}`);
+        setAccountStatus(t('rb_my_account'));
         setAccountLink('/profile');
       } else {
         const guestEmail = sessionStorage.getItem('ifooty_guest_email');
         const guestName = sessionStorage.getItem('ifooty_guest_name');
         if (guestEmail) {
           const first = guestName ? guestName.split(' ')[0] : guestEmail.split('@')[0];
-          setDisplayName(`Hello, ${first}`);
-          setAccountStatus('Guest');
+          setDisplayName(`${t('rb_hello_sign_in').split(',')[0]}, ${first}`);
+          setAccountStatus(t('rb_guest'));
           setAccountLink('/checkout');
         } else {
-          setDisplayName('Hello, Sign In');
-          setAccountStatus('My Account');
+          setDisplayName(t('rb_hello_sign_in'));
+          setAccountStatus(t('rb_my_account'));
           setAccountLink('/auth');
         }
       }
@@ -70,7 +101,7 @@ const Navbar = () => {
     // Listen for storage changes (for guest name updates)
     window.addEventListener('storage', updateAccountStatus);
     return () => window.removeEventListener('storage', updateAccountStatus);
-  }, [user, location.pathname]);
+  }, [user, location.pathname, language]);
 
   const handleSignOut = async (e) => {
     e.preventDefault();
@@ -179,15 +210,15 @@ const Navbar = () => {
           <div className="rebrand-promobar-desktop">
             <div className="rebrand-promobar-left">
               <span style={{ color: 'var(--rebrand-volt)' }}>🍁</span>
-              <span>Free Shipping Across Canada</span>
+              <span>{t('rb_free_shipping')}</span>
             </div>
             <div className="rebrand-promobar-right">
               <a href="https://chat.whatsapp.com/BRxOBGKn84E8n3kiaqh7Jv?s=cl&p=i&mlu=2" target="_blank" rel="noopener noreferrer" style={{ color: 'var(--rebrand-volt)', textDecoration: 'none' }}>
-                ⚡ VIP WhatsApp Group
+                ⚡ {t('rb_vip_whatsapp')}
               </a>
               <span style={{ color: 'rgba(255,255,255,0.2)' }}>|</span>
               <Link to='/profile' style={{ color: '#ffffff', textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '0.3rem' }}>
-                <MapPin size={12} /> Track Order
+                <MapPin size={12} /> {t('rb_track_order')}
               </Link>
             </div>
           </div>
@@ -205,7 +236,7 @@ const Navbar = () => {
                   whiteSpace: 'nowrap'
                 }}
               >
-                🍁 Free Shipping Across Canada
+                🍁 {t('rb_free_shipping')}
               </span>
               <a 
                 href="https://chat.whatsapp.com/BRxOBGKn84E8n3kiaqh7Jv?s=cl&p=i&mlu=2"
@@ -223,12 +254,12 @@ const Navbar = () => {
                   whiteSpace: 'nowrap'
                 }}
               >
-                ⚡ VIP WhatsApp Group
+                ⚡ {t('rb_vip_whatsapp')}
               </a>
             </div>
             <div className="rebrand-promobar-mobile-right">
               <Link to='/profile' style={{ color: '#ffffff', textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '0.3rem', fontWeight: 700 }}>
-                <MapPin size={12} /> Track Order
+                <MapPin size={12} /> {t('rb_track_order')}
               </Link>
             </div>
           </div>
@@ -237,14 +268,24 @@ const Navbar = () => {
         {/* NÍVEL 2: Header Principal */}
         <div className="rebrand-header-main">
 
-          {/* Hamburger — LEFT side, mobile only */}
-          <button
-            onClick={() => setMenuOpen(!menuOpen)}
-            className="rebrand-hamburger"
-            aria-label={menuOpen ? 'Close menu' : 'Open menu'}
-          >
-            {menuOpen ? <X size={24} color="#ffffff" /> : <Menu size={24} color="#ffffff" />}
-          </button>
+          {/* Left Controls — Hamburger + Search icon on mobile */}
+          <div className="rebrand-show-mobile" style={{ alignItems: 'center', gap: '0.25rem' }}>
+            <button
+              onClick={() => setMenuOpen(!menuOpen)}
+              className="rebrand-hamburger"
+              aria-label={menuOpen ? 'Close menu' : 'Open menu'}
+            >
+              {menuOpen ? <X size={24} color="#ffffff" /> : <Menu size={24} color="#ffffff" />}
+            </button>
+
+            <button
+              onClick={() => setSearchOpen(!searchOpen)}
+              style={{ background: 'transparent', border: 'none', cursor: 'pointer', color: '#ffffff', padding: '0.25rem' }}
+              aria-label="Search"
+            >
+              <Search size={22} color="rgba(255,255,255,0.85)" />
+            </button>
+          </div>
 
           {/* Logo */}
           <div className="rebrand-logo-container" style={{ alignItems: 'flex-start' }}>
@@ -255,7 +296,7 @@ const Navbar = () => {
               <div className="rebrand-logo-underline" style={{ height: '3px' }}></div>
             </div>
             <span className="rebrand-slogan rebrand-hide-mobile" style={{ fontSize: '0.62rem', letterSpacing: '2.5px', marginTop: '5px', color: 'rgba(255,255,255,0.5)' }}>
-              Canada's Sports Jersey Store
+              {t('rb_slogan')}
             </span>
           </div>
 
@@ -264,7 +305,7 @@ const Navbar = () => {
             <Search size={18} color="rgba(255,255,255,0.5)" style={{ marginRight: '0.6rem', flexShrink: 0 }} />
             <input
               type="text"
-              placeholder="Find your favorite team..."
+              placeholder={t('rb_search_placeholder')}
               value={searchQuery}
               onChange={(e) => {
                 setSearchQuery(e.target.value);
@@ -301,15 +342,60 @@ const Navbar = () => {
 
           {/* Right actions */}
           <div className="rebrand-header-actions">
-            {/* Search icon — mobile only */}
-            <button
-              onClick={() => setSearchOpen(!searchOpen)}
-              className="rebrand-show-mobile"
-              style={{ background: 'transparent', border: 'none', cursor: 'pointer', color: '#ffffff', padding: '0.25rem' }}
-              aria-label="Search"
-            >
-              <Search size={22} color="rgba(255,255,255,0.85)" />
-            </button>
+            {/* Language Selector — Discreet, left of Account menu on Desktop & Mobile */}
+            <div ref={langRef} style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
+              <button
+                onClick={() => setLangOpen(!langOpen)}
+                style={{
+                  background: 'transparent',
+                  border: 'none',
+                  cursor: 'pointer',
+                  color: '#ffffff',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '0.3rem',
+                  fontSize: '0.75rem',
+                  fontWeight: 600,
+                  padding: '0.25rem 0.5rem',
+                  borderRadius: '6px',
+                  transition: 'background 0.15s'
+                }}
+                aria-label="Select language"
+              >
+                <Globe size={15} style={{ opacity: 0.75 }} />
+                <span style={{ fontSize: '0.8rem', fontWeight: 700, color: '#ffffff' }}>{currentLangObj.code.toUpperCase()}</span>
+                <ChevronDown size={11} style={{ opacity: 0.6, transform: langOpen ? 'rotate(180deg)' : 'rotate(0)', transition: 'transform 0.2s', color: '#ffffff' }} />
+              </button>
+
+              {langOpen && (
+                <div style={{
+                  position: 'absolute', top: '100%', right: 0, marginTop: '8px',
+                  background: '#1A1D20', border: '1px solid #2C3034', borderRadius: '8px',
+                  boxShadow: '0 8px 24px rgba(0,0,0,0.6)', padding: '0.3rem 0',
+                  minWidth: '145px', zIndex: 9999
+                }}>
+                  {LANGUAGE_OPTIONS.map(opt => (
+                    <button
+                      key={opt.code}
+                      onClick={() => { setLanguage(opt.code); setLangOpen(false); }}
+                      style={{
+                        display: 'flex', alignItems: 'center', gap: '0.6rem', width: '100%',
+                        padding: '0.55rem 0.9rem', background: language === opt.code ? 'rgba(200,255,0,0.08)' : 'transparent',
+                        border: 'none', cursor: 'pointer', color: language === opt.code ? 'var(--rebrand-volt)' : '#ffffff',
+                        fontSize: '0.8rem', fontWeight: language === opt.code ? 700 : 500, textAlign: 'left',
+                        transition: 'background 0.15s'
+                      }}
+                      onMouseEnter={e => { if (language !== opt.code) e.currentTarget.style.background = 'rgba(255,255,255,0.05)'; }}
+                      onMouseLeave={e => { if (language !== opt.code) e.currentTarget.style.background = 'transparent'; }}
+                    >
+                      <span style={{ fontSize: '1rem' }}>{opt.flag}</span>
+                      <span>{opt.label}</span>
+                      {language === opt.code && <span style={{ marginLeft: 'auto', fontSize: '0.7rem' }}>✓</span>}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
 
             {/* Account with Dropdown */}
             <div className="rebrand-account-menu-container" style={{ position: 'relative' }}>
@@ -333,14 +419,14 @@ const Navbar = () => {
                 <div className="rebrand-account-dropdown">
                   {isAdmin && (
                     <Link to="/rebrand/admin" style={{ borderBottom: '1px solid #f1f3f5', color: '#121416', fontWeight: 'bold' }}>
-                      ⚙️ Admin Panel
+                      ⚙️ {t('rb_admin_panel')}
                     </Link>
                   )}
                   <Link to={user ? '/profile' : '/checkout'} style={{ borderBottom: '1px solid #f1f3f5' }}>
-                    {user ? 'My Profile' : 'Guest Checkout'}
+                    {user ? t('rb_my_profile') : t('rb_guest_checkout')}
                   </Link>
                   <button onClick={handleSignOut} style={{ color: '#dc3545' }}>
-                    {user ? 'Sign Out' : 'Exit Guest'}
+                    {user ? t('rb_sign_out') : t('rb_exit_guest')}
                   </button>
                 </div>
               )}
@@ -367,8 +453,8 @@ const Navbar = () => {
                 )}
               </div>
               <div style={{ textAlign: 'left' }} className="hide-tablet">
-                <span style={{ display: 'block', fontSize: '0.65rem', color: 'rgba(255,255,255,0.5)' }}>My Cart</span>
-                <span style={{ fontSize: '0.8rem', fontWeight: 700, color: '#ffffff' }}>Jerseys bag</span>
+                <span style={{ display: 'block', fontSize: '0.65rem', color: 'rgba(255,255,255,0.5)' }}>{t('rb_my_cart')}</span>
+                <span style={{ fontSize: '0.8rem', fontWeight: 700, color: '#ffffff' }}>{t('rb_jerseys_bag')}</span>
               </div>
             </button>
 
@@ -383,7 +469,7 @@ const Navbar = () => {
             <input
               autoFocus
               type="text"
-              placeholder="Find your favorite team..."
+              placeholder={t('rb_search_placeholder')}
               value={searchQuery}
               onChange={(e) => {
                 setSearchQuery(e.target.value);
@@ -429,14 +515,14 @@ const Navbar = () => {
           display: 'flex', justifyContent: 'center', gap: '2.5rem',
           borderTop: '1px solid #2C3034', borderBottom: '1px solid #2C3034', overflowX: 'auto'
         }}>
-          {NAV_LINKS.map(({ to, label, special }) => (
+          {NAV_LINKS.map(({ to, labelKey, special }) => (
             <Link
               key={to}
               to={to}
               className="rebrand-nav-link"
               style={{ color: getLinkColor(special), fontSize: '0.82rem', fontWeight: special ? 800 : 700, letterSpacing: '0.8px', whiteSpace: 'nowrap' }}
             >
-              {label}
+              {t(labelKey)}
             </Link>
           ))}
         </nav>
@@ -465,7 +551,7 @@ const Navbar = () => {
           <Search size={16} color="rgba(255,255,255,0.5)" />
           <input
             type="text"
-            placeholder="Find your favorite team..."
+            placeholder={t('rb_search_placeholder')}
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             onKeyDown={handleSearch}
@@ -474,7 +560,7 @@ const Navbar = () => {
         </div>
 
         <nav className="rebrand-drawer-nav">
-          {NAV_LINKS.map(({ to, label, special }) => (
+          {NAV_LINKS.map(({ to, labelKey, special }) => (
             <Link
               key={to}
               to={to}
@@ -482,7 +568,7 @@ const Navbar = () => {
               style={{ color: getLinkColor(special) }}
               onClick={() => setMenuOpen(false)}
             >
-              {label}
+              {t(labelKey)}
             </Link>
           ))}
         </nav>
@@ -502,15 +588,46 @@ const Navbar = () => {
               }}
             >
               <User size={20} color="#dc3545" />
-              <span>{user ? 'Sign Out' : 'Exit Guest'}</span>
+              <span>{user ? t('rb_sign_out') : t('rb_exit_guest')}</span>
             </button>
           )}
+          {/* Mobile Language Selector in Drawer */}
+          <div style={{ borderTop: '1px solid #2C3034', padding: '1rem 0' }}>
+            <button
+              onClick={() => setDrawerLangOpen(!drawerLangOpen)}
+              style={{ background: 'transparent', border: 'none', cursor: 'pointer', color: '#ffffff', display: 'flex', alignItems: 'center', gap: '0.75rem', fontWeight: 700, fontSize: '0.95rem', padding: 0, width: '100%' }}
+            >
+              <Globe size={20} style={{ opacity: 0.7 }} />
+              <span>{t('rb_language')}: {currentLangObj.label}</span>
+              <ChevronDown size={14} style={{ marginLeft: 'auto', opacity: 0.5, transform: drawerLangOpen ? 'rotate(180deg)' : 'rotate(0)', transition: 'transform 0.2s' }} />
+            </button>
+            {drawerLangOpen && (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.2rem', marginTop: '0.5rem', paddingLeft: '2.5rem' }}>
+                {LANGUAGE_OPTIONS.map(opt => (
+                  <button
+                    key={opt.code}
+                    onClick={() => { setLanguage(opt.code); setDrawerLangOpen(false); }}
+                    style={{
+                      display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.5rem 0',
+                      background: 'transparent', border: 'none', cursor: 'pointer',
+                      color: language === opt.code ? 'var(--rebrand-volt)' : 'rgba(255,255,255,0.7)',
+                      fontSize: '0.9rem', fontWeight: language === opt.code ? 700 : 500
+                    }}
+                  >
+                    <span>{opt.flag}</span>
+                    <span>{opt.label}</span>
+                    {language === opt.code && <span style={{ fontSize: '0.7rem' }}>✓</span>}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
           <a href="https://chat.whatsapp.com/BRxOBGKn84E8n3kiaqh7Jv?s=cl&p=i&mlu=2" target="_blank" rel="noopener noreferrer" style={{ color: 'var(--rebrand-volt)', textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '0.75rem', padding: '1rem 0', borderTop: '1px solid #2C3034', fontWeight: 700 }}>
-            ⚡ VIP WhatsApp Group
+            ⚡ {t('rb_vip_whatsapp')}
           </a>
           <Link to='/profile' style={{ color: '#ffffff', textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '0.75rem', padding: '1rem 0', borderTop: '1px solid #2C3034', fontWeight: 700 }} onClick={() => setMenuOpen(false)}>
             <MapPin size={20} />
-            <span>Track Order</span>
+            <span>{t('rb_track_order')}</span>
           </Link>
         </div>
       </div>
