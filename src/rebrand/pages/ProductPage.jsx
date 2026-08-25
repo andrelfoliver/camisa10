@@ -6,6 +6,7 @@ import { Star, ShoppingBag, ArrowLeft, ShieldCheck, Truck, RefreshCw, Calendar, 
 import { useCart } from '../../context/CartContext';
 import { useWishlist } from '../../context/WishlistContext';
 import { formatProductName, getProductRating, getProductReviewsCount } from '../utils/format';
+import { getCategoryRoute, getCategoryDisplayName } from '../utils/categoryRoutes';
 import SizeGuideModal from '../../components/SizeGuideModal';
 import { trackEvent } from '../../services/analytics';
 
@@ -257,8 +258,8 @@ const ProductPage = () => {
       {
         "@type": "ListItem",
         "position": 2,
-        "name": product?.category || "Jerseys",
-        "item": `https://ifooty.ca/colecao/${(product?.category || 'soccer').toLowerCase()}`
+        "name": getCategoryDisplayName(product?.category),
+        "item": `https://ifooty.ca/colecao/${getCategoryRoute(product?.category)}`
       },
       {
         "@type": "ListItem",
