@@ -292,13 +292,20 @@ const RebrandProfile = () => {
                   ${creditBalance.toFixed(2)} <span style={{ fontSize: '1.1rem', color: '#fff', fontWeight: 600 }}>CAD</span>
                 </div>
 
-                {/* Badges de Regras de Crédito */}
+                {/* Badges de Regras de Crédito Dinâmicas */}
                 <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem', marginBottom: '1.25rem' }}>
-                  <span style={{ background: 'rgba(204, 255, 0, 0.15)', color: '#CCFF00', border: '1px solid rgba(204, 255, 0, 0.3)', padding: '0.25rem 0.65rem', borderRadius: '20px', fontSize: '0.75rem', fontWeight: 700 }}>
-                    🛒 Pedido Mínimo: $75.00 CAD
-                  </span>
+                  {creditHistory.some(c => parseFloat(c.amount || 0) > 0 && (parseFloat(c.min_order_amount || 0) <= 0 || c.type === 'defect_compensation')) && (
+                    <span style={{ background: 'rgba(56, 189, 248, 0.15)', color: '#38bdf8', border: '1px solid rgba(56, 189, 248, 0.3)', padding: '0.25rem 0.65rem', borderRadius: '20px', fontSize: '0.75rem', fontWeight: 700 }}>
+                      🛠️ Defeito/Garantia: Sem valor mínimo
+                    </span>
+                  )}
+                  {creditHistory.some(c => parseFloat(c.amount || 0) > 0 && (parseFloat(c.min_order_amount || 0) > 0 || c.type === 'loyalty_reward' || c.type === 'reactivation_campaign')) && (
+                    <span style={{ background: 'rgba(204, 255, 0, 0.15)', color: '#CCFF00', border: '1px solid rgba(204, 255, 0, 0.3)', padding: '0.25rem 0.65rem', borderRadius: '20px', fontSize: '0.75rem', fontWeight: 700 }}>
+                      🎁 Fidelidade: Mínimo $75.00 CAD
+                    </span>
+                  )}
                   <span style={{ background: 'rgba(255, 255, 255, 0.1)', color: '#fff', border: '1px solid rgba(255, 255, 255, 0.2)', padding: '0.25rem 0.65rem', borderRadius: '20px', fontSize: '0.75rem', fontWeight: 600 }}>
-                    ⏳ Validade: 30 dias
+                    ⚡ Abatimento direto no checkout
                   </span>
                   <span style={{ background: 'rgba(255, 255, 255, 0.1)', color: 'rgba(255, 255, 255, 0.8)', border: '1px solid rgba(255, 255, 255, 0.2)', padding: '0.25rem 0.65rem', borderRadius: '20px', fontSize: '0.75rem' }}>
                     🚫 Não cumulativo com cupons
@@ -306,7 +313,9 @@ const RebrandProfile = () => {
                 </div>
 
                 <p style={{ color: 'rgba(255,255,255,0.75)', fontSize: '0.88rem', margin: '0 0 1.5rem', maxWidth: 500, lineHeight: 1.5 }}>
-                  Seu saldo é aplicado automaticamente na etapa de pagamento do checkout para pedidos a partir de $75.00 CAD.
+                  {creditHistory.some(c => parseFloat(c.amount || 0) > 0 && (parseFloat(c.min_order_amount || 0) <= 0 || c.type === 'defect_compensation'))
+                    ? 'Créditos de garantia por defeito podem ser usados em qualquer compra. Créditos fidelidade são aplicados em pedidos acima de $75 CAD.'
+                    : 'Seu saldo é aplicado automaticamente na etapa de pagamento do checkout para pedidos a partir de $75.00 CAD.'}
                 </p>
 
                 <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.75rem' }}>

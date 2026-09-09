@@ -60,7 +60,11 @@ const RebrandCheckout = () => {
   const [promoOpen, setPromoOpen] = useState(!!contextCoupon);
 
   // Carteira / Store Credit
-  const [userCreditBalance, setUserCreditBalance] = useState(0);
+  const [creditData, setCreditData] = useState({
+    totalBalance: 0,
+    unrestrictedBalance: 0, // Defeito, Reembolso, Cortesia (sem valor mínimo de pedido)
+    restrictedBalance: 0,   // Fidelidade / Campanha (mínimo de $75 CAD)
+  });
   const [useStoreCredit, setUseStoreCredit] = useState(true);
   const [loadingCredit, setLoadingCredit] = useState(false);
 
@@ -68,12 +72,12 @@ const RebrandCheckout = () => {
     const fetchUserCredit = async () => {
       const email = (user?.email || guestEmail || '').toLowerCase().trim();
       if (!email && !user?.id) {
-        setUserCreditBalance(0);
+        setCreditData({ totalBalance: 0, unrestrictedBalance: 0, restrictedBalance: 0 });
         return;
       }
       setLoadingCredit(true);
       try {
-        let query = supabase.from('customer_credits').select('amount, expires_at');
+        let query = supabase.from('customer_credits').select('amount, type, expires_at, min_order_amount');
         if (email && user?.id) {
           query = query.or(`customer_email.eq.${email},user_id.eq.${user.id}`);
         } else if (email) {
@@ -86,17 +90,65 @@ const RebrandCheckout = () => {
         if (credits && credits.length > 0) {
           const now = new Date().toISOString();
           const validCredits = credits.filter(c => !c.expires_at || c.expires_at > now);
-          const total = validCredits.reduce((acc, curr) => acc + parseFloat(curr.amount || 0), 0);
-          setUserCreditBalance(Math.max(0, total));
+
+          let rawUnrestricted = 0;
+          let rawRestricted = 0;
+          let redemptions = 0;
+
+          validCredits.forEach(c => {
+            const val = parseFloat(c.amount || 0);
+            const minOrder = parseFloat(c.min_order_amount || 0);
+            if (val < 0) {
+              redemptions += Math.abs(val);
+            } else {
+              // Créditos por defeito ou reembolso não têm valor mínimo
+              if (minOrder <= 0 || c.type === 'defect_compensation' || c.type === 'refund') {
+                rawUnrestricted += val;
+              } else {
+                rawRestricted += val;
+              }
+            }
+          });
+
+          // Abater resgates anteriores
+          let rem = redemptions;
+          let netRestricted = rawRestricted;
+          let netUnrestricted = rawUnrestricted;
+
+          if (rem > 0) {
+            const dRest = Math.min(netRestricted, rem);
+            netRestricted -= dRest;
+            rem -= dRest;
+          }
+          if (rem > 0) {
+            const dUnr = Math.min(netUnrestricted, rem);
+            netUnrestricted -= dUnr;
+            rem -= dUnr;
+          }
+
+          netRestricted = Math.max(0, netRestricted);
+          netUnrestricted = Math.max(0, netUnrestricted);
+          const totalBal = netRestricted + netUnrestricted;
+
+          setCreditData({
+            totalBalance: totalBal,
+            unrestrictedBalance: netUnrestricted,
+            restrictedBalance: netRestricted,
+          });
         } else if (user?.id) {
           const { data: profile } = await supabase
             .from('profiles')
             .select('store_credit')
             .eq('id', user.id)
             .single();
-          setUserCreditBalance(Math.max(0, parseFloat(profile?.store_credit || 0)));
+          const bal = Math.max(0, parseFloat(profile?.store_credit || 0));
+          setCreditData({
+            totalBalance: bal,
+            unrestrictedBalance: bal,
+            restrictedBalance: 0,
+          });
         } else {
-          setUserCreditBalance(0);
+          setCreditData({ totalBalance: 0, unrestrictedBalance: 0, restrictedBalance: 0 });
         }
       } catch (err) {
         console.error('Error fetching credit balance:', err);
@@ -128,12 +180,20 @@ const RebrandCheckout = () => {
         : (subtotal - discount) * (appliedCoupon.discount_percent / 100))
     : 0;
 
-  // Regras de Elegibilidade de Crédito: Mínimo $75 CAD e Opção 1 (Melhor Oferta - Não Cumulativo)
-  const MIN_CREDIT_ORDER_SUBTOTAL = 75.00;
-  const isCreditSubtotalEligible = subtotal >= MIN_CREDIT_ORDER_SUBTOTAL;
-  const isCreditActive = useStoreCredit && userCreditBalance > 0 && isCreditSubtotalEligible;
+  // Regras de Elegibilidade de Crédito:
+  // - Defeito / Reembolso / Cortesia: Sem pedido mínimo ($0)
+  // - Fidelidade / Campanha: Mínimo de $75.00 CAD
+  const MIN_LOYALTY_ORDER_SUBTOTAL = 75.00;
+  const isLoyaltyThresholdMet = subtotal >= MIN_LOYALTY_ORDER_SUBTOTAL;
 
-  // Quando o crédito está ativo, ele não acumula com desconto por volume ou cupom (substitui pela melhor oferta)
+  // Saldo elegível para este carrinho específico
+  const availableUsableCredit = isLoyaltyThresholdMet
+    ? creditData.totalBalance
+    : creditData.unrestrictedBalance;
+
+  const isCreditActive = useStoreCredit && availableUsableCredit > 0;
+
+  // Opção 1 (Melhor Oferta): Quando o crédito está ativo, substitui desconto por volume e cupom
   const effectiveDiscount = isCreditActive ? 0 : discount;
   const effectiveCouponDiscount = isCreditActive ? 0 : couponDiscountAmount;
 
@@ -142,7 +202,7 @@ const RebrandCheckout = () => {
   
   // Saldo aplicado
   const appliedCreditAmount = isCreditActive
-    ? Math.min(userCreditBalance, preCreditBaseTotal)
+    ? Math.min(availableUsableCredit, preCreditBaseTotal)
     : 0;
 
   const baseFinalTotal = Math.max(0, preCreditBaseTotal - appliedCreditAmount);
@@ -171,7 +231,7 @@ const RebrandCheckout = () => {
   const displayShipping = convertPrice(currentShipping);
   const displayPreCreditBaseTotal = displaySubtotal - displayDiscount - displayCouponDiscount + displayShipping;
   const displayAppliedCredit = isCreditActive
-    ? Math.min(convertPrice(userCreditBalance), displayPreCreditBaseTotal)
+    ? Math.min(convertPrice(availableUsableCredit), displayPreCreditBaseTotal)
     : 0;
   const displayBaseFinalTotal = Math.max(0, displayPreCreditBaseTotal - displayAppliedCredit);
   const displayFinalTotal = displayBaseFinalTotal === 0
@@ -456,9 +516,17 @@ const RebrandCheckout = () => {
         }]);
 
         if (user?.id) {
-          const newBal = Math.max(0, userCreditBalance - appliedCreditAmount);
+          const newBal = Math.max(0, creditData.totalBalance - appliedCreditAmount);
           await supabase.from('profiles').update({ store_credit: newBal }).eq('id', user.id);
         }
+
+        // Atualizar estado local de crédito imediatamente
+        setCreditData(prev => ({
+          ...prev,
+          totalBalance: Math.max(0, prev.totalBalance - appliedCreditAmount),
+          unrestrictedBalance: Math.max(0, prev.unrestrictedBalance - appliedCreditAmount),
+          restrictedBalance: Math.max(0, prev.restrictedBalance - Math.max(0, appliedCreditAmount - prev.unrestrictedBalance))
+        }));
       } catch (creditErr) {
         console.error('Erro ao debitar crédito:', creditErr);
       }
@@ -555,12 +623,17 @@ const RebrandCheckout = () => {
     if (!validateForm()) return;
     setIsSubmitting(true);
     try {
+      const isFullyPaidWithCredit = baseFinalTotal === 0 && appliedCreditAmount > 0;
       await saveOrderToDatabase();
-      const message = generateWhatsAppMessage();
       await clearCart();
-      const encodedMessage = encodeURIComponent(message);
-      window.open(`https://wa.me/${String(waNumber).replace(/\D/g, '')}?text=${encodedMessage}`, '_blank');
-      navigate('/sucesso', { state: { orderMessage: message, waNumber } });
+      if (isFullyPaidWithCredit) {
+        navigate('/sucesso', { state: { paid: true } });
+      } else {
+        const message = generateWhatsAppMessage();
+        const encodedMessage = encodeURIComponent(message);
+        window.open(`https://wa.me/${String(waNumber).replace(/\D/g, '')}?text=${encodedMessage}`, '_blank');
+        navigate('/sucesso', { state: { orderMessage: message, waNumber } });
+      }
     } catch (error) {
       showPopup(`Error: ${error.message}`);
     } finally { setIsSubmitting(false); }
@@ -631,8 +704,8 @@ const RebrandCheckout = () => {
           })),
           currency: currency === 'USD' ? 'USD' : 'CAD',
           shippingCost: convertPrice(currentShipping),
-          discountPercent: appliedCoupon ? appliedCoupon.discount_percent : 0,
-          flatDiscount: convertPrice(discount),
+          discountPercent: (appliedCoupon && !isCreditActive) ? appliedCoupon.discount_percent : 0,
+          flatDiscount: convertPrice(isCreditActive ? appliedCreditAmount : discount),
           stripeFee: convertPrice(stripeFee),
           successUrl: `${window.location.origin}/sucesso`,
           cancelUrl: window.location.href
@@ -975,7 +1048,7 @@ const RebrandCheckout = () => {
               </div>
 
               {/* Store Credit Widget */}
-              {userCreditBalance > 0 && (
+              {creditData.totalBalance > 0 && (
                 <div style={{
                   background: 'linear-gradient(135deg, #121416 0%, #1e293b 100%)',
                   borderRadius: '10px',
@@ -992,15 +1065,23 @@ const RebrandCheckout = () => {
                       <span style={{ fontSize: '0.85rem', fontWeight: 700, color: '#fff' }}>Crédito em Loja / Store Credit</span>
                     </div>
                     <span style={{ fontSize: '1rem', fontWeight: 800, color: '#CCFF00' }}>
-                      ${userCreditBalance.toFixed(2)} CAD
+                      ${creditData.totalBalance.toFixed(2)} CAD
                     </span>
                   </div>
 
-                  {!isCreditSubtotalEligible ? (
+                  {/* Avisos de Regras / Desbloqueio */}
+                  {creditData.restrictedBalance > 0 && !isLoyaltyThresholdMet && (
                     <div style={{ background: 'rgba(245, 158, 11, 0.15)', border: '1px solid rgba(245, 158, 11, 0.3)', borderRadius: '6px', padding: '0.6rem 0.75rem', fontSize: '0.78rem', color: '#fbbf24', marginTop: '0.5rem', lineHeight: 1.4 }}>
-                      ⚠️ <strong>Válido para pedidos acima de $75.00 CAD</strong>. Seu subtotal atual é de {formatPrice(displaySubtotal)}. Adicione mais <strong>{formatPrice(convertPrice(Math.max(0, 75 - subtotal)))}</strong> em itens para desbloquear o crédito.
+                      🎁 Você possui <strong>${creditData.restrictedBalance.toFixed(2)} CAD</strong> de Crédito Fidelidade para pedidos acima de $75.00 CAD (adicione mais <strong>{formatPrice(convertPrice(Math.max(0, 75 - subtotal)))}</strong>).
+                      {creditData.unrestrictedBalance > 0 && (
+                        <div style={{ color: '#6ee7b7', marginTop: '0.25rem', fontWeight: 600 }}>
+                          ✓ Seu crédito por defeito/garantia de ${creditData.unrestrictedBalance.toFixed(2)} CAD pode ser usado normalmente agora!
+                        </div>
+                      )}
                     </div>
-                  ) : (
+                  )}
+
+                  {availableUsableCredit > 0 ? (
                     <div>
                       <label style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', cursor: 'pointer', background: 'rgba(255,255,255,0.06)', padding: '0.55rem 0.75rem', borderRadius: '6px', fontSize: '0.82rem', marginTop: '0.5rem' }}>
                         <input 
@@ -1010,7 +1091,7 @@ const RebrandCheckout = () => {
                           style={{ width: 16, height: 16, accentColor: '#CCFF00', cursor: 'pointer' }}
                         />
                         <span style={{ color: '#f3f4f6' }}>
-                          Usar meu saldo de <strong>${userCreditBalance.toFixed(2)} CAD</strong> para abater nesta compra (<strong>-${formatPrice(displayAppliedCredit)}</strong>)
+                          Usar saldo disponível de <strong>${availableUsableCredit.toFixed(2)} CAD</strong> nesta compra (<strong>-{formatPrice(displayAppliedCredit)}</strong>)
                         </span>
                       </label>
                       {discount > 0 && useStoreCredit && (
@@ -1024,7 +1105,7 @@ const RebrandCheckout = () => {
                         </div>
                       )}
                     </div>
-                  )}
+                  ) : null}
                 </div>
               )}
 
@@ -1079,10 +1160,10 @@ const RebrandCheckout = () => {
                     <span>-{formatPrice(displayAppliedCredit)}</span>
                   </div>
                 )}
-                {appliedCreditAmount > 0 && userCreditBalance > appliedCreditAmount && (
+                {appliedCreditAmount > 0 && creditData.totalBalance > appliedCreditAmount && (
                   <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.76rem', color: '#6b7280', fontStyle: 'italic' }}>
                     <span>Saldo restante na carteira:</span>
-                    <span>${(userCreditBalance - appliedCreditAmount).toFixed(2)} CAD</span>
+                    <span>${(creditData.totalBalance - appliedCreditAmount).toFixed(2)} CAD</span>
                   </div>
                 )}
                 {baseFinalTotal > 0 && paymentMethod === 'paypal' && (
