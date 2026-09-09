@@ -45,7 +45,7 @@ const Footer = () => {
         {/* Brand Column */}
         <div>
           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start' }}>
-            <Link to="/rebrand" className="rebrand-logo-text" style={{ color: '#ffffff' }}>
+            <Link to="/" className="rebrand-logo-text" style={{ color: '#ffffff' }}>
               <span className="logo-i">i</span>Footy<span className="logo-dot">.</span>
             </Link>
             <div className="rebrand-logo-underline" style={{ width: '130px' }}></div>

@@ -182,7 +182,7 @@ const Navbar = () => {
 
   const handleSearch = (e) => {
     if (e.key === 'Enter' && searchQuery.trim()) {
-      navigate(`/rebrand/busca?q=${encodeURIComponent(searchQuery)}`);
+      navigate(`/busca?q=${encodeURIComponent(searchQuery)}`);
       setSearchOpen(false);
       setShowSuggestions(false);
     }
@@ -290,7 +290,7 @@ const Navbar = () => {
           {/* Logo */}
           <div className="rebrand-logo-container" style={{ alignItems: 'flex-start' }}>
             <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start' }}>
-              <Link to="/rebrand" className="rebrand-logo-text" style={{ color: '#ffffff', fontSize: '2.5rem' }}>
+              <Link to="/" className="rebrand-logo-text" style={{ color: '#ffffff', fontSize: '2.5rem' }}>
                 <span className="logo-i">i</span>Footy<span className="logo-dot">.</span>
               </Link>
               <div className="rebrand-logo-underline" style={{ height: '3px' }}></div>
@@ -418,7 +418,7 @@ const Navbar = () => {
               {(user || sessionStorage.getItem('ifooty_guest_email')) && (
                 <div className="rebrand-account-dropdown">
                   {isAdmin && (
-                    <Link to="/rebrand/admin" style={{ borderBottom: '1px solid #f1f3f5', color: '#121416', fontWeight: 'bold' }}>
+                    <Link to="/admin" style={{ borderBottom: '1px solid #f1f3f5', color: '#121416', fontWeight: 'bold' }}>
                       ⚙️ {t('rb_admin_panel')}
                     </Link>
                   )}
@@ -539,7 +539,7 @@ const Navbar = () => {
       {/* MOBILE DRAWER */}
       <div className={`rebrand-drawer ${menuOpen ? 'rebrand-drawer-open' : ''}`}>
         <div className="rebrand-drawer-header">
-          <Link to="/rebrand" className="rebrand-logo-text" style={{ color: '#ffffff', fontSize: '1.8rem' }} onClick={() => setMenuOpen(false)}>
+          <Link to="/" className="rebrand-logo-text" style={{ color: '#ffffff', fontSize: '1.8rem' }} onClick={() => setMenuOpen(false)}>
             <span className="logo-i">i</span>Footy<span className="logo-dot">.</span>
           </Link>
           <button onClick={() => setMenuOpen(false)} style={{ background: 'none', border: 'none', cursor: 'pointer' }}>

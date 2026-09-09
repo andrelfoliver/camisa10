@@ -6,6 +6,7 @@ import {
 } from 'lucide-react';
 import { useRebrandAuth } from '../../context/RebrandAuthContext';
 import { useLanguage } from '../../context/LanguageContext';
+import SEO from '../../components/SEO';
 
 const Section = ({ icon: Icon, title, children, id }) => (
   <section id={id} style={{ marginBottom: '3rem' }}>
@@ -88,11 +89,16 @@ const RebrandAffiliatesPage = () => {
 
   return (
     <div style={{ background: '#ffffff', minHeight: '80vh', padding: '3rem 2rem' }} className="rebrand-scope">
+      <SEO 
+        title="Affiliate Program | iFooty Canada" 
+        description="Join the iFooty Canada Affiliate Program and earn commission by sharing premium sports jerseys with your community."
+        url="https://ifooty.ca/affiliates"
+      />
       <div className="container" style={{ maxWidth: '900px', margin: '0 auto' }}>
         
         {/* Back Link */}
         <div style={{ marginBottom: '2rem' }}>
-          <Link to="/rebrand" style={{ display: 'inline-flex', alignItems: 'center', gap: '0.5rem', color: 'var(--rebrand-text-muted)', textDecoration: 'none', fontWeight: 700, fontSize: '0.85rem', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+          <Link to="/" style={{ display: 'inline-flex', alignItems: 'center', gap: '0.5rem', color: 'var(--rebrand-text-muted)', textDecoration: 'none', fontWeight: 700, fontSize: '0.85rem', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
             <ArrowLeft size={14} /> {t('rb_checkout_back')}
           </Link>
         </div>

@@ -93,7 +93,7 @@ const Success = () => {
               <MessageCircle size={24} />
               Falar com Suporte no WhatsApp
             </button>
-            <Link to={isRebrand ? "/rebrand" : "/"} className="btn-secondary" style={{ width: '100%', justifyContent: 'center', padding: '1rem', textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+            <Link to="/" className="btn-secondary" style={{ width: '100%', justifyContent: 'center', padding: '1rem', textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
               <Home size={20} />
               Voltar ao Início
             </Link>
@@ -172,7 +172,7 @@ const Success = () => {
           </div>
 
           <a
-            href={isRebrand ? "/rebrand" : "/"}
+            href="/"
             className="btn-secondary"
             style={{
               width: '100%',

@@ -165,11 +165,11 @@ const RebrandProfile = () => {
 
   const handleSignOut = async () => {
     await signOut();
-    navigate('/rebrand');
+    navigate('/');
   };
 
   if (authLoading) return null;
-  if (!user) return <Navigate to="/rebrand/auth" replace />;
+  if (!user) return <Navigate to="/auth" replace />;
 
   const firstName = (user.user_metadata?.full_name || user.email || '').split(' ')[0];
 
@@ -299,7 +299,7 @@ const RebrandProfile = () => {
                 <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.75rem' }}>
                   <button 
                     className="rp-btn-primary" 
-                    onClick={() => navigate('/rebrand')}
+                    onClick={() => navigate('/')}
                     style={{ background: '#CCFF00', color: '#121416', fontWeight: 700, padding: '0.75rem 1.5rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}
                   >
                     <ShoppingBag size={16} /> {t('rb_profile_use_credit')}
@@ -428,14 +428,14 @@ const RebrandProfile = () => {
                 <Heart size={48} style={{ opacity: 0.3, margin: '0 auto 1rem', display: 'block' }} />
                 <p style={{ fontWeight: 600, margin: '0 0 0.25rem' }}>Your wishlist is empty</p>
                 <p style={{ fontSize: '0.85rem', margin: '0 0 1rem' }}>Mark products with a heart on product details page to save them here.</p>
-                <button className="rp-btn-primary" onClick={() => navigate('/rebrand')}>Start Shopping</button>
+                <button className="rp-btn-primary" onClick={() => navigate('/')}>Start Shopping</button>
               </div>
             ) : (
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: '1.5rem' }}>
                 {wishlistItems.map(item => (
                   <div key={item.id} className="rp-card" style={{ display: 'flex', flexDirection: 'column' }}>
                     <div style={{ position: 'relative', width: '100%', aspectRatio: '1', overflow: 'hidden', background: '#f3f4f6' }}>
-                      <Link to={`/rebrand/produto/${item.id}`}>
+                      <Link to={`/produto/${item.id}`}>
                         <img 
                           src={item.image} 
                           alt={item.name} 
@@ -467,7 +467,7 @@ const RebrandProfile = () => {
                       <div>
                         <span style={{ fontSize: '0.7rem', color: '#9ca3af', textTransform: 'uppercase', fontWeight: 700 }}>{item.category}</span>
                         <h4 style={{ margin: '0.2rem 0 0.5rem 0', fontSize: '0.88rem', fontWeight: 600, color: '#111827', lineHeight: '1.4' }}>
-                          <Link to={`/rebrand/produto/${item.id}`} style={{ color: 'inherit', textDecoration: 'none' }}>
+                          <Link to={`/produto/${item.id}`} style={{ color: 'inherit', textDecoration: 'none' }}>
                             {item.name}
                           </Link>
                         </h4>
@@ -476,7 +476,7 @@ const RebrandProfile = () => {
                         <span style={{ fontWeight: 700, color: '#121416', fontSize: '0.95rem' }}>${Number(item.price || 0).toFixed(2)} CAD</span>
                         <button 
                           className="rp-btn-primary" 
-                          onClick={() => navigate(`/rebrand/produto/${item.id}`)}
+                          onClick={() => navigate(`/produto/${item.id}`)}
                           style={{ padding: '0.4rem 0.8rem', fontSize: '0.75rem', borderRadius: '6px' }}
                         >
                           View
@@ -499,7 +499,7 @@ const RebrandProfile = () => {
                 <ShoppingBag size={48} style={{ opacity: 0.3, margin: '0 auto 1rem', display: 'block' }} />
                 <p style={{ fontWeight: 600, margin: '0 0 0.25rem' }}>No orders yet</p>
                 <p style={{ fontSize: '0.85rem', margin: '0 0 1rem' }}>Your orders will appear here once you make a purchase.</p>
-                <button className="rp-btn-primary" onClick={() => navigate('/rebrand')}>Start Shopping</button>
+                <button className="rp-btn-primary" onClick={() => navigate('/')}>Start Shopping</button>
               </div>
             ) : (
               <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>

@@ -2,16 +2,22 @@ import React from 'react';
 import { ArrowLeft, Award, Globe, ShieldCheck, Mail, MessageCircle } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useLanguage } from '../../context/LanguageContext';
+import SEO from '../../components/SEO';
 
 const RebrandAboutPage = () => {
   const { t } = useLanguage();
   return (
     <div style={{ background: '#ffffff', minHeight: '80vh', padding: '3rem 2rem' }} className="rebrand-scope">
+      <SEO 
+        title="About Us | iFooty Canada" 
+        description="Learn about iFooty Canada, our passion for sports and commitment to delivering premium quality jerseys across Canada."
+        url="https://ifooty.ca/about"
+      />
       <div className="container" style={{ maxWidth: '800px', margin: '0 auto' }}>
         
         {/* Back Link */}
         <div style={{ marginBottom: '2rem' }}>
-          <Link to="/rebrand" style={{ display: 'inline-flex', alignItems: 'center', gap: '0.5rem', color: 'var(--rebrand-text-muted)', textDecoration: 'none', fontWeight: 700, fontSize: '0.85rem', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+          <Link to="/" style={{ display: 'inline-flex', alignItems: 'center', gap: '0.5rem', color: 'var(--rebrand-text-muted)', textDecoration: 'none', fontWeight: 700, fontSize: '0.85rem', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
             <ArrowLeft size={14} /> {t('rb_checkout_back')}
           </Link>
         </div>

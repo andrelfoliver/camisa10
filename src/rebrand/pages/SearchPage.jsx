@@ -6,6 +6,7 @@ import { useCart } from '../../context/CartContext';
 import { useLanguage } from '../../context/LanguageContext';
 import { Search, ChevronRight, X, AlertCircle } from 'lucide-react';
 import { formatProductName, getProductRating, getProductReviewsCount, translateToPortuguese } from '../utils/format';
+import SEO from '../../components/SEO';
 
 const SearchPage = () => {
   const [searchParams] = useSearchParams();
@@ -95,11 +96,16 @@ const SearchPage = () => {
 
   return (
     <div style={{ background: '#ffffff', minHeight: '80vh', padding: '3rem 2rem' }} className="rebrand-scope">
+      <SEO 
+        title={query ? `Search: ${query} | iFooty Canada` : 'Search Jerseys | iFooty Canada'}
+        description={`Search results for sports jerseys at iFooty Canada.`}
+        url="https://ifooty.ca/busca"
+      />
       <div className="container" style={{ maxWidth: '1400px', margin: '0 auto' }}>
         
         {/* Breadcrumb e Voltar */}
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
-          <Link to="/rebrand" style={{ display: 'inline-flex', alignItems: 'center', gap: '0.5rem', color: 'var(--rebrand-text-muted)', textDecoration: 'none', fontWeight: 700, fontSize: '0.85rem', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+          <Link to="/" style={{ display: 'inline-flex', alignItems: 'center', gap: '0.5rem', color: 'var(--rebrand-text-muted)', textDecoration: 'none', fontWeight: 700, fontSize: '0.85rem', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
             {t('rb_cat_back_home')}
           </Link>
           <span style={{ fontSize: '0.8rem', color: 'var(--rebrand-text-muted)', fontWeight: 600 }}>
@@ -144,7 +150,7 @@ const SearchPage = () => {
               <p style={{ color: 'var(--rebrand-text-muted)', maxWidth: '500px', margin: '0 auto 2rem' }}>
                 {t('rb_search_try_again')}
               </p>
-              <Link to="/rebrand" className="rebrand-btn" style={{ textDecoration: 'none', display: 'inline-flex' }}>{t('rb_checkout_back')}</Link>
+              <Link to="/" className="rebrand-btn" style={{ textDecoration: 'none', display: 'inline-flex' }}>{t('rb_checkout_back')}</Link>
             </div>
           ) : (
             <div className="rebrand-products-grid">

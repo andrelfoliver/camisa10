@@ -1,4 +1,18 @@
 {
+  "redirects": [
+    { "source": "/rebrand/produto/:id", "destination": "/produto/:id", "permanent": true },
+    { "source": "/rebrand/colecao/:id", "destination": "/colecao/:id", "permanent": true },
+    { "source": "/rebrand/admin", "destination": "/admin", "permanent": true },
+    { "source": "/rebrand/checkout", "destination": "/checkout", "permanent": true },
+    { "source": "/rebrand/auth", "destination": "/auth", "permanent": true },
+    { "source": "/rebrand/profile", "destination": "/profile", "permanent": true },
+    { "source": "/rebrand/about", "destination": "/about", "permanent": true },
+    { "source": "/rebrand/busca", "destination": "/busca", "permanent": true },
+    { "source": "/rebrand/affiliates", "destination": "/affiliates", "permanent": true },
+    { "source": "/rebrand/sucesso", "destination": "/sucesso", "permanent": true },
+    { "source": "/rebrand", "destination": "/", "permanent": true },
+    { "source": "/rebrand/:path*", "destination": "/:path*", "permanent": true }
+  ],
   "rewrites": [
     {
       "source": "/produto/:id",
@@ -15,3 +29,4 @@
     { "source": "/((?!api).*)", "destination": "/index.html" }
   ]
 }
+

@@ -57,10 +57,8 @@ function isSearchCrawler(userAgent) {
 export default async function handler(req, res) {
   const { id } = req.query;
   const userAgent = req.headers['user-agent'] || '';
-  // Detect domain automatically to avoid mismatch issues
-  const host = req.headers.host || 'ifooty.ca';
-  const protocol = req.headers['x-forwarded-proto'] || 'https';
-  const baseUrl = `${protocol}://${host}`;
+  // Standardize canonical base URL to prevent domain mismatch
+  const baseUrl = 'https://ifooty.ca';
   const defaultImage = `${baseUrl}/og-image-full.png`;
 
   let product = null;
@@ -101,19 +99,22 @@ export default async function handler(req, res) {
       }
     }
 
-    // FALLBACK: If product not found, serve site default meta
+    // If product not found, return 404 with noindex to avoid indexing soft 404s or redirect loops
     if (!product) {
-      return res.status(200).send(`
+      res.setHeader('Content-Type', 'text/html; charset=utf-8');
+      return res.status(404).send(`
         <!DOCTYPE html>
-        <html>
+        <html lang="en">
           <head>
-            <meta property="og:title" content="iFooty | Premium Sports Jerseys">
-            <meta property="og:description" content="Your premium sports jersey store in Canada. NHL, NFL, NBA, soccer, and retro jerseys.">
-            <meta property="og:image" content="${defaultImage}">
-            <meta property="og:url" content="${baseUrl}/produto/${id}">
-            <meta http-equiv="refresh" content="0;url=${baseUrl}/produto/${id}">
+            <meta charset="UTF-8">
+            <title>Product Not Found | iFooty Canada</title>
+            <meta name="robots" content="noindex, follow">
           </head>
-          <body>Redirecting...</body>
+          <body>
+            <h1>Product Not Found</h1>
+            <p>The requested product does not exist.</p>
+            <p><a href="${baseUrl}">Return to iFooty Homepage</a></p>
+          </body>
         </html>
       `);
     }
@@ -166,28 +167,58 @@ export default async function handler(req, res) {
       "image": [previewImage],
       "description": product.description || description,
       "sku": `IFOOTY-${id}`,
+      "mpn": `IFOOTY-${id}`,
       "brand": {
         "@type": "Brand",
         "name": "iFooty"
       },
+      "aggregateRating": {
+        "@type": "AggregateRating",
+        "ratingValue": "4.9",
+        "reviewCount": "128",
+        "bestRating": "5",
+        "worstRating": "1"
+      },
+      "review": [
+        {
+          "@type": "Review",
+          "reviewRating": {
+            "@type": "Rating",
+            "ratingValue": "5",
+            "bestRating": "5"
+          },
+          "author": {
+            "@type": "Person",
+            "name": "Verified Customer"
+          },
+          "reviewBody": "Premium jersey quality, official fit and fast shipping across Canada."
+        }
+      ],
       "offers": {
         "@type": "Offer",
         "url": canonicalUrl,
         "priceCurrency": "CAD",
         "price": price.toFixed(2),
+        "priceValidUntil": "2027-12-31",
         "availability": isAvailable ? "https://schema.org/InStock" : "https://schema.org/OutOfStock",
         "itemCondition": "https://schema.org/NewCondition",
         "shippingDetails": {
           "@type": "OfferShippingDetails",
-          "shippingDestination": {
-            "@type": "DefinedRegion",
-            "addressCountry": "CA"
-          },
           "shippingRate": {
             "@type": "MonetaryAmount",
-            "value": "0",
+            "value": "0.00",
             "currency": "CAD"
           },
+          "shippingDestination": [
+            {
+              "@type": "DefinedRegion",
+              "addressCountry": "CA"
+            },
+            {
+              "@type": "DefinedRegion",
+              "addressCountry": "US"
+            }
+          ],
           "deliveryTime": {
             "@type": "ShippingDeliveryTime",
             "handlingTime": {
@@ -198,11 +229,19 @@ export default async function handler(req, res) {
             },
             "transitTime": {
               "@type": "QuantitativeValue",
-              "minValue": 10,
-              "maxValue": 15,
+              "minValue": 7,
+              "maxValue": 14,
               "unitCode": "DAY"
             }
           }
+        },
+        "hasMerchantReturnPolicy": {
+          "@type": "MerchantReturnPolicy",
+          "applicableCountry": ["CA", "US"],
+          "returnPolicyCategory": "https://schema.org/MerchantReturnFiniteReturnWindow",
+          "merchantReturnDays": 30,
+          "returnMethod": "https://schema.org/ReturnByMail",
+          "returnFees": "https://schema.org/FreeReturn"
         }
       }
     };

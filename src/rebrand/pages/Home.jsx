@@ -5,6 +5,7 @@ import { ArrowRight, Star, ShoppingBag, Eye, ShieldCheck, Truck, RefreshCw, Badg
 import { useCart } from '../../context/CartContext';
 import { useLanguage } from '../../context/LanguageContext';
 import { formatProductName, getProductRating, getProductReviewsCount } from '../utils/format';
+import SEO from '../../components/SEO';
 
 // Mocks premium de outros esportes para simular a loja multiesportiva antes de cadastrar no banco
 const MOCK_PRODUCTS = [
@@ -409,6 +410,11 @@ const Home = () => {
 
   return (
     <div style={{ background: '#ffffff' }}>
+      <SEO 
+        title="iFooty | Premium Sports Jerseys in Canada - NHL, NFL, NBA, Soccer & Retro"
+        description="Your premium sports jersey store in Canada. NHL, NFL, NBA, soccer, and retro jerseys with fast shipping across Canada and USA."
+        url="https://ifooty.ca"
+      />
 
       {/* 1. HERO BANNER - PREMIUM LOCKER ROOM WIDE BANNER */}
       <section className="rebrand-hero">

@@ -19,6 +19,7 @@ const SEO = ({
       <title>{siteTitle}</title>
       <meta name="description" content={siteDescription} />
       <meta name="keywords" content={siteKeywords} />
+      <link rel="canonical" href={url} />
 
       {/* OpenGraph / Facebook */}
       <meta property="og:type" content={type} />

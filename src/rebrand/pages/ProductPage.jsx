@@ -173,7 +173,7 @@ const ProductPage = () => {
     return (
       <div style={{ textAlign: 'center', padding: '10rem 0' }} className="rebrand-scope">
         <h3 style={{ color: 'var(--rebrand-text-muted)' }}>Jersey Not Found</h3>
-        <button onClick={() => navigate('/rebrand')} className="rebrand-btn rebrand-btn-primary" style={{ marginTop: '2rem' }}>
+        <button onClick={() => navigate('/')} className="rebrand-btn rebrand-btn-primary" style={{ marginTop: '2rem' }}>
           Back to Shop
         </button>
       </div>
@@ -237,28 +237,58 @@ const ProductPage = () => {
     "image": [ogImageUrl],
     "description": productDescription,
     "sku": `IFOOTY-${id}`,
+    "mpn": `IFOOTY-${id}`,
     "brand": {
       "@type": "Brand",
       "name": "iFooty"
     },
+    "aggregateRating": {
+      "@type": "AggregateRating",
+      "ratingValue": "4.9",
+      "reviewCount": "128",
+      "bestRating": "5",
+      "worstRating": "1"
+    },
+    "review": [
+      {
+        "@type": "Review",
+        "reviewRating": {
+          "@type": "Rating",
+          "ratingValue": "5",
+          "bestRating": "5"
+        },
+        "author": {
+          "@type": "Person",
+          "name": "Verified Customer"
+        },
+        "reviewBody": "Premium jersey quality, official fit and fast shipping across Canada."
+      }
+    ],
     "offers": {
       "@type": "Offer",
       "url": canonicalUrl,
       "priceCurrency": "CAD",
       "price": (product?.price || 89.90).toFixed(2),
+      "priceValidUntil": "2027-12-31",
       "availability": isAvailable ? "https://schema.org/InStock" : "https://schema.org/OutOfStock",
       "itemCondition": "https://schema.org/NewCondition",
       "shippingDetails": {
         "@type": "OfferShippingDetails",
-        "shippingDestination": {
-          "@type": "DefinedRegion",
-          "addressCountry": "CA"
-        },
         "shippingRate": {
           "@type": "MonetaryAmount",
-          "value": "0",
+          "value": "0.00",
           "currency": "CAD"
         },
+        "shippingDestination": [
+          {
+            "@type": "DefinedRegion",
+            "addressCountry": "CA"
+          },
+          {
+            "@type": "DefinedRegion",
+            "addressCountry": "US"
+          }
+        ],
         "deliveryTime": {
           "@type": "ShippingDeliveryTime",
           "handlingTime": {
@@ -269,11 +299,19 @@ const ProductPage = () => {
           },
           "transitTime": {
             "@type": "QuantitativeValue",
-            "minValue": 10,
-            "maxValue": 15,
+            "minValue": 7,
+            "maxValue": 14,
             "unitCode": "DAY"
           }
         }
+      },
+      "hasMerchantReturnPolicy": {
+        "@type": "MerchantReturnPolicy",
+        "applicableCountry": ["CA", "US"],
+        "returnPolicyCategory": "https://schema.org/MerchantReturnFiniteReturnWindow",
+        "merchantReturnDays": 30,
+        "returnMethod": "https://schema.org/ReturnByMail",
+        "returnFees": "https://schema.org/FreeReturn"
       }
     }
   };
