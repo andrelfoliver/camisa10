@@ -5098,6 +5098,8 @@ const ClientesSection = ({ showToast }) => {
     reason: 'defect_compensation',
     description: '',
     orderId: '',
+    minOrderAmount: '75.00',
+    expiryDays: '30',
     notifyCustomer: true
   });
   const [savingCredit, setSavingCredit] = useState(false);
@@ -5120,16 +5122,44 @@ const ClientesSection = ({ showToast }) => {
     setCampaignModalOpen(true);
   };
 
-  const openCreditModal = (customer = null, orderId = '') => {
-    setCreditForm({
-      email: customer?.email || '',
-      name: customer?.name || '',
-      amount: '',
-      reason: 'defect_compensation',
-      description: orderId ? `Compensação por defeito de fábrica - Pedido #${String(orderId).slice(-6)}` : 'Compensação por defeito de fabricação',
-      orderId: orderId || '',
-      notifyCustomer: true
-    });
+  const openCreditModal = (customer = null, orderId = '', preset = 'defect') => {
+    if (preset === 'loyalty') {
+      setCreditForm({
+        email: customer?.email || '',
+        name: customer?.name || '',
+        amount: '14.90',
+        reason: 'loyalty_reward',
+        description: 'Crédito de Fidelidade ($14.90 CAD) - Válido por 30 dias para compras acima de $75 CAD',
+        orderId: orderId || '',
+        minOrderAmount: '75.00',
+        expiryDays: '30',
+        notifyCustomer: true
+      });
+    } else if (preset === 'courtesy') {
+      setCreditForm({
+        email: customer?.email || '',
+        name: customer?.name || '',
+        amount: '',
+        reason: 'manual_grant',
+        description: 'Cortesia / Fidelização de cliente',
+        orderId: orderId || '',
+        minOrderAmount: '0.00',
+        expiryDays: '365',
+        notifyCustomer: true
+      });
+    } else {
+      setCreditForm({
+        email: customer?.email || '',
+        name: customer?.name || '',
+        amount: '',
+        reason: 'defect_compensation',
+        description: orderId ? `Compensação por defeito de fábrica - Pedido #${String(orderId).slice(-6)}` : 'Compensação por defeito de fabricação',
+        orderId: orderId || '',
+        minOrderAmount: '0.00',
+        expiryDays: '365',
+        notifyCustomer: true
+      });
+    }
     setCreditModalOpen(true);
   };
 
@@ -5143,6 +5173,9 @@ const ClientesSection = ({ showToast }) => {
     try {
       const emailTrim = creditForm.email.toLowerCase().trim();
       const amt = parseFloat(creditForm.amount);
+      const minOrd = parseFloat(creditForm.minOrderAmount) || 0;
+      const expDays = parseInt(creditForm.expiryDays) || 365;
+      const expiryDate = new Date(Date.now() + expDays * 24 * 60 * 60 * 1000).toISOString();
       
       // 1. Inserir em customer_credits
       const { error: insErr } = await supabase.from('customer_credits').insert([{
@@ -5151,6 +5184,9 @@ const ClientesSection = ({ showToast }) => {
         type: creditForm.reason,
         description: creditForm.description.trim() || 'Crédito em loja',
         order_id: creditForm.orderId ? String(creditForm.orderId) : null,
+        expires_at: expiryDate,
+        min_order_amount: minOrd,
+        is_cumulative: false,
         created_by: 'admin'
       }]);
 
@@ -5175,7 +5211,9 @@ const ClientesSection = ({ showToast }) => {
               amount: amt,
               reason: creditForm.reason,
               description: creditForm.description,
-              orderId: creditForm.orderId
+              orderId: creditForm.orderId,
+              minOrderAmount: minOrd,
+              expiryDays: expDays
             })
           });
         } catch (emailErr) {
@@ -6120,12 +6158,20 @@ const ClientesSection = ({ showToast }) => {
                                   ) : (
                                     <div style={{ fontSize: '0.75rem', color: 'rgba(255,255,255,0.3)' }}>Sem movimentações recentes.</div>
                                   )}
-                                  <button
-                                    onClick={(e) => { e.stopPropagation(); openCreditModal(c); }}
-                                    style={{ marginTop: '0.65rem', width: '100%', padding: '0.35rem', background: 'rgba(204,255,0,0.1)', color: '#CCFF00', border: '1px solid rgba(204,255,0,0.3)', borderRadius: '6px', fontSize: '0.75rem', fontWeight: 700, cursor: 'pointer' }}
-                                  >
-                                    ➕ Lançar Crédito
-                                  </button>
+                                  <div style={{ display: 'flex', gap: '0.5rem', marginTop: '0.65rem' }}>
+                                    <button
+                                      onClick={(e) => { e.stopPropagation(); openCreditModal(c, '', 'loyalty'); }}
+                                      style={{ flex: 1, padding: '0.4rem', background: 'rgba(16,185,129,0.15)', color: '#6ee7b7', border: '1px solid rgba(16,185,129,0.3)', borderRadius: '6px', fontSize: '0.74rem', fontWeight: 800, cursor: 'pointer' }}
+                                    >
+                                      🎁 Fidelidade $14.90
+                                    </button>
+                                    <button
+                                      onClick={(e) => { e.stopPropagation(); openCreditModal(c); }}
+                                      style={{ flex: 1, padding: '0.4rem', background: 'rgba(204,255,0,0.1)', color: '#CCFF00', border: '1px solid rgba(204,255,0,0.3)', borderRadius: '6px', fontSize: '0.74rem', fontWeight: 800, cursor: 'pointer' }}
+                                    >
+                                      ➕ Outro Valor
+                                    </button>
+                                  </div>
                                 </div>
                               </div>
 
@@ -6219,6 +6265,52 @@ const ClientesSection = ({ showToast }) => {
               <button onClick={() => setCreditModalOpen(false)} style={{ background: 'none', border: 'none', color: 'rgba(255,255,255,0.5)', cursor: 'pointer', fontSize: '1.2rem' }}>✕</button>
             </div>
 
+            {/* Presets Rápidos */}
+            <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '1rem', flexWrap: 'wrap' }}>
+              <button
+                type="button"
+                onClick={() => setCreditForm(f => ({
+                  ...f,
+                  amount: '14.90',
+                  reason: 'loyalty_reward',
+                  description: 'Crédito de Fidelidade ($14.90 CAD) - Válido por 30 dias para compras acima de $75 CAD',
+                  minOrderAmount: '75.00',
+                  expiryDays: '30'
+                }))}
+                style={{ padding: '0.35rem 0.75rem', borderRadius: '20px', background: creditForm.reason === 'loyalty_reward' ? 'rgba(16, 185, 129, 0.25)' : 'rgba(255,255,255,0.05)', color: creditForm.reason === 'loyalty_reward' ? '#6ee7b7' : 'rgba(255,255,255,0.7)', border: '1px solid rgba(16,185,129,0.3)', fontSize: '0.75rem', fontWeight: 700, cursor: 'pointer' }}
+              >
+                🎁 Fidelidade $14.90 (Min $75, 30d)
+              </button>
+              <button
+                type="button"
+                onClick={() => setCreditForm(f => ({
+                  ...f,
+                  amount: '',
+                  reason: 'defect_compensation',
+                  description: 'Compensação por defeito de fabricação',
+                  minOrderAmount: '0.00',
+                  expiryDays: '365'
+                }))}
+                style={{ padding: '0.35rem 0.75rem', borderRadius: '20px', background: creditForm.reason === 'defect_compensation' ? 'rgba(245, 158, 11, 0.25)' : 'rgba(255,255,255,0.05)', color: creditForm.reason === 'defect_compensation' ? '#fbbf24' : 'rgba(255,255,255,0.7)', border: '1px solid rgba(245,158,11,0.3)', fontSize: '0.75rem', fontWeight: 700, cursor: 'pointer' }}
+              >
+                🛠️ Defeito de Fábrica
+              </button>
+              <button
+                type="button"
+                onClick={() => setCreditForm(f => ({
+                  ...f,
+                  amount: '',
+                  reason: 'manual_grant',
+                  description: 'Cortesia / Fidelização de cliente',
+                  minOrderAmount: '0.00',
+                  expiryDays: '365'
+                }))}
+                style={{ padding: '0.35rem 0.75rem', borderRadius: '20px', background: creditForm.reason === 'manual_grant' ? 'rgba(204, 255, 0, 0.2)' : 'rgba(255,255,255,0.05)', color: creditForm.reason === 'manual_grant' ? '#CCFF00' : 'rgba(255,255,255,0.7)', border: '1px solid rgba(204,255,0,0.3)', fontSize: '0.75rem', fontWeight: 700, cursor: 'pointer' }}
+              >
+                ✨ Cortesia Livre
+              </button>
+            </div>
+
             <form onSubmit={handleSaveCredit} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
               <div>
                 <label style={S.label}>Email do Cliente *</label>
@@ -6250,10 +6342,35 @@ const ClientesSection = ({ showToast }) => {
                     step="0.01"
                     min="0.01"
                     required
-                    placeholder="Ex: 137.80"
+                    placeholder="Ex: 14.90"
                     value={creditForm.amount}
                     onChange={e => setCreditForm(f => ({ ...f, amount: e.target.value }))}
                     style={{ ...S.input, color: '#CCFF00', fontWeight: 800 }}
+                  />
+                </div>
+              </div>
+
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+                <div>
+                  <label style={S.label}>Pedido Mínimo ($ CAD)</label>
+                  <input
+                    type="number"
+                    step="0.01"
+                    placeholder="Ex: 75.00"
+                    value={creditForm.minOrderAmount}
+                    onChange={e => setCreditForm(f => ({ ...f, minOrderAmount: e.target.value }))}
+                    style={S.input}
+                  />
+                </div>
+                <div>
+                  <label style={S.label}>Validade (em dias)</label>
+                  <input
+                    type="number"
+                    min="1"
+                    placeholder="Ex: 30"
+                    value={creditForm.expiryDays}
+                    onChange={e => setCreditForm(f => ({ ...f, expiryDays: e.target.value }))}
+                    style={S.input}
                   />
                 </div>
               </div>
@@ -6266,10 +6383,11 @@ const ClientesSection = ({ showToast }) => {
                     onChange={e => setCreditForm(f => ({ ...f, reason: e.target.value }))}
                     style={S.input}
                   >
-                    <option value="defect_compensation">Defeito de Fábrica</option>
-                    <option value="manual_grant">Cortesia / Fidelização</option>
-                    <option value="refund">Reembolso em Saldo</option>
-                    <option value="order_redemption">Ajuste Manual</option>
+                    <option value="loyalty_reward">🎁 Campanha Fidelidade / Presente</option>
+                    <option value="defect_compensation">🛠️ Defeito de Fábrica</option>
+                    <option value="manual_grant">✨ Cortesia / Fidelização</option>
+                    <option value="refund">💸 Reembolso em Saldo</option>
+                    <option value="order_redemption">⚙️ Ajuste Manual</option>
                   </select>
                 </div>
                 <div>
