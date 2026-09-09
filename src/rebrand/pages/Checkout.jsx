@@ -128,17 +128,20 @@ const RebrandCheckout = () => {
         : (subtotal - discount) * (appliedCoupon.discount_percent / 100))
     : 0;
 
-  // Regras de Elegibilidade de Crédito: Mínimo $75 CAD e Não Cumulativo
+  // Regras de Elegibilidade de Crédito: Mínimo $75 CAD e Opção 1 (Melhor Oferta - Não Cumulativo)
   const MIN_CREDIT_ORDER_SUBTOTAL = 75.00;
   const isCreditSubtotalEligible = subtotal >= MIN_CREDIT_ORDER_SUBTOTAL;
-  const hasConflictingDiscount = (discount > 0) || !!appliedCoupon;
-  const canApplyCredit = isCreditSubtotalEligible && !hasConflictingDiscount;
+  const isCreditActive = useStoreCredit && userCreditBalance > 0 && isCreditSubtotalEligible;
+
+  // Quando o crédito está ativo, ele não acumula com desconto por volume ou cupom (substitui pela melhor oferta)
+  const effectiveDiscount = isCreditActive ? 0 : discount;
+  const effectiveCouponDiscount = isCreditActive ? 0 : couponDiscountAmount;
 
   // Total antes do abatimento de Store Credit
-  const preCreditBaseTotal = Math.max(0, subtotal - discount - couponDiscountAmount + (currentShipping || 0));
+  const preCreditBaseTotal = Math.max(0, subtotal - effectiveDiscount - effectiveCouponDiscount + (currentShipping || 0));
   
   // Saldo aplicado
-  const appliedCreditAmount = (useStoreCredit && userCreditBalance > 0 && canApplyCredit)
+  const appliedCreditAmount = isCreditActive
     ? Math.min(userCreditBalance, preCreditBaseTotal)
     : 0;
 
@@ -157,16 +160,17 @@ const RebrandCheckout = () => {
     ? Number((finalTotal - baseFinalTotal).toFixed(2)) : 0;
 
   const displaySubtotal = convertPrice(subtotal);
-  const displayDiscount = convertPrice(discount);
+  const displayDiscount = convertPrice(effectiveDiscount);
+  const rawDisplayDiscount = convertPrice(discount);
   const displayPromoItemsSubtotal = convertPrice(promoItemsSubtotal);
-  const displayCouponDiscount = appliedCoupon
+  const displayCouponDiscount = (appliedCoupon && !isCreditActive)
     ? (isPromoOnlyCoupon
         ? displayPromoItemsSubtotal * (appliedCoupon.discount_percent / 100)
         : (displaySubtotal - displayDiscount) * (appliedCoupon.discount_percent / 100))
     : 0;
   const displayShipping = convertPrice(currentShipping);
   const displayPreCreditBaseTotal = displaySubtotal - displayDiscount - displayCouponDiscount + displayShipping;
-  const displayAppliedCredit = (useStoreCredit && userCreditBalance > 0 && canApplyCredit)
+  const displayAppliedCredit = isCreditActive
     ? Math.min(convertPrice(userCreditBalance), displayPreCreditBaseTotal)
     : 0;
   const displayBaseFinalTotal = Math.max(0, displayPreCreditBaseTotal - displayAppliedCredit);
@@ -996,22 +1000,30 @@ const RebrandCheckout = () => {
                     <div style={{ background: 'rgba(245, 158, 11, 0.15)', border: '1px solid rgba(245, 158, 11, 0.3)', borderRadius: '6px', padding: '0.6rem 0.75rem', fontSize: '0.78rem', color: '#fbbf24', marginTop: '0.5rem', lineHeight: 1.4 }}>
                       ⚠️ <strong>Válido para pedidos acima de $75.00 CAD</strong>. Seu subtotal atual é de {formatPrice(displaySubtotal)}. Adicione mais <strong>{formatPrice(convertPrice(Math.max(0, 75 - subtotal)))}</strong> em itens para desbloquear o crédito.
                     </div>
-                  ) : hasConflictingDiscount ? (
-                    <div style={{ background: 'rgba(59, 130, 246, 0.15)', border: '1px solid rgba(59, 130, 246, 0.3)', borderRadius: '6px', padding: '0.6rem 0.75rem', fontSize: '0.78rem', color: '#93c5fd', marginTop: '0.5rem', lineHeight: 1.4 }}>
-                      ℹ️ O crédito em loja <strong>não é cumulativo</strong> com cupons de desconto ou desconto por volume. Remova o cupom/oferta se preferir usar seu saldo em carteira.
-                    </div>
                   ) : (
-                    <label style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', cursor: 'pointer', background: 'rgba(255,255,255,0.06)', padding: '0.5rem 0.75rem', borderRadius: '6px', fontSize: '0.82rem', marginTop: '0.5rem' }}>
-                      <input 
-                        type="checkbox" 
-                        checked={useStoreCredit} 
-                        onChange={e => setUseStoreCredit(e.target.checked)}
-                        style={{ width: 16, height: 16, accentColor: '#CCFF00', cursor: 'pointer' }}
-                      />
-                      <span style={{ color: '#f3f4f6' }}>
-                        Usar meu saldo para abater nesta compra (<strong>-${formatPrice(displayAppliedCredit)}</strong>)
-                      </span>
-                    </label>
+                    <div>
+                      <label style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', cursor: 'pointer', background: 'rgba(255,255,255,0.06)', padding: '0.55rem 0.75rem', borderRadius: '6px', fontSize: '0.82rem', marginTop: '0.5rem' }}>
+                        <input 
+                          type="checkbox" 
+                          checked={useStoreCredit} 
+                          onChange={e => setUseStoreCredit(e.target.checked)}
+                          style={{ width: 16, height: 16, accentColor: '#CCFF00', cursor: 'pointer' }}
+                        />
+                        <span style={{ color: '#f3f4f6' }}>
+                          Usar meu saldo de <strong>${userCreditBalance.toFixed(2)} CAD</strong> para abater nesta compra (<strong>-${formatPrice(displayAppliedCredit)}</strong>)
+                        </span>
+                      </label>
+                      {discount > 0 && useStoreCredit && (
+                        <div style={{ fontSize: '0.73rem', color: '#6ee7b7', marginTop: '0.35rem', paddingLeft: '1.6rem', lineHeight: 1.3 }}>
+                          ✓ Crédito aplicado em substituição ao desconto por volume de {formatPrice(rawDisplayDiscount)} para garantir seu maior benefício.
+                        </div>
+                      )}
+                      {appliedCoupon && useStoreCredit && (
+                        <div style={{ fontSize: '0.73rem', color: '#93c5fd', marginTop: '0.35rem', paddingLeft: '1.6rem', lineHeight: 1.3 }}>
+                          ℹ️ Crédito ativo (substitui o cupom <strong>{appliedCoupon.code}</strong> para garantir seu maior desconto).
+                        </div>
+                      )}
+                    </div>
                   )}
                 </div>
               )}
