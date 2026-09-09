@@ -2,10 +2,9 @@ import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { useCart } from '../../context/CartContext';
 import { useRebrandAuth } from '../../context/RebrandAuthContext';
 import { useLanguage } from '../../context/LanguageContext';
-import { ArrowLeft, Truck, MapPin, Save, AlertCircle, X, LogIn, Lock, ShieldCheck } from 'lucide-react';
+import { ArrowLeft, Truck, MapPin, Save, AlertCircle, X, LogIn, Lock, ShieldCheck, CreditCard, MessageSquare, Wallet, CheckCircle, Sparkles } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { PayPalScriptProvider, PayPalButtons } from '@paypal/react-paypal-js';
-import { CreditCard, MessageSquare } from 'lucide-react';
 import WhatsAppIcon from '../../components/WhatsAppIcon';
 import { supabaseRebrand as supabase } from '../../services/supabase';
 import { trackEvent, getSavedUtms, getSavedAttribution } from '../../services/analytics';
@@ -60,6 +59,52 @@ const RebrandCheckout = () => {
   const [notification, setNotification] = useState({ show: false, message: '' });
   const [promoOpen, setPromoOpen] = useState(!!contextCoupon);
 
+  // Carteira / Store Credit
+  const [userCreditBalance, setUserCreditBalance] = useState(0);
+  const [useStoreCredit, setUseStoreCredit] = useState(true);
+  const [loadingCredit, setLoadingCredit] = useState(false);
+
+  useEffect(() => {
+    const fetchUserCredit = async () => {
+      const email = (user?.email || guestEmail || '').toLowerCase().trim();
+      if (!email && !user?.id) {
+        setUserCreditBalance(0);
+        return;
+      }
+      setLoadingCredit(true);
+      try {
+        let query = supabase.from('customer_credits').select('amount');
+        if (email && user?.id) {
+          query = query.or(`customer_email.eq.${email},user_id.eq.${user.id}`);
+        } else if (email) {
+          query = query.eq('customer_email', email);
+        } else if (user?.id) {
+          query = query.eq('user_id', user.id);
+        }
+        const { data: credits } = await query;
+
+        if (credits && credits.length > 0) {
+          const total = credits.reduce((acc, curr) => acc + parseFloat(curr.amount || 0), 0);
+          setUserCreditBalance(Math.max(0, total));
+        } else if (user?.id) {
+          const { data: profile } = await supabase
+            .from('profiles')
+            .select('store_credit')
+            .eq('id', user.id)
+            .single();
+          setUserCreditBalance(Math.max(0, parseFloat(profile?.store_credit || 0)));
+        } else {
+          setUserCreditBalance(0);
+        }
+      } catch (err) {
+        console.error('Error fetching credit balance:', err);
+      } finally {
+        setLoadingCredit(false);
+      }
+    };
+    fetchUserCredit();
+  }, [user, guestEmail]);
+
   useEffect(() => {
     if (contextCoupon && !appliedCoupon) {
       setAppliedCoupon(contextCoupon);
@@ -81,13 +126,23 @@ const RebrandCheckout = () => {
         : (subtotal - discount) * (appliedCoupon.discount_percent / 100))
     : 0;
 
-  const baseFinalTotal = Math.max(0, subtotal - discount - couponDiscountAmount + (currentShipping || 0));
+  // Total antes do abatimento de Store Credit
+  const preCreditBaseTotal = Math.max(0, subtotal - discount - couponDiscountAmount + (currentShipping || 0));
+  
+  // Saldo aplicado
+  const appliedCreditAmount = (useStoreCredit && userCreditBalance > 0)
+    ? Math.min(userCreditBalance, preCreditBaseTotal)
+    : 0;
 
-  const finalTotal = paymentMethod === 'paypal'
-    ? Number(((baseFinalTotal + 0.30) / 0.951).toFixed(2))
-    : paymentMethod === 'stripe'
-      ? Number(((baseFinalTotal + 0.30) / 0.965).toFixed(2))
-      : baseFinalTotal;
+  const baseFinalTotal = Math.max(0, preCreditBaseTotal - appliedCreditAmount);
+
+  const finalTotal = baseFinalTotal === 0
+    ? 0
+    : paymentMethod === 'paypal'
+      ? Number(((baseFinalTotal + 0.30) / 0.951).toFixed(2))
+      : paymentMethod === 'stripe'
+        ? Number(((baseFinalTotal + 0.30) / 0.965).toFixed(2))
+        : baseFinalTotal;
   const paypalFee = paymentMethod === 'paypal'
     ? Number((finalTotal - baseFinalTotal).toFixed(2)) : 0;
   const stripeFee = paymentMethod === 'stripe'
@@ -102,12 +157,18 @@ const RebrandCheckout = () => {
         : (displaySubtotal - displayDiscount) * (appliedCoupon.discount_percent / 100))
     : 0;
   const displayShipping = convertPrice(currentShipping);
-  const displayBaseFinalTotal = displaySubtotal - displayDiscount - displayCouponDiscount + displayShipping;
-  const displayFinalTotal = paymentMethod === 'paypal'
-    ? Number(((displayBaseFinalTotal + 0.30) / 0.951).toFixed(2))
-    : paymentMethod === 'stripe'
-      ? Number(((displayBaseFinalTotal + 0.30) / 0.965).toFixed(2))
-      : displayBaseFinalTotal;
+  const displayPreCreditBaseTotal = displaySubtotal - displayDiscount - displayCouponDiscount + displayShipping;
+  const displayAppliedCredit = (useStoreCredit && userCreditBalance > 0)
+    ? Math.min(convertPrice(userCreditBalance), displayPreCreditBaseTotal)
+    : 0;
+  const displayBaseFinalTotal = Math.max(0, displayPreCreditBaseTotal - displayAppliedCredit);
+  const displayFinalTotal = displayBaseFinalTotal === 0
+    ? 0
+    : paymentMethod === 'paypal'
+      ? Number(((displayBaseFinalTotal + 0.30) / 0.951).toFixed(2))
+      : paymentMethod === 'stripe'
+        ? Number(((displayBaseFinalTotal + 0.30) / 0.965).toFixed(2))
+        : displayBaseFinalTotal;
   const displayPaypalFee = paymentMethod === 'paypal'
     ? Number((displayFinalTotal - displayBaseFinalTotal).toFixed(2)) : 0;
   const displayStripeFee = paymentMethod === 'stripe'
@@ -323,8 +384,7 @@ const RebrandCheckout = () => {
       const d = await r.json();
       if (d?.rates?.CAD) currentExchangeRate = d.rates.CAD;
     } catch {}
-    const utms = getSavedUtms();
-    const attribution = getSavedAttribution();
+    const isFullyPaidWithCredit = appliedCreditAmount > 0 && finalTotal === 0;
     const orderData = {
       user_id: user?.id || null, customer_name: data.name,
       customer_email: user?.email || guestEmail, customer_phone: data.phone,
@@ -345,13 +405,14 @@ const RebrandCheckout = () => {
         image: item.image, extras: item.extras || {}
       })),
       total_price: finalTotal,
-      status: paymentDetails ? 'paid' : 'pending',
-      payment_method: paymentDetails ? 'paypal' : paymentMethod,
-      payment_id: paymentDetails?.id || null,
-      paid_at: paymentDetails ? new Date().toISOString() : null,
+      status: (paymentDetails || isFullyPaidWithCredit) ? 'paid' : 'pending',
+      payment_method: paymentDetails ? 'paypal' : (isFullyPaidWithCredit ? 'store_credit' : paymentMethod),
+      payment_id: paymentDetails?.id || (isFullyPaidWithCredit ? 'STORE_CREDIT' : null),
+      paid_at: (paymentDetails || isFullyPaidWithCredit) ? new Date().toISOString() : null,
       referrer: attribution.referrer || localStorage.getItem('ifooty_referrer') || null,
       coupon_code: appliedCoupon?.code || null,
-      coupon_discount: appliedCoupon ? (cartTotal - finalTotal) : 0,
+      coupon_discount: appliedCoupon ? (cartTotal - preCreditBaseTotal) : 0,
+      store_credit_discount: appliedCreditAmount,
       utm_source: attribution.utm_source || utms.utm_source,
       utm_medium: attribution.utm_medium || utms.utm_medium,
       utm_campaign: attribution.utm_campaign || utms.utm_campaign,
@@ -368,6 +429,29 @@ const RebrandCheckout = () => {
     } catch (err) { orderError = err; }
     if (orderError) throw orderError;
     const orderId = insertedOrders?.[0]?.id || ('purchase_' + Date.now());
+
+    // 💳 Debitar crédito utilizado da carteira do cliente
+    if (appliedCreditAmount > 0) {
+      try {
+        const custEmail = (user?.email || guestEmail || data.email || '').toLowerCase().trim();
+        await supabase.from('customer_credits').insert([{
+          customer_email: custEmail,
+          user_id: user?.id || null,
+          amount: -Math.abs(appliedCreditAmount),
+          type: 'order_redemption',
+          description: `Uso de crédito no pedido #${String(orderId).slice(-6)}`,
+          order_id: String(orderId)
+        }]);
+
+        if (user?.id) {
+          const newBal = Math.max(0, userCreditBalance - appliedCreditAmount);
+          await supabase.from('profiles').update({ store_credit: newBal }).eq('id', user.id);
+        }
+      } catch (creditErr) {
+        console.error('Erro ao debitar crédito:', creditErr);
+      }
+    }
+
     // ✅ Pedido salvo com sucesso — limpar snapshot do carrinho
     try {
       localStorage.removeItem('ifooty_checkout_snapshot');
@@ -878,6 +962,42 @@ const RebrandCheckout = () => {
                 ))}
               </div>
 
+              {/* Store Credit Widget */}
+              {userCreditBalance > 0 && (
+                <div style={{
+                  background: 'linear-gradient(135deg, #121416 0%, #1e293b 100%)',
+                  borderRadius: '10px',
+                  padding: '1rem',
+                  marginBottom: '1rem',
+                  color: '#fff',
+                  border: '1px solid rgba(255,255,255,0.1)'
+                }}>
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                      <div style={{ width: 28, height: 28, borderRadius: '6px', background: 'rgba(204,255,0,0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#CCFF00' }}>
+                        <Wallet size={16} />
+                      </div>
+                      <span style={{ fontSize: '0.85rem', fontWeight: 700, color: '#fff' }}>Crédito em Loja / Store Credit</span>
+                    </div>
+                    <span style={{ fontSize: '1rem', fontWeight: 800, color: '#CCFF00' }}>
+                      ${userCreditBalance.toFixed(2)} CAD
+                    </span>
+                  </div>
+
+                  <label style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', cursor: 'pointer', background: 'rgba(255,255,255,0.06)', padding: '0.5rem 0.75rem', borderRadius: '6px', fontSize: '0.82rem', marginTop: '0.5rem' }}>
+                    <input 
+                      type="checkbox" 
+                      checked={useStoreCredit} 
+                      onChange={e => setUseStoreCredit(e.target.checked)}
+                      style={{ width: 16, height: 16, accentColor: '#CCFF00', cursor: 'pointer' }}
+                    />
+                    <span style={{ color: '#f3f4f6' }}>
+                      Usar meu saldo disponível para abater nesta compra (<strong>-${formatPrice(displayAppliedCredit)}</strong>)
+                    </span>
+                  </label>
+                </div>
+              )}
+
               {/* Promo Code */}
               <div style={{ borderBottom: '1px solid #f0f0f0', paddingBottom: '1rem', marginBottom: '1rem' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', cursor: 'pointer' }} onClick={() => setPromoOpen(o => !o)}>
@@ -923,12 +1043,24 @@ const RebrandCheckout = () => {
                 <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.9rem', color: currentShipping === 0 ? '#16a34a' : '#495057', fontWeight: currentShipping === 0 ? 700 : 400 }}>
                   <span>{t('rb_cart_shipping')}</span><span>{currentShipping === 0 ? t('rb_cart_free') : formatPrice(displayShipping)}</span>
                 </div>
-                {paymentMethod === 'paypal' && (
+                {appliedCreditAmount > 0 && (
+                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.9rem', color: '#10b981', fontWeight: 800 }}>
+                    <span style={{ display: 'flex', alignItems: 'center', gap: '0.3rem' }}>💳 Saldo de Crédito Aplicado</span>
+                    <span>-{formatPrice(displayAppliedCredit)}</span>
+                  </div>
+                )}
+                {appliedCreditAmount > 0 && userCreditBalance > appliedCreditAmount && (
+                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.76rem', color: '#6b7280', fontStyle: 'italic' }}>
+                    <span>Saldo restante na carteira:</span>
+                    <span>${(userCreditBalance - appliedCreditAmount).toFixed(2)} CAD</span>
+                  </div>
+                )}
+                {baseFinalTotal > 0 && paymentMethod === 'paypal' && (
                   <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.85rem', color: '#b45309', fontWeight: 600 }}>
                     <span>PayPal Fee (4.9% + $0.30)</span><span>+{formatPrice(displayPaypalFee)}</span>
                   </div>
                 )}
-                {paymentMethod === 'stripe' && (
+                {baseFinalTotal > 0 && paymentMethod === 'stripe' && (
                   <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.85rem', color: '#b45309', fontWeight: 600 }}>
                     <span>Card Fee (3.5% + $0.30)</span><span>+{formatPrice(displayStripeFee)}</span>
                   </div>
@@ -941,28 +1073,50 @@ const RebrandCheckout = () => {
                 <span style={{ fontWeight: 900, fontSize: '1.4rem', color: '#121416' }}>{formatPrice(displayFinalTotal)}</span>
               </div>
 
-              {/* Payment Method */}
-              <p style={{ fontSize: '0.75rem', fontWeight: 600, color: '#6c757d', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '0.75rem' }}>{t('rb_checkout_payment_method')}</p>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '0.5rem', marginBottom: '1.2rem' }}>
-                <button onClick={() => setPaymentMethod('whatsapp')}
-                  style={{ padding: '0.9rem 0.4rem', borderRadius: '10px', border: `2px solid ${paymentMethod === 'whatsapp' ? '#25D366' : '#dee2e6'}`, background: paymentMethod === 'whatsapp' ? '#f0fdf4' : '#fff', cursor: 'pointer', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.4rem', transition: 'all 0.15s' }}>
-                  <MessageSquare size={20} color={paymentMethod === 'whatsapp' ? '#25D366' : '#adb5bd'} />
-                  <span style={{ fontSize: '0.75rem', fontWeight: 700, color: paymentMethod === 'whatsapp' ? '#121416' : '#6c757d' }}>WhatsApp</span>
-                </button>
-                <button onClick={() => setPaymentMethod('paypal')}
-                  style={{ padding: '0.9rem 0.4rem', borderRadius: '10px', border: `2px solid ${paymentMethod === 'paypal' ? '#0070BA' : '#dee2e6'}`, background: paymentMethod === 'paypal' ? '#eff6ff' : '#fff', cursor: 'pointer', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.4rem', transition: 'all 0.15s' }}>
-                  <CreditCard size={20} color={paymentMethod === 'paypal' ? '#0070BA' : '#adb5bd'} />
-                  <span style={{ fontSize: '0.75rem', fontWeight: 700, color: paymentMethod === 'paypal' ? '#121416' : '#6c757d' }}>PayPal</span>
-                </button>
-                <button onClick={() => setPaymentMethod('stripe')}
-                  style={{ padding: '0.9rem 0.4rem', borderRadius: '10px', border: `2px solid ${paymentMethod === 'stripe' ? '#635BFF' : '#dee2e6'}`, background: paymentMethod === 'stripe' ? '#f8f8ff' : '#fff', cursor: 'pointer', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.4rem', transition: 'all 0.15s' }}>
-                  <CreditCard size={20} color={paymentMethod === 'stripe' ? '#635BFF' : '#adb5bd'} />
-                  <span style={{ fontSize: '0.75rem', fontWeight: 700, color: paymentMethod === 'stripe' ? '#121416' : '#6c757d' }}>Card (Stripe)</span>
-                </button>
-              </div>
+              {/* Payment Methods / 100% Credit Free Box */}
+              {baseFinalTotal === 0 && appliedCreditAmount > 0 ? (
+                <div style={{ marginBottom: '1.2rem', background: '#f0fdf4', border: '1.5px solid #86efac', borderRadius: '10px', padding: '1rem', textAlign: 'center' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.4rem', color: '#15803d', fontWeight: 700, fontSize: '0.92rem', marginBottom: '0.25rem' }}>
+                    <CheckCircle size={18} /> Pedido 100% coberto pelo Crédito em Loja!
+                  </div>
+                  <p style={{ margin: 0, fontSize: '0.8rem', color: '#166534' }}>
+                    Nenhum pagamento adicional é necessário. Clique abaixo para finalizar o seu pedido.
+                  </p>
+                </div>
+              ) : (
+                <>
+                  <p style={{ fontSize: '0.75rem', fontWeight: 600, color: '#6c757d', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '0.75rem' }}>{t('rb_checkout_payment_method')}</p>
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '0.5rem', marginBottom: '1.2rem' }}>
+                    <button onClick={() => setPaymentMethod('whatsapp')}
+                      style={{ padding: '0.9rem 0.4rem', borderRadius: '10px', border: `2px solid ${paymentMethod === 'whatsapp' ? '#25D366' : '#dee2e6'}`, background: paymentMethod === 'whatsapp' ? '#f0fdf4' : '#fff', cursor: 'pointer', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.4rem', transition: 'all 0.15s' }}>
+                      <MessageSquare size={20} color={paymentMethod === 'whatsapp' ? '#25D366' : '#adb5bd'} />
+                      <span style={{ fontSize: '0.75rem', fontWeight: 700, color: paymentMethod === 'whatsapp' ? '#121416' : '#6c757d' }}>WhatsApp</span>
+                    </button>
+                    <button onClick={() => setPaymentMethod('paypal')}
+                      style={{ padding: '0.9rem 0.4rem', borderRadius: '10px', border: `2px solid ${paymentMethod === 'paypal' ? '#0070BA' : '#dee2e6'}`, background: paymentMethod === 'paypal' ? '#eff6ff' : '#fff', cursor: 'pointer', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.4rem', transition: 'all 0.15s' }}>
+                      <CreditCard size={20} color={paymentMethod === 'paypal' ? '#0070BA' : '#adb5bd'} />
+                      <span style={{ fontSize: '0.75rem', fontWeight: 700, color: paymentMethod === 'paypal' ? '#121416' : '#6c757d' }}>PayPal</span>
+                    </button>
+                    <button onClick={() => setPaymentMethod('stripe')}
+                      style={{ padding: '0.9rem 0.4rem', borderRadius: '10px', border: `2px solid ${paymentMethod === 'stripe' ? '#635BFF' : '#dee2e6'}`, background: paymentMethod === 'stripe' ? '#f8f8ff' : '#fff', cursor: 'pointer', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.4rem', transition: 'all 0.15s' }}>
+                      <CreditCard size={20} color={paymentMethod === 'stripe' ? '#635BFF' : '#adb5bd'} />
+                      <span style={{ fontSize: '0.75rem', fontWeight: 700, color: paymentMethod === 'stripe' ? '#121416' : '#6c757d' }}>Card (Stripe)</span>
+                    </button>
+                  </div>
+                </>
+              )}
 
               {/* CTA */}
-              {paymentMethod === 'whatsapp' ? (
+              {baseFinalTotal === 0 && appliedCreditAmount > 0 ? (
+                <button
+                  onClick={handleSubmitOrder}
+                  disabled={isSubmitting}
+                  style={{ width: '100%', padding: '1rem', background: isSubmitting ? '#adb5bd' : '#10b981', color: '#fff', border: 'none', borderRadius: '100px', fontWeight: 800, fontSize: '1rem', cursor: isSubmitting ? 'not-allowed' : 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem', transition: 'background 0.2s', boxShadow: '0 4px 14px rgba(16,185,129,0.35)' }}
+                >
+                  <CheckCircle size={20} />
+                  {isSubmitting ? 'Processando...' : 'Finalizar Pedido com Crédito'}
+                </button>
+              ) : paymentMethod === 'whatsapp' ? (
                 <button
                   onClick={handleSubmitOrder}
                   disabled={isSubmitting}

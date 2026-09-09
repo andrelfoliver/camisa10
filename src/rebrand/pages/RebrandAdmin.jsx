@@ -5089,115 +5089,213 @@ const ClientesSection = ({ showToast }) => {
   const [filterSegment, setFilterSegment] = useState('all');
   const [sortBy, setSortBy] = useState('recent');
 
-  useEffect(() => {
-    let cancelled = false;
-    async function load() {
-      setLoading(true);
+  // Modal de Crédito / Store Credit
+  const [creditModalOpen, setCreditModalOpen] = useState(false);
+  const [creditForm, setCreditForm] = useState({
+    email: '',
+    name: '',
+    amount: '',
+    reason: 'defect_compensation',
+    description: '',
+    orderId: '',
+    notifyCustomer: true
+  });
+  const [savingCredit, setSavingCredit] = useState(false);
 
-      // Fetch all sources in parallel
-      const [{ data: profiles, error: pError }, { data: orders, error: oError }, { data: settings }, { data: evts, error: eError }] = await Promise.all([
-        supabase.from('profiles').select('*').order('created_at', { ascending: false }),
-        supabase.from('orders').select('id, customer_email, customer_name, customer_phone, total_price, status, created_at, session_id'),
-        supabase.from('store_settings').select('*').in('key', ['sent_recovery_emails', 'sent_recovery_emails_2']),
-        supabase.from('analytics_events')
-          .select('event_name, session_id, page, metadata, user_id, created_at, utm_source, utm_medium, utm_campaign')
-          .order('created_at', { ascending: false })
-          .limit(3000)
-      ]);
+  const openCreditModal = (customer = null, orderId = '') => {
+    setCreditForm({
+      email: customer?.email || '',
+      name: customer?.name || '',
+      amount: '',
+      reason: 'defect_compensation',
+      description: orderId ? `Compensação por defeito de fábrica - Pedido #${String(orderId).slice(-6)}` : 'Compensação por defeito de fabricação',
+      orderId: orderId || '',
+      notifyCustomer: true
+    });
+    setCreditModalOpen(true);
+  };
 
-      if (cancelled) return;
+  const handleSaveCredit = async (e) => {
+    e.preventDefault();
+    if (!creditForm.email || !creditForm.amount || parseFloat(creditForm.amount) <= 0) {
+      showToast('Informe o email e um valor válido de crédito.', 'error');
+      return;
+    }
+    setSavingCredit(true);
+    try {
+      const emailTrim = creditForm.email.toLowerCase().trim();
+      const amt = parseFloat(creditForm.amount);
       
-      setDiagInfo({
-        profiles: profiles?.length || 0,
-        orders: orders?.length || 0,
-        pError: pError?.message || null,
-        oError: oError?.message || null
-      });
+      // 1. Inserir em customer_credits
+      const { error: insErr } = await supabase.from('customer_credits').insert([{
+        customer_email: emailTrim,
+        amount: amt,
+        type: creditForm.reason,
+        description: creditForm.description.trim() || 'Crédito em loja',
+        order_id: creditForm.orderId ? String(creditForm.orderId) : null,
+        created_by: 'admin'
+      }]);
 
-      if (settings) {
-        settings.forEach(s => {
-          if (s.key === 'sent_recovery_emails') {
-            try { setSentRecoveryEmails(JSON.parse(s.value)); } catch(e){}
-          }
-          if (s.key === 'sent_recovery_emails_2') {
-            try { setSentRecoveryEmails2(JSON.parse(s.value)); } catch(e){}
-          }
-        });
+      if (insErr) throw insErr;
+
+      // 2. Atualizar perfil se existir
+      const { data: prof } = await supabase.from('profiles').select('id, store_credit').eq('email', emailTrim).maybeSingle();
+      if (prof?.id) {
+        const newBal = (parseFloat(prof.store_credit || 0)) + amt;
+        await supabase.from('profiles').update({ store_credit: newBal }).eq('id', prof.id);
       }
 
-      if (pError) console.error('[Clientes] Error fetching profiles:', pError.message);
-      if (oError) console.error('[Clientes] Error fetching orders:', oError.message);
+      // 3. Enviar e-mail de notificação se marcado
+      if (creditForm.notifyCustomer) {
+        try {
+          await fetch('/api/send-credit-notification', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              customerEmail: emailTrim,
+              customerName: creditForm.name,
+              amount: amt,
+              reason: creditForm.reason,
+              description: creditForm.description,
+              orderId: creditForm.orderId
+            })
+          });
+        } catch (emailErr) {
+          console.error('[Admin] Erro ao enviar email de crédito:', emailErr);
+        }
+      }
 
-      // Build order stats map keyed by email
-      const orderMap = {};
-      (orders || []).forEach(o => {
-        const key = (o.customer_email || '').toLowerCase().trim();
-        if (!key) return;
-        if (!orderMap[key]) orderMap[key] = { count: 0, spent: 0, lastOrder: null, phone: o.customer_phone || '' };
-        orderMap[key].count += 1;
-        // Sum all orders except cancelled ones
-        const isNotCancelled = o.status !== 'cancelled';
-        if (isNotCancelled) orderMap[key].spent += parseFloat(o.total_price || 0);
-        if (!orderMap[key].lastOrder || o.created_at > orderMap[key].lastOrder) {
-          orderMap[key].lastOrder = o.created_at;
-          if (o.customer_phone) orderMap[key].phone = o.customer_phone;
+      showToast(`Crédito de $${amt.toFixed(2)} CAD lançado com sucesso!`, 'success');
+      setCreditModalOpen(false);
+      load();
+    } catch (err) {
+      console.error(err);
+      showToast('Erro ao lançar crédito: ' + err.message, 'error');
+    } finally {
+      setSavingCredit(false);
+    }
+  };
+
+  const load = useCallback(async () => {
+    setLoading(true);
+
+    // Fetch all sources in parallel
+    const [{ data: profiles, error: pError }, { data: orders, error: oError }, { data: settings }, { data: evts, error: eError }, { data: creditsData }] = await Promise.all([
+      supabase.from('profiles').select('*').order('created_at', { ascending: false }),
+      supabase.from('orders').select('id, customer_email, customer_name, customer_phone, total_price, status, created_at, session_id'),
+      supabase.from('store_settings').select('*').in('key', ['sent_recovery_emails', 'sent_recovery_emails_2']),
+      supabase.from('analytics_events')
+        .select('event_name, session_id, page, metadata, user_id, created_at, utm_source, utm_medium, utm_campaign')
+        .order('created_at', { ascending: false })
+        .limit(3000),
+      supabase.from('customer_credits').select('*').order('created_at', { ascending: false })
+    ]);
+    
+    setDiagInfo({
+      profiles: profiles?.length || 0,
+      orders: orders?.length || 0,
+      pError: pError?.message || null,
+      oError: oError?.message || null
+    });
+
+    const sentEmailsObj = {};
+    const sentEmails2Obj = {};
+    if (settings) {
+      settings.forEach(s => {
+        if (s.key === 'sent_recovery_emails') {
+          try { Object.assign(sentEmailsObj, JSON.parse(s.value)); } catch(e){}
+        }
+        if (s.key === 'sent_recovery_emails_2') {
+          try { Object.assign(sentEmails2Obj, JSON.parse(s.value)); } catch(e){}
         }
       });
+    }
+    setSentRecoveryEmails(sentEmailsObj);
+    setSentRecoveryEmails2(sentEmails2Obj);
 
-      // Use profiles as primary source (all registered users)
-      const profileList = (profiles || []).map(p => {
-        const emailKey = (p.email || '').toLowerCase().trim();
-        const stats = orderMap[emailKey] || { count: 0, spent: 0, lastOrder: null, phone: '' };
-        return {
-          id: p.id,
-          name: p.full_name || p.name || '',
-          email: p.email || '',
-          phone: p.phone || stats.phone || '',
-          avatar_url: p.avatar_url || '',
+    // Build credits map
+    const creditsMap = {};
+    (creditsData || []).forEach(c => {
+      const k = (c.customer_email || '').toLowerCase().trim();
+      if (!k) return;
+      if (!creditsMap[k]) creditsMap[k] = { balance: 0, history: [] };
+      creditsMap[k].balance += parseFloat(c.amount || 0);
+      creditsMap[k].history.push(c);
+    });
+
+    // Build order stats map keyed by email
+    const orderMap = {};
+    (orders || []).forEach(o => {
+      const key = (o.customer_email || '').toLowerCase().trim();
+      if (!key) return;
+      if (!orderMap[key]) orderMap[key] = { count: 0, spent: 0, lastOrder: null, phone: o.customer_phone || '' };
+      orderMap[key].count += 1;
+      const isNotCancelled = o.status !== 'cancelled';
+      if (isNotCancelled) orderMap[key].spent += parseFloat(o.total_price || 0);
+      if (!orderMap[key].lastOrder || o.created_at > orderMap[key].lastOrder) {
+        orderMap[key].lastOrder = o.created_at;
+        if (o.customer_phone) orderMap[key].phone = o.customer_phone;
+      }
+    });
+
+    // Use profiles as primary source
+    const profileList = (profiles || []).map(p => {
+      const emailKey = (p.email || '').toLowerCase().trim();
+      const stats = orderMap[emailKey] || { count: 0, spent: 0, lastOrder: null, phone: '' };
+      return {
+        id: p.id,
+        name: p.full_name || p.name || '',
+        email: p.email || '',
+        phone: p.phone || stats.phone || '',
+        avatar_url: p.avatar_url || '',
+        orders: stats.count,
+        spent: stats.spent,
+        storeCredit: Math.max(0, creditsMap[emailKey]?.balance ?? parseFloat(p.store_credit || 0)),
+        creditHistory: creditsMap[emailKey]?.history || [],
+        lastOrder: stats.lastOrder || p.created_at,
+        registeredAt: p.created_at,
+        source: 'profile',
+        cart: p.cart || [],
+        street: p.street || '',
+        apartment: p.apartment || '',
+        city: p.city || '',
+        province: p.province || '',
+        postal_code: p.postal_code || ''
+      };
+    });
+
+    // Add order-only customers
+    const profileEmails = new Set((profiles || []).map(p => (p.email || '').toLowerCase().trim()));
+    const orderedSessionIds = new Set((orders || []).map(o => o.session_id).filter(Boolean));
+    
+    (orders || []).forEach(o => {
+      const emailKey = (o.customer_email || '').toLowerCase().trim();
+      if (!emailKey || profileEmails.has(emailKey)) return;
+      profileEmails.add(emailKey);
+      const stats = orderMap[emailKey];
+      if (stats) {
+        profileList.push({
+          id: 'order-' + emailKey,
+          name: o.customer_name || '',
+          email: o.customer_email || '',
+          phone: stats.phone || '',
+          avatar_url: '',
           orders: stats.count,
           spent: stats.spent,
-          lastOrder: stats.lastOrder || p.created_at,
-          registeredAt: p.created_at,
-          source: 'profile',
-          cart: p.cart || [],
-          street: p.street || '',
-          apartment: p.apartment || '',
-          city: p.city || '',
-          province: p.province || '',
-          postal_code: p.postal_code || ''
-        };
-      });
-
-      // Also add order-only customers (not in profiles) — guests who checked out
-      const profileEmails = new Set((profiles || []).map(p => (p.email || '').toLowerCase().trim()));
-      const orderedSessionIds = new Set((orders || []).map(o => o.session_id).filter(Boolean));
-      
-      (orders || []).forEach(o => {
-        const emailKey = (o.customer_email || '').toLowerCase().trim();
-        if (!emailKey || profileEmails.has(emailKey)) return;
-        profileEmails.add(emailKey); // prevent duplicates
-        const stats = orderMap[emailKey];
-        if (stats) {
-          profileList.push({
-            id: 'order-' + emailKey,
-            name: o.customer_name || '',
-            email: o.customer_email || '',
-            phone: stats.phone || '',
-            avatar_url: '',
-            orders: stats.count,
-            spent: stats.spent,
-            lastOrder: stats.lastOrder,
-            registeredAt: null,
-            source: 'order',
-            cart: [],
-            street: '',
-            apartment: '',
-            city: '',
-            province: '',
-            postal_code: ''
-          });
-        }
-      });
+          storeCredit: Math.max(0, creditsMap[emailKey]?.balance || 0),
+          creditHistory: creditsMap[emailKey]?.history || [],
+          lastOrder: stats.lastOrder,
+          registeredAt: null,
+          source: 'order',
+          cart: [],
+          street: '',
+          apartment: '',
+          city: '',
+          province: '',
+          postal_code: ''
+        });
+      }
+    });
 
       // Find anonymous sessions with active/abandoned carts from analytics_events
       const sessionMap = {};
@@ -5277,6 +5375,8 @@ const ClientesSection = ({ showToast }) => {
               avatar_url: '',
               orders: 0,
               spent: 0,
+              storeCredit: 0,
+              creditHistory: [],
               lastOrder: lastEvent.created_at,
               registeredAt: null,
               source: 'session',
@@ -5296,10 +5396,11 @@ const ClientesSection = ({ showToast }) => {
       profileList.sort((a, b) => new Date(b.lastOrder || b.registeredAt || 0) - new Date(a.lastOrder || a.registeredAt || 0));
       setClientes(profileList);
       setLoading(false);
-    }
-    load();
-    return () => { cancelled = true; };
   }, []);
+
+  useEffect(() => {
+    load();
+  }, [load]);
 
   // Reset to first page when filters change
   useEffect(() => {
@@ -5670,14 +5771,22 @@ const ClientesSection = ({ showToast }) => {
         title="Clientes"
         sub={`${clientes.length} clientes cadastrados`}
         action={
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', background: 'rgba(255,255,255,0.05)', border: '1px solid #2A2D30', borderRadius: '6px', padding: '0.5rem 0.75rem' }}>
-            <Search size={14} color="rgba(255,255,255,0.4)" />
-            <input
-              style={{ background: 'none', border: 'none', outline: 'none', color: '#fff', fontSize: '0.85rem', width: '200px' }}
-              placeholder="Buscar por nome, email ou telefone..."
-              value={search}
-              onChange={e => setSearch(e.target.value)}
-            />
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', flexWrap: 'wrap' }}>
+            <button 
+              onClick={() => openCreditModal()} 
+              style={{ padding: '0.45rem 0.9rem', borderRadius: '6px', background: '#CCFF00', color: '#121416', fontWeight: 800, fontSize: '0.82rem', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.4rem', boxShadow: '0 2px 8px rgba(204,255,0,0.2)' }}
+            >
+              <Plus size={14} /> Lançar Crédito
+            </button>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', background: 'rgba(255,255,255,0.05)', border: '1px solid #2A2D30', borderRadius: '6px', padding: '0.5rem 0.75rem' }}>
+              <Search size={14} color="rgba(255,255,255,0.4)" />
+              <input
+                style={{ background: 'none', border: 'none', outline: 'none', color: '#fff', fontSize: '0.85rem', width: '200px' }}
+                placeholder="Buscar por nome, email ou telefone..."
+                value={search}
+                onChange={e => setSearch(e.target.value)}
+              />
+            </div>
           </div>
         }
       />
@@ -5690,6 +5799,7 @@ const ClientesSection = ({ showToast }) => {
           { id: 'no_email',  label: '⏳ Não Contatados', count: clientes.filter(c => c.cart && c.cart.length > 0 && !sentRecoveryEmails[c.id] && !sentRecoveryEmails2[c.id]).length },
           { id: 'buyers',    label: '✅ Compradores',    count: clientes.filter(c => c.orders > 0).length },
           { id: 'no_orders', label: '👤 Sem Pedidos',    count: clientes.filter(c => c.orders === 0).length },
+          { id: 'credits',   label: '💳 Com Crédito',   count: clientes.filter(c => (c.storeCredit || 0) > 0).length },
         ];
         return (
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap', marginBottom: '1rem', justifyContent: 'space-between' }}>
@@ -5769,6 +5879,7 @@ const ClientesSection = ({ showToast }) => {
                   <th style={S.th}>Telefone</th>
                   <th style={S.th}>Pedidos</th>
                   <th style={S.th}>Total Gasto</th>
+                  <th style={S.th}>Crédito (Store Credit)</th>
                   <th style={S.th}>Último Pedido</th>
                 </tr>
               </thead>
@@ -5829,6 +5940,15 @@ const ClientesSection = ({ showToast }) => {
                         <td style={{ ...S.td, fontWeight: 700, color: c.spent > 0 ? '#4ADE80' : 'rgba(255,255,255,0.25)' }}>
                           ${c.spent.toFixed(2)}
                         </td>
+                        <td style={S.td}>
+                          {(c.storeCredit || 0) > 0 ? (
+                            <span style={{ padding: '0.25rem 0.6rem', background: 'rgba(204,255,0,0.15)', color: '#CCFF00', borderRadius: '4px', fontSize: '0.82rem', fontWeight: 800, border: '1px solid rgba(204,255,0,0.3)' }}>
+                              ${c.storeCredit.toFixed(2)} CAD
+                            </span>
+                          ) : (
+                            <span style={{ color: 'rgba(255,255,255,0.25)', fontSize: '0.8rem' }}>$0.00</span>
+                          )}
+                        </td>
                         <td style={{ ...S.td, color: 'rgba(255,255,255,0.4)', fontSize: '0.8rem' }}>
                           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '0.5rem' }}>
                             <span>{c.lastOrder ? new Date(c.lastOrder).toLocaleDateString('pt-BR') : '—'}</span>
@@ -5839,11 +5959,11 @@ const ClientesSection = ({ showToast }) => {
 
                       {isExpanded && (
                         <tr style={{ background: 'rgba(0,0,0,0.15)', borderBottom: '1px solid rgba(214,255,0,0.15)' }}>
-                          <td colSpan={6} style={{ padding: '1.5rem' }}>
+                          <td colSpan={7} style={{ padding: '1.5rem' }}>
                             <div style={{ display: 'flex', flexWrap: 'wrap', gap: '2rem' }}>
 
                               {/* Endereço */}
-                              <div style={{ flex: '1', minWidth: '220px' }}>
+                              <div style={{ flex: '1', minWidth: '200px' }}>
                                 <p style={{ fontSize: '0.7rem', color: 'rgba(255,255,255,0.35)', fontWeight: 700, textTransform: 'uppercase', marginBottom: '0.5rem', letterSpacing: '0.5px' }}>Endereço Registrado</p>
                                 {c.street ? (
                                   <div style={{ fontSize: '0.85rem', color: '#fff', lineHeight: '1.6' }}>
@@ -5855,8 +5975,38 @@ const ClientesSection = ({ showToast }) => {
                                 )}
                               </div>
 
+                              {/* Carteira / Store Credit */}
+                              <div style={{ flex: '1', minWidth: '220px' }}>
+                                <p style={{ fontSize: '0.7rem', color: 'rgba(255,255,255,0.35)', fontWeight: 700, textTransform: 'uppercase', marginBottom: '0.5rem', letterSpacing: '0.5px' }}>Carteira / Saldo em Loja</p>
+                                <div style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '8px', padding: '0.75rem 1rem' }}>
+                                  <div style={{ fontSize: '1.2rem', fontWeight: 800, color: '#CCFF00', marginBottom: '0.35rem' }}>
+                                    ${(c.storeCredit || 0).toFixed(2)} <span style={{ fontSize: '0.75rem', color: '#fff' }}>CAD</span>
+                                  </div>
+                                  {c.creditHistory && c.creditHistory.length > 0 ? (
+                                    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.3rem', maxHeight: '100px', overflowY: 'auto' }}>
+                                      {c.creditHistory.slice(0, 3).map((cr, idx2) => (
+                                        <div key={idx2} style={{ fontSize: '0.72rem', color: 'rgba(255,255,255,0.6)', display: 'flex', justifyContent: 'space-between', borderTop: '1px dashed rgba(255,255,255,0.08)', paddingTop: '0.2rem' }}>
+                                          <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: '140px' }}>{cr.description}</span>
+                                          <strong style={{ color: parseFloat(cr.amount) >= 0 ? '#4ADE80' : '#F87171' }}>
+                                            {parseFloat(cr.amount) >= 0 ? `+$${parseFloat(cr.amount).toFixed(2)}` : `-$${Math.abs(parseFloat(cr.amount)).toFixed(2)}`}
+                                          </strong>
+                                        </div>
+                                      ))}
+                                    </div>
+                                  ) : (
+                                    <div style={{ fontSize: '0.75rem', color: 'rgba(255,255,255,0.3)' }}>Sem movimentações recentes.</div>
+                                  )}
+                                  <button
+                                    onClick={(e) => { e.stopPropagation(); openCreditModal(c); }}
+                                    style={{ marginTop: '0.65rem', width: '100%', padding: '0.35rem', background: 'rgba(204,255,0,0.1)', color: '#CCFF00', border: '1px solid rgba(204,255,0,0.3)', borderRadius: '6px', fontSize: '0.75rem', fontWeight: 700, cursor: 'pointer' }}
+                                  >
+                                    ➕ Lançar Crédito
+                                  </button>
+                                </div>
+                              </div>
+
                               {/* Sacola */}
-                              <div style={{ flex: '2', minWidth: '320px' }}>
+                              <div style={{ flex: '2', minWidth: '280px' }}>
                                 <p style={{ fontSize: '0.7rem', color: 'rgba(255,255,255,0.35)', fontWeight: 700, textTransform: 'uppercase', marginBottom: '0.5rem', letterSpacing: '0.5px' }}>Sacola / Carrinho Ativo</p>
                                 {hasCart ? (
                                   <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
@@ -5883,6 +6033,10 @@ const ClientesSection = ({ showToast }) => {
 
                             {/* Action Buttons */}
                             <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.75rem', alignItems: 'center', marginTop: '1.25rem', paddingTop: '1.25rem', borderTop: '1px solid rgba(255,255,255,0.05)', flexWrap: 'wrap' }}>
+                              <button onClick={(e) => { e.stopPropagation(); openCreditModal(c); }} style={{ background: '#CCFF00', color: '#121416', border: 'none', padding: '0.4rem 0.9rem', borderRadius: '5px', fontSize: '0.82rem', fontWeight: 800, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
+                                🎁 Lançar Crédito (Defeito/Cortesia)
+                              </button>
+
                               {hasCart && (
                                 <>
                                   {/* 1st Email group */}
@@ -5920,11 +6074,133 @@ const ClientesSection = ({ showToast }) => {
                   );
                 })}
                 {filtered.length === 0 && (
-                  <tr><td colSpan={6} style={{ ...S.td, textAlign: 'center', color: 'rgba(255,255,255,0.3)', padding: '3rem' }}>Nenhum cliente encontrado.</td></tr>
+                  <tr><td colSpan={7} style={{ ...S.td, textAlign: 'center', color: 'rgba(255,255,255,0.3)', padding: '3rem' }}>Nenhum cliente encontrado.</td></tr>
                 )}
               </tbody>
             </table>
             {renderPagination()}
+          </div>
+        </div>
+      )}
+
+      {/* Modal de Lançamento de Crédito */}
+      {creditModalOpen && (
+        <div style={S.modal} onClick={() => setCreditModalOpen(false)}>
+          <div style={{ ...S.modalBox, maxWidth: '520px' }} onClick={e => e.stopPropagation()}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.25rem', borderBottom: '1px solid #2A2D30', paddingBottom: '0.75rem' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                <span style={{ fontSize: '1.25rem' }}>🎁</span>
+                <h3 style={{ margin: 0, fontSize: '1.15rem', fontWeight: 700, color: '#fff' }}>Lançar Crédito em Loja</h3>
+              </div>
+              <button onClick={() => setCreditModalOpen(false)} style={{ background: 'none', border: 'none', color: 'rgba(255,255,255,0.5)', cursor: 'pointer', fontSize: '1.2rem' }}>✕</button>
+            </div>
+
+            <form onSubmit={handleSaveCredit} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+              <div>
+                <label style={S.label}>Email do Cliente *</label>
+                <input
+                  type="email"
+                  required
+                  placeholder="cliente@email.com"
+                  value={creditForm.email}
+                  onChange={e => setCreditForm(f => ({ ...f, email: e.target.value }))}
+                  style={S.input}
+                />
+              </div>
+
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+                <div>
+                  <label style={S.label}>Nome do Cliente (opcional)</label>
+                  <input
+                    type="text"
+                    placeholder="Ex: João Silva"
+                    value={creditForm.name}
+                    onChange={e => setCreditForm(f => ({ ...f, name: e.target.value }))}
+                    style={S.input}
+                  />
+                </div>
+                <div>
+                  <label style={S.label}>Valor do Crédito ($ CAD) *</label>
+                  <input
+                    type="number"
+                    step="0.01"
+                    min="0.01"
+                    required
+                    placeholder="Ex: 137.80"
+                    value={creditForm.amount}
+                    onChange={e => setCreditForm(f => ({ ...f, amount: e.target.value }))}
+                    style={{ ...S.input, color: '#CCFF00', fontWeight: 800 }}
+                  />
+                </div>
+              </div>
+
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+                <div>
+                  <label style={S.label}>Motivo *</label>
+                  <select
+                    value={creditForm.reason}
+                    onChange={e => setCreditForm(f => ({ ...f, reason: e.target.value }))}
+                    style={S.input}
+                  >
+                    <option value="defect_compensation">Defeito de Fábrica</option>
+                    <option value="manual_grant">Cortesia / Fidelização</option>
+                    <option value="refund">Reembolso em Saldo</option>
+                    <option value="order_redemption">Ajuste Manual</option>
+                  </select>
+                </div>
+                <div>
+                  <label style={S.label}>ID do Pedido Relacionado</label>
+                  <input
+                    type="text"
+                    placeholder="Ex: 104"
+                    value={creditForm.orderId}
+                    onChange={e => setCreditForm(f => ({ ...f, orderId: e.target.value }))}
+                    style={S.input}
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label style={S.label}>Descrição / Justificativa Interna *</label>
+                <textarea
+                  rows={3}
+                  required
+                  placeholder="Ex: Compensação por defeito na costura da camisa Real Madrid 24/25 recebida no pedido #104."
+                  value={creditForm.description}
+                  onChange={e => setCreditForm(f => ({ ...f, description: e.target.value }))}
+                  style={{ ...S.input, resize: 'vertical' }}
+                />
+              </div>
+
+              <label style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', cursor: 'pointer', background: 'rgba(255,255,255,0.03)', padding: '0.65rem 0.85rem', borderRadius: '6px', border: '1px solid rgba(255,255,255,0.08)' }}>
+                <input
+                  type="checkbox"
+                  checked={creditForm.notifyCustomer}
+                  onChange={e => setCreditForm(f => ({ ...f, notifyCustomer: e.target.checked }))}
+                  style={{ width: 16, height: 16, accentColor: '#CCFF00', cursor: 'pointer' }}
+                />
+                <span style={{ fontSize: '0.82rem', color: '#fff' }}>
+                  Disparar e-mail cordial automático avisando o cliente sobre o crédito disponível
+                </span>
+              </label>
+
+              <div style={{ display: 'flex', gap: '0.75rem', justifyContent: 'flex-end', marginTop: '0.5rem' }}>
+                <button
+                  type="button"
+                  onClick={() => setCreditModalOpen(false)}
+                  style={{ ...S.btnSecondary }}
+                >
+                  Cancelar
+                </button>
+                <button
+                  type="submit"
+                  disabled={savingCredit}
+                  style={{ ...S.btnPrimary, background: '#CCFF00', color: '#121416', fontWeight: 800 }}
+                >
+                  {savingCredit ? 'Salvando e Notificando...' : 'Confirmar e Lançar Crédito'}
+                </button>
+              </div>
+            </form>
           </div>
         </div>
       )}
