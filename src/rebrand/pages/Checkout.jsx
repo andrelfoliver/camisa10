@@ -73,7 +73,7 @@ const RebrandCheckout = () => {
       }
       setLoadingCredit(true);
       try {
-        let query = supabase.from('customer_credits').select('amount');
+        let query = supabase.from('customer_credits').select('amount, expires_at');
         if (email && user?.id) {
           query = query.or(`customer_email.eq.${email},user_id.eq.${user.id}`);
         } else if (email) {
@@ -84,7 +84,9 @@ const RebrandCheckout = () => {
         const { data: credits } = await query;
 
         if (credits && credits.length > 0) {
-          const total = credits.reduce((acc, curr) => acc + parseFloat(curr.amount || 0), 0);
+          const now = new Date().toISOString();
+          const validCredits = credits.filter(c => !c.expires_at || c.expires_at > now);
+          const total = validCredits.reduce((acc, curr) => acc + parseFloat(curr.amount || 0), 0);
           setUserCreditBalance(Math.max(0, total));
         } else if (user?.id) {
           const { data: profile } = await supabase
@@ -126,11 +128,17 @@ const RebrandCheckout = () => {
         : (subtotal - discount) * (appliedCoupon.discount_percent / 100))
     : 0;
 
+  // Regras de Elegibilidade de Crédito: Mínimo $75 CAD e Não Cumulativo
+  const MIN_CREDIT_ORDER_SUBTOTAL = 75.00;
+  const isCreditSubtotalEligible = subtotal >= MIN_CREDIT_ORDER_SUBTOTAL;
+  const hasConflictingDiscount = (discount > 0) || !!appliedCoupon;
+  const canApplyCredit = isCreditSubtotalEligible && !hasConflictingDiscount;
+
   // Total antes do abatimento de Store Credit
   const preCreditBaseTotal = Math.max(0, subtotal - discount - couponDiscountAmount + (currentShipping || 0));
   
   // Saldo aplicado
-  const appliedCreditAmount = (useStoreCredit && userCreditBalance > 0)
+  const appliedCreditAmount = (useStoreCredit && userCreditBalance > 0 && canApplyCredit)
     ? Math.min(userCreditBalance, preCreditBaseTotal)
     : 0;
 
@@ -158,7 +166,7 @@ const RebrandCheckout = () => {
     : 0;
   const displayShipping = convertPrice(currentShipping);
   const displayPreCreditBaseTotal = displaySubtotal - displayDiscount - displayCouponDiscount + displayShipping;
-  const displayAppliedCredit = (useStoreCredit && userCreditBalance > 0)
+  const displayAppliedCredit = (useStoreCredit && userCreditBalance > 0 && canApplyCredit)
     ? Math.min(convertPrice(userCreditBalance), displayPreCreditBaseTotal)
     : 0;
   const displayBaseFinalTotal = Math.max(0, displayPreCreditBaseTotal - displayAppliedCredit);
@@ -984,17 +992,27 @@ const RebrandCheckout = () => {
                     </span>
                   </div>
 
-                  <label style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', cursor: 'pointer', background: 'rgba(255,255,255,0.06)', padding: '0.5rem 0.75rem', borderRadius: '6px', fontSize: '0.82rem', marginTop: '0.5rem' }}>
-                    <input 
-                      type="checkbox" 
-                      checked={useStoreCredit} 
-                      onChange={e => setUseStoreCredit(e.target.checked)}
-                      style={{ width: 16, height: 16, accentColor: '#CCFF00', cursor: 'pointer' }}
-                    />
-                    <span style={{ color: '#f3f4f6' }}>
-                      Usar meu saldo disponível para abater nesta compra (<strong>-${formatPrice(displayAppliedCredit)}</strong>)
-                    </span>
-                  </label>
+                  {!isCreditSubtotalEligible ? (
+                    <div style={{ background: 'rgba(245, 158, 11, 0.15)', border: '1px solid rgba(245, 158, 11, 0.3)', borderRadius: '6px', padding: '0.6rem 0.75rem', fontSize: '0.78rem', color: '#fbbf24', marginTop: '0.5rem', lineHeight: 1.4 }}>
+                      ⚠️ <strong>Válido para pedidos acima de $75.00 CAD</strong>. Seu subtotal atual é de {formatPrice(displaySubtotal)}. Adicione mais <strong>{formatPrice(convertPrice(Math.max(0, 75 - subtotal)))}</strong> em itens para desbloquear o crédito.
+                    </div>
+                  ) : hasConflictingDiscount ? (
+                    <div style={{ background: 'rgba(59, 130, 246, 0.15)', border: '1px solid rgba(59, 130, 246, 0.3)', borderRadius: '6px', padding: '0.6rem 0.75rem', fontSize: '0.78rem', color: '#93c5fd', marginTop: '0.5rem', lineHeight: 1.4 }}>
+                      ℹ️ O crédito em loja <strong>não é cumulativo</strong> com cupons de desconto ou desconto por volume. Remova o cupom/oferta se preferir usar seu saldo em carteira.
+                    </div>
+                  ) : (
+                    <label style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', cursor: 'pointer', background: 'rgba(255,255,255,0.06)', padding: '0.5rem 0.75rem', borderRadius: '6px', fontSize: '0.82rem', marginTop: '0.5rem' }}>
+                      <input 
+                        type="checkbox" 
+                        checked={useStoreCredit} 
+                        onChange={e => setUseStoreCredit(e.target.checked)}
+                        style={{ width: 16, height: 16, accentColor: '#CCFF00', cursor: 'pointer' }}
+                      />
+                      <span style={{ color: '#f3f4f6' }}>
+                        Usar meu saldo para abater nesta compra (<strong>-${formatPrice(displayAppliedCredit)}</strong>)
+                      </span>
+                    </label>
+                  )}
                 </div>
               )}
 

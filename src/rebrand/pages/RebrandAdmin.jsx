@@ -5102,6 +5102,24 @@ const ClientesSection = ({ showToast }) => {
   });
   const [savingCredit, setSavingCredit] = useState(false);
 
+  // Modal de Campanha em Massa de Fidelidade
+  const [campaignModalOpen, setCampaignModalOpen] = useState(false);
+  const [campaignRunning, setCampaignRunning] = useState(false);
+  const [campaignAmount, setCampaignAmount] = useState('14.90');
+  const [campaignMinOrder, setCampaignMinOrder] = useState('75.00');
+  const [campaignExpiryDays, setCampaignExpiryDays] = useState(30);
+  const [campaignNotify, setCampaignNotify] = useState(true);
+  const [campaignProgress, setCampaignProgress] = useState({ current: 0, total: 0, success: 0, failed: 0, log: [] });
+
+  const openCampaignModal = () => {
+    setCampaignAmount('14.90');
+    setCampaignMinOrder('75.00');
+    setCampaignExpiryDays(30);
+    setCampaignNotify(true);
+    setCampaignProgress({ current: 0, total: 0, success: 0, failed: 0, log: [] });
+    setCampaignModalOpen(true);
+  };
+
   const openCreditModal = (customer = null, orderId = '') => {
     setCreditForm({
       email: customer?.email || '',
@@ -5174,6 +5192,106 @@ const ClientesSection = ({ showToast }) => {
     } finally {
       setSavingCredit(false);
     }
+  };
+
+  const handleExecuteMassCampaign = async () => {
+    // Clientes que já compraram pelo menos 1 camisa
+    const eligibleBuyers = (clientes || []).filter(c => (c.orders > 0 || c.totalSpent > 0) && c.email && c.email.includes('@'));
+    
+    // Deduplica por e-mail
+    const uniqueMap = new Map();
+    eligibleBuyers.forEach(c => {
+      const em = c.email.toLowerCase().trim();
+      if (!uniqueMap.has(em)) {
+        uniqueMap.set(em, c);
+      }
+    });
+    const uniqueBuyers = Array.from(uniqueMap.values());
+
+    if (uniqueBuyers.length === 0) {
+      showToast('Nenhum comprador elegível encontrado na base.', 'warning');
+      return;
+    }
+
+    const amt = parseFloat(campaignAmount) || 14.90;
+    const minOrd = parseFloat(campaignMinOrder) || 75.00;
+    const expDays = parseInt(campaignExpiryDays) || 30;
+    const expiryDate = new Date(Date.now() + expDays * 24 * 60 * 60 * 1000).toISOString();
+
+    setCampaignRunning(true);
+    setCampaignProgress({ current: 0, total: uniqueBuyers.length, success: 0, failed: 0, log: [] });
+
+    let successCount = 0;
+    let failCount = 0;
+    const logs = [];
+
+    for (let i = 0; i < uniqueBuyers.length; i++) {
+      const buyer = uniqueBuyers[i];
+      const buyerEmail = buyer.email.toLowerCase().trim();
+      const buyerName = buyer.name || buyerEmail.split('@')[0];
+
+      try {
+        // 1. Inserir em customer_credits
+        const { error: insErr } = await supabase.from('customer_credits').insert([{
+          customer_email: buyerEmail,
+          amount: amt,
+          type: 'reactivation_campaign',
+          description: `Crédito de Fidelidade ($${amt.toFixed(2)} CAD) - Válido por ${expDays} dias para compras acima de $${minOrd.toFixed(2)} CAD`,
+          expires_at: expiryDate,
+          min_order_amount: minOrd,
+          is_cumulative: false,
+          created_by: 'admin_campaign'
+        }]);
+
+        if (insErr) throw insErr;
+
+        // 2. Atualizar profile se existir
+        const { data: prof } = await supabase.from('profiles').select('id, store_credit').eq('email', buyerEmail).maybeSingle();
+        if (prof?.id) {
+          const newBal = (parseFloat(prof.store_credit || 0)) + amt;
+          await supabase.from('profiles').update({ store_credit: newBal }).eq('id', prof.id);
+        }
+
+        // 3. Enviar email se marcado
+        if (campaignNotify) {
+          try {
+            await fetch('/api/send-credit-notification', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                customerEmail: buyerEmail,
+                customerName: buyerName,
+                amount: amt,
+                reason: 'loyalty_reward',
+                description: `Crédito exclusivo para você renovar seu manto! Válido por ${expDays} dias para pedidos a partir de $${minOrd.toFixed(2)} CAD.`,
+                minOrderAmount: minOrd,
+                expiryDays: expDays
+              })
+            });
+          } catch (eErr) {
+            console.error('[Campaign] Erro ao enviar email para:', buyerEmail, eErr);
+          }
+        }
+
+        successCount++;
+        logs.push(`✓ ${buyerName} (${buyerEmail}): $${amt.toFixed(2)} creditado`);
+      } catch (err) {
+        failCount++;
+        logs.push(`✕ ${buyerEmail}: ${err.message}`);
+      }
+
+      setCampaignProgress({
+        current: i + 1,
+        total: uniqueBuyers.length,
+        success: successCount,
+        failed: failCount,
+        log: [...logs]
+      });
+    }
+
+    setCampaignRunning(false);
+    showToast(`Campanha concluída: ${successCount} clientes receberam $${amt.toFixed(2)} CAD!`, 'success');
+    load();
   };
 
   const load = useCallback(async () => {
@@ -5773,6 +5891,12 @@ const ClientesSection = ({ showToast }) => {
         action={
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', flexWrap: 'wrap' }}>
             <button 
+              onClick={() => openCampaignModal()} 
+              style={{ padding: '0.45rem 0.9rem', borderRadius: '6px', background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)', color: '#fff', fontWeight: 800, fontSize: '0.82rem', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.4rem', boxShadow: '0 2px 8px rgba(16,185,129,0.3)' }}
+            >
+              🎁 Campanha Fidelidade ($14.90)
+            </button>
+            <button 
               onClick={() => openCreditModal()} 
               style={{ padding: '0.45rem 0.9rem', borderRadius: '6px', background: '#CCFF00', color: '#121416', fontWeight: 800, fontSize: '0.82rem', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.4rem', boxShadow: '0 2px 8px rgba(204,255,0,0.2)' }}
             >
@@ -6204,6 +6328,155 @@ const ClientesSection = ({ showToast }) => {
           </div>
         </div>
       )}
+
+      {/* Modal de Disparo em Massa - Campanha de Fidelidade */}
+      {campaignModalOpen && (() => {
+        const eligibleBuyers = (clientes || []).filter(c => (c.orders > 0 || c.totalSpent > 0) && c.email && c.email.includes('@'));
+        const uniqueEmails = new Set(eligibleBuyers.map(c => c.email.toLowerCase().trim()));
+        const eligibleCount = uniqueEmails.size;
+
+        return (
+          <div style={S.modal} onClick={() => !campaignRunning && setCampaignModalOpen(false)}>
+            <div style={{ ...S.modalBox, maxWidth: '600px' }} onClick={e => e.stopPropagation()}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.25rem', borderBottom: '1px solid #2A2D30', paddingBottom: '0.75rem' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                  <span style={{ fontSize: '1.4rem' }}>🎁</span>
+                  <div>
+                    <h3 style={{ margin: 0, fontSize: '1.2rem', fontWeight: 800, color: '#fff' }}>Campanha de Fidelidade & Reativação</h3>
+                    <span style={{ fontSize: '0.75rem', color: 'rgba(255,255,255,0.5)' }}>Crédito em carteira para clientes que já compraram na loja</span>
+                  </div>
+                </div>
+                {!campaignRunning && (
+                  <button onClick={() => setCampaignModalOpen(false)} style={{ background: 'none', border: 'none', color: 'rgba(255,255,255,0.5)', cursor: 'pointer', fontSize: '1.2rem' }}>✕</button>
+                )}
+              </div>
+
+              {/* Card de Resumo de Público */}
+              <div style={{ background: 'rgba(16, 185, 129, 0.1)', border: '1px solid rgba(16, 185, 129, 0.25)', borderRadius: '8px', padding: '1rem', marginBottom: '1.25rem' }}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                  <span style={{ fontSize: '0.85rem', color: '#6ee7b7', fontWeight: 600 }}>Clientes Compradores Elegíveis:</span>
+                  <span style={{ fontSize: '1.3rem', fontWeight: 900, color: '#10b981' }}>{eligibleCount} compradores</span>
+                </div>
+                <p style={{ margin: '0.4rem 0 0', fontSize: '0.78rem', color: 'rgba(255,255,255,0.7)', lineHeight: 1.4 }}>
+                  Cada um desses clientes receberá o crédito diretamente na conta vinculado ao seu e-mail cadastrado.
+                </p>
+              </div>
+
+              {/* Configurações da Campanha */}
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginBottom: '1rem' }}>
+                <div>
+                  <label style={S.label}>Valor do Crédito ($ CAD)</label>
+                  <input
+                    type="number"
+                    step="0.01"
+                    disabled={campaignRunning}
+                    value={campaignAmount}
+                    onChange={e => setCampaignAmount(e.target.value)}
+                    style={{ ...S.input, color: '#CCFF00', fontWeight: 800, fontSize: '1.05rem' }}
+                  />
+                </div>
+                <div>
+                  <label style={S.label}>Pedido Mínimo ($ CAD)</label>
+                  <input
+                    type="number"
+                    step="0.01"
+                    disabled={campaignRunning}
+                    value={campaignMinOrder}
+                    onChange={e => setCampaignMinOrder(e.target.value)}
+                    style={{ ...S.input, fontWeight: 700 }}
+                  />
+                </div>
+              </div>
+
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginBottom: '1.25rem' }}>
+                <div>
+                  <label style={S.label}>Validade (em dias)</label>
+                  <input
+                    type="number"
+                    min="1"
+                    disabled={campaignRunning}
+                    value={campaignExpiryDays}
+                    onChange={e => setCampaignExpiryDays(e.target.value)}
+                    style={S.input}
+                  />
+                </div>
+                <div>
+                  <label style={S.label}>Regra de Acúmulo</label>
+                  <div style={{ ...S.input, color: 'rgba(255,255,255,0.6)', fontSize: '0.82rem', display: 'flex', alignItems: 'center' }}>
+                    🚫 Não cumulativo com cupons
+                  </div>
+                </div>
+              </div>
+
+              <label style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', cursor: campaignRunning ? 'not-allowed' : 'pointer', background: 'rgba(255,255,255,0.03)', padding: '0.75rem 0.85rem', borderRadius: '6px', border: '1px solid rgba(255,255,255,0.08)', marginBottom: '1.25rem' }}>
+                <input
+                  type="checkbox"
+                  disabled={campaignRunning}
+                  checked={campaignNotify}
+                  onChange={e => setCampaignNotify(e.target.checked)}
+                  style={{ width: 16, height: 16, accentColor: '#10b981', cursor: 'pointer' }}
+                />
+                <span style={{ fontSize: '0.82rem', color: '#fff' }}>
+                  Disparar e-mail de notificação com template oficial iFooty para todos os {eligibleCount} clientes
+                </span>
+              </label>
+
+              {/* Barra de Progresso / Logs */}
+              {campaignProgress.total > 0 && (
+                <div style={{ background: '#121416', border: '1px solid #2A2D30', borderRadius: '8px', padding: '1rem', marginBottom: '1.25rem' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.82rem', marginBottom: '0.4rem', color: '#fff' }}>
+                    <span>Progresso do Disparo:</span>
+                    <span style={{ fontWeight: 800, color: campaignRunning ? '#CCFF00' : '#10b981' }}>
+                      {campaignProgress.current} / {campaignProgress.total} ({Math.round((campaignProgress.current / campaignProgress.total) * 100)}%)
+                    </span>
+                  </div>
+                  <div style={{ width: '100%', height: '8px', background: '#2A2D30', borderRadius: '4px', overflow: 'hidden', marginBottom: '0.75rem' }}>
+                    <div style={{
+                      width: `${(campaignProgress.current / campaignProgress.total) * 100}%`,
+                      height: '100%',
+                      background: campaignRunning ? 'linear-gradient(90deg, #10b981, #CCFF00)' : '#10b981',
+                      transition: 'width 0.3s ease'
+                    }} />
+                  </div>
+                  <div style={{ maxHeight: '100px', overflowY: 'auto', fontSize: '0.72rem', color: 'rgba(255,255,255,0.6)', fontFamily: 'monospace', display: 'flex', flexDirection: 'column', gap: '2px' }}>
+                    {(campaignProgress.log || []).slice(-10).map((l, idx) => (
+                      <div key={idx}>{l}</div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Ações */}
+              <div style={{ display: 'flex', gap: '0.75rem', justifyContent: 'flex-end' }}>
+                <button
+                  type="button"
+                  disabled={campaignRunning}
+                  onClick={() => setCampaignModalOpen(false)}
+                  style={{ ...S.btnSecondary }}
+                >
+                  {campaignProgress.current === campaignProgress.total && campaignProgress.total > 0 ? 'Fechar' : 'Cancelar'}
+                </button>
+                <button
+                  type="button"
+                  disabled={campaignRunning || eligibleCount === 0}
+                  onClick={handleExecuteMassCampaign}
+                  style={{
+                    ...S.btnPrimary,
+                    background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
+                    color: '#fff',
+                    fontWeight: 800,
+                    boxShadow: '0 4px 12px rgba(16,185,129,0.35)'
+                  }}
+                >
+                  {campaignRunning 
+                    ? `Disparando (${campaignProgress.current}/${campaignProgress.total})...` 
+                    : `🚀 Disparar $${parseFloat(campaignAmount || 14.9).toFixed(2)} CAD para ${eligibleCount} Clientes`}
+                </button>
+              </div>
+            </div>
+          </div>
+        );
+      })()}
     </div>
   );
 };

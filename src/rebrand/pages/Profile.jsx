@@ -288,12 +288,25 @@ const RebrandProfile = () => {
                   </span>
                 </div>
 
-                <div style={{ fontSize: '2.4rem', fontWeight: 900, color: '#CCFF00', margin: '0.25rem 0 1rem' }}>
+                <div style={{ fontSize: '2.4rem', fontWeight: 900, color: '#CCFF00', margin: '0.25rem 0 0.5rem' }}>
                   ${creditBalance.toFixed(2)} <span style={{ fontSize: '1.1rem', color: '#fff', fontWeight: 600 }}>CAD</span>
                 </div>
 
+                {/* Badges de Regras de Crédito */}
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem', marginBottom: '1.25rem' }}>
+                  <span style={{ background: 'rgba(204, 255, 0, 0.15)', color: '#CCFF00', border: '1px solid rgba(204, 255, 0, 0.3)', padding: '0.25rem 0.65rem', borderRadius: '20px', fontSize: '0.75rem', fontWeight: 700 }}>
+                    🛒 Pedido Mínimo: $75.00 CAD
+                  </span>
+                  <span style={{ background: 'rgba(255, 255, 255, 0.1)', color: '#fff', border: '1px solid rgba(255, 255, 255, 0.2)', padding: '0.25rem 0.65rem', borderRadius: '20px', fontSize: '0.75rem', fontWeight: 600 }}>
+                    ⏳ Validade: 30 dias
+                  </span>
+                  <span style={{ background: 'rgba(255, 255, 255, 0.1)', color: 'rgba(255, 255, 255, 0.8)', border: '1px solid rgba(255, 255, 255, 0.2)', padding: '0.25rem 0.65rem', borderRadius: '20px', fontSize: '0.75rem' }}>
+                    🚫 Não cumulativo com cupons
+                  </span>
+                </div>
+
                 <p style={{ color: 'rgba(255,255,255,0.75)', fontSize: '0.88rem', margin: '0 0 1.5rem', maxWidth: 500, lineHeight: 1.5 }}>
-                  Seu saldo é aplicado automaticamente na etapa de pagamento do checkout quando você estiver conectado.
+                  Seu saldo é aplicado automaticamente na etapa de pagamento do checkout para pedidos a partir de $75.00 CAD.
                 </p>
 
                 <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.75rem' }}>
@@ -336,7 +349,7 @@ const RebrandProfile = () => {
                   <Gift size={40} style={{ opacity: 0.25, margin: '0 auto 0.75rem', display: 'block' }} />
                   <p style={{ fontWeight: 600, margin: '0 0 0.25rem', color: '#374151' }}>{t('rb_profile_no_credits')}</p>
                   <p style={{ fontSize: '0.82rem', margin: '0', color: '#9ca3af' }}>
-                    Créditos de compensação, trocas ou cortesias aparecerão listados aqui.
+                    Créditos de fidelidade, compensação ou trocas aparecerão listados aqui.
                   </p>
                 </div>
               ) : (
@@ -355,6 +368,10 @@ const RebrandProfile = () => {
                       typeLabel = 'Defeito de Fábrica';
                       typeBg = '#fef3c7';
                       typeColor = '#b45309';
+                    } else if (item.type === 'loyalty_reward' || item.type === 'reactivation_campaign') {
+                      typeLabel = 'Fidelidade / Presente';
+                      typeBg = '#dcfce7';
+                      typeColor = '#15803d';
                     } else if (item.type === 'order_redemption') {
                       typeLabel = 'Uso em Compra';
                       typeBg = '#fee2e2';
