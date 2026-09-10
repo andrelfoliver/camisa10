@@ -85,19 +85,21 @@ export default async function handler(req, res) {
       const imageUrl = normalizeImgUrl(item.image);
       let customization = '';
       if (item.extras?.nameNumber) {
-        customization += `<div style="margin-top: 5px; padding: 8px; background: #FFF9C4; border-left: 4px solid #FBC02D; font-size: 0.9rem; color: #444;">
+        customization += `<div style="margin-top: 5px; padding: 8px; background: #FFF9C4; border-left: 4px solid #FBC02D; font-size: 0.9rem; color: #444; border-radius: 4px;">
              <strong>${t.customLabel}:</strong> ${item.extras.customName || 'N/A'} - ${item.extras.customNumber || 'N/A'}
            </div>`;
       }
       if (item.extras?.extraCustomization && item.extras?.customExtraName) {
-        customization += `<div style="margin-top: 5px; padding: 8px; background: #E0F7FA; border-left: 4px solid #00BCD4; font-size: 0.9rem; color: #444;">
+        customization += `<div style="margin-top: 5px; padding: 8px; background: #E0F7FA; border-left: 4px solid #00BCD4; font-size: 0.9rem; color: #444; border-radius: 4px;">
              <strong>EXTRA CUSTOM:</strong> ${item.extras.customExtraName}
            </div>`;
       }
       const hasPatch = item.extras?.patches || item.extras?.patch;
-      const patchText = item.extras?.customPatch ? `: ${item.extras.customPatch}` : '';
+      const patchName = item.extras?.customPatch || 'World Cup 2026';
       const patches = hasPatch
-        ? `<div style="margin-top: 3px; font-size: 0.85rem; color: #666;"><strong>${t.patchesLabel}</strong>${patchText}</div>`
+        ? `<div style="margin-top: 6px; padding: 6px 10px; background: #FEF3C7; border-left: 4px solid #F59E0B; border-radius: 4px; font-size: 0.88rem; color: #92400E; font-weight: 600;">
+             🎖️ <strong>${t.patchesLabel || 'PATCH OFICIAL'}:</strong> ${patchName}
+           </div>`
         : '';
       return `
         <div style="margin-bottom: 20px; padding: 15px; border: 1px solid #edf2f7; border-radius: 8px; display: flex; align-items: center; gap: 15px;">
@@ -131,9 +133,11 @@ export default async function handler(req, res) {
            </div>`;
       }
       const hasPatch = item.extras?.patches || item.extras?.patch;
-      const patchText = item.extras?.customPatch ? `: ${item.extras.customPatch}` : '';
+      const patchName = item.extras?.customPatch || 'World Cup 2026';
       const patches = hasPatch
-        ? `<div style="margin-top: 3px; font-size: 0.85rem; color: #4a5568;">🎖️ <strong>+ Patches</strong>${patchText}</div>`
+        ? `<div style="margin-top: 5px; padding: 6px 10px; background: #fef9c3; border-radius: 4px; font-size: 0.85rem; color: #854d0e; font-weight: 700;">
+             🎖️ <strong>PATCH:</strong> ${patchName}
+           </div>`
         : '';
       return `
         <div style="margin-bottom: 15px; padding: 12px; border: 1px solid #e2e8f0; border-radius: 8px; display: flex; align-items: center; gap: 12px; background: #ffffff;">
