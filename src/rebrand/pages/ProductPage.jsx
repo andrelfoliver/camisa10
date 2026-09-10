@@ -270,6 +270,7 @@ const ProductPage = () => {
       "priceCurrency": "CAD",
       "price": (product?.price || 89.90).toFixed(2),
       "priceValidUntil": "2027-12-31",
+      "validFrom": "2024-01-01",
       "availability": isAvailable ? "https://schema.org/InStock" : "https://schema.org/OutOfStock",
       "itemCondition": "https://schema.org/NewCondition",
       "shippingDetails": {

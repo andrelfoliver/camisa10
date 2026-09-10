@@ -338,6 +338,8 @@ const ProductPage = () => {
       "@type": "Offer",
       "priceCurrency": "CAD",
       "price": basePrice,
+      "validFrom": "2024-01-01",
+      "priceValidUntil": "2027-12-31",
       "availability": "http://schema.org/InStock",
       "url": `https://ifooty.ca/produto/${product.id}`
     }
