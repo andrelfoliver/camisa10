@@ -296,26 +296,26 @@ const RebrandProfile = () => {
                 <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem', marginBottom: '1.25rem' }}>
                   {creditHistory.some(c => parseFloat(c.amount || 0) > 0 && (parseFloat(c.min_order_amount || 0) <= 0 || c.type === 'defect_compensation')) && (
                     <span style={{ background: 'rgba(56, 189, 248, 0.15)', color: '#38bdf8', border: '1px solid rgba(56, 189, 248, 0.3)', padding: '0.25rem 0.65rem', borderRadius: '20px', fontSize: '0.75rem', fontWeight: 700 }}>
-                      🛠️ Defeito/Garantia: Sem valor mínimo
+                      {t('rb_profile_credit_defect_badge')}
                     </span>
                   )}
                   {creditHistory.some(c => parseFloat(c.amount || 0) > 0 && (parseFloat(c.min_order_amount || 0) > 0 || c.type === 'loyalty_reward' || c.type === 'reactivation_campaign')) && (
                     <span style={{ background: 'rgba(204, 255, 0, 0.15)', color: '#CCFF00', border: '1px solid rgba(204, 255, 0, 0.3)', padding: '0.25rem 0.65rem', borderRadius: '20px', fontSize: '0.75rem', fontWeight: 700 }}>
-                      🎁 Fidelidade: Mínimo $75.00 CAD
+                      {t('rb_profile_credit_loyalty_badge')}
                     </span>
                   )}
                   <span style={{ background: 'rgba(255, 255, 255, 0.1)', color: '#fff', border: '1px solid rgba(255, 255, 255, 0.2)', padding: '0.25rem 0.65rem', borderRadius: '20px', fontSize: '0.75rem', fontWeight: 600 }}>
-                    ⚡ Abatimento direto no checkout
+                    {t('rb_profile_credit_instant_apply')}
                   </span>
                   <span style={{ background: 'rgba(255, 255, 255, 0.1)', color: 'rgba(255, 255, 255, 0.8)', border: '1px solid rgba(255, 255, 255, 0.2)', padding: '0.25rem 0.65rem', borderRadius: '20px', fontSize: '0.75rem' }}>
-                    🚫 Não cumulativo com cupons
+                    {t('rb_profile_credit_non_cumulative')}
                   </span>
                 </div>
 
                 <p style={{ color: 'rgba(255,255,255,0.75)', fontSize: '0.88rem', margin: '0 0 1.5rem', maxWidth: 500, lineHeight: 1.5 }}>
                   {creditHistory.some(c => parseFloat(c.amount || 0) > 0 && (parseFloat(c.min_order_amount || 0) <= 0 || c.type === 'defect_compensation'))
-                    ? 'Créditos de garantia por defeito podem ser usados em qualquer compra. Créditos fidelidade são aplicados em pedidos acima de $75 CAD.'
-                    : 'Seu saldo é aplicado automaticamente na etapa de pagamento do checkout para pedidos a partir de $75.00 CAD.'}
+                    ? t('rb_profile_credit_desc_mixed')
+                    : t('rb_profile_credit_desc_loyalty')}
                 </p>
 
                 <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.75rem' }}>
@@ -332,7 +332,7 @@ const RebrandProfile = () => {
                     disabled={loadingCredits}
                     style={{ color: '#fff', borderColor: 'rgba(255,255,255,0.25)', padding: '0.75rem 1.25rem' }}
                   >
-                    {loadingCredits ? 'Atualizando...' : 'Atualizar Saldo'}
+                    {loadingCredits ? t('rb_profile_credit_refreshing') : t('rb_profile_credit_refresh')}
                   </button>
                 </div>
               </div>
@@ -345,20 +345,20 @@ const RebrandProfile = () => {
                   <Clock size={18} color="#6b7280" /> {t('rb_profile_credits_history')}
                 </h3>
                 <span style={{ fontSize: '0.8rem', color: '#6b7280', fontWeight: 500 }}>
-                  {creditHistory.length} {creditHistory.length === 1 ? 'registro' : 'registros'}
+                  {creditHistory.length} {creditHistory.length === 1 ? t('rb_profile_credit_records') : t('rb_profile_credit_records_plural')}
                 </span>
               </div>
 
               {loadingCredits ? (
                 <div style={{ textAlign: 'center', padding: '2rem', color: '#9ca3af', fontSize: '0.9rem' }}>
-                  Carregando histórico de créditos...
+                  {t('rb_profile_credit_loading_history')}
                 </div>
               ) : creditHistory.length === 0 ? (
                 <div style={{ textAlign: 'center', padding: '3rem 1rem', color: '#6b7280' }}>
                   <Gift size={40} style={{ opacity: 0.25, margin: '0 auto 0.75rem', display: 'block' }} />
                   <p style={{ fontWeight: 600, margin: '0 0 0.25rem', color: '#374151' }}>{t('rb_profile_no_credits')}</p>
                   <p style={{ fontSize: '0.82rem', margin: '0', color: '#9ca3af' }}>
-                    Créditos de fidelidade, compensação ou trocas aparecerão listados aqui.
+                    {t('rb_profile_credit_no_history_sub')}
                   </p>
                 </div>
               ) : (
@@ -366,27 +366,27 @@ const RebrandProfile = () => {
                   {creditHistory.map((item) => {
                     const isPositive = parseFloat(item.amount || 0) >= 0;
                     const dateStr = item.created_at 
-                      ? new Date(item.created_at).toLocaleDateString('pt-BR', { day: '2-digit', month: 'short', year: 'numeric' })
+                      ? new Date(item.created_at).toLocaleDateString(language === 'pt' ? 'pt-BR' : (language === 'es' ? 'es-ES' : 'en-CA'), { day: '2-digit', month: 'short', year: 'numeric' })
                       : '—';
 
-                    let typeLabel = 'Crédito';
+                    let typeLabel = t('rb_profile_credit_type_generic');
                     let typeBg = '#dcfce7';
                     let typeColor = '#15803d';
 
                     if (item.type === 'defect_compensation') {
-                      typeLabel = 'Defeito de Fábrica';
+                      typeLabel = t('rb_profile_credit_type_defect');
                       typeBg = '#fef3c7';
                       typeColor = '#b45309';
                     } else if (item.type === 'loyalty_reward' || item.type === 'reactivation_campaign') {
-                      typeLabel = 'Fidelidade / Presente';
+                      typeLabel = t('rb_profile_credit_type_loyalty');
                       typeBg = '#dcfce7';
                       typeColor = '#15803d';
                     } else if (item.type === 'order_redemption') {
-                      typeLabel = 'Uso em Compra';
+                      typeLabel = t('rb_profile_credit_type_redemption');
                       typeBg = '#fee2e2';
                       typeColor = '#b91c1c';
                     } else if (item.type === 'refund') {
-                      typeLabel = 'Reembolso';
+                      typeLabel = t('rb_profile_credit_type_refund');
                       typeBg = '#e0e7ff';
                       typeColor = '#4338ca';
                     }

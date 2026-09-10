@@ -1062,7 +1062,7 @@ const RebrandCheckout = () => {
                       <div style={{ width: 28, height: 28, borderRadius: '6px', background: 'rgba(204,255,0,0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#CCFF00' }}>
                         <Wallet size={16} />
                       </div>
-                      <span style={{ fontSize: '0.85rem', fontWeight: 700, color: '#fff' }}>Crédito em Loja / Store Credit</span>
+                      <span style={{ fontSize: '0.85rem', fontWeight: 700, color: '#fff' }}>{t('rb_checkout_store_credit_title')}</span>
                     </div>
                     <span style={{ fontSize: '1rem', fontWeight: 800, color: '#CCFF00' }}>
                       ${creditData.totalBalance.toFixed(2)} CAD
@@ -1072,10 +1072,10 @@ const RebrandCheckout = () => {
                   {/* Avisos de Regras / Desbloqueio */}
                   {creditData.restrictedBalance > 0 && !isLoyaltyThresholdMet && (
                     <div style={{ background: 'rgba(245, 158, 11, 0.15)', border: '1px solid rgba(245, 158, 11, 0.3)', borderRadius: '6px', padding: '0.6rem 0.75rem', fontSize: '0.78rem', color: '#fbbf24', marginTop: '0.5rem', lineHeight: 1.4 }}>
-                      🎁 Você possui <strong>${creditData.restrictedBalance.toFixed(2)} CAD</strong> de Crédito Fidelidade para pedidos acima de $75.00 CAD (adicione mais <strong>{formatPrice(convertPrice(Math.max(0, 75 - subtotal)))}</strong>).
+                      🎁 {t('rb_checkout_loyalty_notice_prefix')} <strong>${creditData.restrictedBalance.toFixed(2)} CAD</strong> {t('rb_checkout_loyalty_notice_mid')} $75.00 CAD ({t('rb_checkout_loyalty_notice_add')} <strong>{formatPrice(convertPrice(Math.max(0, 75 - subtotal)))}</strong>).
                       {creditData.unrestrictedBalance > 0 && (
                         <div style={{ color: '#6ee7b7', marginTop: '0.25rem', fontWeight: 600 }}>
-                          ✓ Seu crédito por defeito/garantia de ${creditData.unrestrictedBalance.toFixed(2)} CAD pode ser usado normalmente agora!
+                          {t('rb_checkout_defect_notice')} ${creditData.unrestrictedBalance.toFixed(2)} CAD {t('rb_checkout_defect_notice_suffix')}
                         </div>
                       )}
                     </div>
@@ -1091,17 +1091,17 @@ const RebrandCheckout = () => {
                           style={{ width: 16, height: 16, accentColor: '#CCFF00', cursor: 'pointer' }}
                         />
                         <span style={{ color: '#f3f4f6' }}>
-                          Usar saldo disponível de <strong>${availableUsableCredit.toFixed(2)} CAD</strong> nesta compra (<strong>-{formatPrice(displayAppliedCredit)}</strong>)
+                          {t('rb_checkout_use_credit_btn')} <strong>${availableUsableCredit.toFixed(2)} CAD</strong> {t('rb_checkout_use_credit_in_purchase')} (<strong>-{formatPrice(displayAppliedCredit)}</strong>)
                         </span>
                       </label>
                       {discount > 0 && useStoreCredit && (
                         <div style={{ fontSize: '0.73rem', color: '#6ee7b7', marginTop: '0.35rem', paddingLeft: '1.6rem', lineHeight: 1.3 }}>
-                          ✓ Crédito aplicado em substituição ao desconto por volume de {formatPrice(rawDisplayDiscount)} para garantir seu maior benefício.
+                          {t('rb_checkout_credit_replaced_volume')} {formatPrice(rawDisplayDiscount)} {t('rb_checkout_credit_replaced_volume_suffix')}
                         </div>
                       )}
                       {appliedCoupon && useStoreCredit && (
                         <div style={{ fontSize: '0.73rem', color: '#93c5fd', marginTop: '0.35rem', paddingLeft: '1.6rem', lineHeight: 1.3 }}>
-                          ℹ️ Crédito ativo (substitui o cupom <strong>{appliedCoupon.code}</strong> para garantir seu maior desconto).
+                          {t('rb_checkout_credit_replaced_coupon')} <strong>{appliedCoupon.code}</strong> {t('rb_checkout_credit_replaced_coupon_suffix')}
                         </div>
                       )}
                     </div>
@@ -1156,13 +1156,13 @@ const RebrandCheckout = () => {
                 </div>
                 {appliedCreditAmount > 0 && (
                   <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.9rem', color: '#10b981', fontWeight: 800 }}>
-                    <span style={{ display: 'flex', alignItems: 'center', gap: '0.3rem' }}>💳 Saldo de Crédito Aplicado</span>
+                    <span style={{ display: 'flex', alignItems: 'center', gap: '0.3rem' }}>{t('rb_checkout_applied_store_credit')}</span>
                     <span>-{formatPrice(displayAppliedCredit)}</span>
                   </div>
                 )}
                 {appliedCreditAmount > 0 && creditData.totalBalance > appliedCreditAmount && (
                   <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.76rem', color: '#6b7280', fontStyle: 'italic' }}>
-                    <span>Saldo restante na carteira:</span>
+                    <span>{t('rb_checkout_remaining_wallet')}</span>
                     <span>${(creditData.totalBalance - appliedCreditAmount).toFixed(2)} CAD</span>
                   </div>
                 )}
@@ -1188,10 +1188,10 @@ const RebrandCheckout = () => {
               {baseFinalTotal === 0 && appliedCreditAmount > 0 ? (
                 <div style={{ marginBottom: '1.2rem', background: '#f0fdf4', border: '1.5px solid #86efac', borderRadius: '10px', padding: '1rem', textAlign: 'center' }}>
                   <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.4rem', color: '#15803d', fontWeight: 700, fontSize: '0.92rem', marginBottom: '0.25rem' }}>
-                    <CheckCircle size={18} /> Pedido 100% coberto pelo Crédito em Loja!
+                    <CheckCircle size={18} /> {t('rb_checkout_covered_title')}
                   </div>
                   <p style={{ margin: 0, fontSize: '0.8rem', color: '#166534' }}>
-                    Nenhum pagamento adicional é necessário. Clique abaixo para finalizar o seu pedido.
+                    {t('rb_checkout_covered_desc')}
                   </p>
                 </div>
               ) : (
@@ -1225,7 +1225,7 @@ const RebrandCheckout = () => {
                   style={{ width: '100%', padding: '1rem', background: isSubmitting ? '#adb5bd' : '#10b981', color: '#fff', border: 'none', borderRadius: '100px', fontWeight: 800, fontSize: '1rem', cursor: isSubmitting ? 'not-allowed' : 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem', transition: 'background 0.2s', boxShadow: '0 4px 14px rgba(16,185,129,0.35)' }}
                 >
                   <CheckCircle size={20} />
-                  {isSubmitting ? 'Processando...' : 'Finalizar Pedido com Crédito'}
+                  {isSubmitting ? t('rb_checkout_processing') : t('rb_checkout_place_order_credit')}
                 </button>
               ) : paymentMethod === 'whatsapp' ? (
                 <button
