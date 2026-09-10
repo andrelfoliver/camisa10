@@ -2531,6 +2531,11 @@
     <priority>0.8</priority>
   </url>
   <url>
+    <loc>https://ifooty.ca/produto/1634</loc>
+    <changefreq>daily</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
     <loc>https://ifooty.ca/produto/1621</loc>
     <changefreq>daily</changefreq>
     <priority>0.8</priority>

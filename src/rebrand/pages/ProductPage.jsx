@@ -28,6 +28,34 @@ const ALL_MOCKS = {
   'hock-2': { name: 'Edmonton Oilers Connor McDavid Home Jersey', price: 149.90, oldPrice: 189.90, category: 'Hockey', image: 'https://images.unsplash.com/photo-1580748141549-71748d60bdc9?w=800', rating: 4.9, reviews: 112, colors: ['#041E42', '#FF4C00', '#FFFFFF'], desc: 'Stitched Connor McDavid Oilers jersey.' }
 };
 
+// 4 Opções de Patches Oficiais da Copa do Mundo 2026
+const WORLD_CUP_PATCHES = [
+  {
+    id: 'wc2026_gold',
+    nameKey: 'rb_patch_wc2026_gold',
+    defaultName: 'World Cup 2026 - Gold Champions',
+    image: '/images/patches/wc2026_gold.png',
+  },
+  {
+    id: 'wc2026_black',
+    nameKey: 'rb_patch_wc2026_black',
+    defaultName: 'World Cup 2026 - Black Edition',
+    image: '/images/patches/wc2026_black.png',
+  },
+  {
+    id: 'wc2026_white',
+    nameKey: 'rb_patch_wc2026_white',
+    defaultName: 'World Cup 2026 - White Edition',
+    image: '/images/patches/wc2026_white.png',
+  },
+  {
+    id: 'wc2026_white_gold',
+    nameKey: 'rb_patch_wc2026_white_gold',
+    defaultName: 'World Cup 2026 - White & Gold',
+    image: '/images/patches/wc2026_white_gold.png',
+  },
+];
+
 const ProductPage = () => {
   const { id } = useParams();
   const navigate = useNavigate();
@@ -43,6 +71,7 @@ const ProductPage = () => {
   const [customName, setCustomName] = useState('');
   const [customNumber, setCustomNumber] = useState('');
   const [patchEnabled, setPatchEnabled] = useState(false);
+  const [selectedPatch, setSelectedPatch] = useState('wc2026_gold');
   const [customPatch, setCustomPatch] = useState('');
 
   // Favorito
@@ -140,12 +169,19 @@ const ProductPage = () => {
          : (['24', '26', '28'].includes(selectedSize) ? 54.90 : 49.90))
       : product.price;
 
+    const activePatchObj = WORLD_CUP_PATCHES.find(p => p.id === selectedPatch);
+    const resolvedPatchText = selectedPatch === 'other'
+      ? (customPatch.trim() || t('rb_patch_other'))
+      : (activePatchObj ? t(activePatchObj.nameKey) : 'World Cup 2026 Patch');
+
     const extras = {
       nameNumber: nameNumberEnabled,
       customName: nameNumberEnabled ? customName.toUpperCase() : '',
       customNumber: nameNumberEnabled ? customNumber : '',
       patch: patchEnabled,
-      customPatch: patchEnabled ? customPatch : '',
+      customPatch: patchEnabled ? resolvedPatchText : '',
+      patchId: patchEnabled ? selectedPatch : '',
+      patchImage: patchEnabled && activePatchObj ? activePatchObj.image : '',
       extraCustomization: false,
       onlyShirt: isKidsKit && selectedInclusions === 'shirt'
     };
@@ -676,44 +712,164 @@ const ProductPage = () => {
             {/* Custom Patch Option */}
             <div style={{
               background: '#f8f9fa',
-              padding: '1rem',
-              borderRadius: '6px',
-              border: '1px solid #dee2e6',
-              marginBottom: '1.5rem'
+              padding: '1.1rem',
+              borderRadius: '8px',
+              border: patchEnabled ? '1.5px solid #121416' : '1px solid #dee2e6',
+              marginBottom: '1.5rem',
+              transition: 'border-color 0.2s, box-shadow 0.2s'
             }}>
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '1rem' }}>
-                <div 
-                  onClick={() => setPatchEnabled(!patchEnabled)}
-                  style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', cursor: 'pointer' }}
-                >
+              <div 
+                onClick={() => setPatchEnabled(!patchEnabled)}
+                style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', cursor: 'pointer' }}
+              >
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem' }}>
                   <div style={{ 
-                    width: '18px', height: '18px', borderRadius: '3px', border: '2px solid #121416',
+                    width: '20px', height: '20px', borderRadius: '4px', border: '2px solid #121416',
                     background: patchEnabled ? '#121416' : 'transparent',
                     display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'all 0.2s',
                     flexShrink: 0
                   }}>
-                    {patchEnabled && <span style={{ color: '#fff', fontWeight: 800, fontSize: '0.6rem' }}>✓</span>}
+                    {patchEnabled && <span style={{ color: '#fff', fontWeight: 800, fontSize: '0.7rem' }}>✓</span>}
                   </div>
                   <div>
-                    <span style={{ fontSize: '0.85rem', color: '#121416', fontWeight: 700 }}>{t('rb_prod_add_patch')}</span>
-                    <span style={{ fontSize: '0.75rem', color: '#6c757d', marginLeft: '0.4rem' }}>
+                    <span style={{ fontSize: '0.9rem', color: '#121416', fontWeight: 700 }}>{t('rb_prod_add_patch')}</span>
+                    <span style={{ fontSize: '0.78rem', color: '#16a34a', fontWeight: 700, marginLeft: '0.4rem' }}>
                       (+ ${(pricingConfig?.patch || 5.00).toFixed(2)} CAD)
                     </span>
                   </div>
                 </div>
-
-                {patchEnabled && (
-                  <div style={{ flex: 1, minWidth: '180px' }}>
-                    <input 
-                      type="text" 
-                      placeholder={t('rb_prod_patch_placeholder')} 
-                      value={customPatch}
-                      onChange={e => setCustomPatch(e.target.value.substring(0, 50))}
-                      style={{ width: '100%', padding: '0.5rem', border: '1px solid #ced4da', borderRadius: '4px', fontSize: '0.8rem', fontWeight: 600 }}
-                    />
-                  </div>
-                )}
+                <span style={{ fontSize: '0.75rem', fontWeight: 700, color: patchEnabled ? '#121416' : '#6b7280', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                  {patchEnabled ? '▲ Fechar' : '▼ Ver Opções'}
+                </span>
               </div>
+
+              {patchEnabled && (
+                <div style={{ marginTop: '1rem', paddingTop: '1rem', borderTop: '1px solid #e5e7eb' }}>
+                  <p style={{ fontSize: '0.8rem', fontWeight: 700, color: '#374151', margin: '0 0 0.75rem', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                    <span>🏆</span> {t('rb_prod_patch_select_title')}
+                  </p>
+
+                  {/* Grid dos 4 Patches da Copa 2026 */}
+                  <div style={{ 
+                    display: 'grid', 
+                    gridTemplateColumns: 'repeat(auto-fit, minmax(130px, 1fr))', 
+                    gap: '0.65rem',
+                    marginBottom: '0.85rem'
+                  }}>
+                    {WORLD_CUP_PATCHES.map((patch) => {
+                      const isSelected = selectedPatch === patch.id;
+                      return (
+                        <div
+                          key={patch.id}
+                          onClick={() => setSelectedPatch(patch.id)}
+                          style={{
+                            display: 'flex',
+                            flexDirection: 'column',
+                            alignItems: 'center',
+                            textAlign: 'center',
+                            padding: '0.6rem 0.5rem',
+                            borderRadius: '8px',
+                            cursor: 'pointer',
+                            background: isSelected ? '#121416' : '#ffffff',
+                            color: isSelected ? '#ffffff' : '#1f2937',
+                            border: isSelected ? '2px solid #121416' : '1.5px solid #e5e7eb',
+                            boxShadow: isSelected ? '0 4px 12px rgba(0,0,0,0.15)' : 'none',
+                            position: 'relative',
+                            transition: 'all 0.15s ease'
+                          }}
+                        >
+                          {isSelected && (
+                            <div style={{
+                              position: 'absolute',
+                              top: '4px',
+                              right: '4px',
+                              width: '16px',
+                              height: '16px',
+                              borderRadius: '50%',
+                              background: '#CCFF00',
+                              color: '#121416',
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              fontSize: '0.6rem',
+                              fontWeight: 900
+                            }}>
+                              ✓
+                            </div>
+                          )}
+                          <div style={{ 
+                            width: '54px', 
+                            height: '54px', 
+                            borderRadius: '6px', 
+                            overflow: 'hidden', 
+                            background: '#000',
+                            display: 'flex', 
+                            alignItems: 'center', 
+                            justifyContent: 'center',
+                            marginBottom: '0.4rem',
+                            border: '1px solid rgba(0,0,0,0.1)'
+                          }}>
+                            <img 
+                              src={patch.image} 
+                              alt={t(patch.nameKey)} 
+                              style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                            />
+                          </div>
+                          <span style={{ fontSize: '0.72rem', fontWeight: 700, lineHeight: 1.2 }}>
+                            {t(patch.nameKey)}
+                          </span>
+                        </div>
+                      );
+                    })}
+                  </div>
+
+                  {/* Opção de Patch Personalizado / Outra Liga */}
+                  <div style={{ marginTop: '0.5rem' }}>
+                    <div 
+                      onClick={() => setSelectedPatch(selectedPatch === 'other' ? 'wc2026_gold' : 'other')}
+                      style={{ 
+                        display: 'inline-flex', 
+                        alignItems: 'center', 
+                        gap: '0.4rem', 
+                        fontSize: '0.78rem', 
+                        color: selectedPatch === 'other' ? '#121416' : '#6b7280', 
+                        fontWeight: 600, 
+                        cursor: 'pointer',
+                        padding: '0.2rem 0'
+                      }}
+                    >
+                      <input 
+                        type="radio" 
+                        checked={selectedPatch === 'other'} 
+                        onChange={() => setSelectedPatch('other')}
+                        style={{ cursor: 'pointer', accentColor: '#121416' }}
+                      />
+                      <span>{t('rb_patch_other')}</span>
+                    </div>
+
+                    {selectedPatch === 'other' && (
+                      <div style={{ marginTop: '0.4rem' }}>
+                        <input 
+                          type="text" 
+                          placeholder={t('rb_prod_patch_placeholder')} 
+                          value={customPatch}
+                          onChange={e => setCustomPatch(e.target.value.substring(0, 50))}
+                          style={{ 
+                            width: '100%', 
+                            padding: '0.55rem 0.75rem', 
+                            border: '1.5px solid #121416', 
+                            borderRadius: '6px', 
+                            fontSize: '0.82rem', 
+                            fontWeight: 600,
+                            background: '#fff'
+                          }}
+                          autoFocus
+                        />
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
             </div>
 
             {/* Quantity and Add to Cart Row */}
