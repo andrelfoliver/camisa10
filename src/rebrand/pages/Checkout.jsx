@@ -130,10 +130,27 @@ const RebrandCheckout = () => {
           netUnrestricted = Math.max(0, netUnrestricted);
           const totalBal = netRestricted + netUnrestricted;
 
+          let earliestExpiry = null;
+          validCredits.forEach(c => {
+            if (c.expires_at && parseFloat(c.amount || 0) > 0) {
+              if (!earliestExpiry || new Date(c.expires_at) < new Date(earliestExpiry)) {
+                earliestExpiry = c.expires_at;
+              }
+            }
+          });
+
+          let expiringDays = null;
+          if (earliestExpiry) {
+            const diffMs = new Date(earliestExpiry).getTime() - Date.now();
+            expiringDays = Math.ceil(diffMs / (1000 * 60 * 60 * 24));
+          }
+
           setCreditData({
             totalBalance: totalBal,
             unrestrictedBalance: netUnrestricted,
             restrictedBalance: netRestricted,
+            expiringDays,
+            earliestExpiry
           });
         } else if (user?.id) {
           const { data: profile } = await supabase
@@ -1064,9 +1081,18 @@ const RebrandCheckout = () => {
                       </div>
                       <span style={{ fontSize: '0.85rem', fontWeight: 700, color: '#fff' }}>{t('rb_checkout_store_credit_title')}</span>
                     </div>
-                    <span style={{ fontSize: '1rem', fontWeight: 800, color: '#CCFF00' }}>
-                      ${creditData.totalBalance.toFixed(2)} CAD
-                    </span>
+                    <div style={{ textAlign: 'right' }}>
+                      <div style={{ fontSize: '1rem', fontWeight: 800, color: '#CCFF00' }}>
+                        ${creditData.totalBalance.toFixed(2)} CAD
+                      </div>
+                      {creditData.expiringDays !== null && creditData.expiringDays !== undefined && creditData.expiringDays > 0 && (
+                        <div style={{ fontSize: '0.7rem', color: '#fbbf24', fontWeight: 700 }}>
+                          ⏳ {creditData.expiringDays === 1 
+                            ? t('rb_profile_credit_expires_tomorrow') 
+                            : t('rb_profile_credit_expires_days').replace('{days}', creditData.expiringDays)}
+                        </div>
+                      )}
+                    </div>
                   </div>
 
                   {/* Avisos de Regras / Desbloqueio */}

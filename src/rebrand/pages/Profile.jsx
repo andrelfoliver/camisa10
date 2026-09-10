@@ -278,64 +278,107 @@ const RebrandProfile = () => {
                 <Wallet size={180} />
               </div>
 
-              <div style={{ position: 'relative', zIndex: 1 }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', marginBottom: '0.5rem' }}>
-                  <div style={{ width: 28, height: 28, borderRadius: '6px', background: 'rgba(204,255,0,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#CCFF00' }}>
-                    <Sparkles size={16} />
+              {/* Wallet Card */}
+              {(() => {
+                const getExpirationInfo = (expiresAt) => {
+                  if (!expiresAt) return null;
+                  const expDate = new Date(expiresAt);
+                  const now = new Date();
+                  const diffMs = expDate.getTime() - now.getTime();
+                  const days = Math.ceil(diffMs / (1000 * 60 * 60 * 24));
+                  const locale = language === 'pt' ? 'pt-BR' : (language === 'es' ? 'es-ES' : 'en-CA');
+                  const formattedDate = expDate.toLocaleDateString(locale, { day: '2-digit', month: 'short', year: 'numeric' });
+                  return { days, formattedDate, isExpired: days <= 0 };
+                };
+
+                const activeExpiringCredit = creditHistory.find(
+                  c => parseFloat(c.amount || 0) > 0 && c.expires_at && new Date(c.expires_at) > new Date()
+                );
+                const overallExpiryInfo = activeExpiringCredit ? getExpirationInfo(activeExpiringCredit.expires_at) : null;
+
+                return (
+                  <div style={{ position: 'relative', zIndex: 1 }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', marginBottom: '0.5rem' }}>
+                      <div style={{ width: 28, height: 28, borderRadius: '6px', background: 'rgba(204,255,0,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#CCFF00' }}>
+                        <Sparkles size={16} />
+                      </div>
+                      <span style={{ fontSize: '0.82rem', textTransform: 'uppercase', letterSpacing: '1px', color: 'rgba(255,255,255,0.7)', fontWeight: 700 }}>
+                        {t('rb_profile_credits')}
+                      </span>
+                    </div>
+
+                    <div style={{ fontSize: '2.4rem', fontWeight: 900, color: '#CCFF00', margin: '0.25rem 0 0.5rem' }}>
+                      ${creditBalance.toFixed(2)} <span style={{ fontSize: '1.1rem', color: '#fff', fontWeight: 600 }}>CAD</span>
+                    </div>
+
+                    {/* Badges de Regras de Crédito Dinâmicas */}
+                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem', marginBottom: '1.25rem' }}>
+                      {creditHistory.some(c => parseFloat(c.amount || 0) > 0 && (parseFloat(c.min_order_amount || 0) <= 0 || c.type === 'defect_compensation')) && (
+                        <span style={{ background: 'rgba(56, 189, 248, 0.15)', color: '#38bdf8', border: '1px solid rgba(56, 189, 248, 0.3)', padding: '0.25rem 0.65rem', borderRadius: '20px', fontSize: '0.75rem', fontWeight: 700 }}>
+                          {t('rb_profile_credit_defect_badge')}
+                        </span>
+                      )}
+                      {creditHistory.some(c => parseFloat(c.amount || 0) > 0 && (parseFloat(c.min_order_amount || 0) > 0 || c.type === 'loyalty_reward' || c.type === 'reactivation_campaign')) && (
+                        <span style={{ background: 'rgba(204, 255, 0, 0.15)', color: '#CCFF00', border: '1px solid rgba(204, 255, 0, 0.3)', padding: '0.25rem 0.65rem', borderRadius: '20px', fontSize: '0.75rem', fontWeight: 700 }}>
+                          {t('rb_profile_credit_loyalty_badge')}
+                        </span>
+                      )}
+                      {overallExpiryInfo && (
+                        <span style={{ 
+                          background: 'rgba(251, 191, 36, 0.2)', 
+                          color: '#fbbf24', 
+                          border: '1px solid rgba(251, 191, 36, 0.45)', 
+                          padding: '0.25rem 0.65rem', 
+                          borderRadius: '20px', 
+                          fontSize: '0.75rem', 
+                          fontWeight: 700,
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          gap: '0.3rem'
+                        }}>
+                          {overallExpiryInfo.days <= 0 
+                            ? t('rb_profile_credit_valid_badge_today') 
+                            : (overallExpiryInfo.days === 1 
+                                ? t('rb_profile_credit_valid_badge_one') 
+                                : t('rb_profile_credit_valid_badge').replace('{days}', overallExpiryInfo.days)
+                              ) + ` (${t('rb_profile_credit_valid_until').replace('{date}', overallExpiryInfo.formattedDate)})`
+                          }
+                        </span>
+                      )}
+                      <span style={{ background: 'rgba(255, 255, 255, 0.1)', color: '#fff', border: '1px solid rgba(255, 255, 255, 0.2)', padding: '0.25rem 0.65rem', borderRadius: '20px', fontSize: '0.75rem', fontWeight: 600 }}>
+                        {t('rb_profile_credit_instant_apply')}
+                      </span>
+                      <span style={{ background: 'rgba(255, 255, 255, 0.1)', color: 'rgba(255, 255, 255, 0.8)', border: '1px solid rgba(255, 255, 255, 0.2)', padding: '0.25rem 0.65rem', borderRadius: '20px', fontSize: '0.75rem' }}>
+                        {t('rb_profile_credit_non_cumulative')}
+                      </span>
+                    </div>
+
+                    <p style={{ color: 'rgba(255,255,255,0.75)', fontSize: '0.88rem', margin: '0 0 1.5rem', maxWidth: 500, lineHeight: 1.5 }}>
+                      {creditHistory.some(c => parseFloat(c.amount || 0) > 0 && (parseFloat(c.min_order_amount || 0) <= 0 || c.type === 'defect_compensation'))
+                        ? t('rb_profile_credit_desc_mixed')
+                        : t('rb_profile_credit_desc_loyalty')}
+                    </p>
+
+                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.75rem' }}>
+                      <button 
+                        className="rp-btn-primary" 
+                        onClick={() => navigate('/')}
+                        style={{ background: '#CCFF00', color: '#121416', fontWeight: 700, padding: '0.75rem 1.5rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}
+                      >
+                        <ShoppingBag size={16} /> {t('rb_profile_use_credit')}
+                      </button>
+                      <button 
+                        className="rp-btn-outline" 
+                        onClick={() => loadCredits()}
+                        disabled={loadingCredits}
+                        style={{ color: '#fff', borderColor: 'rgba(255,255,255,0.25)', padding: '0.75rem 1.25rem' }}
+                      >
+                        {loadingCredits ? t('rb_profile_credit_refreshing') : t('rb_profile_credit_refresh')}
+                      </button>
+                    </div>
                   </div>
-                  <span style={{ fontSize: '0.82rem', textTransform: 'uppercase', letterSpacing: '1px', color: 'rgba(255,255,255,0.7)', fontWeight: 700 }}>
-                    {t('rb_profile_credits')}
-                  </span>
-                </div>
-
-                <div style={{ fontSize: '2.4rem', fontWeight: 900, color: '#CCFF00', margin: '0.25rem 0 0.5rem' }}>
-                  ${creditBalance.toFixed(2)} <span style={{ fontSize: '1.1rem', color: '#fff', fontWeight: 600 }}>CAD</span>
-                </div>
-
-                {/* Badges de Regras de Crédito Dinâmicas */}
-                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem', marginBottom: '1.25rem' }}>
-                  {creditHistory.some(c => parseFloat(c.amount || 0) > 0 && (parseFloat(c.min_order_amount || 0) <= 0 || c.type === 'defect_compensation')) && (
-                    <span style={{ background: 'rgba(56, 189, 248, 0.15)', color: '#38bdf8', border: '1px solid rgba(56, 189, 248, 0.3)', padding: '0.25rem 0.65rem', borderRadius: '20px', fontSize: '0.75rem', fontWeight: 700 }}>
-                      {t('rb_profile_credit_defect_badge')}
-                    </span>
-                  )}
-                  {creditHistory.some(c => parseFloat(c.amount || 0) > 0 && (parseFloat(c.min_order_amount || 0) > 0 || c.type === 'loyalty_reward' || c.type === 'reactivation_campaign')) && (
-                    <span style={{ background: 'rgba(204, 255, 0, 0.15)', color: '#CCFF00', border: '1px solid rgba(204, 255, 0, 0.3)', padding: '0.25rem 0.65rem', borderRadius: '20px', fontSize: '0.75rem', fontWeight: 700 }}>
-                      {t('rb_profile_credit_loyalty_badge')}
-                    </span>
-                  )}
-                  <span style={{ background: 'rgba(255, 255, 255, 0.1)', color: '#fff', border: '1px solid rgba(255, 255, 255, 0.2)', padding: '0.25rem 0.65rem', borderRadius: '20px', fontSize: '0.75rem', fontWeight: 600 }}>
-                    {t('rb_profile_credit_instant_apply')}
-                  </span>
-                  <span style={{ background: 'rgba(255, 255, 255, 0.1)', color: 'rgba(255, 255, 255, 0.8)', border: '1px solid rgba(255, 255, 255, 0.2)', padding: '0.25rem 0.65rem', borderRadius: '20px', fontSize: '0.75rem' }}>
-                    {t('rb_profile_credit_non_cumulative')}
-                  </span>
-                </div>
-
-                <p style={{ color: 'rgba(255,255,255,0.75)', fontSize: '0.88rem', margin: '0 0 1.5rem', maxWidth: 500, lineHeight: 1.5 }}>
-                  {creditHistory.some(c => parseFloat(c.amount || 0) > 0 && (parseFloat(c.min_order_amount || 0) <= 0 || c.type === 'defect_compensation'))
-                    ? t('rb_profile_credit_desc_mixed')
-                    : t('rb_profile_credit_desc_loyalty')}
-                </p>
-
-                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.75rem' }}>
-                  <button 
-                    className="rp-btn-primary" 
-                    onClick={() => navigate('/')}
-                    style={{ background: '#CCFF00', color: '#121416', fontWeight: 700, padding: '0.75rem 1.5rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}
-                  >
-                    <ShoppingBag size={16} /> {t('rb_profile_use_credit')}
-                  </button>
-                  <button 
-                    className="rp-btn-outline" 
-                    onClick={() => loadCredits()}
-                    disabled={loadingCredits}
-                    style={{ color: '#fff', borderColor: 'rgba(255,255,255,0.25)', padding: '0.75rem 1.25rem' }}
-                  >
-                    {loadingCredits ? t('rb_profile_credit_refreshing') : t('rb_profile_credit_refresh')}
-                  </button>
-                </div>
-              </div>
+                );
+              })()}
             </div>
 
             {/* Extrato / Histórico */}
@@ -368,6 +411,59 @@ const RebrandProfile = () => {
                     const dateStr = item.created_at 
                       ? new Date(item.created_at).toLocaleDateString(language === 'pt' ? 'pt-BR' : (language === 'es' ? 'es-ES' : 'en-CA'), { day: '2-digit', month: 'short', year: 'numeric' })
                       : '—';
+
+                    let itemExpiryInfo = null;
+                    if (item.expires_at) {
+                      const expDate = new Date(item.expires_at);
+                      const now = new Date();
+                      const diffMs = expDate.getTime() - now.getTime();
+                      const days = Math.ceil(diffMs / (1000 * 60 * 60 * 24));
+                      const locale = language === 'pt' ? 'pt-BR' : (language === 'es' ? 'es-ES' : 'en-CA');
+                      const formattedDate = expDate.toLocaleDateString(locale, { day: '2-digit', month: 'short', year: 'numeric' });
+                      itemExpiryInfo = { days, formattedDate, isExpired: days <= 0 };
+                    }
+
+                    // Tradução dinâmica da descrição gravada
+                    const getLocalizedDescription = () => {
+                      const rawDesc = (item.description || '').trim();
+                      const amt = Math.abs(parseFloat(item.amount || 0)).toFixed(2);
+                      const minOrdVal = parseFloat(item.min_order_amount || 75).toFixed(2);
+
+                      if (item.type === 'loyalty_reward' || item.type === 'reactivation_campaign' || /Crédito de Fidelidade|Loyalty/i.test(rawDesc)) {
+                        const daysMatch = rawDesc.match(/(\d+)\s*(?:dias|days|días)/i);
+                        const expDays = daysMatch ? daysMatch[1] : '30';
+                        return t('rb_profile_credit_desc_loyalty_tpl')
+                          .replace('{amount}', amt)
+                          .replace('{days}', expDays)
+                          .replace('{min}', minOrdVal);
+                      }
+
+                      if (item.type === 'defect_compensation' || /defeito|fabricação|defect|defecto/i.test(rawDesc)) {
+                        if (/Compensação por defeito de fabricação/i.test(rawDesc)) {
+                          return rawDesc
+                            .replace(/Compensação por defeito de fabricação/gi, t('rb_profile_credit_desc_defect_default'))
+                            .replace(/\bteste\b/gi, language === 'en' ? 'test' : (language === 'es' ? 'prueba' : 'teste'));
+                        }
+                        return t('rb_profile_credit_desc_defect_default');
+                      }
+
+                      if (item.type === 'order_redemption' || /resgate|abate|abatimento|uso no pedido|uso em compra/i.test(rawDesc)) {
+                        if (item.order_id) {
+                          return t('rb_profile_credit_desc_redemption_tpl').replace('{orderId}', String(item.order_id).slice(-8));
+                        }
+                        return t('rb_profile_credit_desc_redemption_default');
+                      }
+
+                      if (item.type === 'refund') {
+                        return t('rb_profile_credit_type_refund');
+                      }
+
+                      if (!rawDesc || rawDesc.toLowerCase() === 'crédito em loja' || rawDesc.toLowerCase() === 'store credit') {
+                        return t('rb_profile_credit_desc_store');
+                      }
+
+                      return rawDesc;
+                    };
 
                     let typeLabel = t('rb_profile_credit_type_generic');
                     let typeBg = '#dcfce7';
@@ -419,9 +515,30 @@ const RebrandProfile = () => {
                               {typeLabel}
                             </span>
                             <span style={{ fontSize: '0.78rem', color: '#9ca3af' }}>{dateStr}</span>
+                            {itemExpiryInfo && isPositive && (
+                              <span style={{
+                                fontSize: '0.7rem',
+                                fontWeight: 700,
+                                padding: '0.15rem 0.5rem',
+                                borderRadius: 4,
+                                background: itemExpiryInfo.isExpired ? '#fee2e2' : '#fef3c7',
+                                color: itemExpiryInfo.isExpired ? '#b91c1c' : '#b45309',
+                                border: itemExpiryInfo.isExpired ? '1px solid #fca5a5' : '1px solid #fde68a'
+                              }}>
+                                {itemExpiryInfo.isExpired 
+                                  ? `❌ ${t('rb_profile_credit_expired')}`
+                                  : `⏳ ${itemExpiryInfo.days <= 0 
+                                      ? t('rb_profile_credit_expires_today') 
+                                      : (itemExpiryInfo.days === 1 
+                                          ? t('rb_profile_credit_expires_tomorrow') 
+                                          : t('rb_profile_credit_expires_days').replace('{days}', itemExpiryInfo.days)
+                                        )} (${itemExpiryInfo.formattedDate})`
+                                }
+                              </span>
+                            )}
                           </div>
                           <div style={{ fontSize: '0.9rem', fontWeight: 600, color: '#1f2937' }}>
-                            {item.description || 'Crédito em loja'}
+                            {getLocalizedDescription()}
                           </div>
                           {item.order_id && (
                             <div style={{ fontSize: '0.75rem', color: '#6b7280' }}>
