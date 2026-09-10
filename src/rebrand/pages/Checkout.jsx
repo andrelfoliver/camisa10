@@ -132,7 +132,7 @@ const RebrandCheckout = () => {
 
           let earliestExpiry = null;
           validCredits.forEach(c => {
-            if (c.expires_at && parseFloat(c.amount || 0) > 0) {
+            if (c.expires_at && parseFloat(c.amount || 0) > 0 && c.type !== 'defect_compensation' && c.type !== 'refund') {
               if (!earliestExpiry || new Date(c.expires_at) < new Date(earliestExpiry)) {
                 earliestExpiry = c.expires_at;
               }
@@ -141,8 +141,11 @@ const RebrandCheckout = () => {
 
           let expiringDays = null;
           if (earliestExpiry) {
-            const diffMs = new Date(earliestExpiry).getTime() - Date.now();
-            expiringDays = Math.ceil(diffMs / (1000 * 60 * 60 * 24));
+            const expDate = new Date(earliestExpiry);
+            const now = new Date();
+            const expMidnight = new Date(expDate.getFullYear(), expDate.getMonth(), expDate.getDate());
+            const nowMidnight = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+            expiringDays = Math.round((expMidnight.getTime() - nowMidnight.getTime()) / (1000 * 60 * 60 * 24));
           }
 
           setCreditData({

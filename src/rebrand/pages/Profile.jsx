@@ -284,15 +284,18 @@ const RebrandProfile = () => {
                   if (!expiresAt) return null;
                   const expDate = new Date(expiresAt);
                   const now = new Date();
-                  const diffMs = expDate.getTime() - now.getTime();
-                  const days = Math.ceil(diffMs / (1000 * 60 * 60 * 24));
+                  // Normalizar para meia-noite para cálculo exato de dias corridos do calendário
+                  const expMidnight = new Date(expDate.getFullYear(), expDate.getMonth(), expDate.getDate());
+                  const nowMidnight = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+                  const diffTime = expMidnight.getTime() - nowMidnight.getTime();
+                  const days = Math.round(diffTime / (1000 * 60 * 60 * 24));
                   const locale = language === 'pt' ? 'pt-BR' : (language === 'es' ? 'es-ES' : 'en-CA');
                   const formattedDate = expDate.toLocaleDateString(locale, { day: '2-digit', month: 'short', year: 'numeric' });
-                  return { days, formattedDate, isExpired: days <= 0 };
+                  return { days, formattedDate, isExpired: days < 0 };
                 };
 
                 const activeExpiringCredit = creditHistory.find(
-                  c => parseFloat(c.amount || 0) > 0 && c.expires_at && new Date(c.expires_at) > new Date()
+                  c => parseFloat(c.amount || 0) > 0 && c.expires_at && c.type !== 'defect_compensation' && c.type !== 'refund' && new Date(c.expires_at) > new Date()
                 );
                 const overallExpiryInfo = activeExpiringCredit ? getExpirationInfo(activeExpiringCredit.expires_at) : null;
 
@@ -413,14 +416,16 @@ const RebrandProfile = () => {
                       : '—';
 
                     let itemExpiryInfo = null;
-                    if (item.expires_at) {
+                    if (item.expires_at && item.type !== 'defect_compensation' && item.type !== 'refund') {
                       const expDate = new Date(item.expires_at);
                       const now = new Date();
-                      const diffMs = expDate.getTime() - now.getTime();
-                      const days = Math.ceil(diffMs / (1000 * 60 * 60 * 24));
+                      const expMidnight = new Date(expDate.getFullYear(), expDate.getMonth(), expDate.getDate());
+                      const nowMidnight = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+                      const diffTime = expMidnight.getTime() - nowMidnight.getTime();
+                      const days = Math.round(diffTime / (1000 * 60 * 60 * 24));
                       const locale = language === 'pt' ? 'pt-BR' : (language === 'es' ? 'es-ES' : 'en-CA');
                       const formattedDate = expDate.toLocaleDateString(locale, { day: '2-digit', month: 'short', year: 'numeric' });
-                      itemExpiryInfo = { days, formattedDate, isExpired: days <= 0 };
+                      itemExpiryInfo = { days, formattedDate, isExpired: days < 0 };
                     }
 
                     // Tradução dinâmica da descrição gravada
