@@ -18,7 +18,7 @@ const STATUS_CONFIG = {
 
 const RebrandProfile = () => {
   const { user, signOut, loading: authLoading, isAdmin } = useRebrandAuth();
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
   const navigate = useNavigate();
 
   const [activeTab, setActiveTab] = useState('orders');
