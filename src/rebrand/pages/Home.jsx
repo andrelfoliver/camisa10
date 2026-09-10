@@ -6,6 +6,7 @@ import { useCart } from '../../context/CartContext';
 import { useLanguage } from '../../context/LanguageContext';
 import { formatProductName, getProductRating, getProductReviewsCount } from '../utils/format';
 import SEO from '../../components/SEO';
+import AnimatedStatsTracker from '../components/AnimatedStatsTracker';
 
 // Mocks premium de outros esportes para simular a loja multiesportiva antes de cadastrar no banco
 const MOCK_PRODUCTS = [
@@ -478,21 +479,8 @@ const Home = () => {
         </div>
       </section>
 
-      {/* FAIXA DE DIFERENCIAIS / TRUST ELEMENT (Otimizado abaixo do Hero) */}
-      <div className="rebrand-trustbar" style={{ background: '#000000', borderTop: '1px solid rgba(255,255,255,0.1)', borderBottom: '1px solid rgba(255,255,255,0.1)' }}>
-        <div className="rebrand-trustbar-item">
-          <Shirt size={16} color="var(--rebrand-volt)" /> {t('rb_prod_premium_quality')}
-        </div>
-        <div className="rebrand-trustbar-item">
-          <Truck size={18} color="var(--rebrand-volt)" /> {t('rb_free_shipping')}
-        </div>
-        <div className="rebrand-trustbar-item">
-          <Star size={16} color="var(--rebrand-volt)" fill="var(--rebrand-volt)" /> 5-Star Customer Experience
-        </div>
-        <div className="rebrand-trustbar-item">
-          <span style={{ color: 'var(--rebrand-volt)', fontSize: '1rem', display: 'flex', alignItems: 'center' }}>🍁</span> {t('rb_slogan')}
-        </div>
-      </div>
+      {/* TRACKING RECORDS & LIVE STATS ANIMADOS (Substitui os benefícios abaixo do Hero) */}
+      <AnimatedStatsTracker />
 
       {/* 2. SHOP BY SPORT - GRIDS ASSIMÉTRICOS (Mais amplo, vem primeiro) */}
       <section className="rebrand-section container" style={{ maxWidth: '1400px', margin: '0 auto', paddingTop: '4rem' }}>
