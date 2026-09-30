@@ -476,6 +476,10 @@ const RebrandCheckout = () => {
       const d = await r.json();
       if (d?.rates?.CAD) currentExchangeRate = d.rates.CAD;
     } catch {}
+
+    const utms = getSavedUtms();
+    const attribution = getSavedAttribution();
+
     const isFullyPaidWithCredit = appliedCreditAmount > 0 && finalTotal === 0;
     const orderData = {
       user_id: user?.id || null, customer_name: data.name,
@@ -519,6 +523,36 @@ const RebrandCheckout = () => {
       const res = await supabase.from('orders').insert([orderData]).select();
       insertedOrders = res.data; orderError = res.error;
     } catch (err) { orderError = err; }
+
+    if (orderError && (orderError.code === '42703' || orderError.message?.includes('column'))) {
+      console.warn("[Checkout] Column error detected, retrying order insertion with fallback payload...");
+      const fallbackOrderData = {
+        user_id: user?.id || null,
+        customer_name: data.name,
+        customer_email: user?.email || guestEmail,
+        customer_phone: data.phone,
+        shipping_address: orderData.shipping_address,
+        usd_cad_rate: currentExchangeRate,
+        items: orderData.items,
+        total_price: finalTotal,
+        status: orderData.status,
+        payment_method: orderData.payment_method,
+        payment_id: orderData.payment_id,
+        paid_at: orderData.paid_at,
+        referrer: localStorage.getItem('ifooty_referrer') || null,
+        coupon_code: appliedCoupon?.code || null,
+        coupon_discount: orderData.coupon_discount,
+        utm_source: utms.utm_source,
+        utm_medium: utms.utm_medium,
+        utm_campaign: utms.utm_campaign,
+        utm_content: utms.utm_content,
+        utm_term: utms.utm_term,
+        session_id: localStorage.getItem('ifooty_session_id') || null
+      };
+      const res = await supabase.from('orders').insert([fallbackOrderData]).select();
+      insertedOrders = res.data;
+      orderError = res.error;
+    }
     if (orderError) throw orderError;
     const orderId = insertedOrders?.[0]?.id || ('purchase_' + Date.now());
 
