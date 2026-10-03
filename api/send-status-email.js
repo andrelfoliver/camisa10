@@ -136,6 +136,33 @@ export default async function handler(req, res) {
           <p style="color: #4a5568; line-height: 1.6; font-size: 1.05rem; margin-top: 25px;">Thank you for choosing iFooty!</p>
         `;
         break;
+      case 'payment_pending':
+        subject = `⏳ Action Required: Complete your order #${orderIdShort} - iFooty`;
+        subtitle = 'Awaiting Payment';
+        bodyContent = `
+          <p style="color: #4a5568; line-height: 1.6; font-size: 1.05rem; margin-top: 0;">Hi <strong>${firstName}</strong>,</p>
+          <p style="color: #4a5568; line-height: 1.6; font-size: 1.05rem;">We noticed that your order <strong>#${orderIdShort}</strong> was started, but the payment is still pending confirmation.</p>
+          <div style="background: #fffbeb; border-left: 4px solid #f59e0b; padding: 14px 16px; margin: 18px 0; border-radius: 4px;">
+            <p style="margin: 0; color: #92400e; font-size: 0.95rem; line-height: 1.5;">
+              ⚠️ <strong>Your items are temporarily reserved!</strong> Please complete your payment so our team can prepare and dispatch your jerseys right away.
+            </p>
+          </div>
+          ${productsHtml}${totalHtml}${addressHtml}
+          <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 22px; margin: 25px 0; text-align: center;">
+            <h3 style="margin: 0 0 10px; color: #1a202c; font-size: 1.1rem;">Need help completing your payment?</h3>
+            <p style="margin: 0 0 18px; color: #718096; font-size: 0.95rem; line-height: 1.5;">
+              If your card was declined or if you prefer to pay via <strong>Interac e-Transfer</strong>, <strong>PayPal</strong>, or <strong>Credit Card link</strong>, tap below to contact us directly:
+            </p>
+            <a href="https://wa.me/17788061419?text=${encodeURIComponent(`Hi iFooty! I need help completing the payment for my order #${orderIdShort}`)}" 
+               style="background-color: #25D366; color: #ffffff; padding: 12px 28px; border-radius: 6px; font-weight: bold; text-decoration: none; display: inline-block; font-size: 0.95rem;">
+              💬 Complete Payment via WhatsApp
+            </a>
+          </div>
+          <p style="color: #a0aec0; font-size: 0.85rem; margin-top: 20px;">
+            If you have already sent the payment, please reply to this email with your receipt or contact us on WhatsApp so we can confirm it immediately.
+          </p>
+        `;
+        break;
       case 'payment_received':
         subject = `✅ Payment Confirmed! Order #${orderIdShort} - iFooty`;
         subtitle = 'Payment Confirmed';

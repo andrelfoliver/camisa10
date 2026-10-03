@@ -1086,6 +1086,7 @@ const DashboardSection = ({ showValues, setShowValues }) => {
 // ─── ResendEmailModal ─────────────────────────────────────────────────────────
 const EMAIL_TEMPLATES = [
   { value: 'order_confirmation', label: 'Order Confirmation' },
+  { value: 'payment_pending',    label: 'Payment Pending (Aguardando Pagamento)' },
   { value: 'payment_received',   label: 'Payment Received' },
   { value: 'preparing_order',    label: 'Preparing Order' },
   { value: 'order_shipped',      label: 'Order Shipped' },
