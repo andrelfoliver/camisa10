@@ -8,6 +8,7 @@ import { PayPalScriptProvider, PayPalButtons } from '@paypal/react-paypal-js';
 import WhatsAppIcon from '../../components/WhatsAppIcon';
 import { supabaseRebrand as supabase } from '../../services/supabase';
 import { trackEvent, getSavedUtms, getSavedAttribution } from '../../services/analytics';
+import { computeCreditBalance, isCreditExpired, isNonExpiringCredit } from '../utils/credits';
 
 const RebrandCheckout = () => {
   const { 
@@ -88,51 +89,16 @@ const RebrandCheckout = () => {
         const { data: credits } = await query;
 
         if (credits && credits.length > 0) {
-          const now = new Date().toISOString();
-          const validCredits = credits.filter(c => !c.expires_at || c.expires_at > now);
-
-          let rawUnrestricted = 0;
-          let rawRestricted = 0;
-          let redemptions = 0;
-
-          validCredits.forEach(c => {
-            const val = parseFloat(c.amount || 0);
-            const minOrder = parseFloat(c.min_order_amount || 0);
-            if (val < 0) {
-              redemptions += Math.abs(val);
-            } else {
-              // Créditos por defeito ou reembolso não têm valor mínimo
-              if (minOrder <= 0 || c.type === 'defect_compensation' || c.type === 'refund') {
-                rawUnrestricted += val;
-              } else {
-                rawRestricted += val;
-              }
-            }
-          });
-
-          // Abater resgates anteriores
-          let rem = redemptions;
-          let netRestricted = rawRestricted;
-          let netUnrestricted = rawUnrestricted;
-
-          if (rem > 0) {
-            const dRest = Math.min(netRestricted, rem);
-            netRestricted -= dRest;
-            rem -= dRest;
-          }
-          if (rem > 0) {
-            const dUnr = Math.min(netUnrestricted, rem);
-            netUnrestricted -= dUnr;
-            rem -= dUnr;
-          }
-
-          netRestricted = Math.max(0, netRestricted);
-          netUnrestricted = Math.max(0, netUnrestricted);
-          const totalBal = netRestricted + netUnrestricted;
+          // Créditos por defeito ou reembolso não têm valor mínimo nem expiram
+          const {
+            totalBalance: totalBal,
+            restrictedBalance: netRestricted,
+            unrestrictedBalance: netUnrestricted
+          } = computeCreditBalance(credits);
 
           let earliestExpiry = null;
-          validCredits.forEach(c => {
-            if (c.expires_at && parseFloat(c.amount || 0) > 0 && c.type !== 'defect_compensation' && c.type !== 'refund') {
+          credits.forEach(c => {
+            if (c.expires_at && parseFloat(c.amount || 0) > 0 && !isNonExpiringCredit(c) && !isCreditExpired(c) && netRestricted > 0) {
               if (!earliestExpiry || new Date(c.expires_at) < new Date(earliestExpiry)) {
                 earliestExpiry = c.expires_at;
               }

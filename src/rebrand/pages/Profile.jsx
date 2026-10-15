@@ -6,6 +6,7 @@ import { useLanguage } from '../../context/LanguageContext';
 import { supabaseRebrand as supabase } from '../../services/supabase';
 import { Package, User, LogOut, ChevronRight, Edit2, Check, X, Truck, Clock, CheckCircle, XCircle, ShoppingBag, Heart, Star, MessageSquare, Wallet, Gift, Sparkles } from 'lucide-react';
 import TrackingModal from '../../components/TrackingModal';
+import { computeCreditBalance } from '../utils/credits';
 
 const STATUS_CONFIG = {
   pending:    { label: 'Pending Payment',  color: '#f59e0b', bg: '#fef3c7' },
@@ -48,8 +49,7 @@ const RebrandProfile = () => {
 
       if (credits && credits.length > 0) {
         setCreditHistory(credits);
-        const total = credits.reduce((acc, curr) => acc + parseFloat(curr.amount || 0), 0);
-        setCreditBalance(Math.max(0, total));
+        setCreditBalance(computeCreditBalance(credits).totalBalance);
       } else {
         const { data: profile } = await supabase
           .from('profiles')

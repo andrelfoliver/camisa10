@@ -10,6 +10,7 @@ import {
   Shirt, CreditCard, Globe, Activity, Truck, CheckCircle2, XCircle, Menu, MapPin, Mail, Send, AlertTriangle
 } from 'lucide-react';
 import ProductMedia from '../../components/ProductMedia';
+import { computeCreditBalance } from '../utils/credits';
 import TrackingModal from '../../components/TrackingModal';
 import CanadaMap, { normalizeProvince } from '../../components/CanadaMap';
 import JornadaCliente from '../components/JornadaCliente';
@@ -5376,8 +5377,10 @@ const ClientesSection = ({ showToast }) => {
       const k = (c.customer_email || '').toLowerCase().trim();
       if (!k) return;
       if (!creditsMap[k]) creditsMap[k] = { balance: 0, history: [] };
-      creditsMap[k].balance += parseFloat(c.amount || 0);
       creditsMap[k].history.push(c);
+    });
+    Object.values(creditsMap).forEach(m => {
+      m.balance = computeCreditBalance(m.history).totalBalance;
     });
 
     // Build order stats map keyed by email
