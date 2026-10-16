@@ -2111,6 +2111,20 @@ const uploadImageToSupabase = async (file) => {
   return data.publicUrl;
 };
 
+// Vídeos vão sem compressão (não passam pelo canvas/WebP)
+const MAX_VIDEO_MB = 50;
+const uploadVideoToSupabase = async (file) => {
+  if (file.type !== 'video/mp4') throw new Error(`"${file.name}" não é MP4.`);
+  if (file.size > MAX_VIDEO_MB * 1024 * 1024) {
+    throw new Error(`"${file.name}" tem ${(file.size / 1024 / 1024).toFixed(1)} MB (máx. ${MAX_VIDEO_MB} MB).`);
+  }
+  const filename = `${Date.now()}-${Math.random().toString(36).slice(2)}.mp4`;
+  const { error } = await supabase.storage.from('product-images').upload(filename, file, { cacheControl: '31536000', upsert: true, contentType: 'video/mp4' });
+  if (error) throw new Error(error.message);
+  const { data } = supabase.storage.from('product-images').getPublicUrl(filename);
+  return data.publicUrl;
+};
+
 // ─── Products Section ─────────────────────────────────────────────────────────
 const PRODUCT_CATEGORIES = [
   'Brasileirão',
@@ -2342,10 +2356,13 @@ const ProductsSection = ({ showToast }) => {
     if (files.length === 0) return;
     
     try {
-      showToast('Enviando imagens para a galeria...', 'success');
+      const hasVideo = files.some(f => f.type.startsWith('video/'));
+      showToast(hasVideo ? 'Enviando mídia para a galeria (vídeos podem demorar)...' : 'Enviando imagens para a galeria...', 'success');
       const uploadedUrls = [];
       for (const file of files) {
-        const url = await uploadImageToSupabase(file);
+        const url = file.type.startsWith('video/')
+          ? await uploadVideoToSupabase(file)
+          : await uploadImageToSupabase(file);
         uploadedUrls.push(url);
       }
       setForm(prev => ({
@@ -2354,7 +2371,9 @@ const ProductsSection = ({ showToast }) => {
       }));
       showToast('Galeria atualizada!', 'success');
     } catch (err) {
-      showToast('Erro no upload das imagens: ' + err.message, 'error');
+      showToast('Erro no upload: ' + err.message, 'error');
+    } finally {
+      e.target.value = '';
     }
   };
 
@@ -2793,8 +2812,8 @@ const ProductsSection = ({ showToast }) => {
                   )}
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
                     <label style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', padding: '0.75rem 1rem', background: '#0B0C0E', border: '1px dashed #2A2D30', borderRadius: '6px', cursor: 'pointer', fontSize: '0.8rem', color: 'rgba(255,255,255,0.6)' }}>
-                      <input type="file" multiple accept="image/*" style={{ display: 'none' }} onChange={handleGalleryUpload} />
-                      📸 Clique para enviar fotos para a galeria
+                      <input type="file" multiple accept="image/*,video/mp4" style={{ display: 'none' }} onChange={handleGalleryUpload} />
+                      📸 Clique para enviar fotos ou vídeos MP4 (máx. 50 MB) para a galeria
                     </label>
                     <div style={{ display: 'flex', gap: '0.5rem' }}>
                       <input 

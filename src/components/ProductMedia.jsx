@@ -1,7 +1,11 @@
 import React from 'react';
 
+// Detecta URLs de vídeo (ignora query string / hash, ex: ?t=123)
+export const isVideoUrl = (src) =>
+  typeof src === 'string' && /\.(mp4|webm)$/i.test(src.split(/[?#]/)[0]);
+
 const ProductMedia = ({ src, alt, style, className, onError, ...props }) => {
-  const isVideo = src && src.toLowerCase().endsWith('.mp4');
+  const isVideo = isVideoUrl(src);
 
   if (isVideo) {
     return (

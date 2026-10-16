@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
 import { supabaseRebrand as supabase } from '../../services/supabase';
-import { Star, ShoppingBag, ArrowLeft, ShieldCheck, Truck, RefreshCw, Calendar, Heart, Share2, Info, ChevronLeft, ChevronRight, Award } from 'lucide-react';
+import { Star, ShoppingBag, ArrowLeft, ShieldCheck, Truck, RefreshCw, Calendar, Heart, Share2, Info, ChevronLeft, ChevronRight, Award, Play } from 'lucide-react';
 import { useCart } from '../../context/CartContext';
 import { useWishlist } from '../../context/WishlistContext';
 import { useLanguage } from '../../context/LanguageContext';
@@ -10,6 +10,7 @@ import { formatProductName, getProductRating, getProductReviewsCount } from '../
 import { getCategoryRoute, getCategoryDisplayName } from '../utils/categoryRoutes';
 import SizeGuideModal from '../../components/SizeGuideModal';
 import { trackEvent } from '../../services/analytics';
+import { isVideoUrl } from '../../components/ProductMedia';
 
 // Todos os mocks para busca rápida com suporte a cores de time, preços riscados e informações extras
 const ALL_MOCKS = {
@@ -432,12 +433,21 @@ const ProductPage = () => {
                         key={idx}
                         onClick={() => setActiveThumb(idx)}
                         className={`rebrand-product-thumbnail-btn ${activeThumb === idx ? 'active' : ''}`}
+                        aria-label={isVideoUrl(img) ? `Play video ${idx + 1}` : `View image ${idx + 1}`}
                       >
-                        <img 
-                          src={img} 
-                          alt={`${formatProductName(product.name)} - View ${idx + 1}`} 
-                          style={{ objectFit: 'contain' }} 
-                        />
+                        {isVideoUrl(img) ? (
+                          <>
+                            {/* #t=0.1 forces browsers (incl. iOS) to render the first frame as poster */}
+                            <video src={`${img}#t=0.1`} muted playsInline preload="metadata" />
+                            <span className="rebrand-product-thumbnail-play"><Play size={14} fill="#ffffff" /></span>
+                          </>
+                        ) : (
+                          <img 
+                            src={img} 
+                            alt={`${formatProductName(product.name)} - View ${idx + 1}`} 
+                            style={{ objectFit: 'contain' }} 
+                          />
+                        )}
                       </button>
                     ))}
                   </div>
@@ -478,15 +488,27 @@ const ProductPage = () => {
                       </button>
                     )}
 
-                    <img 
-                      src={images[activeThumb] || product.image} 
-                      alt={formatProductName(product.name)} 
-                      style={{ 
-                        width: '100%', 
-                        height: '100%', 
-                        objectFit: 'contain'
-                      }} 
-                    />
+                    {isVideoUrl(images[activeThumb]) ? (
+                      <video
+                        key={images[activeThumb]}
+                        src={images[activeThumb]}
+                        className="rebrand-product-main-video"
+                        controls
+                        playsInline
+                        preload="metadata"
+                        controlsList="nodownload"
+                      />
+                    ) : (
+                      <img 
+                        src={images[activeThumb] || product.image} 
+                        alt={formatProductName(product.name)} 
+                        style={{ 
+                          width: '100%', 
+                          height: '100%', 
+                          objectFit: 'contain'
+                        }} 
+                      />
+                    )}
 
                     {/* Right Navigation Arrow */}
                     {images.length > 1 && (
