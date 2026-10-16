@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { ShoppingBag, Eye, Star } from 'lucide-react';
 import { formatProductName } from '../utils/format';
 import { useLanguage } from '../../context/LanguageContext';
+import ProductMedia from '../../components/ProductMedia';
 
 const ProductCard = ({ product, onAdd, onQuickView }) => {
   const [activeColor, setActiveColor] = useState(product.colors?.[0] || '');
@@ -38,8 +39,13 @@ const ProductCard = ({ product, onAdd, onQuickView }) => {
             {getBadgeLabel(product.badge)}
           </span>
         )}
-        <Link to={`/produto/${product.id}`}>
-          <img src={product.image} alt={product.name} className="rebrand-product-img" />
+        <Link to={`/produto/${product.id}`} style={{ display: 'block', width: '100%', height: '100%' }}>
+          <ProductMedia
+            src={product.image}
+            alt={product.name}
+            className="rebrand-product-img"
+            style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+          />
         </Link>
         
         {/* Hover Actions */}

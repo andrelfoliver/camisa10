@@ -1662,6 +1662,13 @@ h3.rebrand-sport-name {
   position: relative;
 }
 
+.rebrand-product-main-image-container.has-video {
+  aspect-ratio: auto;
+  background: transparent;
+  border: none;
+  min-height: 420px;
+}
+
 .rebrand-product-main-image-container img {
   width: 100%;
   height: 100%;
@@ -1699,10 +1706,16 @@ h3.rebrand-sport-name {
 }
 
 .rebrand-product-main-video {
-  width: 100%;
-  height: 100%;
+  display: block;
+  width: auto;
+  height: auto;
+  max-width: 100%;
+  max-height: 620px;
   object-fit: contain;
-  background: #000000;
+  border-radius: 8px;
+  margin: 0 auto;
+  background: transparent;
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.12);
 }
 
 /* Badge Oficial */
@@ -1881,6 +1894,21 @@ h3.rebrand-sport-name {
     flex: none !important;
     aspect-ratio: 1 !important;
     min-width: 0 !important;
+  }
+
+  .rebrand-product-main-image-container.has-video {
+    aspect-ratio: auto !important;
+    height: auto !important;
+    min-height: unset !important;
+    background: transparent !important;
+    border: none !important;
+  }
+
+  .rebrand-product-main-video {
+    max-height: 75vh !important;
+    width: 100% !important;
+    height: auto !important;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1) !important;
   }
 }
 

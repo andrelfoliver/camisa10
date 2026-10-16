@@ -258,7 +258,8 @@ const ProductPage = () => {
     ? product.desc 
     : `${formatProductName(product?.name || '')} - available in multiple sizes with shipping across Canada & USA at iFooty.ca.`;
   const canonicalUrl = `https://ifooty.ca/produto/${id}`;
-  const rawImageUrl = product?.image || 'https://ifooty.ca/og-image-full.png';
+  const firstStaticImage = [product?.image, ...(product?.gallery || [])].find(img => img && !isVideoUrl(img)) || 'https://ifooty.ca/og-image-full.png';
+  const rawImageUrl = firstStaticImage;
   const ogImageUrl = rawImageUrl.startsWith('http') ? rawImageUrl : `https://ifooty.ca${rawImageUrl.startsWith('/') ? '' : '/'}${rawImageUrl}`;
 
   // Availability calculation based on real inventory
@@ -424,6 +425,8 @@ const ProductPage = () => {
           <div>
             {(() => {
               const images = [product.image, ...(product.gallery || [])].filter(Boolean);
+              const currentMedia = images[activeThumb] || product.image;
+              const isCurrentVideo = isVideoUrl(currentMedia);
               return (
                 <div className="rebrand-product-gallery">
                   {/* Vertical Thumbnails */}
@@ -452,8 +455,8 @@ const ProductPage = () => {
                     ))}
                   </div>
 
-                  {/* Main Product Image */}
-                  <div className="rebrand-product-main-image-container">
+                  {/* Main Product Image / Video */}
+                  <div className={`rebrand-product-main-image-container ${isCurrentVideo ? 'has-video' : ''}`}>
                     <span style={{
                       position: 'absolute',
                       top: '1.5rem',
@@ -466,7 +469,8 @@ const ProductPage = () => {
                       textTransform: 'uppercase',
                       borderRadius: '3px',
                       borderLeft: '3px solid var(--rebrand-volt)',
-                      zIndex: 2
+                      zIndex: 2,
+                      pointerEvents: 'none'
                     }}>
                       Premium Quality
                     </span>
@@ -488,10 +492,10 @@ const ProductPage = () => {
                       </button>
                     )}
 
-                    {isVideoUrl(images[activeThumb]) ? (
+                    {isCurrentVideo ? (
                       <video
-                        key={images[activeThumb]}
-                        src={images[activeThumb]}
+                        key={currentMedia}
+                        src={currentMedia}
                         className="rebrand-product-main-video"
                         controls
                         playsInline
@@ -500,7 +504,7 @@ const ProductPage = () => {
                       />
                     ) : (
                       <img 
-                        src={images[activeThumb] || product.image} 
+                        src={currentMedia} 
                         alt={formatProductName(product.name)} 
                         style={{ 
                           width: '100%', 

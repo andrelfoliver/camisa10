@@ -2381,7 +2381,8 @@ const ProductsSection = ({ showToast }) => {
     const file = e.target.files?.[0];
     if (!file) return;
     setImageFile(file);
-    setImagePreview(URL.createObjectURL(file));
+    const isVid = file.type.startsWith('video/');
+    setImagePreview(URL.createObjectURL(file) + (isVid ? '#video' : ''));
   };
 
   const handleSizeStockChange = (size, val) => {
@@ -2401,9 +2402,11 @@ const ProductsSection = ({ showToast }) => {
     if (imageFile) {
       setUploading(true);
       try {
-        imageUrl = await uploadImageToSupabase(imageFile);
+        imageUrl = imageFile.type.startsWith('video/')
+          ? await uploadVideoToSupabase(imageFile)
+          : await uploadImageToSupabase(imageFile);
       } catch (err) {
-        showToast('Erro no upload da imagem: ' + err.message, 'error');
+        showToast('Erro no upload da mídia de capa: ' + err.message, 'error');
         setSaving(false); setUploading(false); return;
       }
       setUploading(false);
@@ -2776,8 +2779,8 @@ const ProductsSection = ({ showToast }) => {
                     </div>
                   )}
                   <label style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', padding: '0.85rem 1rem', background: '#0B0C0E', border: '1px dashed #2A2D30', borderRadius: '6px', cursor: 'pointer', fontSize: '0.875rem', color: 'rgba(255,255,255,0.6)' }}>
-                    <input type="file" accept="image/*" style={{ display: 'none' }} onChange={handleImageSelect} />
-                    📁 {imageFile ? imageFile.name : 'Clique para enviar imagem (comprimida para WebP)'}
+                    <input type="file" accept="image/*,video/mp4" style={{ display: 'none' }} onChange={handleImageSelect} />
+                    📁 {imageFile ? imageFile.name : 'Clique para enviar foto ou vídeo MP4 de capa'}
                   </label>
                   <div style={{ textAlign: 'center', color: 'rgba(255,255,255,0.2)', fontSize: '0.75rem', margin: '0.4rem 0' }}>— ou —</div>
                   <input style={S.input} value={form.image} onChange={e => { setForm({...form, image: e.target.value}); if (e.target.value) setImagePreview(e.target.value); }} placeholder="Cole uma URL direta: https://..." />
@@ -2801,10 +2804,39 @@ const ProductsSection = ({ showToast }) => {
                               position: 'absolute', top: '2px', right: '2px', 
                               background: 'rgba(0,0,0,0.8)', border: 'none', color: '#F87171', 
                               borderRadius: '50%', width: '18px', height: '18px', cursor: 'pointer', 
-                              display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.75rem' 
+                              display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.75rem',
+                              zIndex: 2
                             }}
+                            title="Remover da galeria"
                           >
                             <X size={10} />
+                          </button>
+                          <button 
+                            type="button" 
+                            onClick={() => {
+                              const currentCover = form.image;
+                              const chosen = img;
+                              const newGallery = [...form.gallery];
+                              newGallery.splice(idx, 1);
+                              if (currentCover && currentCover !== chosen) {
+                                newGallery.unshift(currentCover);
+                              }
+                              setForm({ ...form, image: chosen, gallery: newGallery });
+                              setImagePreview(chosen);
+                              setImageFile(null);
+                              showToast('Mídia definida como capa com sucesso!', 'success');
+                            }} 
+                            style={{ 
+                              position: 'absolute', bottom: '2px', left: '2px', 
+                              background: 'rgba(0,0,0,0.85)', border: '1px solid rgba(214,255,0,0.4)', 
+                              color: '#D6FF00', borderRadius: '3px', padding: '1px 4px', 
+                              fontSize: '0.6rem', fontWeight: 800, cursor: 'pointer',
+                              display: 'flex', alignItems: 'center', gap: '2px', lineHeight: 1,
+                              zIndex: 2
+                            }}
+                            title="Definir como Imagem/Vídeo de Capa"
+                          >
+                            ★ Capa
                           </button>
                         </div>
                       ))}
